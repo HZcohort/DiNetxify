@@ -152,7 +152,6 @@ class DiseaseNetworkData:
         self.__medical_recods_info = {}
         self._medical_recods_info = {}
 
-
         #check input
         #----------
         self.__phenotype_info['phenotype_col_dict'] = self.__phenotype_col_dict[self.study_design]
@@ -382,8 +381,41 @@ class DiseaseNetworkData:
     def load(self, filepath):
         None
 
-    def save(self, filepath):
-        None
+    def save(self, file:str):
+        """
+        Save the DiseaseNet.DiseaseNetworkData object to a .npy file for further loading.
+
+        Parameters
+        ----------
+        file : path and file prefix.
+            The filename (string) where the data object will be saved. 
+            The .npy extension will be appended to the filename.
+
+        Returns
+        -------
+        None.
+
+        """
+        #create a save dict
+        if self.phenotype_df is None:
+            raise ValueError('Nothing to save, please load phenotype data first')
+        elif self.diagnosis is None or self.history is None:
+            print('No medical records data were found.')
+        elif self.trajectory is None:
+            print('No trajectory data were found.')
+        #generate dctionary for save
+        save_dict = {}
+        #global information
+        save_dict['study_design'] = self.study_design
+        save_dict['date_fmt'] = self.date_fmt
+        save_dict['phecode_level'] = self.phecode_level
+        save_dict['phecode_version'] = self.phecode_version
+        save_dict['phecode_info'] = self.phecode_info
+        #dataset
+        self.phenotype_df = None
+        self.diagnosis = None
+        self.history = None
+        self.trajectory = None
     
     def get_phenotype_info(self):
         return self.__phenotype_info
