@@ -143,7 +143,6 @@ class DiseaseNetworkData:
         print('Phenotype and medical records data reset.')
         #attributes related to phenotype data
         self.__warning_phenotype = []
-        self.__warning_phenotype = []
         self.__phenotype_statistics = {}
         self.__phenotype_info = {}
         #attributes related to medical records data
@@ -412,10 +411,22 @@ class DiseaseNetworkData:
         save_dict['phecode_version'] = self.phecode_version
         save_dict['phecode_info'] = self.phecode_info
         #dataset
-        self.phenotype_df = None
-        self.diagnosis = None
-        self.history = None
-        self.trajectory = None
+        save_dict['phenotype_df'] = self.phenotype_df.to_numpy()
+        save_dict['phenotype_df_columns'] = self.phenotype_df.columns.to_numpy()
+        save_dict['diagnosis'] = self.diagnosis
+        save_dict['history'] = self.history
+        save_dict['trajectory'] = self.trajectory
+        #attributes related to phenotype data
+        save_dict['__warning_phenotype'] = self.__warning_phenotype
+        save_dict['__phenotype_statistics'] = self.__phenotype_statistics
+        save_dict['__phenotype_info'] = self.__phenotype_info
+        #attributes related to medical records data
+        save_dict['__warning_medical_records'] = self.__warning_medical_records = []
+        save_dict['__medical_recods_statistics'] = self.__medical_recods_statistics = {}
+        save_dict['__medical_recods_info'] = self.__medical_recods_info
+        #save it
+        np.save(file,save_dict)
+
     
     def get_phenotype_info(self):
         return self.__phenotype_info
