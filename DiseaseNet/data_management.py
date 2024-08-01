@@ -377,23 +377,60 @@ class DiseaseNetworkData:
         self.__medical_recods_statistics['n_phecode_diagnosis_per_unexposed'] = np.mean([len(self.diagnosis[id_]) for id_ in unexposed_id])
         self.__medical_recods_statistics['n_phecode_history_per_unexposed'] = np.mean([len(self.history[id_]) for id_ in unexposed_id])
 
-    def load(self, filepath):
-        None
-
-    def save(self, file:str):
+    def load(self, file:str, force:bool=False):
         """
-        Save the DiseaseNet.DiseaseNetworkData object to a .npy file for further loading.
-
+        Load data from a .npy file and restore the attributes to this DiseaseNet.DiseaseNetworkData object. 
+        This method is intended for restoring data to an empty object. 
+        If data is already present in any attribute and `force` is not set to True, an error will be raised to prevent accidental data overwrite.
+        
         Parameters
         ----------
-        file : path and file prefix.
-            The filename (string) where the data object will be saved. 
-            The .npy extension will be appended to the filename.
+        file : str
+            The filename (string) from which the data object will be loaded.
+            The filename should include the .npy extension.
+        
+        force : bool, default=False
+            If True, the data will be loaded and existing attributes will be overwritten, even if they contain data. 
+            The default is False, which will raise an error if data already exists.
 
         Returns
         -------
         None.
+    
+        """
+        # Check for existing data if force is not True
+        if not force:
+            data_attrs = ['phenotype_df', 'diagnosis', 'history', 'trajectory']
+            for attr in data_attrs:
+                if getattr(self, attr) is not None:
+                    raise ValueError(f"Attribute '{attr}' is not empty. Use force=True to overwrite existing data.")
 
+        # Load the dictionary from .npy file
+        data_dict = np.load(file, allow_pickle=True).item()
+        #restore pandas dataframe attribute
+        self.phenotype_df = pd.DataFrame(data_dict['phenotype_df'], columns=data_dict['phenotype_df_columns'])
+        # Restoring all simple attributes directly from data_dict
+        simple_attrs = ['study_design', 'date_fmt', 'phecode_level', 'phecode_version', 'phecode_info',
+                        'diagnosis', 'history', 'trajectory',
+                        '__warning_phenotype', '__phenotype_statistics', '__phenotype_info',
+                        '__warning_medical_records', '__medical_recods_statistics', '__medical_recods_info']
+        for attr in simple_attrs:
+            setattr(self, attr, data_dict.get(attr))
+        print("All attributes restored.")
+
+    def save(self, file:str):
+        """
+        Save the DiseaseNet.DiseaseNetworkData object's attributes to a .npy file, which can be restored using the corresponding load method.
+    
+        Parameters
+        ----------
+        file : str
+            The filename or path prefix where the data object will be saved. 
+            The '.npy' extension will be automatically appended to this filename if not already included.
+    
+        Returns
+        -------
+        None.
         """
         #create a save dict
         if self.phenotype_df is None:
@@ -402,32 +439,27 @@ class DiseaseNetworkData:
             print('No medical records data were found.')
         elif self.trajectory is None:
             print('No trajectory data were found.')
-        #generate dctionary for save
-        save_dict = {}
-        #global information
-        save_dict['study_design'] = self.study_design
-        save_dict['date_fmt'] = self.date_fmt
-        save_dict['phecode_level'] = self.phecode_level
-        save_dict['phecode_version'] = self.phecode_version
-        save_dict['phecode_info'] = self.phecode_info
-        #dataset
-        save_dict['phenotype_df'] = self.phenotype_df.to_numpy()
-        save_dict['phenotype_df_columns'] = self.phenotype_df.columns.to_numpy()
-        save_dict['diagnosis'] = self.diagnosis
-        save_dict['history'] = self.history
-        save_dict['trajectory'] = self.trajectory
-        #attributes related to phenotype data
-        save_dict['__warning_phenotype'] = self.__warning_phenotype
-        save_dict['__phenotype_statistics'] = self.__phenotype_statistics
-        save_dict['__phenotype_info'] = self.__phenotype_info
-        #attributes related to medical records data
-        save_dict['__warning_medical_records'] = self.__warning_medical_records = []
-        save_dict['__medical_recods_statistics'] = self.__medical_recods_statistics = {}
-        save_dict['__medical_recods_info'] = self.__medical_recods_info
+        # Create a dictionary to save the data
+        save_dict = {'study_design': self.study_design,
+                     'date_fmt': self.date_fmt,
+                     'phecode_level': self.phecode_level,
+                     'phecode_version': self.phecode_version,
+                     'phecode_info': self.phecode_info,
+                     'phenotype_df': self.phenotype_df.to_numpy(),
+                     'phenotype_df_columns': self.phenotype_df.columns.to_numpy(),
+                     'diagnosis': self.diagnosis,
+                     'history': self.history,
+                     'trajectory': self.trajectory,
+                     '__warning_phenotype': self.__warning_phenotype,
+                     '__phenotype_statistics': self.__phenotype_statistics,
+                     '__phenotype_info': self.__phenotype_info,
+                     '__warning_medical_records': self.__warning_medical_records,
+                     '__medical_recods_statistics': self.__medical_recods_statistics,
+                     '__medical_recods_info': self.__medical_recods_info}
         #save it
         np.save(file,save_dict)
-
-    
+        print(f"Attributes save to {file}.npy")
+ 
     def get_phenotype_info(self):
         return self.__phenotype_info
     
