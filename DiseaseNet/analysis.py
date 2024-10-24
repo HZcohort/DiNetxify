@@ -1,10 +1,10 @@
 import pandas as pd
 import numpy as np
 import multiprocessing
+import time
 
 def phewas(data:pd.DataFrame, n_cpus:int, adjustment:str) -> pd.DataFrame:
     """
-    
     """
     from lifelines import CoxPHFitter
     from statsmodels.duration.hazard_regression import PHReg
@@ -121,7 +121,6 @@ def phewas(data:pd.DataFrame, n_cpus:int, adjustment:str) -> pd.DataFrame:
 
 def comorbidity_analysis(data:pd.DataFrame, n_cpus:int, adjustment:str) -> pd.DataFrame:
     """
-    
     """
     threshold = 1
     d1d2_lst = []
@@ -158,8 +157,60 @@ def comorbidity_analysis(data:pd.DataFrame, n_cpus:int, adjustment:str) -> pd.Da
     pool.map(comorbidity())
 
 
-def trajectory_analysis():
+def trajectory_analysis(data:pd.DataFrame, n_cpus:int, adjustment:str) -> pd.DataFrame:
     """
-    
     """
     pool = multiprocessing.Pool(n_cpus)
+
+    def exc_lst(disease:str, phecode_cate:pd.DataFrame, phecode_lst:list) -> set:
+        """
+        """
+        lst = []
+        exl_range = phecode_cate.loc[phecode_cate['phecode']==disease]['phecode_exclude_range'].values[0]
+        if pd.isna(exl_range):
+            return set(lst)
+        else:
+            for range_ in exl_range.split(','):
+                exl_lower, exl_higher = float(range_.split('-')[0]), float(range_.split('-')[1])
+                exl_list_index = np.where(np.all([phecode_lst>=exl_lower, phecode_lst<=exl_higher], axis=0))[0]
+                exl_list_temp = phecode_lst[exl_list_index]
+                lst += [x for x in exl_list_temp]
+            return set(lst)
+        
+    def d1_d2(data:pd.DataFrame) -> pd.DataFrame:
+        """
+        """
+        exposed = data.copy()
+        id_ = 'eid'
+        inpatient_variable = 'inpatient_level1'
+        date_start_variable = 'dia_date'
+        eligible_variable = 'd_eligible'
+
+        array = exposed[[id_, date_start_variable, inpatient_variable, eligible_variable]].values
+        d1d2_result = []
+        total = len(array)
+        time0 = time.time()
+        for i in range(len(array)):
+            if i%3000 == 0:
+                print("Progress: %.1f%%" % (i/total*100))
+                print("Time spent: %.1f mins" % ((time.time()-time0)/60))
+            d1d2 = []
+            dict_temp = array[i][2]
+            eligible = array[i][-1]
+            d_list = [x for x in dict_temp.keys() if x in eligible]
+            length = len(d_list)
+            if length <= 1:
+                d1d2_result.append([])
+                continue
+            for j in range(length-1):
+                for k in (range(j+1,length)):
+                    d1 = d_list[j]
+                    d2 = d_list[k]
+                    if dict_temp.get(d2) > dict_temp.get(d1):
+                        d1d2.append("%s-%s" % (d1,d2))
+            d1d2_result.append(d1d2)
+        exposed['d1d2'] = d1d2_result
+        return exposed
+
+    def main():
+        pass
