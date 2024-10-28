@@ -5,27 +5,44 @@ import time
 
 def phewas(data:pd.DataFrame, n_cpus:int, adjustment:str) -> pd.DataFrame:
     """
+    A method for Phenome-wide association study (PheWAS), for use in DiseaseNet.analysis module.
+
+    Parameters:
+    ----------
+    data : pd.DataFrame
+        An object of the class DiseaseNetworkData, more details in data_management module.
+
+    n_cpus : int
+        The number of threads to run, for use in multiprocessing.
+
+    adjustment : str, default='PDR'
+        The method of multiple test to adjust the p-values.
+
     """
+
     from lifelines import CoxPHFitter
     from statsmodels.duration.hazard_regression import PHReg
+    # 
     cph = CoxPHFitter()
     phecode_cate = pd.read_csv(r'C:/Users/Administrator/Desktop/data/phecode_1.2/phecode_info.csv')
     phecode_lst = np.array([x for x in phecode_cate.phecode.values])
     result_final = []
 
-    def range_d(x):
+    def range_disease(x):
         """
+
         """
         x_str = str(x)
         if x_str.split('.')[1] == '0':
-            return round(x+0.99,2)
+            return round(x+0.99, 2)
         elif len(x_str.split('.')[1]) == 1:
-            return round(x+0.09,2)
+            return round(x+0.09, 2)
         else:
             return x
         
     def cox(disease:str, data:pd.DataFrame, threshold=1000, covariates=['age', 'sex', 'BMI']) -> float:
         """
+
         """
         result = [disease]
         dataset_analysis = data[covariates+'eid'+'date_start'+'date_end'+'inpatient'+'outcome'+'match']
@@ -51,7 +68,7 @@ def phewas(data:pd.DataFrame, n_cpus:int, adjustment:str) -> pd.DataFrame:
             result += ['Sex specific']
             return result
         
-        disease_upper = range_d(disease)
+        disease_upper = range_disease(disease)
         disease_lst = [x for x in phecode_lst if x>=disease and x<=disease_upper]
         dataset_analysis['d_time'] = dataset_analysis['inpatient'].apply(lambda x: 
                                                                                 np.nanmin([x.get(j,np.NaN) for j in disease_lst]))
@@ -121,6 +138,7 @@ def phewas(data:pd.DataFrame, n_cpus:int, adjustment:str) -> pd.DataFrame:
 
 def comorbidity_analysis(data:pd.DataFrame, n_cpus:int, adjustment:str) -> pd.DataFrame:
     """
+
     """
     threshold = 1
     d1d2_lst = []

@@ -40,7 +40,7 @@ class DiseaseNetworkData:
     
     """
     
-    def __init__(self,study_design:str='cohort', phecode_level:int=1, date_fmt:str='%Y-%m-%d',phecode_version:str='1.2'):
+    def __init__(self, study_design:str='cohort', phecode_level:int=1, date_fmt:str='%Y-%m-%d', phecode_version:str='1.2'):
         #fixed attributes
         #phenotype data
         self.__module_dir = os.path.dirname(__file__)

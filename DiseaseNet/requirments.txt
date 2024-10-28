@@ -1,5 +1,9 @@
-pandas
-os
-datetime
-numpy
-...
+pandas==
+datetime==
+numpy==
+lifeline==
+plotly==
+scipy==
+community==
+statsmodels==
+scikit-learn==
