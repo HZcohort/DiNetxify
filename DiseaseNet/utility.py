@@ -9,11 +9,16 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 
-def decimal_to_short(code):
+def decimal_to_short(code:float) -> str:
     """
+
     Convert an ICD9 code from decimal format to short format.
+
+    Parameters:
+    ----------
+
     """
-    parts = code.split(".")
+    parts = str(code).split(".")
     parts[0] = parts[0].zfill(3)
     return "".join(parts)
 

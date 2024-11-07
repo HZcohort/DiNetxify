@@ -9,8 +9,8 @@ import pandas as pd
 import numpy as np
 import os
 from datetime import datetime
-from .utility import convert_column,phenotype_required_columns,diff_date_years,read_check_csv
-from .utility import medical_records_process,diagnosis_history_update
+from .utility import convert_column, phenotype_required_columns, diff_date_years, read_check_csv
+from .utility import medical_records_process, diagnosis_history_update
 
 
 class DiseaseNetworkData:
