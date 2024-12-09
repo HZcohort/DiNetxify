@@ -171,7 +171,7 @@ for icd,phe in who_9[['ICD','phecode']].values:
         who_9_dict[icd] = [phe]
 np.save(r'C:/Users/Administrator/Desktop/data/phecode_1.2/ICD-9-WHO.npy',who_9_dict)
 
-who_10 = pd.read_csv(r'C:/Users/Administrator/Desktop/data/phecode_1.2/phecode_map_who_icd10.csv')
+who_10 = pd.read_csv(r'D:/我的坚果云/PPHD Project/Others/code/DiseaseNet_git/DiseaseNet/data/phecode_1.2/phecode_map_who_icd10.csv')
 who_10['ICD'] = who_10['ICD10'].apply(lambda x: x.replace('.',''))
 #who_10[who_10['ICD'].apply(lambda x: len(x)<=2)]
 
@@ -181,7 +181,7 @@ for icd,phe in who_10[['ICD','PHECODE']].values:
         who_10_dict[icd].append(phe)
     except:
         who_10_dict[icd] = [phe]
-np.save(r'C:/Users/Administrator/Desktop/data/phecode_1.2/ICD-10-WHO.npy',who_10_dict)
+np.save(r'D:/我的坚果云/PPHD Project/Others/code/DiseaseNet_git/DiseaseNet/data/phecode_1.2/ICD-10-WHO.npy',who_10_dict)
 
 #[x for x in who_9_dict if x in who_10_dict]
 
