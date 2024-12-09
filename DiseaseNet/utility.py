@@ -216,6 +216,7 @@ def phenotype_required_columns(dataframe,col_dict:dict,date_fmt:str):
         - there are formatting issues with the date columns, 
         - duplicate entries in the Participant ID, 
         - the exposure variable does not consist of exactly two unique binary values as expected.
+        - the sex variable does not consist of exactly two unique binary values as expected.
 
     """
     for col in col_dict.keys():
@@ -226,6 +227,7 @@ def phenotype_required_columns(dataframe,col_dict:dict,date_fmt:str):
     index_date_col = col_dict['Index date']
     end_date_col = col_dict['End date']
     exposure_col = col_dict['Exposure']
+    sex_col = col_dict['Sex']
     
     try:
         dataframe[index_date_col] = dataframe[index_date_col].apply(lambda x: datetime.strptime(x,date_fmt))
@@ -242,12 +244,23 @@ def phenotype_required_columns(dataframe,col_dict:dict,date_fmt:str):
     unique_vals = dataframe[exposure_col].unique()
     n_unique_vals = len(unique_vals)
     if n_unique_vals != 2:
-        raise ValueError('The exposure variable does not have 2 unique vales')
+        raise ValueError('The exposure variable does not have 2 unique values')
     else:
         if all(isinstance(x, (int, np.integer, float, np.floating)) and x in {0, 1} for x in unique_vals):
             None
         else:
-            raise ValueError("The exposure variable does not have 2 unique vales")
+            raise ValueError("The exposure variable does not have 2 unique values")
+    
+    #prcess the sex column
+    unique_vals = dataframe[sex_col].unique()
+    n_unique_vals = len(unique_vals)
+    if n_unique_vals != 2:
+        raise ValueError('The sex variable does not have 2 unique values')
+    else:
+        if all(isinstance(x, (int, np.integer, float, np.floating)) and x in {0, 1} for x in unique_vals):
+            None
+        else:
+            raise ValueError("The sex variable does not have 2 unique values")
     
     
 def medical_records_process(medical_records:str,col_dict:dict,code_type:str,date_fmt:str,chunk_n,seperator,
@@ -269,10 +282,10 @@ def medical_records_process(medical_records:str,col_dict:dict,code_type:str,date
     date_fmt : str
         The format string for parsing dates in the date columns.
     
-    chunk_n : TYPE
+    chunk_n : int
         Chunk size for read the medical records data.
     
-    seperator : TYPE
+    seperator : str
         Seperator used for reading.
     
     all_phecode_dict : dict
@@ -402,18 +415,6 @@ def diagnosis_history_update(diagnosis_dict:dict, history_dict:dict, start_date_
                 except:
                     n_invalid[patient_id] = 1
     return n_invalid   
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     
 
 

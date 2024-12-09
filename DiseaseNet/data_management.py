@@ -12,6 +12,9 @@ from datetime import datetime
 from .utility import convert_column, phenotype_required_columns, diff_date_years, read_check_csv
 from .utility import medical_records_process, diagnosis_history_update
 
+import warnings
+warnings.filterwarnings('ignore')
+
 
 class DiseaseNetworkData:
     """
@@ -23,7 +26,7 @@ class DiseaseNetworkData:
         Specify the type of study design, either "cohort" or "matched cohort".
     
     phecode_level : int
-        The level of phecode to use for analysis, where level 1 (with a total of 585 medical conditions) corresponds to 3-digit ICD-10 codes and level 2 (a total of 1257 medical conditions) to 4-digit ICD-10 codes.
+        The level of phecode to use for analysis, where level 1 (with a total of 585 medical conditions) corresponds to 3-digit ICD-10 codes and level 2 (a total of 1257 medical conditions) to 4-digit ICD-10 codes. 
         Level 2 phecodes offer a more granular analysis with potentially smaller sample sizes per disease category. 
         For larger studies, level 2 phecodes may enhance result interpretation. 
         For smaller studies, level 1 is recommended to maintain statistical power.
@@ -33,10 +36,6 @@ class DiseaseNetworkData:
     
     phecode_version : str, default='1.2'
         The version of the phecode system used for converting diagnosis codes. Currently, only version 1.2 is supported.
-        
-    chunksize_medical_records : int, default=100
-        Passed to pd.read_csv chunksize for reading medical records data with iterator mode.
-        If this value is 0, the iterator mode in pd.read_csv will not be used.
     
     """
     
@@ -48,16 +47,19 @@ class DiseaseNetworkData:
         self.__study_design_options = ['matched cohort','cohort']
         self.__id_col = 'eid'
         self.__exposure_col = 'exposure'
+        self.__sex_col = 'sex'
         self.__index_date_col = 'index_date'
         self.__end_date_col = 'end_date'
         self.__mathcing_identifier_col = 'group'
         self.__phenotype_col_dict = {'matched cohort':{'Participant ID':self.__id_col,
                                                      'Exposure':self.__exposure_col,
+                                                     'Sex':self.__sex_col,
                                                      'Index date': self.__index_date_col,
                                                      'End date': self.__end_date_col,
                                                      'Matching identifier':self.__mathcing_identifier_col},
                                      'cohort':{'Participant ID':self.__id_col,
                                                'Exposure':self.__index_date_col,
+                                               'Sex':self.__sex_col,
                                                'Index date': self.__index_date_col,
                                                'End date': self.__end_date_col,}}
         #medical records data
@@ -107,26 +109,30 @@ class DiseaseNetworkData:
         Parameters:
         ----------
         phenotype_data_path : str
-            The file path containing phenotype data in CSV or TSV format. The file must include a header row with columns such as Participant ID, 
-            Index date, End date, Exposure, Matching identifier (if a matched cohort design), and other covariates like age and sex.
+            The file path containing phenotype data in CSV or TSV format. 
+            The file must include a header row with columns such as Participant ID, sex, Index date, End date, Exposure, Matching identifier (if a matched cohort design), and other covariates like age and BMI.
                 
         column_names : dict
             A dictionary mapping required column names to their corresponding identifiers in the dataset. 
-            Expected keys include 'Participant ID', 'Index date', 'End date', 'Exposure', and 'Matching identifier' (if applicable). 
+            Expected keys include 'Participant ID', 'Index date', 'End date', 'Exposure', 'Sex', and 'Matching identifier' (if applicable). 
             For example:
             column_names={'Participant ID': 'eid',
                           'Exposure': 'status',
+                          'Sex': 'sex',
                           'Index date': 'index_date',
                           'End date': 'final_date',
                           'Matching identifier': 'group'}
-            The 'Exposure' column should be coded as 0 (unexposed) and 1 (exposed). Dates must be formatted as '%Y-%m-%d' unless specified otherwise. 
+            The 'Exposure' column must be coded as 0 (unexposed) and 1 (exposed). 
+            The 'Sex' column must be coded as 1 (female) and 0 (male).
+            Dates must be formatted as '%Y-%m-%d' unless specified otherwise.
             Records with missing values in any required columns are not allowed.
         
         covariates : list
-            A list of column names representing additional covariates, such as ['age', 'sex', 'BMI']. 
+            A list of column names representing additional covariates, such as ['age', 'BMI']. 
             Provide an empty list if no additional covariates are included. 
             The system will automatically detect and convert variable types. 
-            Individuals with missing values in continuous variables will be removed, while those missing in categorical variables will be categorized separately.
+            Individuals with missing values in continuous variables will be removed, 
+            while those missing in categorical variables will be categorized separately.
 
         Returns:
         ----------
@@ -242,13 +248,14 @@ class DiseaseNetworkData:
                               column_names:dict, date_fmt:str=None, chunksize:int=1000000):
         """
         Merge the loaded phenotype data with one more medical records data.
-        If you have multiple medical records data to merge (in most cases, with difference diagnosis code types), you can call this function multiple times.
+        If you have multiple medical records data to merge (in most cases, with difference diagnosis code types), 
+        you can call this function multiple times.
 
         Parameters
         ----------
         medical_records_data_path : str
-            The file path containing medical records data in CSV or TSV format. Required columns include Participant ID, Diagnosis code (with the specified type), 
-            and Date of diagnosis (default format '%Y-%m-%d').
+            The file path containing medical records data in CSV or TSV format. 
+            Required columns include Participant ID, Diagnosis code (with the specified type), and Date of diagnosis (default format '%Y-%m-%d').
         
         diagnosis_code : str
             Diagnosis code type used in the medical records data. Valid options include 'ICD-9-CM', 'ICD-9-WHO', 'ICD-10-CM', and 'ICD-10-WHO'. 
@@ -377,6 +384,41 @@ class DiseaseNetworkData:
         self.__medical_recods_statistics['n_phecode_diagnosis_per_unexposed'] = np.mean([len(self.diagnosis[id_]) for id_ in unexposed_id])
         self.__medical_recods_statistics['n_phecode_history_per_unexposed'] = np.mean([len(self.history[id_]) for id_ in unexposed_id])
 
+    def get_attribute(self, attr_name):
+        """
+        Retrieves the value of a specified attribute, providing controlled access to the class's private and protected data.
+        
+        Parameters
+        ----------
+        attr_name : str
+            The name of the attribute to retrieve. The name should correspond to one of the predefined keys in the private_attrs dictionary.
+            If the requested attribute is not found, a ValueError is raised.
+        
+        Returns
+        -------
+        value : any
+            The value of the requested attribute. If the attribute is a mutable data type (like dictionaries), a copy of the data is returned
+            to prevent accidental modification of the internal state.
+
+        """
+
+        # Use a dictionary to map attribute names to their private counterparts
+        private_attrs = {
+            'warning_phenotype': self.__warning_phenotype,
+            'phenotype_statistics': self.__phenotype_statistics,
+            'phenotype_info': self.__phenotype_info,
+            'warning_medical_records': self.__warning_medical_records,
+            'medical_records_statistics': self.__medical_recods_statistics,
+            'medical_records_info': self.__medical_recods_info
+        }
+        if attr_name in private_attrs:
+            value = private_attrs[attr_name]
+            if isinstance(value, dict):
+                return value.copy()  # Return a copy if it's a dictionary
+            return value
+        else:
+            raise ValueError(f"Attribute {attr_name} not found")
+
     def load(self, file:str, force:bool=False):
         """
         Load data from a .npy file and restore the attributes to this DiseaseNet.DiseaseNetworkData object. 
@@ -411,11 +453,14 @@ class DiseaseNetworkData:
         self.phenotype_df = pd.DataFrame(data_dict['phenotype_df'], columns=data_dict['phenotype_df_columns'])
         # Restoring all simple attributes directly from data_dict
         simple_attrs = ['study_design', 'date_fmt', 'phecode_level', 'phecode_version', 'phecode_info',
-                        'diagnosis', 'history', 'trajectory',
-                        '__warning_phenotype', '__phenotype_statistics', '__phenotype_info',
-                        '__warning_medical_records', '__medical_recods_statistics', '__medical_recods_info']
+                        'diagnosis', 'history', 'trajectory']
         for attr in simple_attrs:
             setattr(self, attr, data_dict.get(attr))
+        # Restoring all private attributes from data_dict
+        private_attrs = ['__warning_phenotype', '__phenotype_statistics', '__phenotype_info',
+                        '__warning_medical_records', '__medical_recods_statistics', '__medical_recods_info']
+        for attr in private_attrs:
+            setattr(self, '_DiseaseNetworkData'+attr, data_dict.get(attr))
         print("All attributes restored.")
 
     def save(self, file:str):
@@ -459,13 +504,7 @@ class DiseaseNetworkData:
         #save it
         np.save(file,save_dict)
         print(f"Attributes save to {file}.npy")
- 
-    def get_phenotype_info(self):
-        return self.__phenotype_info
-    
-    def get_medical_records_info(self):
-        return self.__medical_recods_info
-    
+
     def __str__(self):
         self.__print_string = 'DiseseNet.DiseaseNetworkData\n\n'
         #add cohort description

@@ -6,6 +6,7 @@ Created on Mon Jul 22 23:48:05 2024
 """
 
 from .data_management import DiseaseNetworkData
+from .analysis import phewas, phewas_multipletests
 #from .analysis import phewas, comorbidity_analysis, trajectory_analysis
 #from .regression import unconditional_logistic, conditional_logistic
 #from .visualization import create_3d_network
@@ -14,23 +15,38 @@ from .data_management import DiseaseNetworkData
 import DiseaseNet as dnt
 
 #create data objective
-full_data = dnt.DiseaseNetworkData(study_design='matched cohort',phecode_level=1,date_fmt='%Y-%m-%d')
-full_data.phenotype_data('phe.csv', column_names={'Participant ID': 'eid',
-                                                  'Exposure': 'status',
-                                                  'Index date': 'index_date',
-                                                  'End date': 'final_date',
-                                                  'Matching identifier': 'group'}, 
-                         covariates=['age', 'sex', 'BMI'])
-full_data.merge_medical_records('icd10.csv', diagnosis_code='ICD-10-WHO', column_names={'Participant ID': 'eid',
-                                                                                         'Diagnosis code': 'ICD10',
-                                                                                         'Date of diagnosis': 'date'})
-full_data.merge_medical_records(r'icd9.csv', diagnosis_code='ICD-9-WHO', column_names={'Participant ID': 'eid',
-                                                                                         'Diagnosis code': 'ICD9',
-                                                                                         'Date of diagnosis': 'date'})
-full_data.save(r'./prefix') #saved to prefix.npz
+col_dict = {'Participant ID': 'new_index',
+            'Exposure': 'outcome',
+            'Sex':'sex',
+            'Index date': 'date_start',
+            'End date': 'time_end',
+            'Matching identifier': 'match_2'}
+vars_lst = ['age','social','BMI','smoking', 'drinking']
+
+data = dnt.DiseaseNetworkData(study_design='matched cohort',phecode_level=1,date_fmt='%Y-%m-%d')
+data.phenotype_data(phenotype_data_path='phenotype.csv',
+                         column_names=col_dict, covariates=vars_lst)
+
+data.merge_medical_records('inp_1.csv',diagnosis_code='ICD-10-WHO',
+                           column_names={'Participant ID': 'eid',
+                                         'Diagnosis code': 'diag_icd10',
+                                         'Date of diagnosis': 'date'})
+
+data.merge_medical_records('inp_2.csv',diagnosis_code='ICD-10-WHO',
+                           column_names={'Participant ID': 'eid',
+                                         'Diagnosis code': 'diag_icd10',
+                                         'Date of diagnosis': 'date'})
+
+#save
+data.save('module_test\dep')
+
+#load
+data = dnt.DiseaseNetworkData(study_design='matched cohort',phecode_level=1,date_fmt='%Y-%m-%d')
+data.load('dep.npy')
 
 #phewas
-phewas_level1 = dnt.phewas(full_data,n_cpus=10,adjustment='FDR')
+phewas_result = dnt.phewas(data,n_threshold=200,n_cpus=5,system_inc=['digestive'])
+dnt.phewas_multipletests(phewas_result,adjustment='fdr_bh')
 
 #generate trajectory for only exposed group
 full_data.trajectory(phewas_result=phewas_level1)
