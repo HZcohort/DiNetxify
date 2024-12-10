@@ -9,16 +9,15 @@ import pandas as pd
 import numpy as np
 import time
 from .data_management import DiseaseNetworkData
-from statsmodels.stats.multitest import multipletests
 from .cox import cox_conditional,cox_unconditional
-from .utility import log_file_detect
+from .utility import log_file_detect,filter_phecodes,validate_threshold,validate_n_cpus,validate_correction_method,states_p_adjust
 
 import warnings
 warnings.filterwarnings('ignore')
 
 def phewas(data:DiseaseNetworkData, sex_adjustment:bool=True, proportion_threshold:float=None, n_threshold:int=None, 
            n_cpus:int=1, correction:str='bonferroni', cutoff:float=0.05, system_inc:list=None, system_exl:list=None, 
-           phecode_inc:list=None, phecode_exl:list=None, log_file:str=None) -> pd.DataFrame:
+           phecode_inc:list=None, phecode_exl:list=None, log_file:str=None, lifelines_disable:bool=False) -> pd.DataFrame:
     """
     Conducts Phenome-wide association studies (PheWAS) using the specified DiseaseNetworkData object.
 
@@ -30,7 +29,7 @@ def phewas(data:DiseaseNetworkData, sex_adjustment:bool=True, proportion_thresho
     sex_adjustment : bool, default=True
         Whether sex should be included as an additional covariate in the Cox model.
         For example, for matched-cohort study where sex is one of the matching variables, it should not be included as a covariate.
-        For unmatched cohort study on the hand, sex is normally included as a covariate.
+        For unmatched cohort study on the other hand, sex is normally included as a covariate.
     
     proportion_threshold : float
         Minimum proportion of cases among the exposed group to include a phecode in the analysis. 
@@ -91,6 +90,10 @@ def phewas(data:DiseaseNetworkData, sex_adjustment:bool=True, proportion_thresho
     log_file : str, default=None
         Path and prefix for the text file where log will be recorded.
         If None, the log will be written to the temporary files directory with file prefix of DiseaseNet_.
+    
+    lifelines_disable : bool, default=False
+        Whether to disable the use of lifelines. 
+        While lifelines generally require a longer fitting time, they are more resilient to violations of model assumptions.
 
     Returns:
     ----------
@@ -105,95 +108,29 @@ def phewas(data:DiseaseNetworkData, sex_adjustment:bool=True, proportion_thresho
     #retrieve phecode information
     phecode_info = data.phecode_info
     
+    #check sex adjustment
+    if not isinstance(sex_adjustment,bool):
+        raise ValueError("Invalid 'sex_adjustment' type: expected a bool object.")
+    
+    #check lifelines_disable
+    if not isinstance(lifelines_disable,bool):
+        raise ValueError("Invalid 'lifelines_disable' type: expected a bool object.")
+    
     #check threshold
     n_exposed = data.get_attribute('phenotype_statistics')['n_exposed']
-    if proportion_threshold and n_threshold:
-        raise ValueError("'n_threshold' and 'proportion_threshold' cannot be specified at the same time.")
-    if proportion_threshold:
-        if not isinstance(proportion_threshold,float):
-            raise ValueError("The 'proportion_threshold' must be a floating-point number.")
-        if proportion_threshold<0 or proportion_threshold>1:
-            raise ValueError("'proportion_threshold' must be between 0 and 1.")
-        else:
-            n_threshold = int(n_exposed)*proportion_threshold
-    elif n_threshold:
-        if not isinstance(n_threshold,int):
-            raise ValueError("The 'n_threshold' must be an integer.")
-        if n_threshold<0 or n_threshold>n_exposed:
-            raise ValueError("'n_threshold' must be a non-negative integer less than or equal to the number of exposed indivduals.")
-    else:
-        raise ValueError("Either 'n_threshold' nor 'proportion_threshold' is specified.")
+    n_threshold = validate_threshold(proportion_threshold,n_threshold,n_exposed)
     
     #check number of CPUs
-    if not isinstance(n_cpus,int):
-        raise ValueError("The 'n_cpus' must be an integer.")
-    if n_cpus == 1:
-        print('Multi-threading is not used.')
-    elif n_cpus > 1:
-        print(f'Use {n_cpus} CPU cores for PheWAS analysis.')
+    validate_n_cpus(n_cpus,'PheWAS')
+    if n_cpus>1:
         import multiprocessing
-    else:
-        raise ValueError("The specified number of CPUs is not valid. Please enter a positive integer.")
-    
+
     #check p-value correction method and cutoff
-    if not isinstance(correction,str):
-        raise ValueError("The 'adjustment' must be a string.")
-    methods_lst = ['bonferroni','sidak', 'holm-sidak','holm','simes-hochberg',
-                   'hommel','fdr_bh','fdr_by','fdr_tsbh','fdr_tsbky','none'] #list of available p-value correction method
-    if correction not in methods_lst:
-        raise ValueError(f"Choose from the following p-value correction methods: {methods_lst}")
-    if not isinstance(cutoff,float):
-        raise ValueError("The 'cutoff' must be a floating-point number.")
-    if cutoff<=0 or cutoff>=1:
-        raise ValueError("'cutoff' must be between 0 and 1, exclusive.")
+    validate_correction_method(correction,cutoff)
     
     #check inclusion and exclusion list
-    phecode_lst_all = list(phecode_info.keys())
-    system_all = set([phecode_info[x]['category'] for x in phecode_lst_all])
-    if system_inc and system_exl:
-        raise ValueError("'system_inc' and 'system_exl' cannot both be specified.")
-    if phecode_inc and phecode_exl:
-        raise ValueError("'phecode_inc' and 'phecode_exl' cannot both be specified.")
-    if (system_inc or system_exl) and (phecode_inc or phecode_exl):
-        print('Warning: both phecode and system level filters applied may result in redundant or ambiguous outcomes.')
-    if system_inc:
-        if not isinstance(system_inc,list):
-            raise ValueError("The 'system_inc' must be a list.")
-        if len(system_inc) == 0:
-            raise ValueError("The 'system_inc' list is empty.")
-        system_unidentified = [x for x in system_inc if x not in system_all]
-        if len(system_unidentified)>0:
-            raise ValueError(f"The following phecode systems from 'system_inc' are invalid: {system_unidentified}")
-        phecode_lst_all = [x for x in phecode_lst_all if phecode_info[x]['category'] in system_inc]
-    if system_exl:
-        if not isinstance(system_exl,list):
-            raise ValueError("The 'system_exl' must be a list.")
-        if len(system_exl) == 0:
-            raise ValueError("The 'system_exl' list is empty.")
-        system_unidentified = [x for x in system_exl if x not in system_all]
-        if len(system_unidentified)>0:
-            raise ValueError(f"The following phecode systems from 'system_exl' are invalid: {system_unidentified}")
-        phecode_lst_all = [x for x in phecode_lst_all if phecode_info[x]['category'] not in system_exl]  
-    if phecode_inc:
-        if not isinstance(phecode_inc,list):
-            raise ValueError("The 'phecode_inc' must be a list.")
-        if len(phecode_inc) == 0:
-            raise ValueError("The 'phecode_inc' list is empty.")
-        phecode_unidentified = [x for x in phecode_inc if x not in phecode_lst_all]
-        if len(phecode_unidentified)>0:
-            raise ValueError(f"The following phecodes from 'phecode_inc' are invalid: {phecode_unidentified}")
-        phecode_lst_all = [x for x in phecode_lst_all if x in phecode_inc]
-    if phecode_exl:
-        if not isinstance(phecode_exl,list):
-            raise ValueError("The 'phecode_exl' must be a list.")
-        if len(phecode_exl) == 0:
-            raise ValueError("The 'phecode_exl' list is empty.")
-        phecode_unidentified = [x for x in phecode_exl if x not in phecode_lst_all]
-        if len(phecode_unidentified)>0:
-            raise ValueError(f"The following phecodes from 'phecode_exl' are invalid: {phecode_unidentified}")
-        phecode_lst_all = [x for x in phecode_lst_all if x not in phecode_exl]
-    if len(phecode_lst_all) == 0:
-        raise ValueError("No phecodes remain after applying filtering at the phecode and system levels.")
+    phecode_lst_all = filter_phecodes(phecode_info,system_inc,system_exl,phecode_inc,phecode_exl)
+    print(f'A total of {len(phecode_lst_all)} phecodes included in the PheWAS analysis.')
     
     #check log files
     log_file_final,message = log_file_detect(log_file)
@@ -205,22 +142,22 @@ def phewas(data:DiseaseNetworkData, sex_adjustment:bool=True, proportion_thresho
     if data.study_design == 'matched cohort':
         if n_cpus == 1:
             for phecode in phecode_lst_all:
-                result_all.append(cox_conditional(data,n_threshold,phecode,sex_adjustment,log_file_final))
+                result_all.append(cox_conditional(data,n_threshold,phecode,sex_adjustment,log_file_final,lifelines_disable))
         elif n_cpus > 1:
             with multiprocessing.get_context('spawn').Pool(n_cpus) as p:
                 parameters_all = []
                 for phecode in phecode_lst_all:
-                    parameters_all.append([data,n_threshold,phecode,sex_adjustment,log_file_final])
+                    parameters_all.append([data,n_threshold,phecode,sex_adjustment,log_file_final,lifelines_disable])
                 result_all = p.starmap(cox_conditional, parameters_all)
     if data.study_design == 'cohort':
         if n_cpus == 1:
             for phecode in phecode_lst_all:
-                result_all.append(cox_unconditional(data,n_threshold,phecode,sex_adjustment,log_file_final))
+                result_all.append(cox_unconditional(data,n_threshold,phecode,sex_adjustment,log_file_final,lifelines_disable))
         elif n_cpus > 1:
             with multiprocessing.get_context('spawn').Pool(n_cpus) as p:
                 parameters_all = []
                 for phecode in phecode_lst_all:
-                    parameters_all.append([data,n_threshold,phecode,sex_adjustment,log_file_final])
+                    parameters_all.append([data,n_threshold,phecode,sex_adjustment,log_file_final,lifelines_disable])
                 result_all = p.starmap(cox_unconditional, parameters_all)    
     
     time_end = time.time()
@@ -233,25 +170,9 @@ def phewas(data:DiseaseNetworkData, sex_adjustment:bool=True, proportion_thresho
     columns_selected = columns[0:max_columns]
     phewas_df = pd.DataFrame(result_all, columns=columns_selected)
     
-    #if p-value were not presented
-    if 'p' not in phewas_df.columns or len(phewas_df[~phewas_df['p'].isna()])==0:
-        print('Warning: none of the phecodes yielded a valid p-value from the Cox analysis.')
-        return phewas_df
-    
-    #multiple adjustment
-    phewas_df['p'] = pd.to_numeric(phewas_df['p'],errors='coerce')
-    if correction == 'none':
-        phewas_df['significance'] = phewas_df['p'].apply(lambda x: True if x<=cutoff else False)
-    else:
-        phewas_df_na = phewas_df[phewas_df['p'].isna()]
-        phewas_df_nona = phewas_df[~phewas_df['p'].isna()]
-        reject_, corrected_p, _, _ = multipletests(phewas_df_nona['p'],method=correction,alpha=cutoff)
-        phewas_df_nona['significance'] = reject_
-        phewas_df_nona['p_adjusted'] = corrected_p
-        phewas_df_na['significance'] = False
-        phewas_df_na['p_adjusted'] = np.NaN
-        phewas_df = pd.concat([phewas_df_nona,phewas_df_na])
-    
+    #p-value correction
+    phewas_df = phewas_multipletests(phewas_df, correction=correction,cutoff=cutoff)
+
     return phewas_df
 
 def phewas_multipletests(phewas_result:pd.DataFrame, correction:str='bonferroni', cutoff:float=0.05) -> pd.DataFrame:
@@ -266,6 +187,7 @@ def phewas_multipletests(phewas_result:pd.DataFrame, correction:str='bonferroni'
     correction : str, default='bonferroni'
         Method for p-value correction from the statsmodels.stats.multitest.multipletests.
         Available methods are:
+        none : no correction
         bonferroni : one-step correction
         sidak : one-step correction
         holm-sidak : step down method using Sidak adjustments
@@ -292,31 +214,22 @@ def phewas_multipletests(phewas_result:pd.DataFrame, correction:str='bonferroni'
         raise ValueError("The provided input 'df' must be a pandas DataFrame.")
     
     #check p-value correction method and cutoff
-    if not isinstance(correction,str):
-        raise ValueError("The 'adjustment' parameter must be a string.")
-    methods_lst = ['bonferroni','sidak', 'holm-sidak','holm','simes-hochberg',
-                   'hommel','fdr_bh','fdr_by','fdr_tsbh','fdr_tsbky'] #list of available p-value correction method
-    if correction not in methods_lst:
-        raise ValueError(f"Choose from the following p-value correction methods: {methods_lst}")
-    if not isinstance(cutoff,float):
-        raise ValueError("The 'cutoff' must be a floating-point number.")
-    if cutoff<=0 or cutoff>=1:
-        raise ValueError("'cutoff' must be between 0 and 1, exclusive.")
+    validate_correction_method(correction,cutoff)
+
+    #multiple adjustmen
 
     #if p-value were not presented
     if 'p' not in phewas_result.columns or len(phewas_result[~phewas_result['p'].isna()])==0:
-        raise ValueError('No valid p-values found in the provided DataFrame.')
+        print('No valid p-values found in the provided DataFrame, no p-value correction made.')
+        return phewas_result
     
-    #multiple adjustment
     phewas_result['p'] = pd.to_numeric(phewas_result['p'],errors='coerce')
-    phewas_df_na = phewas_result[phewas_result['p'].isna()]
-    phewas_df_nona = phewas_result[~phewas_result['p'].isna()]
-    reject_, corrected_p, _, _ = multipletests(phewas_df_nona['p'],method=correction,alpha=cutoff)
-    phewas_df_nona['significance'] = reject_
-    phewas_df_nona['p_adjusted'] = corrected_p
-    phewas_df_na['significance'] = False
-    phewas_df_na['p_adjusted'] = np.NaN
-    phewas_result = pd.concat([phewas_df_nona,phewas_df_na])
+    
+    if correction == 'none':
+        phewas_result['p_significance'] = phewas_result['p'].apply(lambda x: True if x<=cutoff else False)
+        phewas_result['p_adjusted'] = np.NaN
+    else:
+        phewas_result = states_p_adjust(phewas_result,'p',correction,cutoff,'p','p')
     
     return phewas_result
 

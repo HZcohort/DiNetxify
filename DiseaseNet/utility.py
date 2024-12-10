@@ -416,6 +416,88 @@ def diagnosis_history_update(diagnosis_dict:dict, history_dict:dict, start_date_
                     n_invalid[patient_id] = 1
     return n_invalid   
     
+def validate_threshold(proportion_threshold, n_threshold, n_exposed):
+    """
+    Validates and determines the threshold for analysis based on either a proportion or an absolute count.
+
+    Parameters:
+        proportion_threshold (float or None): Proportion of exposed individuals to use as a threshold.
+        n_threshold (int or None): Absolute number of exposed individuals to use as a threshold.
+        n_exposed (int): Total number of exposed individuals.
+
+    Returns:
+        int: The calculated or validated threshold.
+
+    Raises:
+        ValueError: If both `proportion_threshold` and `n_threshold` are specified, or if any input
+                    is invalid (e.g., types or ranges).
+    """
+    if proportion_threshold and n_threshold:
+        raise ValueError("'n_threshold' and 'proportion_threshold' cannot be specified at the same time.")
+    if proportion_threshold is not None:
+        if not isinstance(proportion_threshold, float):
+            raise ValueError("The 'proportion_threshold' must be a floating-point number.")
+        if not (0 < proportion_threshold <= 1):
+            raise ValueError("'proportion_threshold' must be between 0 and 1.")
+        return int(n_exposed * proportion_threshold)
+    elif n_threshold is not None:
+        if not isinstance(n_threshold, int):
+            raise ValueError("The 'n_threshold' must be an integer.")
+        if not (0 <= n_threshold <= n_exposed):
+            raise ValueError("'n_threshold' must be a non-negative integer less than or equal to the number of exposed individuals.")
+        return n_threshold
+    else:
+        raise ValueError("Either 'n_threshold' or 'proportion_threshold' must be specified.")
+
+def validate_n_cpus(n_cpus,analysis_name):
+    """
+    Validates the number of CPUs specified for analysis.
+
+    Parameters:
+        n_cpus (int): The number of CPUs to use.
+
+    Returns:
+        None
+
+    Side Effects:
+        Prints a message about the CPU usage for the analysis.
+
+    Raises:
+        ValueError: If `n_cpus` is not a positive integer.
+    """
+    if not isinstance(n_cpus, int):
+        raise ValueError("The 'n_cpus' must be an integer.")
+    if n_cpus == 1:
+        print('Multi-threading is not used.')
+    elif n_cpus > 1:
+        print(f'Use {n_cpus} CPU cores for {analysis_name} analysis.')
+    else:
+        raise ValueError("The specified number of CPUs is not valid. Please enter a positive integer.")
+
+def validate_correction_method(correction, cutoff):
+    """
+    Validates the p-value correction method and its cutoff threshold.
+
+    Parameters:
+        correction (str): The p-value correction method to use.
+        cutoff (float): The cutoff threshold for significance.
+
+    Returns:
+        None
+
+    Raises:
+        ValueError: If `correction` is not a recognized method, or if `cutoff` is invalid.
+    """
+    methods_lst = ['bonferroni', 'sidak', 'holm-sidak', 'holm', 'simes-hochberg',
+                   'hommel', 'fdr_bh', 'fdr_by', 'fdr_tsbh', 'fdr_tsbky', 'none']
+    if not isinstance(correction, str):
+        raise ValueError("The 'correction' must be a string.")
+    if correction not in methods_lst:
+        raise ValueError(f"Choose from the following p-value correction methods: {methods_lst}")
+    if not isinstance(cutoff, float):
+        raise ValueError("The 'cutoff' must be a floating-point number.")
+    if not (0 < cutoff < 1):
+        raise ValueError("'cutoff' must be between 0 and 1, exclusive.")
 
 def log_file_detect(file_path):
     """
@@ -455,8 +537,114 @@ def log_file_detect(file_path):
     return file_path,f'log written to {file_path}'
 
 
+def filter_phecodes(phecode_info, system_inc=None, system_exl=None, phecode_inc=None, phecode_exl=None):
+    """
+    Filters a list of phecodes based on inclusion and exclusion criteria for systems and phecodes.
 
+    Parameters:
+        phecode_info (dict): Dictionary where keys are phecodes and values are dictionaries containing system information.
+        system_inc (list, optional): List of systems to include.
+        system_exl (list, optional): List of systems to exclude.
+        phecode_inc (list, optional): List of phecodes to include.
+        phecode_exl (list, optional): List of phecodes to exclude.
 
+    Returns:
+        list: Filtered list of phecodes.
+
+    Raises:
+        ValueError: If inclusion and exclusion parameters conflict or contain invalid values.
+    """
+    # Initialize the full list of phecodes
+    phecode_lst_all = list(phecode_info.keys())
+    system_all = set([phecode_info[x]['category'] for x in phecode_lst_all])
+
+    # Validate input criteria
+    if system_inc and system_exl:
+        raise ValueError("'system_inc' and 'system_exl' cannot both be specified.")
+    if phecode_inc and phecode_exl:
+        raise ValueError("'phecode_inc' and 'phecode_exl' cannot both be specified.")
+    if (system_inc or system_exl) and (phecode_inc or phecode_exl):
+        print('Warning: both phecode and system level filters applied may result in redundant or ambiguous outcomes.')
+
+    # Filter based on system inclusion
+    if system_inc:
+        if not isinstance(system_inc, list):
+            raise ValueError("The 'system_inc' must be a list.")
+        if len(system_inc) == 0:
+            raise ValueError("The 'system_inc' list is empty.")
+        system_unidentified = [x for x in system_inc if x not in system_all]
+        if system_unidentified:
+            raise ValueError(f"The following phecode systems from 'system_inc' are invalid: {system_unidentified}")
+        phecode_lst_all = [x for x in phecode_lst_all if phecode_info[x]['category'] in system_inc]
+
+    # Filter based on system exclusion
+    if system_exl:
+        if not isinstance(system_exl, list):
+            raise ValueError("The 'system_exl' must be a list.")
+        if len(system_exl) == 0:
+            raise ValueError("The 'system_exl' list is empty.")
+        system_unidentified = [x for x in system_exl if x not in system_all]
+        if system_unidentified:
+            raise ValueError(f"The following phecode systems from 'system_exl' are invalid: {system_unidentified}")
+        phecode_lst_all = [x for x in phecode_lst_all if phecode_info[x]['category'] not in system_exl]
+
+    # Filter based on phecode inclusion
+    if phecode_inc:
+        if not isinstance(phecode_inc, list):
+            raise ValueError("The 'phecode_inc' must be a list.")
+        if len(phecode_inc) == 0:
+            raise ValueError("The 'phecode_inc' list is empty.")
+        phecode_unidentified = [x for x in phecode_inc if x not in phecode_lst_all]
+        if phecode_unidentified:
+            raise ValueError(f"The following phecodes from 'phecode_inc' are invalid: {phecode_unidentified}")
+        phecode_lst_all = [x for x in phecode_lst_all if x in phecode_inc]
+
+    # Filter based on phecode exclusion
+    if phecode_exl:
+        if not isinstance(phecode_exl, list):
+            raise ValueError("The 'phecode_exl' must be a list.")
+        if len(phecode_exl) == 0:
+            raise ValueError("The 'phecode_exl' list is empty.")
+        phecode_unidentified = [x for x in phecode_exl if x not in phecode_lst_all]
+        if phecode_unidentified:
+            raise ValueError(f"The following phecodes from 'phecode_exl' are invalid: {phecode_unidentified}")
+        phecode_lst_all = [x for x in phecode_lst_all if x not in phecode_exl]
+
+    # Check if any phecodes remain
+    if not phecode_lst_all:
+        raise ValueError("No phecodes remain after applying filtering at the phecode and system levels.")
+
+    return phecode_lst_all
+
+def states_p_adjust(df,p_col,correction,cutoff,prefix_sig_col,prefix_padj_col):
+    """
+    Applies p-value adjustment for multiple comparisons and determines significance based on a cutoff.
+    
+    Parameters:
+        df (pd.DataFrame): The input DataFrame containing p-values.
+        p_col (str): Column name in `df` containing p-values to adjust.
+        correction (str): The method to use for p-value adjustment.
+        cutoff (float): The significance cutoff value for the adjusted p-values.
+        prefix_sig_col (str): Prefix for the new column indicating significance.
+        prefix_padj_col (str): Prefix for the new column containing adjusted p-values.
+    
+    Returns:
+        pd.DataFrame: The input DataFrame with added columns for adjusted p-values and significance.
+    
+    Raises:
+        ValueError: If the specified column does not exist or other parameter issues arise.
+    """
+    from statsmodels.stats.multitest import multipletests
+    
+    df_na = df[df[p_col].isna()]
+    df_nona = df[~df[p_col].isna()]
+    reject_, corrected_p, _, _ = multipletests(df_nona[p_col],method=correction,alpha=cutoff)
+    df_nona[f'{prefix_sig_col}_significance'] = reject_
+    df_nona[f'{prefix_padj_col}_adjusted'] = corrected_p
+    df_na[f'{prefix_sig_col}_significance'] = False
+    df_na[f'{prefix_padj_col}_adjusted'] = np.NaN
+    result = pd.concat([df_nona,df_na])
+    return result
 
 
 

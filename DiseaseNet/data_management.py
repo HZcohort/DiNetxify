@@ -9,7 +9,7 @@ import pandas as pd
 import numpy as np
 import os
 from datetime import datetime
-from .utility import convert_column, phenotype_required_columns, diff_date_years, read_check_csv
+from .utility import convert_column, phenotype_required_columns, read_check_csv
 from .utility import medical_records_process, diagnosis_history_update
 
 import warnings
@@ -234,9 +234,9 @@ class DiseaseNetworkData:
             if self.__phenotype_statistics['n_single_group'] > 0:
                 self.__warning_phenotype.append(f"Warning: {self.__phenotype_statistics['n_single_group']} groups had only one individual")
                 print(self.__warning_phenotype[-1])
-            
-        self.phenotype_df['follow_up'] = diff_date_years(self.phenotype_df[[self.__index_date_col,self.__end_date_col]],
-                                                         self.__index_date_col,self.__end_date_col)
+        
+        self.phenotype_df['follow_up'] = (self.phenotype_df[self.__end_date_col] - self.phenotype_df[self.__index_date_col]).dt.days/365.25
+
         self.__phenotype_statistics['avg_follow_exposed'] = self.phenotype_df[self.phenotype_df[self.__exposure_col]==1]['follow_up'].mean()
         self.__phenotype_statistics['avg_follow_unexposed'] = self.phenotype_df[self.phenotype_df[self.__exposure_col]==0]['follow_up'].mean()
         self.__phenotype_statistics['n_neg_follow_exposed'] = len(self.phenotype_df[(self.phenotype_df[self.__exposure_col]==1) & 
@@ -423,6 +423,39 @@ class DiseaseNetworkData:
             return value
         else:
             raise ValueError(f"Attribute {attr_name} not found")
+    
+    def modify_phecode_level(self,phecode_level:int):
+        """
+        Modify the phecode level setting.
+        
+        Parameters
+        ----------
+        phecode_level : int
+            The level of phecode to use for analysis, where level 1 (with a total of 585 medical conditions) corresponds to 3-digit ICD-10 codes and level 2 (a total of 1257 medical conditions) to 4-digit ICD-10 codes. 
+            Level 2 phecodes offer a more granular analysis with potentially smaller sample sizes per disease category. 
+            For larger studies, level 2 phecodes may enhance result interpretation. 
+            For smaller studies, level 1 is recommended to maintain statistical power.
+
+        Returns
+        -------
+        None.
+            This function modifies the object's main data attribute in-place.
+        """
+        if self.trajectory is not None:
+            ValueError("Trajectory data already exists; therefore, the phecode level cannot be modified.")
+        
+        if phecode_level not in self.__phecode_level_options:
+            raise ValueError(f"Choose from the following phecode level {self.__phecode_level_options}")
+        
+        if phecode_level == self.phecode_level:
+            raise ValueError("No modification needed.")
+        else:
+            self.phecode_level = phecode_level
+            #load necessary phecode files
+            phecode_info_npyfile = os.path.join(self.__module_dir,f'data/phecode_{self.phecode_version}/level{self.phecode_level}_info.npy')
+            self.phecode_info = np.load(phecode_info_npyfile,allow_pickle=True).item()
+            print(f'Phecode level set to {self.phecode_level} now.')
+            
 
     def load(self, file:str, force:bool=False):
         """

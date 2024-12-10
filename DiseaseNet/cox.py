@@ -10,13 +10,34 @@ import pandas as pd
 import numpy as np
 import time
 from .data_management import DiseaseNetworkData
-from lifelines import CoxPHFitter
 from statsmodels.duration.hazard_regression import PHReg
-cph = CoxPHFitter()
 import warnings
 warnings.filterwarnings('ignore')
 
-def cox_conditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,sex_adjustment:bool,log_file:str):
+def write_log(log_file, message, retries=50, delay=0.1):
+    """
+    Writes a log message to a file with a retry mechanism for simplicity.
+    
+    Args:
+        log_file (str): Path to the log file.
+        message (str): Log message to write to the file.
+        retries (int): Number of retries in case of a file access conflict.
+        delay (float): Delay in seconds between retries.
+    """
+    for attempt in range(retries):
+        try:
+            with open(log_file, 'ab') as f:
+                f.write(message.encode())
+            return
+        except PermissionError:
+            if attempt < retries - 1:
+                time.sleep(delay)
+            else:
+                raise PermissionError(f"Failed to write to {log_file} after {retries} retries.")
+
+
+def cox_conditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,
+                    sex_adjustment:bool,log_file:str,lifelines_disable:bool):
     """
     Perfoming Cox conditional analysis based on the provided DiseaseNetworkData object.
 
@@ -37,6 +58,10 @@ def cox_conditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,sex_ad
     
     log_file : str
         Path and prefix for the log file.
+    
+    lifelines_disable : bool
+        Whether to disable the use of lifelines. 
+        While lifelines generally require a longer fitting time, they are more resilient to violations of model assumptions.
 
     Returns:
     ----------
@@ -44,6 +69,13 @@ def cox_conditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,sex_ad
         A list of the Cox analysis results.
 
     """
+    
+    if lifelines_disable:
+        cph = None
+    else:
+        from lifelines import CoxPHFitter
+        cph = CoxPHFitter()
+    
     #phecode information
     phecode_dict = data.phecode_info[phecode]
     disease_name = phecode_dict['phenotype']
@@ -119,10 +151,24 @@ def cox_conditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,sex_ad
                                                                 else row[exl_flag_col],axis=1)
     #exclude eligible individuals
     dataset_analysis = dataset_analysis.loc[dataset_analysis[exl_flag_col]==0]
+    
+    #check number
     if len(dataset_analysis) == 0:
-        result += [0,'Sex specific']
-        with open(log_file,'ab') as f:
-            f.write(f'No individuals remaining after filtering for phecode {phecode}\n'.encode())
+        result += [0,'Sex specific potentially']
+        write_log(log_file,f'No individuals remaining after filtering for phecode {phecode}\n')
+        return result
+    
+    #check number
+    number_exposed = len(dataset_analysis[dataset_analysis[exp_col]==1])
+    number_unexposed = len(dataset_analysis[dataset_analysis[exp_col]==0])
+    if number_exposed == 0:
+        result += [0,'Disease specific (zero exposed)']
+        write_log(log_file,f'No exposed individuals remaining after filtering for phecode {phecode}\n')
+        return result
+    
+    if number_unexposed == 0:
+        result += [0,'Disease specific (zero unexposed)']
+        write_log(log_file,f'No unexposed individuals remaining after filtering for phecode {phecode}\n')
         return result
     
     #define diagnosis time and outcome
@@ -155,9 +201,11 @@ def cox_conditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,sex_ad
     if length < n_threshold:
         result += ['less than threshold','%i/%.2f (%.2f)' % (n_exp,time_exp,n_exp/time_exp),
                 '%i/%.2f (%.2f)' % (n_unexp,time_unexp,n_unexp/time_unexp)]
-        with open(log_file,'ab') as f:
-            f.write(f'Number of cases less than threshold for phecode {phecode}\n'.encode())
+        write_log(log_file,f'Number of cases less than threshold for phecode {phecode}\n')
         return result
+    
+    #exclude those with negative time
+    dataset_analysis = dataset_analysis[dataset_analysis[time_col]>0]
     
     #restricted to groups with at least one case
     match_id = dataset_analysis[dataset_analysis[outcome_col]==1][matching_col].to_list()
@@ -167,8 +215,10 @@ def cox_conditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,sex_ad
     if sex_adjustment:
         covars += [sex_col]
 
-    #error message none
-    e = None
+    #error message
+    e_stats = None
+    e_lifelines = None
+    error_message = None
     
     try:
         model = PHReg(np.asarray(dataset_analysis[time_col],dtype=np.float32),
@@ -177,6 +227,7 @@ def cox_conditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,sex_ad
                     strata=np.asarray(dataset_analysis[matching_col],dtype=np.int32))
         model_result = model.fit(method='bfgs',maxiter=300,disp=0)
         if pd.isna(model_result.params[0]) or pd.isna(model_result.bse[0]):
+            e_stats = 'No converge for statsmodels Cox'
             model = cph.fit(dataset_analysis[[time_col,outcome_col,exp_col,matching_col]+covars],
                             fit_options=dict(step_size=0.2), duration_col=time_col, event_col=outcome_col,strata=[matching_col])
             result_temp = model.summary.loc[exp_col]
@@ -187,7 +238,11 @@ def cox_conditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,sex_ad
             result += ['fitted','%i/%.2f (%.2f)' % (n_exp,time_exp,n_exp/time_exp),
                                 '%i/%.2f (%.2f)' % (n_unexp,time_unexp,n_unexp/time_unexp)]
             result += [model_result.params[0],model_result.bse[0],model_result.pvalues[0]]
-    except:
+    except Exception as e:
+        if e_stats:
+            e_lifelines = e
+        else:
+            e_stats = e
         try:
             model = cph.fit(dataset_analysis[[time_col,outcome_col,exp_col,matching_col]+covars],
                             fit_options=dict(step_size=0.2), duration_col=time_col, event_col=outcome_col,strata=[matching_col])
@@ -196,21 +251,28 @@ def cox_conditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,sex_ad
                         '%i/%.2f (%.2f)' % (n_unexp,time_unexp,n_unexp/time_unexp)]
             result += [x for x in result_temp[['coef','se(coef)','p']]]
         except Exception as e:
-            result += [e,'%i/%.2f (%.2f)' % (n_exp,time_exp,n_exp/time_exp),
+            if e_lifelines:
+                None
+            else:
+                e_lifelines = e
+            if lifelines_disable:
+                error_message = e_stats
+            else:
+                error_message = f'{e_stats} (statsmodels); {e_lifelines} (lifelines)'
+            result += [error_message,'%i/%.2f (%.2f)' % (n_exp,time_exp,n_exp/time_exp),
                         '%i/%.2f (%.2f)' % (n_unexp,time_unexp,n_unexp/time_unexp)]
     #print
     time_end = time.time()
     time_spend = time_end - time_start
-    if e:
-        with open(log_file,'ab') as f:
-            f.write(f'An error occurred during the Cox model fitting for phecode {phecode} (elapsed {time_spend:.2f}s)\n'.encode())
+    if error_message:
+        write_log(log_file,f'An error occurred during the Cox model fitting for phecode {phecode} (elapsed {time_spend:.2f}s)\n{error_message}\n')
     else:
-        with open(log_file,'ab') as f:
-            f.write(f'Cox model successfully fitted for phecode {phecode} (elapsed {time_spend:.2f}s)\n'.encode())
+        write_log(log_file,f'Cox model successfully fitted for phecode {phecode} (elapsed {time_spend:.2f}s)\n')
             
     return result
 
-def cox_unconditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,sex_adjustment:bool,log_file:str):
+def cox_unconditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,
+                      sex_adjustment:bool,log_file:str,lifelines_disable:bool):
     """
     Perfoming Cox unconditional analysis based on the provided DiseaseNetworkData object.
 
@@ -231,6 +293,9 @@ def cox_unconditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,sex_
     
     log_file : str
         Path and prefix for the log file where output will be written.
+    
+    lifelines_disable : bool
+        Whether to disable the use of lifelines. 
 
     Returns:
     ----------
@@ -238,6 +303,13 @@ def cox_unconditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,sex_
         A list of the Cox analysis results.
 
     """
+    
+    if lifelines_disable:
+        cph = None
+    else:
+        from lifelines import CoxPHFitter
+        cph = CoxPHFitter()
+    
     #phecode information
     phecode_dict = data.phecode_info[phecode]
     disease_name = phecode_dict['phenotype']
@@ -312,10 +384,23 @@ def cox_unconditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,sex_
                                                                 else row[exl_flag_col],axis=1)
     #exclude eligible individuals
     dataset_analysis = dataset_analysis.loc[dataset_analysis[exl_flag_col]==0]
+    
+    #check number
     if len(dataset_analysis) == 0:
-        result += [0,'Sex specific']
-        with open(log_file,'ab') as f:
-            f.write(f'No individuals remaining after filtering for phecode {phecode}\n'.encode())
+        result += [0,'Sex specific potentially']
+        write_log(log_file,f'No individuals remaining after filtering for phecode {phecode}\n')
+        return result
+    
+    #check number
+    number_exposed = len(dataset_analysis[dataset_analysis[exp_col]==1])
+    number_unexposed = len(dataset_analysis[dataset_analysis[exp_col]==0])
+    if number_exposed == 0:
+        result += [0,'Disease specific (zero exposed)']
+        write_log(log_file,f'No exposed individuals remaining after filtering for phecode {phecode}\n')
+        return result
+    if number_unexposed == 0:
+        result += [0,'Disease specific (zero unexposed)']
+        write_log(log_file,f'No unexposed individuals remaining after filtering for phecode {phecode}\n')
         return result
     
     #define diagnosis time and outcome
@@ -348,16 +433,20 @@ def cox_unconditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,sex_
     if length < n_threshold:
         result += ['less than threshold','%i/%.2f (%.2f)' % (n_exp,time_exp,n_exp/time_exp),
                 '%i/%.2f (%.2f)' % (n_unexp,time_unexp,n_unexp/time_unexp)]
-        with open(log_file,'ab') as f:
-            f.write(f'Number of cases less than threshold for phecode {phecode}\n'.encode())
+        write_log(log_file,f'Number of cases less than threshold for phecode {phecode}\n')
         return result
     
     #additionally include sex
     if sex_adjustment:
         covars += [sex_col]
+    
+    #exclude those with negative time
+    dataset_analysis = dataset_analysis[dataset_analysis[time_col]>0]
 
-    #error message none
-    e = None
+    #error message
+    e_stats = None
+    e_lifelines = None
+    error_message = None
     
     try:
         model = PHReg(np.asarray(dataset_analysis[time_col],dtype=np.float32),
@@ -365,6 +454,7 @@ def cox_unconditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,sex_
                     status=np.asarray(dataset_analysis[outcome_col],dtype=np.int32))
         model_result = model.fit(method='bfgs',maxiter=300,disp=0)
         if pd.isna(model_result.params[0]) or pd.isna(model_result.bse[0]):
+            e_stats = 'No converge for statsmodels Cox'
             model = cph.fit(dataset_analysis[[time_col,outcome_col,exp_col]+covars],
                             fit_options=dict(step_size=0.2), duration_col=time_col, event_col=outcome_col)
             result_temp = model.summary.loc[exp_col]
@@ -375,7 +465,11 @@ def cox_unconditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,sex_
             result += ['fitted','%i/%.2f (%.2f)' % (n_exp,time_exp,n_exp/time_exp),
                                 '%i/%.2f (%.2f)' % (n_unexp,time_unexp,n_unexp/time_unexp)]
             result += [model_result.params[0],model_result.bse[0],model_result.pvalues[0]]
-    except:
+    except Exception as e:
+        if e_stats:
+            e_lifelines = e
+        else:
+            e_stats = e
         try:
             model = cph.fit(dataset_analysis[[time_col,outcome_col,exp_col]+covars],
                             fit_options=dict(step_size=0.2), duration_col=time_col, event_col=outcome_col)
@@ -384,20 +478,25 @@ def cox_unconditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,sex_
                         '%i/%.2f (%.2f)' % (n_unexp,time_unexp,n_unexp/time_unexp)]
             result += [x for x in result_temp[['coef','se(coef)','p']]]
         except Exception as e:
-            result += [e,'%i/%.2f (%.2f)' % (n_exp,time_exp,n_exp/time_exp),
+            if e_lifelines:
+                None
+            else:
+                e_lifelines = e
+            if lifelines_disable:
+                error_message = e_stats
+            else:
+                error_message = f'{e_stats} (statsmodels); {e_lifelines} (lifelines)'
+            result += [error_message,'%i/%.2f (%.2f)' % (n_exp,time_exp,n_exp/time_exp),
                         '%i/%.2f (%.2f)' % (n_unexp,time_unexp,n_unexp/time_unexp)]
     #print
     time_end = time.time()
     time_spend = time_end - time_start
-    if e:
-        with open(log_file,'ab') as f:
-            f.write(f'An error occurred during the Cox model fitting for phecode {phecode} (elapsed {time_spend:.2f}s)\n'.encode())
+    if error_message:
+        write_log(log_file,f'An error occurred during the Cox model fitting for phecode {phecode} (elapsed {time_spend:.2f}s)\n{error_message}\n')
     else:
-        with open(log_file,'ab') as f:
-            f.write(f'Cox model successfully fitted for phecode {phecode} (elapsed {time_spend:.2f}s)\n'.encode())
+        write_log(log_file,f'Cox model successfully fitted for phecode {phecode} (elapsed {time_spend:.2f}s)\n')
             
     return result
-
 
     
     

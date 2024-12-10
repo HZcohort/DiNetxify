@@ -6,10 +6,11 @@ Created on Mon Jul 22 23:48:05 2024
 """
 
 from .data_management import DiseaseNetworkData
-from .analysis import phewas, phewas_multipletests
+from .analysis import phewas,phewas_multipletests
 #from .analysis import phewas, comorbidity_analysis, trajectory_analysis
 #from .regression import unconditional_logistic, conditional_logistic
 #from .visualization import create_3d_network
+
 
 """
 import DiseaseNet as dnt
@@ -69,8 +70,6 @@ dnt.create_3d_network(unconditional_logistic_result=uncond,conditional_logistic_
                       save_html='./3d.html')
 
 """
-
-
 
 
 
