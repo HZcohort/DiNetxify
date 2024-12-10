@@ -44,10 +44,11 @@ data.save('module_test\dep')
 #load
 data = dnt.DiseaseNetworkData(study_design='matched cohort',phecode_level=1,date_fmt='%Y-%m-%d')
 data.load('dep.npy')
+data.modify_phecode_level(2)
 
 #phewas
 phewas_result = dnt.phewas(data,n_threshold=200,n_cpus=5,system_inc=['digestive'],sex_adjustment=False,
-                           log_file='phewas.log')
+                           lifelines_disable=True,log_file='phewas.log')
 dnt.phewas_multipletests(phewas_result,adjustment='fdr_bh')
 
 #generate trajectory for only exposed group
