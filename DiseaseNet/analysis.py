@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Dec  5 19:48:09 2024
+Created on Thu Dec 5 19:48:09 2024
 
 @author: Can Hou - Biomedical Big data center of West China Hospital, Sichuan University
 """
@@ -11,13 +11,14 @@ import time
 from .data_management import DiseaseNetworkData
 from statsmodels.stats.multitest import multipletests
 from .cox import cox_conditional,cox_unconditional
+from .utility import log_file_detect
 
 import warnings
 warnings.filterwarnings('ignore')
 
-def phewas(data:DiseaseNetworkData, proportion_threshold:float=None, n_threshold:int=None, n_cpus:int=1, 
-           adjustment:str='bonferroni', cutoff:float=0.05, system_inc:list=None, system_exl:list=None, 
-           phecode_inc:list=None, phecode_exl:list=None) -> pd.DataFrame:
+def phewas(data:DiseaseNetworkData, sex_adjustment:bool=True, proportion_threshold:float=None, n_threshold:int=None, 
+           n_cpus:int=1, correction:str='bonferroni', cutoff:float=0.05, system_inc:list=None, system_exl:list=None, 
+           phecode_inc:list=None, phecode_exl:list=None, log_file:str=None) -> pd.DataFrame:
     """
     Conducts Phenome-wide association studies (PheWAS) using the specified DiseaseNetworkData object.
 
@@ -25,6 +26,11 @@ def phewas(data:DiseaseNetworkData, proportion_threshold:float=None, n_threshold
     ----------
     data : DiseaseNetworkData
         DiseaseNetworkData object.
+    
+    sex_adjustment : bool, default=True
+        Whether sex should be included as an additional covariate in the Cox model.
+        For example, for matched-cohort study where sex is one of the matching variables, it should not be included as a covariate.
+        For unmatched cohort study on the hand, sex is normally included as a covariate.
     
     proportion_threshold : float
         Minimum proportion of cases among the exposed group to include a phecode in the analysis. 
@@ -38,7 +44,7 @@ def phewas(data:DiseaseNetworkData, proportion_threshold:float=None, n_threshold
         Number of CPU cores to utilize for the analysis. 
         Multiprocessing is engaged if more than one core is specified.
 
-    adjustment : str, default='bonferroni'
+    correction : str, default='bonferroni'
         Method for p-value correction from the statsmodels.stats.multitest.multipletests.
         Available methods are:
         none : no correction
@@ -81,6 +87,10 @@ def phewas(data:DiseaseNetworkData, proportion_threshold:float=None, n_threshold
     phecode_exl : list, default=None
         Specific phecodes to exclude from the analysis. 
         phecode_inc and phecode_exl are mutually exclusive.
+    
+    log_file : str, default=None
+        Path and prefix for the text file where log will be recorded.
+        If None, the log will be written to the temporary files directory with file prefix of DiseaseNet_.
 
     Returns:
     ----------
@@ -126,11 +136,11 @@ def phewas(data:DiseaseNetworkData, proportion_threshold:float=None, n_threshold
         raise ValueError("The specified number of CPUs is not valid. Please enter a positive integer.")
     
     #check p-value correction method and cutoff
-    if not isinstance(adjustment,str):
+    if not isinstance(correction,str):
         raise ValueError("The 'adjustment' must be a string.")
     methods_lst = ['bonferroni','sidak', 'holm-sidak','holm','simes-hochberg',
                    'hommel','fdr_bh','fdr_by','fdr_tsbh','fdr_tsbky','none'] #list of available p-value correction method
-    if adjustment not in methods_lst:
+    if correction not in methods_lst:
         raise ValueError(f"Choose from the following p-value correction methods: {methods_lst}")
     if not isinstance(cutoff,float):
         raise ValueError("The 'cutoff' must be a floating-point number.")
@@ -184,29 +194,38 @@ def phewas(data:DiseaseNetworkData, proportion_threshold:float=None, n_threshold
         phecode_lst_all = [x for x in phecode_lst_all if x not in phecode_exl]
     if len(phecode_lst_all) == 0:
         raise ValueError("No phecodes remain after applying filtering at the phecode and system levels.")
-
+    
+    #check log files
+    log_file_final,message = log_file_detect(log_file)
+    print(message)
+    
+    time_start = time.time()
     #list of phecode
     result_all = []
     if data.study_design == 'matched cohort':
         if n_cpus == 1:
             for phecode in phecode_lst_all:
-                result_all.append(cox_conditional(data,n_threshold,phecode))
+                result_all.append(cox_conditional(data,n_threshold,phecode,sex_adjustment,log_file_final))
         elif n_cpus > 1:
             with multiprocessing.get_context('spawn').Pool(n_cpus) as p:
                 parameters_all = []
                 for phecode in phecode_lst_all:
-                    parameters_all.append([data,n_threshold,phecode])
+                    parameters_all.append([data,n_threshold,phecode,sex_adjustment,log_file_final])
                 result_all = p.starmap(cox_conditional, parameters_all)
     if data.study_design == 'cohort':
         if n_cpus == 1:
             for phecode in phecode_lst_all:
-                result_all.append(cox_unconditional(data,n_threshold,phecode))
+                result_all.append(cox_unconditional(data,n_threshold,phecode,sex_adjustment,log_file_final))
         elif n_cpus > 1:
             with multiprocessing.get_context('spawn').Pool(n_cpus) as p:
                 parameters_all = []
                 for phecode in phecode_lst_all:
-                    parameters_all.append([data,n_threshold,phecode])
+                    parameters_all.append([data,n_threshold,phecode,sex_adjustment,log_file_final])
                 result_all = p.starmap(cox_unconditional, parameters_all)    
+    
+    time_end = time.time()
+    time_spent = (time_end - time_start)/60
+    print(f'PheWAS analysis finished (elapsed {time_spent:.1f} mins)')
     
     #generate result dataframe
     max_columns = max([len(x) for x in result_all])
@@ -221,12 +240,12 @@ def phewas(data:DiseaseNetworkData, proportion_threshold:float=None, n_threshold
     
     #multiple adjustment
     phewas_df['p'] = pd.to_numeric(phewas_df['p'],errors='coerce')
-    if adjustment == 'none':
+    if correction == 'none':
         phewas_df['significance'] = phewas_df['p'].apply(lambda x: True if x<=cutoff else False)
     else:
         phewas_df_na = phewas_df[phewas_df['p'].isna()]
         phewas_df_nona = phewas_df[~phewas_df['p'].isna()]
-        reject_, corrected_p, _, _ = multipletests(phewas_df_nona['p'],method=adjustment,alpha=cutoff)
+        reject_, corrected_p, _, _ = multipletests(phewas_df_nona['p'],method=correction,alpha=cutoff)
         phewas_df_nona['significance'] = reject_
         phewas_df_nona['p_adjusted'] = corrected_p
         phewas_df_na['significance'] = False
@@ -235,7 +254,7 @@ def phewas(data:DiseaseNetworkData, proportion_threshold:float=None, n_threshold
     
     return phewas_df
 
-def phewas_multipletests(phewas_result:pd.DataFrame, adjustment:str='bonferroni', cutoff:float=0.05) -> pd.DataFrame:
+def phewas_multipletests(phewas_result:pd.DataFrame, correction:str='bonferroni', cutoff:float=0.05) -> pd.DataFrame:
     """
     Adjusts PheWAS p-values for multiple comparisons using specified correction methods.
 
@@ -244,7 +263,7 @@ def phewas_multipletests(phewas_result:pd.DataFrame, adjustment:str='bonferroni'
     phewas_result : pd.DataFrame
         DataFrame containing the results from the phewas function.
 
-    adjustment : str, default='bonferroni'
+    correction : str, default='bonferroni'
         Method for p-value correction from the statsmodels.stats.multitest.multipletests.
         Available methods are:
         bonferroni : one-step correction
@@ -273,11 +292,11 @@ def phewas_multipletests(phewas_result:pd.DataFrame, adjustment:str='bonferroni'
         raise ValueError("The provided input 'df' must be a pandas DataFrame.")
     
     #check p-value correction method and cutoff
-    if not isinstance(adjustment,str):
+    if not isinstance(correction,str):
         raise ValueError("The 'adjustment' parameter must be a string.")
     methods_lst = ['bonferroni','sidak', 'holm-sidak','holm','simes-hochberg',
                    'hommel','fdr_bh','fdr_by','fdr_tsbh','fdr_tsbky'] #list of available p-value correction method
-    if adjustment not in methods_lst:
+    if correction not in methods_lst:
         raise ValueError(f"Choose from the following p-value correction methods: {methods_lst}")
     if not isinstance(cutoff,float):
         raise ValueError("The 'cutoff' must be a floating-point number.")
@@ -292,7 +311,7 @@ def phewas_multipletests(phewas_result:pd.DataFrame, adjustment:str='bonferroni'
     phewas_result['p'] = pd.to_numeric(phewas_result['p'],errors='coerce')
     phewas_df_na = phewas_result[phewas_result['p'].isna()]
     phewas_df_nona = phewas_result[~phewas_result['p'].isna()]
-    reject_, corrected_p, _, _ = multipletests(phewas_df_nona['p'],method=adjustment,alpha=cutoff)
+    reject_, corrected_p, _, _ = multipletests(phewas_df_nona['p'],method=correction,alpha=cutoff)
     phewas_df_nona['significance'] = reject_
     phewas_df_nona['p_adjusted'] = corrected_p
     phewas_df_na['significance'] = False

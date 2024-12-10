@@ -417,6 +417,60 @@ def diagnosis_history_update(diagnosis_dict:dict, history_dict:dict, start_date_
     return n_invalid   
     
 
+def log_file_detect(file_path):
+    """
+    Try to get the log file path and test it.
+
+    Parameters
+    ----------
+    file_path : str
+        Input log file path or None. 
+    
+    Returns : str and a message
+    -------
+        The final log file path and message.
+
+    """
+    import tempfile
+    import os
+    
+    if not file_path:
+        characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        random_file_name = 'DiseaseNet_'+''.join(np.random.choice(list(characters),12))+'.log'
+        temp_folder_path = tempfile.gettempdir()
+        temp_file = os.path.join(temp_folder_path,random_file_name)
+        return temp_file,f'log written to {temp_file}'
+    else:
+        if not file_path.endswith('.log'):
+            file_path += '.log'
+        try:
+            with open(file_path,'wb') as f:
+                f.write(''.encode())
+        except:
+            characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+            random_file_name = 'DiseaseNet_'+''.join(np.random.choice(list(characters),12))+'.log'
+            temp_folder_path = tempfile.gettempdir()
+            temp_file = os.path.join(temp_folder_path,random_file_name)
+            return (temp_file, f'{file_path} does not exist or is not writable, log written to {temp_file}.')
+    return file_path,f'log written to {file_path}'
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

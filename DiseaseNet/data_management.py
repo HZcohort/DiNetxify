@@ -164,6 +164,10 @@ class DiseaseNetworkData:
         value_notin = [x for x in self.__phenotype_info['phenotype_col_dict'].keys() if x not in column_names.keys()]
         if len(value_notin) > 0:
             raise ValueError(f"{value_notin} not specified in the column_names dictionary")
+        #check duplicate columns
+        duplicate_cols = set(column_names.values()).intersection(set(covariates))
+        if len(duplicate_cols)>0:
+            raise ValueError(f"The column {duplicate_cols} is specified both as a required column and in the covariates.")
         #check other columns
         all_cols = list(column_names.values())+covariates
         date_cols = [column_names[x] for x in ['Index date','End date']]
@@ -409,7 +413,8 @@ class DiseaseNetworkData:
             'phenotype_info': self.__phenotype_info,
             'warning_medical_records': self.__warning_medical_records,
             'medical_records_statistics': self.__medical_recods_statistics,
-            'medical_records_info': self.__medical_recods_info
+            'medical_records_info': self.__medical_recods_info,
+            'module_dir':self.__module_dir
         }
         if attr_name in private_attrs:
             value = private_attrs[attr_name]
@@ -458,7 +463,8 @@ class DiseaseNetworkData:
             setattr(self, attr, data_dict.get(attr))
         # Restoring all private attributes from data_dict
         private_attrs = ['__warning_phenotype', '__phenotype_statistics', '__phenotype_info',
-                        '__warning_medical_records', '__medical_recods_statistics', '__medical_recods_info']
+                        '__warning_medical_records', '__medical_recods_statistics', '__medical_recods_info',
+                        '__module_dir']
         for attr in private_attrs:
             setattr(self, '_DiseaseNetworkData'+attr, data_dict.get(attr))
         print("All attributes restored.")
@@ -500,7 +506,8 @@ class DiseaseNetworkData:
                      '__phenotype_info': self.__phenotype_info,
                      '__warning_medical_records': self.__warning_medical_records,
                      '__medical_recods_statistics': self.__medical_recods_statistics,
-                     '__medical_recods_info': self.__medical_recods_info}
+                     '__medical_recods_info': self.__medical_recods_info,
+                     '__module_dir':self.__module_dir}
         #save it
         np.save(file,save_dict)
         print(f"Attributes save to {file}.npy")

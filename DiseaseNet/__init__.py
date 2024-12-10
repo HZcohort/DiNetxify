@@ -45,7 +45,8 @@ data = dnt.DiseaseNetworkData(study_design='matched cohort',phecode_level=1,date
 data.load('dep.npy')
 
 #phewas
-phewas_result = dnt.phewas(data,n_threshold=200,n_cpus=5,system_inc=['digestive'])
+phewas_result = dnt.phewas(data,n_threshold=200,n_cpus=5,system_inc=['digestive'],sex_adjustment=False,
+                           log_file='phewas.log')
 dnt.phewas_multipletests(phewas_result,adjustment='fdr_bh')
 
 #generate trajectory for only exposed group
