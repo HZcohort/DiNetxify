@@ -74,7 +74,7 @@ print(f"Explicit Loop Time: {time_explicit_loop:.6f}s")
 
 
 
-#phecode data prepare
+# %%phecode data prepare
 import pandas as pd
 import numpy as np
 
@@ -88,9 +88,59 @@ def level_number(n):
     else:
         return 9
 
-phecode_definition = pd.read_csv(r'C:/Users/Administrator/Desktop/data/phecode_1.2/phecode_info.csv')
+def get_d_lst(lower,upper):
+    """
+    Get all the possible phecodes between two provided phecodes
+    
+    Parameters
+    ----------
+    lower : float the smaller phecode
+    upper : float the larger phecode
+
+    Returns
+    -------
+    A list of phecodes.
+
+    """
+    if lower>=upper:
+        raise ValueError("The larger phecode is larger or equal to lower phecode.")
+    
+    n_step = int((upper - lower) / 0.01 + 1)
+    d_lst = np.linspace(lower, upper, n_step)
+
+    return d_lst
+
+def get_exclison_lst(exl_range_str):
+    """
+    Get a list of phecodes for exclision give the exclusion description string.
+
+    Parameters
+    ----------
+    exl_range_str : string
+        String of phecodes exclusion criteria.
+
+    Returns
+    -------
+    A set of phecodes
+
+    """
+    exl_list = []
+    if pd.isna(exl_range_str):
+        return exl_list
+    else:
+        for range_ in exl_range_str.split(','):
+            exl_lower,exl_higher = float(range_.split('-')[0]), float(range_.split('-')[1])
+            exl_list += list(get_d_lst(exl_lower,exl_higher))
+        exl_list = set(exl_list)
+    
+    return set(exl_list)
+
+
+
+phecode_definition = pd.read_csv(r'D:/我的坚果云/PPHD Project/Others/code/DiseaseNet_git/DiseaseNet/data/phecode_1.2/phecode_info.csv')
 phecode_definition['level'] = phecode_definition['phecode'].apply(lambda x: level_number(x))
 phecode_definition.fillna({'sex':'Both','category':'others'},inplace=True)
+all_phecode = set(phecode_definition['phecode'].to_list())
 
 #dict for level 1 list
 phecode_level1_lst = set([int(x) for x in phecode_definition['phecode'].values])
@@ -102,9 +152,21 @@ for i in phecode_definition_level1.index:
     phecode = phecode_definition_level1.loc[i,'phecode']
     for col in ['phenotype','phecode_exclude_range','sex','category','level']:
         temp_dict[col] = phecode_definition_level1.loc[i,col]
+    #list of level code
+    if temp_dict['level'] == 1:
+        leaf_lst = get_d_lst(phecode,round(phecode+0.99, 2))
+        leaf_lst = [x for x in leaf_lst if x in all_phecode]
+    elif temp_dict['level'] == 2:
+        leaf_lst = get_d_lst(phecode,round(phecode+0.09, 2))
+        leaf_lst = [x for x in leaf_lst if x in all_phecode]
+    temp_dict['leaf_list'] = set(leaf_lst)
+    #list of exclude phecode
+    exl_list = get_exclison_lst(temp_dict['phecode_exclude_range'])
+    exl_list = [x for x in exl_list if x in all_phecode]
+    temp_dict['exclude_list'] = set(exl_list)
     phecode_dict[phecode] = temp_dict
     
-np.save(r'C:/Users/Administrator/Desktop/data/phecode_1.2/level1_info.npy',phecode_dict)
+np.save(r'D:/我的坚果云/PPHD Project/Others/code/DiseaseNet_git/DiseaseNet/data/phecode_1.2/level1_info.npy',phecode_dict)
 
 
 #dict for level 2 list
@@ -119,11 +181,23 @@ for i in phecode_definition_level2.index:
     phecode = phecode_definition_level2.loc[i,'phecode']
     for col in ['phenotype','phecode_exclude_range','sex','category','level']:
         temp_dict[col] = phecode_definition_level2.loc[i,col]
+    #list of level code
+    if temp_dict['level'] == 1:
+        leaf_lst = get_d_lst(phecode,round(phecode+0.99, 2))
+        leaf_lst = [x for x in leaf_lst if x in all_phecode]
+    elif temp_dict['level'] == 2:
+        leaf_lst = get_d_lst(phecode,round(phecode+0.09, 2))
+        leaf_lst = [x for x in leaf_lst if x in all_phecode]
+    temp_dict['leaf_list'] = set(leaf_lst)
+    #list of exclude phecode
+    exl_list = get_exclison_lst(temp_dict['phecode_exclude_range'])
+    exl_list = [x for x in exl_list if x in all_phecode]
+    temp_dict['exclude_list'] = set(exl_list)
     phecode_dict[phecode] = temp_dict
-    
-np.save(r'C:/Users/Administrator/Desktop/data/phecode_1.2/level2_info.npy',phecode_dict)
 
-#mapping files
+np.save(r'D:/我的坚果云/PPHD Project/Others/code/DiseaseNet_git/DiseaseNet/data/phecode_1.2/level2_info.npy',phecode_dict)
+
+# %% mapping files
 def decimal_to_short(code):
     """
     Convert an ICD9 code from decimal format to short format.

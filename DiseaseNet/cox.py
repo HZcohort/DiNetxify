@@ -10,30 +10,10 @@ import pandas as pd
 import numpy as np
 import time
 from .data_management import DiseaseNetworkData
+from .utility import write_log
 from statsmodels.duration.hazard_regression import PHReg
 import warnings
 warnings.filterwarnings('ignore')
-
-def write_log(log_file, message, retries=50, delay=0.1):
-    """
-    Writes a log message to a file with a retry mechanism for simplicity.
-    
-    Args:
-        log_file (str): Path to the log file.
-        message (str): Log message to write to the file.
-        retries (int): Number of retries in case of a file access conflict.
-        delay (float): Delay in seconds between retries.
-    """
-    for attempt in range(retries):
-        try:
-            with open(log_file, 'ab') as f:
-                f.write(message.encode())
-            return
-        except PermissionError:
-            if attempt < retries - 1:
-                time.sleep(delay)
-            else:
-                raise PermissionError(f"Failed to write to {log_file} after {retries} retries.")
 
 
 def cox_conditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,
@@ -117,25 +97,16 @@ def cox_conditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,
     time_start = time.time()
     
     #outcome disease list
-    if level == 1:
-        range_upper = round(phecode+0.99, 2)
-    elif level == 2:
-        range_upper = round(phecode+0.09, 2)
-    n_step = int((range_upper - phecode) / 0.01 + 1)
-    d_lst = np.linspace(phecode, range_upper, n_step)
+    d_lst = phecode_dict['leaf_list']
     
     #df processing
     dataset_analysis = data.phenotype_df[covars+[id_col,index_date_col,end_date_col,exp_col,sex_col,matching_col]]
+    
     if pd.isna(exl_range):
         dataset_analysis[exl_flag_col] = 0
     else:
-        exl_list = []
-        for range_ in exl_range.split(','):
-            exl_lower,exl_higher = float(range_.split('-')[0]), float(range_.split('-')[1])
-            n_step = int((exl_higher - exl_lower) / 0.01 + 1)
-            exl_list += list(np.round(np.linspace(exl_lower,exl_higher,n_step),2))
-        exl_list = set(exl_list)
-        #start check
+        exl_list = phecode_dict['exclude_list']
+        #start check each individual eligibility
         exl_flag_lst = []
         for id_ in dataset_analysis[id_col].values:
             history_ = history[id_]
@@ -154,7 +125,7 @@ def cox_conditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,
     
     #check number
     if len(dataset_analysis) == 0:
-        result += [0,'Sex specific potentially']
+        result += [0,'Potentially sex specific']
         write_log(log_file,f'No individuals remaining after filtering for phecode {phecode}\n')
         return result
     
@@ -196,11 +167,12 @@ def cox_conditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,
     n_unexp = len(dataset_analysis.loc[(dataset_analysis[exp_col]==0) & (dataset_analysis[outcome_col]==1)])
     time_exp = dataset_analysis.groupby(by=exp_col)[time_col].sum().loc[1]/1000
     time_unexp = dataset_analysis.groupby(by=exp_col)[time_col].sum().loc[0]/1000
+    str_exp = '%i/%.2f (%.2f)' % (n_exp,time_exp,n_exp/time_exp)
+    str_noexp = '%i/%.2f (%.2f)' % (n_unexp,time_unexp,n_unexp/time_unexp)
     
     #return and save results if less than threshold
     if length < n_threshold:
-        result += ['less than threshold','%i/%.2f (%.2f)' % (n_exp,time_exp,n_exp/time_exp),
-                '%i/%.2f (%.2f)' % (n_unexp,time_unexp,n_unexp/time_unexp)]
+        result += ['less than threshold',str_exp,str_noexp]
         write_log(log_file,f'Number of cases less than threshold for phecode {phecode}\n')
         return result
     
@@ -231,12 +203,10 @@ def cox_conditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,
             model = cph.fit(dataset_analysis[[time_col,outcome_col,exp_col,matching_col]+covars],
                             fit_options=dict(step_size=0.2), duration_col=time_col, event_col=outcome_col,strata=[matching_col])
             result_temp = model.summary.loc[exp_col]
-            result += ['fitted_lifelines','%i/%.2f (%.2f)' % (n_exp,time_exp,n_exp/time_exp),
-                        '%i/%.2f (%.2f)' % (n_unexp,time_unexp,n_unexp/time_unexp)]
+            result += ['fitted_lifelines',str_exp,str_noexp]
             result += [x for x in result_temp[['coef','se(coef)','p']]]
         else:
-            result += ['fitted','%i/%.2f (%.2f)' % (n_exp,time_exp,n_exp/time_exp),
-                                '%i/%.2f (%.2f)' % (n_unexp,time_unexp,n_unexp/time_unexp)]
+            result += ['fitted',str_exp,str_noexp]
             result += [model_result.params[0],model_result.bse[0],model_result.pvalues[0]]
     except Exception as e:
         if e_stats:
@@ -247,8 +217,7 @@ def cox_conditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,
             model = cph.fit(dataset_analysis[[time_col,outcome_col,exp_col,matching_col]+covars],
                             fit_options=dict(step_size=0.2), duration_col=time_col, event_col=outcome_col,strata=[matching_col])
             result_temp = model.summary.loc[exp_col]
-            result += ['fitted_lifelines','%i/%.2f (%.2f)' % (n_exp,time_exp,n_exp/time_exp),
-                        '%i/%.2f (%.2f)' % (n_unexp,time_unexp,n_unexp/time_unexp)]
+            result += ['fitted_lifelines',str_exp,str_noexp]
             result += [x for x in result_temp[['coef','se(coef)','p']]]
         except Exception as e:
             if e_lifelines:
@@ -259,8 +228,7 @@ def cox_conditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,
                 error_message = e_stats
             else:
                 error_message = f'{e_stats} (statsmodels); {e_lifelines} (lifelines)'
-            result += [error_message,'%i/%.2f (%.2f)' % (n_exp,time_exp,n_exp/time_exp),
-                        '%i/%.2f (%.2f)' % (n_unexp,time_unexp,n_unexp/time_unexp)]
+            result += [error_message,str_exp,str_noexp]
     #print
     time_end = time.time()
     time_spend = time_end - time_start
@@ -350,24 +318,14 @@ def cox_unconditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,
     time_start = time.time()
     
     #outcome disease list
-    if level == 1:
-        range_upper = round(phecode+0.99, 2)
-    elif level == 2:
-        range_upper = round(phecode+0.09, 2)
-    n_step = int((range_upper - phecode) / 0.01 + 1)
-    d_lst = np.linspace(phecode, range_upper, n_step)
+    d_lst = phecode_dict['leaf_list']
     
     #df processing
     dataset_analysis = data.phenotype_df[covars+[id_col,index_date_col,end_date_col,exp_col,sex_col]]
     if pd.isna(exl_range):
         dataset_analysis[exl_flag_col] = 0
     else:
-        exl_list = []
-        for range_ in exl_range.split(','):
-            exl_lower,exl_higher = float(range_.split('-')[0]), float(range_.split('-')[1])
-            n_step = int((exl_higher - exl_lower) / 0.01 + 1)
-            exl_list += list(np.round(np.linspace(exl_lower,exl_higher,n_step),2))
-        exl_list = set(exl_list)
+        exl_list = phecode_dict['exclude_list']
         #start check
         exl_flag_lst = []
         for id_ in dataset_analysis[id_col].values:

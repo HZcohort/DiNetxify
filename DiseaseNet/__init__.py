@@ -49,10 +49,11 @@ data.modify_phecode_level(2)
 #phewas
 phewas_result = dnt.phewas(data,n_threshold=200,n_cpus=5,system_inc=['digestive'],sex_adjustment=False,
                            lifelines_disable=True,log_file='phewas.log')
-dnt.phewas_multipletests(phewas_result,adjustment='fdr_bh')
+phewas_result = dnt.phewas_multipletests(phewas_result,correction='fdr_bh')
 
-#generate trajectory for only exposed group
-full_data.trajectory(phewas_result=phewas_level1)
+#generate disease pairs for only exposed group
+data.disease_pair(phewas_result)
+data.save('module_test\dep_withtra') #save again new data
 
 #comorbidity strength estimation
 com = dnt.comorbidity_analysis(full_data,phewas_result=phewas_level1,n_cpus=10,adjustment='FDR')

@@ -249,7 +249,7 @@ def phenotype_required_columns(dataframe,col_dict:dict,date_fmt:str):
         if all(isinstance(x, (int, np.integer, float, np.floating)) and x in {0, 1} for x in unique_vals):
             None
         else:
-            raise ValueError("The exposure variable does not have 2 unique values")
+            raise TypeError("The exposure variable does not have 2 unique values")
     
     #prcess the sex column
     unique_vals = dataframe[sex_col].unique()
@@ -260,7 +260,7 @@ def phenotype_required_columns(dataframe,col_dict:dict,date_fmt:str):
         if all(isinstance(x, (int, np.integer, float, np.floating)) and x in {0, 1} for x in unique_vals):
             None
         else:
-            raise ValueError("The sex variable does not have 2 unique values")
+            raise TypeError("The sex variable does not have 2 unique values")
     
     
 def medical_records_process(medical_records:str,col_dict:dict,code_type:str,date_fmt:str,chunk_n,seperator,
@@ -436,13 +436,13 @@ def validate_threshold(proportion_threshold, n_threshold, n_exposed):
         raise ValueError("'n_threshold' and 'proportion_threshold' cannot be specified at the same time.")
     if proportion_threshold is not None:
         if not isinstance(proportion_threshold, float):
-            raise ValueError("The 'proportion_threshold' must be a floating-point number.")
+            raise TypeError("The 'proportion_threshold' must be a float.")
         if not (0 < proportion_threshold <= 1):
             raise ValueError("'proportion_threshold' must be between 0 and 1.")
         return int(n_exposed * proportion_threshold)
     elif n_threshold is not None:
         if not isinstance(n_threshold, int):
-            raise ValueError("The 'n_threshold' must be an integer.")
+            raise TypeError("The 'n_threshold' must be an int.")
         if not (0 <= n_threshold <= n_exposed):
             raise ValueError("'n_threshold' must be a non-negative integer less than or equal to the number of exposed individuals.")
         return n_threshold
@@ -466,7 +466,7 @@ def validate_n_cpus(n_cpus,analysis_name):
         ValueError: If `n_cpus` is not a positive integer.
     """
     if not isinstance(n_cpus, int):
-        raise ValueError("The 'n_cpus' must be an integer.")
+        raise TypeError("The 'n_cpus' must be an int.")
     if n_cpus == 1:
         print('Multi-threading is not used.')
     elif n_cpus > 1:
@@ -491,11 +491,11 @@ def validate_correction_method(correction, cutoff):
     methods_lst = ['bonferroni', 'sidak', 'holm-sidak', 'holm', 'simes-hochberg',
                    'hommel', 'fdr_bh', 'fdr_by', 'fdr_tsbh', 'fdr_tsbky', 'none']
     if not isinstance(correction, str):
-        raise ValueError("The 'correction' must be a string.")
+        raise TypeError("The 'correction' must be a string.")
     if correction not in methods_lst:
         raise ValueError(f"Choose from the following p-value correction methods: {methods_lst}")
     if not isinstance(cutoff, float):
-        raise ValueError("The 'cutoff' must be a floating-point number.")
+        raise TypeError("The 'cutoff' must be a float.")
     if not (0 < cutoff < 1):
         raise ValueError("'cutoff' must be between 0 and 1, exclusive.")
 
@@ -569,7 +569,7 @@ def filter_phecodes(phecode_info, system_inc=None, system_exl=None, phecode_inc=
     # Filter based on system inclusion
     if system_inc:
         if not isinstance(system_inc, list):
-            raise ValueError("The 'system_inc' must be a list.")
+            raise TypeError("The 'system_inc' must be a list.")
         if len(system_inc) == 0:
             raise ValueError("The 'system_inc' list is empty.")
         system_unidentified = [x for x in system_inc if x not in system_all]
@@ -580,7 +580,7 @@ def filter_phecodes(phecode_info, system_inc=None, system_exl=None, phecode_inc=
     # Filter based on system exclusion
     if system_exl:
         if not isinstance(system_exl, list):
-            raise ValueError("The 'system_exl' must be a list.")
+            raise TypeError("The 'system_exl' must be a list.")
         if len(system_exl) == 0:
             raise ValueError("The 'system_exl' list is empty.")
         system_unidentified = [x for x in system_exl if x not in system_all]
@@ -591,7 +591,7 @@ def filter_phecodes(phecode_info, system_inc=None, system_exl=None, phecode_inc=
     # Filter based on phecode inclusion
     if phecode_inc:
         if not isinstance(phecode_inc, list):
-            raise ValueError("The 'phecode_inc' must be a list.")
+            raise TypeError("The 'phecode_inc' must be a list.")
         if len(phecode_inc) == 0:
             raise ValueError("The 'phecode_inc' list is empty.")
         phecode_unidentified = [x for x in phecode_inc if x not in phecode_lst_all]
@@ -602,7 +602,7 @@ def filter_phecodes(phecode_info, system_inc=None, system_exl=None, phecode_inc=
     # Filter based on phecode exclusion
     if phecode_exl:
         if not isinstance(phecode_exl, list):
-            raise ValueError("The 'phecode_exl' must be a list.")
+            raise TypeError("The 'phecode_exl' must be a list.")
         if len(phecode_exl) == 0:
             raise ValueError("The 'phecode_exl' list is empty.")
         phecode_unidentified = [x for x in phecode_exl if x not in phecode_lst_all]
@@ -645,6 +645,146 @@ def states_p_adjust(df,p_col,correction,cutoff,prefix_sig_col,prefix_padj_col):
     df_na[f'{prefix_padj_col}_adjusted'] = np.NaN
     result = pd.concat([df_nona,df_na])
     return result
+
+def write_log(log_file, message, retries=50, delay=0.1):
+    import time
+    """
+    Writes a log message to a file with a retry mechanism for simplicity.
+    
+    Parameters
+    ----------
+        log_file (str): Path to the log file.
+        message (str): Log message to write to the file.
+        retries (int): Number of retries in case of a file access conflict.
+        delay (float): Delay in seconds between retries.
+    """
+    for attempt in range(retries):
+        try:
+            with open(log_file, 'ab') as f:
+                f.write(message.encode())
+            return
+        except PermissionError:
+            if attempt < retries - 1:
+                time.sleep(delay)
+            else:
+                raise PermissionError(f"Failed to write to {log_file} after {retries} retries.")
+
+def get_d_lst(lower,upper):
+    """
+    Get all the possible phecodes between two provided phecodes
+    
+    Parameters
+    ----------
+        lower : float the smaller phecode
+        upper : float the larger phecode
+
+    Returns
+    -------
+        A list of phecodes.
+
+    """
+    if lower>=upper:
+        raise ValueError("The larger phecode is larger or equal to lower phecode.")
+    
+    n_step = int((upper - lower) / 0.01 + 1)
+    d_lst = np.linspace(lower, upper, n_step)
+
+    return d_lst
+
+def get_exclison_lst(exl_range_str):
+    """
+    Get a list of phecodes for exclision give the exclusion description string.
+
+    Parameters
+    ----------
+    exl_range_str : string
+        String of phecodes exclusion criteria.
+
+    Returns
+    -------
+    A set of phecodes
+
+    """
+    exl_list = []
+    if pd.isna(exl_range_str):
+        return exl_list
+    else:
+        for range_ in exl_range_str.split(','):
+            exl_lower,exl_higher = float(range_.split('-')[0]), float(range_.split('-')[1])
+            exl_list += list(get_d_lst(exl_lower,exl_higher))
+        exl_list = set(exl_list)
+    
+    return set(exl_list)
+
+def d1d2_from_diagnosis_history(df:pd.DataFrame, id_col:str, sex_col:str, phecode_lst:list, history_dict:dict, diagnosis_dict:dict,
+                                phecode_info_dict:dict, time_interval_days:int) -> dict:
+    """
+    Construct d1->d2 disease pairs for each individual from a list of significant phecodes.
+    
+    Parameters
+    ----------
+        df : dataframe of phenotype data, contains at id and sex columns
+        id_col : id column in the df
+        sex_col : sex column in the df
+        phecode_lst : list of significant phecodes
+        history_dict : dictionary containing medical records history
+        diagnosis_dict : dictionary containing diagnosis and date
+        phecode_info_dict : phecode information
+        time_interval_days : time interval required for d1-d2 disease pair construction
+
+    Returns
+    -------
+        D1->D2 dictionary.
+    
+    """
+    sex_value_dict = {'Female':1,'Male':0}
+    trajectory_dict = {}
+    from itertools import combinations
+    
+    for id_,sex in df[[id_col,sex_col]].values:
+        temp_deligible_dict = {}
+        temp_dpair_lst = []
+        diagnosis_ = diagnosis_dict[id_]
+        history_ = history_dict[id_]
+        #generate eligible disease dictionary
+        for phecode in phecode_lst:
+            leaf_lst = phecode_info_dict[phecode]['leaf_list']
+            exl_lst = phecode_info_dict[phecode]['exclude_list']
+            sex_specific = phecode_info_dict[phecode]['sex']
+            if len(exl_lst.intersection(set(history_)))==0 and (sex_specific=='Both' or sex_value_dict[sex_specific]==sex):
+                try:
+                    date = min([diagnosis_[x] for x in leaf_lst if x in diagnosis_])
+                except:
+                    date = pd.NaT
+            temp_deligible_dict[phecode] = date
+        #generate disease pair dictionary
+        temp_deligible_dict_withdate = {i:j for i,j in temp_deligible_dict.items() if not pd.isna(j)}
+        if len(temp_deligible_dict_withdate) <= 1:
+            trajectory_dict[id_] = {'eligible_disease':temp_deligible_dict,
+                                    'd1d2_pair':temp_dpair_lst}
+        else:
+            for d1,d2 in combinations(temp_deligible_dict_withdate,2):
+                date1, date2 = temp_deligible_dict_withdate[d1], temp_deligible_dict_withdate[d2]
+                if abs((date1 - date2).days) <= time_interval_days:
+                    continue
+                if date1 > date2:
+                    temp_dpair_lst.append((d1,d2))
+                else:
+                    temp_dpair_lst.append((d2,d1))
+        #save for the individual
+        trajectory_dict[id_] = {'eligible_disease':temp_deligible_dict,
+                                'd1d2_pair':temp_dpair_lst}
+        
+    return trajectory_dict
+
+
+
+
+
+
+
+
+
 
 
 

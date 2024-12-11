@@ -74,6 +74,7 @@ def phewas(data:DiseaseNetworkData, sex_adjustment:bool=True, proportion_thresho
     system_exl : list, default=None
         List of phecode systems to exclude from the analysis. 
         system_inc and system_exl are mutually exclusive.
+        List of eligible phecode systems: 
         circulatory system; congenital anomalies; dermatologic; digestive; 
         endocrine/metabolic; genitourinary; hematopoietic; infectious diseases; injuries & poisonings; 
         mental disorders; musculoskeletal; neoplasms; neurological; pregnancy complications; 
@@ -104,17 +105,21 @@ def phewas(data:DiseaseNetworkData, sex_adjustment:bool=True, proportion_thresho
 
     #data type check
     if not isinstance(data,DiseaseNetworkData):
-        raise ValueError("Invalid 'data' type: expected a DiseaseNetworkData object.")
+        raise TypeError("The input 'data' must be a DiseaseNetworkData object.")
+    if not data.diagnosis or not data.history:
+        raise ValueError("No medical records data in DiseaseNetworkData object.")
+    if not isinstance(data.phenotype_df,pd.DataFrame):
+        raise TypeError("No phenotype data in DiseaseNetworkData object.")
     #retrieve phecode information
     phecode_info = data.phecode_info
     
     #check sex adjustment
     if not isinstance(sex_adjustment,bool):
-        raise ValueError("Invalid 'sex_adjustment' type: expected a bool object.")
+        raise TypeError("The input 'sex_adjustment' must be a bool.")
     
     #check lifelines_disable
     if not isinstance(lifelines_disable,bool):
-        raise ValueError("Invalid 'lifelines_disable' type: expected a bool object.")
+        raise TypeError("The input 'lifelines_disable' must be a bool.")
     
     #check threshold
     n_exposed = data.get_attribute('phenotype_statistics')['n_exposed']
@@ -211,7 +216,7 @@ def phewas_multipletests(phewas_result:pd.DataFrame, correction:str='bonferroni'
     """
     #data type check
     if not isinstance(phewas_result,pd.DataFrame):
-        raise ValueError("The provided input 'df' must be a pandas DataFrame.")
+        raise TypeError("The input 'phewas_result' must be a pandas DataFrame.")
     
     #check p-value correction method and cutoff
     validate_correction_method(correction,cutoff)

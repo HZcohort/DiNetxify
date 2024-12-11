@@ -10,7 +10,7 @@ import numpy as np
 import os
 from datetime import datetime
 from .utility import convert_column, phenotype_required_columns, read_check_csv
-from .utility import medical_records_process, diagnosis_history_update
+from .utility import medical_records_process, diagnosis_history_update, d1d2_from_diagnosis_history
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -101,7 +101,7 @@ class DiseaseNetworkData:
         self.__warning_medical_records = []
 
     
-    def phenotype_data(self, phenotype_data_path:str, column_names:dict, covariates:list):
+    def phenotype_data(self, phenotype_data_path:str, column_names:dict, covariates:list, force:bool=False):
         """
         
         Merges phenotype and medical records data into the main data attribute.
@@ -133,6 +133,10 @@ class DiseaseNetworkData:
             The system will automatically detect and convert variable types. 
             Individuals with missing values in continuous variables will be removed, 
             while those missing in categorical variables will be categorized separately.
+        
+        force : bool, default=False
+            If True, the data will be loaded and existing attributes will be overwritten, even if they contain data. 
+            The default is False, which will raise an error if data already exists.
 
         Returns:
         ----------
@@ -140,6 +144,12 @@ class DiseaseNetworkData:
             This function modifies the object's main data attribute in-place.
         
         """
+        if not force:
+            data_attrs = ['phenotype_df', 'diagnosis', 'history', 'trajectory']
+            for attr in data_attrs:
+                if getattr(self, attr) is not None:
+                    raise ValueError(f"Attribute '{attr}' is not empty. Use force=True to overwrite existing data.")
+        
         #reset some of the attributes
         #reset key dataset
         self.phenotype_df = None
@@ -156,6 +166,8 @@ class DiseaseNetworkData:
         self.__medical_recods_statistics = {}
         self.__medical_recods_info = {}
         self._medical_recods_info = {}
+        #attributes of phewas information
+        self.__significant_phecodes = None
 
         #check input
         #----------
@@ -252,8 +264,7 @@ class DiseaseNetworkData:
                               column_names:dict, date_fmt:str=None, chunksize:int=1000000):
         """
         Merge the loaded phenotype data with one more medical records data.
-        If you have multiple medical records data to merge (in most cases, with difference diagnosis code types), 
-        you can call this function multiple times.
+        If you have multiple medical records data to merge (e.g., with different diagnosis code types), you can call this function multiple times.
 
         Parameters
         ----------
@@ -294,6 +305,9 @@ class DiseaseNetworkData:
             This function modifies the object's main data attribute in-place.
 
         """
+        if not isinstance(self.phenotype_df,pd.DataFrame):
+            raise TypeError("Noy phenotype data in DiseaseNetworkData object.")
+        
         if len(self.__medical_recods_info) > 0:
              print(f'{len(self.__medical_recods_info)} medical records data already merged, merging with a new one.')
              self._medical_recods_info = {}
@@ -414,7 +428,8 @@ class DiseaseNetworkData:
             'warning_medical_records': self.__warning_medical_records,
             'medical_records_statistics': self.__medical_recods_statistics,
             'medical_records_info': self.__medical_recods_info,
-            'module_dir':self.__module_dir
+            'module_dir':self.__module_dir,
+            'significant_phecodes':self.__significant_phecodes
         }
         if attr_name in private_attrs:
             value = private_attrs[attr_name]
@@ -442,7 +457,7 @@ class DiseaseNetworkData:
             This function modifies the object's main data attribute in-place.
         """
         if self.trajectory is not None:
-            ValueError("Trajectory data already exists; therefore, the phecode level cannot be modified.")
+            raise ValueError("Disease pair data already exists; therefore, the phecode level cannot be modified.")
         
         if phecode_level not in self.__phecode_level_options:
             raise ValueError(f"Choose from the following phecode level {self.__phecode_level_options}")
@@ -452,10 +467,91 @@ class DiseaseNetworkData:
         else:
             self.phecode_level = phecode_level
             #load necessary phecode files
-            phecode_info_npyfile = os.path.join(self.__module_dir,f'data/phecode_{self.phecode_version}/level{self.phecode_level}_info.npy')
-            self.phecode_info = np.load(phecode_info_npyfile,allow_pickle=True).item()
+            self.__phecode_info_npyfile = os.path.join(self.__module_dir,f'data/phecode_{self.phecode_version}/level{self.phecode_level}_info.npy')
+            self.phecode_info = np.load(self.__phecode_info_npyfile,allow_pickle=True).item()
             print(f'Phecode level set to {self.phecode_level} now.')
-            
+    
+    def disease_pair(self, phewas_result:pd.DataFrame, phecode_col:str='phecode', significance_col:str='p_significance', 
+                     time_interval_days:int=0, force:bool=False):
+        """
+        Read PheWAS results from the dataframe generated by DiseaseNet.pheewas and get all phecodes with significant results. 
+        Then construct all possible D1->D2 disease pairs where D2 is diagnosed after D1 for each individual using these significant phecodes.
+        
+        Parameters
+        ----------
+        phewas_result : pd.DataFrame
+            PheWAS analysis results dataframe from DiseaseNet.pheewas function.
+        
+        phecode_col : str, default='phecode'
+            The column name in the dataframe indicating the phecode.
+        
+        significance_col : str, default='p_significance'
+            The column name in the dataframe indicating the significance of each phecode in PheWAS analysis.
+        
+        time_interval_days : int, default=0
+            Whether to set a minimal required time interval (in days) when constructing D1->D2 disease pairs.
+            D1->D2 pair that is diagnosed with time interval less than this value is considered ineligible.
+        
+        force : bool, default=False
+            If True, the data will be loaded and existing attributes will be overwritten, even if they contain data. 
+            The default is False, which will raise an error if data already exists.
+        
+        Returns
+        -------
+        None.
+            This function modifies the object's main data attribute in-place.
+
+        """
+        if not force:
+            data_attrs = ['trajectory']
+            for attr in data_attrs:
+                if getattr(self, attr) is not None:
+                    raise ValueError(f"Attribute '{attr}' is not empty. Use force=True to overwrite existing data.")
+        
+        #data check
+        if not isinstance(self.phenotype_df,pd.DataFrame):
+            raise TypeError("No phenotype data in DiseaseNetworkData object.")
+        if not self.diagnosis or not self.history:
+            raise ValueError("No medical records data in DiseaseNetworkData object.")
+
+        #check phewas result
+        if not isinstance(phewas_result,pd.DataFrame):
+            raise TypeError("The provided input 'phewas_result' must be a pandas DataFrame.")
+        
+        #check column existence
+        for col in [phecode_col,significance_col]:
+            if col not in phewas_result.columns:
+                raise ValueError(f"Column {col} not in 'phewas_result' DataFrame.")
+        
+        #check float
+        if not isinstance(time_interval_days, int):
+            raise TypeError("The provided input 'time_interval_years' must be a int")
+        if time_interval_days<0:
+            raise ValueError("The provided input 'time_lag_years' is not valide.")
+        
+        #get list of significant phecodes
+        significant_phecodes = phewas_result[phewas_result[significance_col]==True][phecode_col].to_list()
+        invalid_phecodes = [x for x in significant_phecodes if x not in self.phecode_info]
+        if len(invalid_phecodes)>0:
+            print(f'Warning: the following phecodes are invalid and ignored (possible phecode level disconcordance): {invalid_phecodes}')
+        valid_phecodes = [x for x in significant_phecodes if x in self.phecode_info]
+        if len(valid_phecodes) == 0:
+            raise ValueError("No significant phecodes from 'phewas_result' are found.")
+        if len(valid_phecodes) <= 10:
+            print(f'Warning: only {len(valid_phecodes)} significant phecodes are found.')
+        self.__significant_phecodes = valid_phecodes
+        
+        exp_col = self.__phenotype_info['phenotype_col_dict']['Exposure']
+        exposed_index = self.phenotype_df[self.phenotype_df[exp_col]==1].index
+
+        self.trajectory = d1d2_from_diagnosis_history(self.phenotype_df.loc[exposed_index],
+                                                      self.__phenotype_info['phenotype_col_dict']['Participant ID'],
+                                                      self.__phenotype_info['phenotype_col_dict']['Sex'],
+                                                      self.__significant_phecodes,
+                                                      self.history,
+                                                      self.diagnosis,
+                                                      self.phecode_info,
+                                                      time_interval_days)
 
     def load(self, file:str, force:bool=False):
         """
@@ -497,7 +593,7 @@ class DiseaseNetworkData:
         # Restoring all private attributes from data_dict
         private_attrs = ['__warning_phenotype', '__phenotype_statistics', '__phenotype_info',
                         '__warning_medical_records', '__medical_recods_statistics', '__medical_recods_info',
-                        '__module_dir']
+                        '__module_dir','__significant_phecodes']
         for attr in private_attrs:
             setattr(self, '_DiseaseNetworkData'+attr, data_dict.get(attr))
         print("All attributes restored.")
@@ -540,7 +636,8 @@ class DiseaseNetworkData:
                      '__warning_medical_records': self.__warning_medical_records,
                      '__medical_recods_statistics': self.__medical_recods_statistics,
                      '__medical_recods_info': self.__medical_recods_info,
-                     '__module_dir':self.__module_dir}
+                     '__module_dir':self.__module_dir,
+                     '__significant_phecodes':self.__significant_phecodes}
         #save it
         np.save(file,save_dict)
         print(f"Attributes save to {file}.npy")
