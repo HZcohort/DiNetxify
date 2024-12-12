@@ -6,7 +6,7 @@ Created on Mon Jul 22 23:48:05 2024
 """
 
 from .data_management import DiseaseNetworkData
-from .analysis import phewas,phewas_multipletests
+from .analysis import phewas,phewas_multipletests, comorbidity_strength, comorbidity_strength_multipletests
 #from .analysis import phewas, comorbidity_analysis, trajectory_analysis
 #from .regression import unconditional_logistic, conditional_logistic
 #from .visualization import create_3d_network
@@ -52,11 +52,13 @@ phewas_result = dnt.phewas(data,n_threshold=200,n_cpus=5,system_inc=['digestive'
 phewas_result = dnt.phewas_multipletests(phewas_result,correction='fdr_bh')
 
 #generate disease pairs for only exposed group
-data.disease_pair(phewas_result)
+data.disease_pair(phewas_result,min_interval_days=30,max_interval_days=365*5) #min_interval_days and max_interval_days added
 data.save('module_test\dep_withtra') #save again new data
 
 #comorbidity strength estimation
-com = dnt.comorbidity_analysis(full_data,phewas_result=phewas_level1,n_cpus=10,adjustment='FDR')
+com_strength_result = dnt.comorbidity_strength(data,proportion_threshold=0.001,n_cpus=5,
+                                               log_file='com.log')
+com_strength_result = dnt.comorbidity_strength_multipletests(com_strength_result,correction_phi='fdr_bh',correction_RR='fdr_bh')
 
 #trajectory analysis
 tra = dnt.trajectory_analysis(full_data,comorbidity_result=com,n_cpus=10,adjustment='FDR')
@@ -70,7 +72,6 @@ cond = dnt.conditional_logistic(full_data,trajectory_result=tra,n_cpus=10,adjust
 #3D visulization
 dnt.create_3d_network(unconditional_logistic_result=uncond,conditional_logistic_result=cond,
                       save_html='./3d.html')
-
 """
 
 

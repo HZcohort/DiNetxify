@@ -1,0 +1,155 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Dec 12 02:25:20 2024
+
+@author: Can Hou - Biomedical Big data center of West China Hospital, Sichuan University
+"""
+
+import pandas as pd
+import numpy as np
+from scipy.stats import t
+from .data_management import DiseaseNetworkData
+from .utility import write_log
+
+def com_rr(n:int,c:int,p1:int,p2:int):
+    """
+    Parameters
+    ----------
+    n : int
+        total number of individuals.
+    c : int
+        number of individuals with temporal/non-temporal d1 and d2 disease pair
+    p1 : int
+        number of individuals with d1 diagnosis.
+    p2 : int
+        number of individuals with d2 diagnosis.
+
+    Returns
+    -------
+        RR, RR_se and p-value
+
+    """
+    rr = (n*c)/(p1*p2)
+    theta = (1/c + 1/((p1*p2)/n) - 1/n - 1/n)**0.5
+    t_ = abs(np.log(rr)/theta)
+    p = (1-t.cdf(t_,n))*2
+    return rr,theta,p
+
+def com_phi(n:int,c:int,p1:int,p2:int):
+    """
+    Parameters
+    ----------
+    n : int
+        total number of individuals
+    c : int
+        number of individuals with temporal/non-temporal d1 and d2 disease pair
+    p1 : int
+        number of individuals with d1 diagnosis
+    p2 : int
+        number of individuals with d2 diagnosis
+
+    Returns
+    -------
+        phi and p-value
+
+    """
+    phi = (c*n-p1*p2)/(((p1*p2)*(n-p1)*(n-p2))**0.5)
+    z_phi = 0.5*np.log((1+phi)/(1-phi))
+    z_phi_theta = (1/(n-3))**0.5
+    z_phi_t = abs(z_phi/z_phi_theta)
+    p_phi = (1-t.cdf(z_phi_t,n))*2
+    return phi,z_phi_theta,p_phi
+    
+
+def com_phi_rr(trajectory:dict,d1:float,d2:float,message:str,n_threshold:int,log_file:str):
+    """
+    Estimate comorbidity strength for a disease pair using phi-correlation and RR.
+
+    Parameters:
+    ----------
+    trajectory : dictionary
+        DiseaseNetworkData.trajectory dictionary
+    
+    d1 : float
+        Disease 1
+
+    d2 : float
+        Disease 2
+
+    message : string
+        additional comment
+    
+    n_threshold : int
+        Number of individuals threshold
+    
+    log_file : str
+        Path and prefix for the log file
+    
+    Returns:
+    ----------
+    result : list
+        A list of the comorbidity strength estimation results
+
+    """
+    eligible_d_dict = trajectory['eligible_disease']
+    eligible_d_dict_withdate = {}
+    for id_,dict_ in eligible_d_dict.items():
+        temp_lst = []
+        for d,dt in dict_.items():
+            if not pd.isna(dt):
+                temp_lst.append(d)
+        eligible_d_dict_withdate[id_] = temp_lst
+    temporal_pair_dict = trajectory['d1d2_temporal_pair']
+    com_pair_dict = trajectory['d1d2_com_pair']
+    
+    #get number of individuals
+    N = len(eligible_d_dict) #total number of exposed individuals
+    n = sum([d1 in x and d2 in x for x in eligible_d_dict.values()]) #total number of sub-cohort
+    n_p1p2 = sum([d1 in x and d2 in x for x in eligible_d_dict_withdate.values()]) #number of individuals with both d1 and d2 diagnosis.
+    p1 = sum([d1 in x for x in eligible_d_dict_withdate.values()]) #number of individuals with d1 diagnosis.
+    p2 = sum([d2 in x for x in eligible_d_dict_withdate.values()]) #number of individuals with d2 diagnosis.
+    n_com = sum([{d1,d2} in x for x in com_pair_dict.values()]) #number of individuals with non-temporal d1-d2 disease pair
+    n_tra_d1_d2 = sum([(d1,d2) in x for x in temporal_pair_dict.values()]) #number of individuals with temporal d1->d2 disease pair
+    n_tra_d2_d1 = sum([(d2,d1) in x for x in temporal_pair_dict.values()]) #number of individuals with temporal d2->d1 disease pair
+    c = sum([n_com,n_tra_d1_d2,n_tra_d2_d1]) #number of individuals with temporal/non-temporal d1 and d2 disease pair
+    
+    if message:
+        write_log(log_file,f'{d1} and {d2}: {message}\n')
+        return [d1,d2,f'{d1}-{d2}',N,n,n_p1p2,p1,p2,c,message]
+    elif c<n_threshold:
+        write_log(log_file,f'{d1} and {d2}: Less than threshold of {n_threshold}\n')
+        return [d1,d2,f'{d1}-{d2}',N,n,n_p1p2,p1,p2,c,f'Less than threshold of {n_threshold}']
+    else:
+        phi,phi_theta,phi_p = com_phi(n,c,p1,p2)
+        rr,rr_theta,rr_p = com_rr(n,c,p1,p2)
+        write_log(log_file,f'{d1} and {d2}: Done\n')
+        return [d1,d2,f'{d1}-{d2}',N,n,n_p1p2,p1,p2,c,np.NaN,phi,phi_theta,phi_p,rr,rr_theta,rr_p]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

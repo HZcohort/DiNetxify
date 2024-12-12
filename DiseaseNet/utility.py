@@ -499,14 +499,17 @@ def validate_correction_method(correction, cutoff):
     if not (0 < cutoff < 1):
         raise ValueError("'cutoff' must be between 0 and 1, exclusive.")
 
-def log_file_detect(file_path):
+def log_file_detect(file_path,prefix):
     """
     Try to get the log file path and test it.
 
     Parameters
     ----------
     file_path : str
-        Input log file path or None. 
+        Input log file path or None.
+    
+    prefix : str
+        Prefix to be added except for the 12 randomly generated characters.
     
     Returns : str and a message
     -------
@@ -518,10 +521,10 @@ def log_file_detect(file_path):
     
     if not file_path:
         characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-        random_file_name = 'DiseaseNet_'+''.join(np.random.choice(list(characters),12))+'.log'
+        random_file_name = f'DiseaseNet_{prefix}_'+''.join(np.random.choice(list(characters),12))+'.log'
         temp_folder_path = tempfile.gettempdir()
         temp_file = os.path.join(temp_folder_path,random_file_name)
-        return temp_file,f'log written to {temp_file}'
+        return temp_file,f'Logging to {temp_file}'
     else:
         if not file_path.endswith('.log'):
             file_path += '.log'
@@ -530,11 +533,11 @@ def log_file_detect(file_path):
                 f.write(''.encode())
         except:
             characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-            random_file_name = 'DiseaseNet_'+''.join(np.random.choice(list(characters),12))+'.log'
+            random_file_name = f'DiseaseNet_{prefix}_'+''.join(np.random.choice(list(characters),12))+'.log'
             temp_folder_path = tempfile.gettempdir()
             temp_file = os.path.join(temp_folder_path,random_file_name)
-            return (temp_file, f'{file_path} does not exist or is not writable, log written to {temp_file}.')
-    return file_path,f'log written to {file_path}'
+            return (temp_file, f'{file_path} does not exist or is not writable, logging to {temp_file}.')
+    return file_path,f'Logging to {file_path}'
 
 
 def filter_phecodes(phecode_info, system_inc=None, system_exl=None, phecode_inc=None, phecode_exl=None):
@@ -646,7 +649,7 @@ def states_p_adjust(df,p_col,correction,cutoff,prefix_sig_col,prefix_padj_col):
     result = pd.concat([df_nona,df_na])
     return result
 
-def write_log(log_file, message, retries=50, delay=0.1):
+def write_log(log_file, message, retries=50, delay=0.001):
     import time
     """
     Writes a log message to a file with a retry mechanism for simplicity.
@@ -717,7 +720,7 @@ def get_exclison_lst(exl_range_str):
     return set(exl_list)
 
 def d1d2_from_diagnosis_history(df:pd.DataFrame, id_col:str, sex_col:str, phecode_lst:list, history_dict:dict, diagnosis_dict:dict,
-                                phecode_info_dict:dict, time_interval_days:int) -> dict:
+                                phecode_info_dict:dict, min_interval_days:int, max_interval_days:int) -> dict:
     """
     Construct d1->d2 disease pairs for each individual from a list of significant phecodes.
     
@@ -730,7 +733,8 @@ def d1d2_from_diagnosis_history(df:pd.DataFrame, id_col:str, sex_col:str, phecod
         history_dict : dictionary containing medical records history
         diagnosis_dict : dictionary containing diagnosis and date
         phecode_info_dict : phecode information
-        time_interval_days : time interval required for d1-d2 disease pair construction
+        min_interval_days : minimum interval required for d1-d2 disease pair construction
+        max_interval_days : maximum interval allowed for d1-d2 disease pair construction
 
     Returns
     -------
@@ -738,12 +742,16 @@ def d1d2_from_diagnosis_history(df:pd.DataFrame, id_col:str, sex_col:str, phecod
     
     """
     sex_value_dict = {'Female':1,'Male':0}
-    trajectory_dict = {}
+    eligible_disease_dict = {}
+    d1d2_temporl_pair_dict = {}
+    d1d2_com_pair_dict = {}
+    
     from itertools import combinations
     
     for id_,sex in df[[id_col,sex_col]].values:
         temp_deligible_dict = {}
-        temp_dpair_lst = []
+        temp_dpair_temporal_lst = []
+        temp_dpair_com_lst = []
         diagnosis_ = diagnosis_dict[id_]
         history_ = history_dict[id_]
         #generate eligible disease dictionary
@@ -756,31 +764,36 @@ def d1d2_from_diagnosis_history(df:pd.DataFrame, id_col:str, sex_col:str, phecod
                     date = min([diagnosis_[x] for x in leaf_lst if x in diagnosis_])
                 except:
                     date = pd.NaT
-            temp_deligible_dict[phecode] = date
+                temp_deligible_dict[phecode] = date
         #generate disease pair dictionary
         temp_deligible_dict_withdate = {i:j for i,j in temp_deligible_dict.items() if not pd.isna(j)}
         if len(temp_deligible_dict_withdate) <= 1:
-            trajectory_dict[id_] = {'eligible_disease':temp_deligible_dict,
-                                    'd1d2_pair':temp_dpair_lst}
+            eligible_disease_dict[id_] = temp_deligible_dict
+            d1d2_temporl_pair_dict[id_] = temp_dpair_temporal_lst
+            d1d2_com_pair_dict[id_] = temp_dpair_com_lst
         else:
             for d1,d2 in combinations(temp_deligible_dict_withdate,2):
                 date1, date2 = temp_deligible_dict_withdate[d1], temp_deligible_dict_withdate[d2]
-                if abs((date1 - date2).days) <= time_interval_days:
+                if abs((date1 - date2).days) > max_interval_days:
                     continue
-                if date1 > date2:
-                    temp_dpair_lst.append((d1,d2))
+                elif abs((date1 - date2).days) <= min_interval_days:
+                    temp_dpair_com_lst.append({d1,d2}) #order insensitive
+                    continue
                 else:
-                    temp_dpair_lst.append((d2,d1))
-        #save for the individual
-        trajectory_dict[id_] = {'eligible_disease':temp_deligible_dict,
-                                'd1d2_pair':temp_dpair_lst}
-        
+                    if date1 > date2:
+                        temp_dpair_temporal_lst.append((d2,d1))
+                    else:
+                        temp_dpair_temporal_lst.append((d1,d2))
+            #save for the individual
+            eligible_disease_dict[id_] = temp_deligible_dict
+            d1d2_temporl_pair_dict[id_] = temp_dpair_temporal_lst
+            d1d2_com_pair_dict[id_] = temp_dpair_com_lst
+    #final dictionary
+    trajectory_dict = {'eligible_disease':eligible_disease_dict,
+                       'd1d2_temporal_pair':d1d2_temporl_pair_dict,
+                       'd1d2_com_pair':d1d2_com_pair_dict}
+    
     return trajectory_dict
-
-
-
-
-
 
 
 

@@ -71,7 +71,7 @@ def cox_conditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,
     exl_range = phecode_dict['phecode_exclude_range']
     
     #result list
-    result = [phecode,disease_name,system]
+    result = [phecode,disease_name,system,sex_specific]
     
     #information about the dataframe
     info_dict = data.get_attribute('phenotype_info')
@@ -117,7 +117,7 @@ def cox_conditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,
         dataset_analysis[exl_flag_col] = exl_flag_lst
     
     #sex specific
-    if sex_code:
+    if sex_code is not None:
         dataset_analysis[exl_flag_col] = dataset_analysis.apply(lambda row: 1 if row[sex_col] != sex_code 
                                                                 else row[exl_flag_col],axis=1)
     #exclude eligible individuals
@@ -172,8 +172,8 @@ def cox_conditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,
     
     #return and save results if less than threshold
     if length < n_threshold:
-        result += ['less than threshold',str_exp,str_noexp]
-        write_log(log_file,f'Number of cases less than threshold for phecode {phecode}\n')
+        result += [f'Less than threshold of {n_threshold}',str_exp,str_noexp]
+        write_log(log_file,f'Number of cases {length} less than threshold {n_threshold} for phecode {phecode}\n')
         return result
     
     #exclude those with negative time
@@ -386,12 +386,13 @@ def cox_unconditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,
     n_unexp = len(dataset_analysis.loc[(dataset_analysis[exp_col]==0) & (dataset_analysis[outcome_col]==1)])
     time_exp = dataset_analysis.groupby(by=exp_col)[time_col].sum().loc[1]/1000
     time_unexp = dataset_analysis.groupby(by=exp_col)[time_col].sum().loc[0]/1000
+    str_exp = '%i/%.2f (%.2f)' % (n_exp,time_exp,n_exp/time_exp)
+    str_noexp = '%i/%.2f (%.2f)' % (n_unexp,time_unexp,n_unexp/time_unexp)
     
     #return and save results if less than threshold
     if length < n_threshold:
-        result += ['less than threshold','%i/%.2f (%.2f)' % (n_exp,time_exp,n_exp/time_exp),
-                '%i/%.2f (%.2f)' % (n_unexp,time_unexp,n_unexp/time_unexp)]
-        write_log(log_file,f'Number of cases less than threshold for phecode {phecode}\n')
+        result += [f'Less than threshold of {n_threshold}',str_exp,str_noexp]
+        write_log(log_file,f'Number of cases {length} less than threshold {n_threshold} for phecode {phecode}\n')
         return result
     
     #additionally include sex
@@ -416,12 +417,10 @@ def cox_unconditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,
             model = cph.fit(dataset_analysis[[time_col,outcome_col,exp_col]+covars],
                             fit_options=dict(step_size=0.2), duration_col=time_col, event_col=outcome_col)
             result_temp = model.summary.loc[exp_col]
-            result += ['fitted_lifelines','%i/%.2f (%.2f)' % (n_exp,time_exp,n_exp/time_exp),
-                        '%i/%.2f (%.2f)' % (n_unexp,time_unexp,n_unexp/time_unexp)]
+            result += ['fitted_lifelines',str_exp,str_noexp]
             result += [x for x in result_temp[['coef','se(coef)','p']]]
         else:
-            result += ['fitted','%i/%.2f (%.2f)' % (n_exp,time_exp,n_exp/time_exp),
-                                '%i/%.2f (%.2f)' % (n_unexp,time_unexp,n_unexp/time_unexp)]
+            result += ['fitted',str_exp,str_noexp]
             result += [model_result.params[0],model_result.bse[0],model_result.pvalues[0]]
     except Exception as e:
         if e_stats:
@@ -432,8 +431,7 @@ def cox_unconditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,
             model = cph.fit(dataset_analysis[[time_col,outcome_col,exp_col]+covars],
                             fit_options=dict(step_size=0.2), duration_col=time_col, event_col=outcome_col)
             result_temp = model.summary.loc[exp_col]
-            result += ['fitted_lifelines','%i/%.2f (%.2f)' % (n_exp,time_exp,n_exp/time_exp),
-                        '%i/%.2f (%.2f)' % (n_unexp,time_unexp,n_unexp/time_unexp)]
+            result += ['fitted_lifelines',str_exp,str_noexp]
             result += [x for x in result_temp[['coef','se(coef)','p']]]
         except Exception as e:
             if e_lifelines:
@@ -444,8 +442,7 @@ def cox_unconditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,
                 error_message = e_stats
             else:
                 error_message = f'{e_stats} (statsmodels); {e_lifelines} (lifelines)'
-            result += [error_message,'%i/%.2f (%.2f)' % (n_exp,time_exp,n_exp/time_exp),
-                        '%i/%.2f (%.2f)' % (n_unexp,time_unexp,n_unexp/time_unexp)]
+            result += [error_message,str_exp,str_noexp]
     #print
     time_end = time.time()
     time_spend = time_end - time_start
