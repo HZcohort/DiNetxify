@@ -72,6 +72,7 @@ cond = dnt.conditional_logistic(full_data,trajectory_result=tra,n_cpus=10,adjust
 #3D visulization
 dnt.create_3d_network(unconditional_logistic_result=uncond,conditional_logistic_result=cond,
                       save_html='./3d.html')
+test
 """
 
 
