@@ -263,7 +263,7 @@ class DiseaseNetworkData:
     def merge_medical_records(self, medical_records_data_path:str, diagnosis_code:str, 
                               column_names:dict, date_fmt:str=None, chunksize:int=1000000):
         """
-        Merge the loaded phenotype data with one more medical records data.
+        Merge the loaded phenotype data with one or more medical records data.
         If you have multiple medical records data to merge (e.g., with different diagnosis code types), you can call this function multiple times.
 
         Parameters
@@ -391,7 +391,6 @@ class DiseaseNetworkData:
         del self._phecode_dict #save memory
         self.__medical_recods_info[medical_records_data_path] = self._medical_recods_info
         print(f"Phecode diagnosis records successfully merged ({sum(self._medical_recods_info['n_invalid'].values()):,} invalid records were not merged, typically with diagnosis date later than date of follow-up end)\n")
-        print("To obtain more detailed information about the merged medical records data, please use the '.get_medical_records_info()' method on the instance of DiseaseNetworkData you created.")
         
         #generate basic statistics
         self.__medical_recods_statistics['n_merged_files'] = len(self.__medical_recods_info)

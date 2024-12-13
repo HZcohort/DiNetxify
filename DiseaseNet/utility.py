@@ -403,18 +403,23 @@ def diagnosis_history_update(diagnosis_dict:dict, history_dict:dict, start_date_
     n_invalid = {}
     for patient_id in phecode_dict:
         for phecode,date in phecode_dict[patient_id].items():
-            if date <= start_date_dict[patient_id]:
-                if phecode not in history_dict[patient_id]:
-                    history_dict[patient_id].append(phecode)
-            elif date > start_date_dict[patient_id] and date <= end_date_dict[patient_id]:
-                if phecode not in diagnosis_dict[patient_id] or date < diagnosis_dict[patient_id][phecode]:
-                    diagnosis_dict[patient_id][phecode] = date
-            else:
+            if date > end_date_dict[patient_id]:
                 try:
                     n_invalid[patient_id] += 1
                 except:
                     n_invalid[patient_id] = 1
-    return n_invalid   
+            elif date <= start_date_dict[patient_id]:
+                if phecode in diagnosis_dict[patient_id]:
+                    del diagnosis_dict[patient_id][phecode]
+                    history_dict[patient_id].append(phecode)
+                elif phecode not in history_dict[patient_id]:
+                    history_dict[patient_id].append(phecode)
+            elif date > start_date_dict[patient_id]:
+                if phecode in history_dict[patient_id]:
+                    continue
+                elif phecode not in diagnosis_dict[patient_id] or date < diagnosis_dict[patient_id][phecode]:
+                    diagnosis_dict[patient_id][phecode] = date
+    return n_invalid
     
 def validate_threshold(proportion_threshold, n_threshold, n_exposed):
     """
