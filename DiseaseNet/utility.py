@@ -186,7 +186,7 @@ def convert_column(dataframe, column:str):
         if df[new_column].isna().any():
             return pd.get_dummies(df[new_column], prefix=column, dummy_na=True, drop_first=True),'categorical'
         else:
-            return pd.get_dummies(df[new_column], prefix=column, drop_first=True),'categorical'
+            return pd.get_dummies(df[new_column], prefix=column, drop_first=True).astype('int'),'categorical'
 
 def phenotype_required_columns(dataframe,col_dict:dict,date_fmt:str):
     """
@@ -421,9 +421,9 @@ def diagnosis_history_update(diagnosis_dict:dict, history_dict:dict, start_date_
                     diagnosis_dict[patient_id][phecode] = date
     return n_invalid
     
-def validate_threshold(proportion_threshold, n_threshold, n_exposed):
+def threshold_check(proportion_threshold, n_threshold, n_exposed):
     """
-    Validates and determines the threshold for analysis based on either a proportion or an absolute count.
+    Checks and determines the threshold for analysis based on either a proportion or an absolute count.
 
     Parameters:
         proportion_threshold (float or None): Proportion of exposed individuals to use as a threshold.
@@ -431,10 +431,10 @@ def validate_threshold(proportion_threshold, n_threshold, n_exposed):
         n_exposed (int): Total number of exposed individuals.
 
     Returns:
-        int: The calculated or validated threshold.
+        int: The calculated or checked original threshold.
 
     Raises:
-        ValueError: If both `proportion_threshold` and `n_threshold` are specified, or if any input
+        ValueError: If both 'proportion_threshold' and 'n_threshold' are specified, or if any input
                     is invalid (e.g., types or ranges).
     """
     if proportion_threshold and n_threshold:
@@ -454,9 +454,9 @@ def validate_threshold(proportion_threshold, n_threshold, n_exposed):
     else:
         raise ValueError("Either 'n_threshold' or 'proportion_threshold' must be specified.")
 
-def validate_n_cpus(n_cpus,analysis_name):
+def n_cpus_check(n_cpus,analysis_name):
     """
-    Validates the number of CPUs specified for analysis.
+    Check the number of CPUs specified for analysis.
 
     Parameters:
         n_cpus (int): The number of CPUs to use.
@@ -468,7 +468,7 @@ def validate_n_cpus(n_cpus,analysis_name):
         Prints a message about the CPU usage for the analysis.
 
     Raises:
-        ValueError: If `n_cpus` is not a positive integer.
+        ValueError: If 'n_cpus' is not a positive integer.
     """
     if not isinstance(n_cpus, int):
         raise TypeError("The 'n_cpus' must be an int.")
@@ -479,9 +479,9 @@ def validate_n_cpus(n_cpus,analysis_name):
     else:
         raise ValueError("The specified number of CPUs is not valid. Please enter a positive integer.")
 
-def validate_correction_method(correction, cutoff):
+def correction_method_check(correction, cutoff):
     """
-    Validates the p-value correction method and its cutoff threshold.
+    Check the p-value correction method and its cutoff threshold.
 
     Parameters:
         correction (str): The p-value correction method to use.
@@ -491,7 +491,7 @@ def validate_correction_method(correction, cutoff):
         None
 
     Raises:
-        ValueError: If `correction` is not a recognized method, or if `cutoff` is invalid.
+        ValueError: If 'correction' is not a recognized method, or if 'cutoff' is invalid.
     """
     methods_lst = ['bonferroni', 'sidak', 'holm-sidak', 'holm', 'simes-hochberg',
                    'hommel', 'fdr_bh', 'fdr_by', 'fdr_tsbh', 'fdr_tsbky', 'none']
@@ -566,7 +566,7 @@ def filter_phecodes(phecode_info, system_inc=None, system_exl=None, phecode_inc=
     phecode_lst_all = list(phecode_info.keys())
     system_all = set([phecode_info[x]['category'] for x in phecode_lst_all])
 
-    # Validate input criteria
+    # check input criteria
     if system_inc and system_exl:
         raise ValueError("'system_inc' and 'system_exl' cannot both be specified.")
     if phecode_inc and phecode_exl:
@@ -630,7 +630,7 @@ def states_p_adjust(df,p_col,correction,cutoff,prefix_sig_col,prefix_padj_col):
     
     Parameters:
         df (pd.DataFrame): The input DataFrame containing p-values.
-        p_col (str): Column name in `df` containing p-values to adjust.
+        p_col (str): Column name in 'df' containing p-values to adjust.
         correction (str): The method to use for p-value adjustment.
         cutoff (float): The significance cutoff value for the adjusted p-values.
         prefix_sig_col (str): Prefix for the new column indicating significance.
@@ -801,22 +801,210 @@ def d1d2_from_diagnosis_history(df:pd.DataFrame, id_col:str, sex_col:str, phecod
     return trajectory_dict
 
 
+def check_kwargs_com_tra(method:str,comorbidity_strength_cols:list,binomial_test_result_cols,**kwargs):
+    """
+    Check the **kwargs from comorbidity_network function
+    
+    Parameters
+    ----------
+    method : str comorbidity network analysis method
+    comorbidity_strength_cols : list columns of comorbidity_strength_result dataframe
+    binomial_test_result_cols : TYPE columns of binomial_test_result dataframe
+    **kwargs : **kwargs from comorbidity_network function
 
+    Returns
+    -------
+    List of required parameters
 
+    """
+    # Default keyword arguments
+    default_kwargs = {
+        'phecode_d1_col': 'phecode_d1',
+        'phecode_d2_col': 'phecode_d2',
+        'significance_phi_col': 'phi_p_significance',
+        'significance_RR_col': 'RR_p_significance',
+        'significance_binomial_col': 'binomial_p_significance'
+    }
+    # Update default_kwargs with user-provided kwargs
+    column_kwargs = {k: kwargs.pop(k, v) for k, v in default_kwargs.items()}
+    # check that no unexpected keyword arguments are present for column definitions
+    allowed_column_kwargs = set(default_kwargs.keys())
+    extra_column_kwargs = set(kwargs.keys()) - set([
+        'alpha', 'auto_penalty','alpha_range', 'n_PC', 'explained_variance'
+    ])
+    invalid_column_kwargs = extra_column_kwargs - allowed_column_kwargs
+    if invalid_column_kwargs:
+        raise ValueError(f"Invalid keyword arguments: {invalid_column_kwargs}")
+    
+    # check that required columns exist in the DataFrames
+    required_columns_strength = [
+        column_kwargs['phecode_d1_col'],
+        column_kwargs['phecode_d2_col'],
+        column_kwargs['significance_phi_col'],
+        column_kwargs['significance_RR_col']
+    ]
+    required_columns_binomial = [
+        column_kwargs['phecode_d1_col'],
+        column_kwargs['phecode_d2_col'],
+        column_kwargs['significance_binomial_col']
+    ]
+    missing_columns_strength = [col for col in required_columns_strength if col not in comorbidity_strength_cols]
+    missing_columns_binomial = [col for col in required_columns_binomial if col not in binomial_test_result_cols]
+    if missing_columns_strength:
+        raise ValueError(f"The following required columns are missing in 'comorbidity_strength_result': {missing_columns_strength}")
+    if missing_columns_binomial:
+        raise ValueError(f"The following required columns are missing in 'binomial_test_result': {missing_columns_binomial}")
+    
+    alpha = None
+    auto_penalty = None
+    n_PC = None
+    explained_variance = None
+    
+    # Method-specific kwargs validation
+    if method == 'RPCN':
+        # RPCN-specific parameters
+        alpha = kwargs.pop('alpha', None)
+        auto_penalty = kwargs.pop('auto_penalty', True)
+        alpha_range = kwargs.pop('alpha_range',(1,15))
 
+        if not isinstance(auto_penalty, bool):
+            raise TypeError(f"'auto_penalty' should be a bool, got {type(auto_penalty).__name__}.")
 
+        if auto_penalty:
+            # If auto_penalty is True, alpha should not be provided
+            if 'alpha' in kwargs:
+                raise ValueError("When 'auto_penalty' is True, 'alpha' should not be provided.")
+            if not isinstance(alpha_range,tuple):
+                raise TypeError(f"'alpha_range' should be a tuple, got {type(alpha_range).__name__}.")
+            if len(alpha_range)>2 or alpha_range[1] <= alpha_range[0]:
+                raise ValueError("The range defined in 'alpha_range' is invalid.")
+            for alpha_value in alpha_range:
+                if not isinstance(alpha_value, int) or alpha_value<0:
+                    raise TypeError(f"Upper and lower bounds defined in 'alpha_range' should be int>=0, got {alpha_value}.")
+            parameter_dict = {'method':'RPCN','auto_penalty':True,'alpha':alpha, 'alpha_range':alpha_range}
+        else:
+            # If auto_penalty is False, alpha must be provided, while alpha_range shoud not be provided
+            if 'alpha_range' in kwargs:
+                raise ValueError("When 'auto_penalty' is False, 'alpha_range' should not be provided.")
+            if alpha is None:
+                raise ValueError("When 'auto_penalty' is False, 'alpha' must be provided.")
+            if not isinstance(alpha, (int, float)):
+                raise TypeError(f"'alpha' should be a scalar, got {type(alpha).__name__}.")
+            if alpha<0:
+                raise ValueError("'alpha' must be a positive scaler.")
+            elif alpha<=1:
+                print("Warning: The provided 'alpha' value is low. The optimal 'alpha' value is normally within the range of (1, 15].")
+            parameter_dict = {'method':'RPCN','auto_penalty':False,'alpha':alpha, 'alpha_range':alpha_range}
+            
+    elif method == 'PCN_PCA':
+        # PCN_PCA-specific parameters
+        n_PC = kwargs.pop('n_PC', 5)
+        explained_variance = kwargs.pop('explained_variance', None)
 
+        if explained_variance is not None:
+            if not isinstance(explained_variance, float):
+                raise TypeError(f"'explained_variance' should be a float, got {type(explained_variance).__name__}.")
+            if not (0 < explained_variance <= 1):
+                raise ValueError("'explained_variance' should be between 0 and 1.")
+            if 'n_PC' in kwargs:
+                raise ValueError("Cannot specify both 'n_PC' and 'explained_variance'. Please choose one.")
+            parameter_dict = {'method':'PCN_PCA','explained_variance':explained_variance}
+        else:
+            if not isinstance(n_PC, int):
+                raise TypeError(f"'n_PC' should be an integer, got {type(n_PC).__name__}.")
+            if n_PC <= 0:
+                raise ValueError("'n_PC' should be a positive integer.")
+            parameter_dict = {'method':'PCN_PCA','n_PC':n_PC}
 
+    elif method == 'CN':
+        # CN does not have method-specific parameters, ensure none are provided
+        method_specific_params = {'alpha', 'L1_wt', 'auto_penalty', 'n_PC', 'explained_variance'}
+        if any(param in kwargs for param in method_specific_params):
+            raise ValueError(f"No additional parameters are required for method '{method}'.")
+        parameter_dict = {'method':'CN'}
+    
+    # After method-specific validation, ensure no unexpected kwargs remain
+    if kwargs:
+        raise ValueError(f"Unexpected keyword arguments provided: {kwargs.keys()}")
+    
 
+    return [parameter_dict,column_kwargs['phecode_d1_col'],column_kwargs['phecode_d2_col'],
+            column_kwargs['significance_phi_col'],column_kwargs['significance_RR_col'],column_kwargs['significance_binomial_col']]
 
+def matching_var_check(matching_var_dict:dict,phenotype_info:dict):
+    """
+    Check the specified matching_var dictionary.
 
+    Parameters
+    ----------
+    matching_var_dict : dict, matching variable and matching criteria.
+    phenotype_info : dict, phenotype information from DiseaseNetwork data.
 
+    Returns
+    -------
+    None.
 
+    """
+    if not isinstance(matching_var_dict,dict):
+        raise TypeError(f"'matching_var_dict' should be a dictionary, got {type(matching_var_dict).__name__}.")
+    
+    if len(matching_var_dict) == 0:
+        raise ValueError("Empty 'matching_var_dict'. At least one matching variable is needed.")
+    
+    
+    for var,val in matching_var_dict.items():
+        if var not in phenotype_info['phenotype_covariates_type']:
+            raise ValueError(f'Unknown matching variable: {var}')
+        var_type = phenotype_info['phenotype_covariates_type'][var]
+        if var_type == 'categorical' and val != 'exact':
+            raise ValueError(f"Matching variable {var} is categorical, the matching criteria should always be 'exact', got {val}.")
+        if var_type == 'continuous':
+            if not isinstance(val, (int,float)) or val <= 0:
+                raise ValueError(f"Invalid matching criteria {val} for matching variable {var}.")
+                
 
+def covariates_check(covariates:list,phenotype_info:dict,matching_var_dict:dict=None):
+    """
+    Check whether the given list of covariates is valid and return the transformed covariates name.
+    If matching dictionary is given, also check whether there is any overlap with the matching variables.
+    
+    Parameters
+    ----------
+    covariates : list or None, list of covariates.
+    matching_dict : dict or None, dictionary of matching variables and criteria used
+    phenotype_info : dict, phenotype information from DiseaseNetwork data
 
+    Returns
+    -------
+    List of final covariates list.
 
-
-
+    """
+    sex_col = phenotype_info['phenotype_col_dict']['Sex']
+    all_possible_covars = [sex_col] + phenotype_info['phenotype_covariates_original']
+    if covariates is not None:
+        if not isinstance(covariates, list):
+            raise TypeError(f"'covariates' should be a list of strings, got {type(covariates).__name__}.")
+        invalid_vars = [x for x in covariates if x not in all_possible_covars]
+        if invalid_vars:
+            raise ValueError(f"Invalid covariates '{invalid_vars}'. Allowed covariates are: {all_possible_covars}.")
+    else:
+        if sex_col in matching_var_dict:
+            all_possible_covars.remove(sex_col)
+            covariates = all_possible_covars 
+        else:
+            covariates = all_possible_covars
+    #transform the covariates
+    var_rename_dict = phenotype_info['phenotype_covariates_converted']
+    covariates_final = [x for var in covariates for x in var_rename_dict.get(var,[var])]
+    
+    if matching_var_dict is None:
+        return covariates_final
+    else:
+        for var in matching_var_dict:
+            if var in covariates and phenotype_info['phenotype_covariates_type'][var]=='categorical':
+                raise ValueError(f'Categorical covariate {var} has already been used for matching.')
+        return covariates_final
+                
 
 
 

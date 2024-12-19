@@ -18,20 +18,13 @@ def binomial(d1:float,d2:float,n_com:int,n_d1d2:int,n_d2d1:int,enforce:bool,log_
 
     Parameters
     ----------
-    d1 : float
-        Disease 1
-    d2 : float
-        Disease 2
-    n_com : int
-        Number of individuals with non-temporal D1-D2
-    n_d1d2 : int
-        Number of individuals with temporal D1->D2
-    n_d2d1 : int
-        Number of individuals with temporal D2->D1
-    enforce : bool
-        If true, exclude those with non-temporal D1-D2
-    log_file : str
-        Path and prefix for the log file
+    d1 : float, Disease 1
+    d2 : float, Disease 2
+    n_com : int, Number of individuals with non-temporal D1-D2
+    n_d1d2 : int, Number of individuals with temporal D1->D2
+    n_d2d1 : int, Number of individuals with temporal D2->D1
+    enforce : bool, If true, exclude those with non-temporal D1-D2
+    log_file : str, Path and prefix for the log file
 
     Returns
     -------

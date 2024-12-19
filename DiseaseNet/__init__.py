@@ -7,7 +7,8 @@ Created on Mon Jul 22 23:48:05 2024
 
 from .data_management import DiseaseNetworkData
 from .analysis import phewas,phewas_multipletests, comorbidity_strength, comorbidity_strength_multipletests
-from .analysis import binomial_test, binomial_multipletests
+from .analysis import binomial_test, binomial_multipletests, comorbidity_network, comorbidity_multipletests
+from .analysis import disease_trajectory, trajectory_multipletests
 #from .analysis import phewas, comorbidity_analysis, trajectory_analysis
 #from .regression import unconditional_logistic, conditional_logistic
 #from .visualization import create_3d_network
@@ -50,6 +51,7 @@ data.modify_phecode_level(2)
 #phewas
 phewas_result = dnt.phewas(data,n_threshold=200,n_cpus=5,system_inc=['digestive'],sex_adjustment=False,
                            lifelines_disable=True,log_file='phewas.log')
+phewas_result = phewas_result[phewas_result['phewas_coef']>=0]
 phewas_result = dnt.phewas_multipletests(phewas_result,correction='fdr_bh')
 
 #generate disease pairs for only exposed group
@@ -59,18 +61,42 @@ data.save('module_test\dep_withtra') #save again new data
 #comorbidity strength estimation
 com_strength_result = dnt.comorbidity_strength(data,proportion_threshold=0.001,n_cpus=5,
                                                log_file='com.log')
+com_strength_result = com_strength_result[(com_strength_result['phi']>=0) & (com_strength_result['RR']>=1)] #further filtering as required
 com_strength_result = dnt.comorbidity_strength_multipletests(com_strength_result,correction_phi='fdr_bh',correction_RR='fdr_bh')
+
 
 #binomial test
 binomial_result = dnt.binomial_test(data, com_strength_result,n_cpus=1,enforce_temporal_order=True,
                                     log_file='com.log')
 binomial_result = dnt.binomial_multipletests(binomial_result,correction='fdr_bh')
 
-#comorbidity network analysis
-uncond = dnt.unconditional_logistic(full_data,comorbidity_result=com,n_cpus=10,adjustment='FDR',coe=0.1)
+#comorbidity network analysis - traditional method
+comorbidity_result = dnt.comorbidity_network(data, com_strength_result, binomial_result, n_cpus=6, method='CN',log_file='com.log')
+#comorbidity network analysis - partial correlation network method
+comorbidity_result = dnt.comorbidity_network(data, com_strength_result, binomial_result, n_cpus=6, method='RPCN',log_file='com.log')
+#comorbidity network analysis - new PCA method
+comorbidity_result = dnt.comorbidity_network(data, com_strength_result, binomial_result, n_cpus=6, method='PCN_PCA',n_PC=15,
+                                             log_file='com.log')
+comorbidity_result = dnt.comorbidity_multipletests(comorbidity_result,correction='fdr_bh')
 
-#trajectory analysis
-cond = dnt.conditional_logistic(full_data,trajectory_result=tra,n_cpus=10,adjustment='FDR',coe=0.1)
+#trajectory analysis  - traditional method
+trajectory_result = dnt.disease_trajectory(data, com_strength_result, binomial_result, method='CN',n_cpus=6,
+                                           matching_var_dict={'age':2,'sex':'exact'},matching_n=5,
+                                           covariates=['social','BMI','smoking','drinking'],
+                                           log_file='com.log')
+#trajectory analysis  - partial correlation network method
+trajectory_result = dnt.disease_trajectory(data, com_strength_result, binomial_result, method='RPCN',n_cpus=6,
+                                           matching_var_dict={'age':2,'sex':'exact'},matching_n=5,
+                                           covariates=['social','BMI','smoking','drinking'],
+                                           log_file='com.log')
+#trajectory analysis  - new PCA method
+trajectory_result = dnt.disease_trajectory(data, com_strength_result, binomial_result, method='PCN_PCA',n_PC=15,
+                                           n_cpus=6,matching_var_dict={'age':2,'sex':'exact'},matching_n=5,
+                                           covariates=['social','BMI','smoking','drinking'],
+                                           log_file='com.log')
+trajectory_result = dnt.trajectory_multipletests(trajectory_result,correction='fdr_bh')
+
+
 
 #3D visulization
 dnt.create_3d_network(unconditional_logistic_result=uncond,conditional_logistic_result=cond,

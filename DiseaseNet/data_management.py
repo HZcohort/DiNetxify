@@ -110,10 +110,10 @@ class DiseaseNetworkData:
         ----------
         phenotype_data_path : str
             The file path containing phenotype data in CSV or TSV format. 
-            The file must include a header row with columns such as Participant ID, sex, Index date, End date, Exposure, Matching identifier (if a matched cohort design), and other covariates like age and BMI.
+            The file must include a header row with column names.
                 
         column_names : dict
-            A dictionary mapping required column names to their corresponding identifiers in the dataset. 
+            A dictionary mapping required variable names to their corresponding identifiers in the dataset. 
             Expected keys include 'Participant ID', 'Index date', 'End date', 'Exposure', 'Sex', and 'Matching identifier' (if applicable). 
             For example:
             column_names={'Participant ID': 'eid',
@@ -122,17 +122,16 @@ class DiseaseNetworkData:
                           'Index date': 'index_date',
                           'End date': 'final_date',
                           'Matching identifier': 'group'}
-            The 'Exposure' column must be coded as 0 (unexposed) and 1 (exposed). 
-            The 'Sex' column must be coded as 1 (female) and 0 (male).
+            The 'Exposure' variable must be coded as 0 (unexposed) and 1 (exposed). 
+            The 'Sex' variable must be coded as 1 (female) and 0 (male).
             Dates must be formatted as '%Y-%m-%d' unless specified otherwise.
             Records with missing values in any required columns are not allowed.
         
         covariates : list
-            A list of column names representing additional covariates, such as ['age', 'BMI']. 
+            A list of variable names representing additional covariates, such as ['age', 'BMI']. 
             Provide an empty list if no additional covariates are included. 
-            The system will automatically detect and convert variable types. 
-            Individuals with missing values in continuous variables will be removed, 
-            while those missing in categorical variables will be categorized separately.
+            The function will automatically detect and convert variable types. 
+            Individuals with missing values in continuous variables will be removed, while those missing in categorical variables will be categorized separately.
         
         force : bool, default=False
             If True, the data will be loaded and existing attributes will be overwritten, even if they contain data. 
@@ -179,7 +178,7 @@ class DiseaseNetworkData:
         #check duplicate columns
         duplicate_cols = set(column_names.values()).intersection(set(covariates))
         if len(duplicate_cols)>0:
-            raise ValueError(f"The column {duplicate_cols} is specified both as a required column and in the covariates.")
+            raise ValueError(f"The variable {duplicate_cols} is specified both as a required variable and in the covariates.")
         #check other columns
         all_cols = list(column_names.values())+covariates
         date_cols = [column_names[x] for x in ['Index date','End date']]
@@ -200,7 +199,7 @@ class DiseaseNetworkData:
         #convert covariates
         self.__phenotype_info['phenotype_covariates_converted'] = {}
         self.__phenotype_info['phenotype_covariates_list'] = []
-        self.__phenotype_info['phenotype_covariates_type'] = {}
+        self.__phenotype_info['phenotype_covariates_type'] = {self.__sex_col:'categorical'}
         for var in self.__phenotype_info['phenotype_covariates_original']:
             converted_df,var_type = convert_column(phenotype_data_[[var]],var)
             self.__phenotype_info['phenotype_covariates_converted'][var] = list(converted_df.columns)
@@ -281,7 +280,7 @@ class DiseaseNetworkData:
             Format of ICD-9 codes: either decimal format (9.9) or non-decimal "short" format (0099).
         
         column_names : dict
-            Maps required column names to their corresponding identifiers in the medical records dataset. 
+            Maps required variable names to their corresponding identifiers in the medical records dataset. 
             Required keys include 'Participant ID', 'Diagnosis code', and 'Date of diagnosis'. 
             Example:
             column_names={'Participant ID': 'eid',
@@ -477,22 +476,15 @@ class DiseaseNetworkData:
             print(f'Phecode level set to {self.phecode_level} now.')
     
     
-    def disease_pair(self, phewas_result:pd.DataFrame, phecode_col:str='phecode', significance_col:str='phewas_p_significance', 
-                     min_interval_days:int=0, max_interval_days:int=np.inf, force:bool=False):
+    def disease_pair(self, phewas_result:pd.DataFrame, min_interval_days:int=0, max_interval_days:int=np.inf, force:bool=False, **kwargs):
         """
-        This function reads PheWAS results from a DataFrame generated by the `DiseaseNet.pheewas` method. 
+        This function reads PheWAS results from a DataFrame generated by the 'DiseaseNet.pheewas' method. 
         It filters for phecodes with significant associations and constructs all possible temporal (D1 → D2, where D2 is diagnosed after D1) and non-temporal disease pairs (D1 - D2) for each exposed individual, based on the identified significant phecodes.
         
         Parameters
         ----------
         phewas_result : pd.DataFrame
-            DataFrame containing PheWAS analysis results produced by the `DiseaseNet.pheewas` function.
-        
-        phecode_col : str, default='phecode'
-            Name of the column in `phewas_result` that specifies the phecode identifiers.
-        
-        significance_col : str, default='phewas_p_significance'
-            Name of the column in `phewas_result` that indicates the significance of each phecode in the PheWAS analysis.
+            DataFrame containing PheWAS analysis results produced by the 'DiseaseNet.pheewas' function.
         
         min_interval_days : int/float, default=0
             Minimum required time interval (in days) between diagnosis dates when constructing temporal D1 → D2 disease pair for each individual.
@@ -505,6 +497,13 @@ class DiseaseNetworkData:
         force : bool, default=False
             If True, the data will be loaded and existing attributes will be overwritten, even if they contain data. 
             The default is False, which will raise an error if data already exists.
+        
+        **kwargs
+            Additional keyword argument to define the required columns in 'phewas_result':
+                phecode_col : str, default='phecode'
+                    Name of the column in 'phewas_result' that specifies the phecode identifiers.
+                significance_col : str, default='phewas_p_significance'
+                    Name of the column in 'phewas_result' that indicates the significance of each phecode in the PheWAS analysis.
         
         Returns
         -------
@@ -528,8 +527,11 @@ class DiseaseNetworkData:
         if not isinstance(phewas_result,pd.DataFrame):
             raise TypeError("The provided input 'phewas_result' must be a pandas DataFrame.")
         
-        #check column existence
-        for col in [phecode_col,significance_col]:
+        # Default column names
+        phecode_col = kwargs.get('phecode_col', 'phecode')
+        significance_col = kwargs.get('significance_col', 'phewas_p_significance')
+        # Check column existence
+        for col in [phecode_col, significance_col]:
             if col not in phewas_result.columns:
                 raise ValueError(f"Column {col} not in 'phewas_result' DataFrame.")
         
@@ -572,7 +574,7 @@ class DiseaseNetworkData:
         """
         Load data from a .npy file and restore the attributes to this DiseaseNet.DiseaseNetworkData object. 
         This method is intended for restoring data to an empty object. 
-        If data is already present in any attribute and `force` is not set to True, an error will be raised to prevent accidental data overwrite.
+        If data is already present in any attribute and 'force' is not set to True, an error will be raised to prevent accidental data overwrite.
         
         Parameters
         ----------
@@ -659,7 +661,7 @@ class DiseaseNetworkData:
                      '__significant_phecodes':self.__significant_phecodes}
         #save it
         np.save(file,save_dict)
-        print(f"Attributes save to {file}.npy")
+        print(f"DiseaseNetworkData is saved to {file}.npy")
 
     def __str__(self):
         self.__print_string = 'DiseseNet.DiseaseNetworkData\n\n'

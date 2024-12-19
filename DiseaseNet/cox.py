@@ -17,7 +17,7 @@ warnings.filterwarnings('ignore')
 
 
 def cox_conditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,
-                    sex_adjustment:bool,log_file:str,lifelines_disable:bool):
+                    covariates:list,log_file:str,lifelines_disable:bool):
     """
     Perfoming Cox conditional analysis based on the provided DiseaseNetworkData object.
 
@@ -33,8 +33,8 @@ def cox_conditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,
     phecode : float
         The outcome phecode for running the Cox analysis.
     
-    sex_adjustment : bool
-        Whether sex should be included as an additional covariate in the Cox model.
+    covariates : list
+        List of covariates to be adjusted in the Cox model.
     
     log_file : str
         Path and prefix for the log file.
@@ -75,7 +75,6 @@ def cox_conditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,
     
     #information about the dataframe
     info_dict = data.get_attribute('phenotype_info')
-    covars = info_dict['phenotype_covariates_list']
     id_col = info_dict['phenotype_col_dict']['Participant ID']
     exp_col = info_dict['phenotype_col_dict']['Exposure']
     sex_col = info_dict['phenotype_col_dict']['Sex']
@@ -100,7 +99,7 @@ def cox_conditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,
     d_lst = phecode_dict['leaf_list']
     
     #df processing
-    dataset_analysis = data.phenotype_df[covars+[id_col,index_date_col,end_date_col,exp_col,sex_col,matching_col]]
+    dataset_analysis = data.phenotype_df[covariates+[id_col,index_date_col,end_date_col,exp_col,sex_col,matching_col]]
     
     if pd.isna(exl_range):
         dataset_analysis[exl_flag_col] = 0
@@ -183,9 +182,11 @@ def cox_conditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,
     match_id = dataset_analysis[dataset_analysis[outcome_col]==1][matching_col].to_list()
     dataset_analysis = dataset_analysis[dataset_analysis[matching_col].isin(match_id)]
     
-    #additionally include sex
-    if sex_adjustment:
-        covars += [sex_col]
+    #check var of covariates, remove these with var()==0
+    for var in covariates:
+        dataset_analysis[var] = dataset_analysis[var].astype(np.float32)
+        if dataset_analysis.groupby(by=matching_col)[var].var().mean() <= 0: #lowest var() allowed
+            covariates.remove(var)
 
     #error message
     e_stats = None
@@ -194,13 +195,13 @@ def cox_conditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,
     
     try:
         model = PHReg(np.asarray(dataset_analysis[time_col],dtype=np.float32),
-                    np.asarray(dataset_analysis[[exp_col]+covars],dtype=np.float32),
+                    np.asarray(dataset_analysis[[exp_col]+covariates],dtype=np.float32),
                     status=np.asarray(dataset_analysis[outcome_col],dtype=np.int32), 
                     strata=np.asarray(dataset_analysis[matching_col],dtype=np.int32))
         model_result = model.fit(method='bfgs',maxiter=300,disp=0)
         if pd.isna(model_result.params[0]) or pd.isna(model_result.bse[0]):
             e_stats = 'No converge for statsmodels Cox'
-            model = cph.fit(dataset_analysis[[time_col,outcome_col,exp_col,matching_col]+covars],
+            model = cph.fit(dataset_analysis[[time_col,outcome_col,exp_col,matching_col]+covariates],
                             fit_options=dict(step_size=0.2), duration_col=time_col, event_col=outcome_col,strata=[matching_col])
             result_temp = model.summary.loc[exp_col]
             result += ['fitted_lifelines',str_exp,str_noexp]
@@ -214,7 +215,7 @@ def cox_conditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,
         else:
             e_stats = e
         try:
-            model = cph.fit(dataset_analysis[[time_col,outcome_col,exp_col,matching_col]+covars],
+            model = cph.fit(dataset_analysis[[time_col,outcome_col,exp_col,matching_col]+covariates],
                             fit_options=dict(step_size=0.2), duration_col=time_col, event_col=outcome_col,strata=[matching_col])
             result_temp = model.summary.loc[exp_col]
             result += ['fitted_lifelines',str_exp,str_noexp]
@@ -240,7 +241,7 @@ def cox_conditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,
     return result
 
 def cox_unconditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,
-                      sex_adjustment:bool,log_file:str,lifelines_disable:bool):
+                      covariates:list,log_file:str,lifelines_disable:bool):
     """
     Perfoming Cox unconditional analysis based on the provided DiseaseNetworkData object.
 
@@ -256,8 +257,8 @@ def cox_unconditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,
     phecode : float
         The outcome phecode for running the Cox analysis.
     
-    sex_adjustment : bool
-        Whether sex should be included as an additional covariate in the Cox model.
+    covariates : list
+        List of covariates to be adjusted in the Cox model.
     
     log_file : str
         Path and prefix for the log file where output will be written.
@@ -297,7 +298,6 @@ def cox_unconditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,
     
     #information about the dataframe
     info_dict = data.get_attribute('phenotype_info')
-    covars = info_dict['phenotype_covariates_list']
     id_col = info_dict['phenotype_col_dict']['Participant ID']
     exp_col = info_dict['phenotype_col_dict']['Exposure']
     sex_col = info_dict['phenotype_col_dict']['Sex']
@@ -321,7 +321,7 @@ def cox_unconditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,
     d_lst = phecode_dict['leaf_list']
     
     #df processing
-    dataset_analysis = data.phenotype_df[covars+[id_col,index_date_col,end_date_col,exp_col,sex_col]]
+    dataset_analysis = data.phenotype_df[covariates+[id_col,index_date_col,end_date_col,exp_col,sex_col]]
     if pd.isna(exl_range):
         dataset_analysis[exl_flag_col] = 0
     else:
@@ -395,12 +395,13 @@ def cox_unconditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,
         write_log(log_file,f'Number of cases {length} less than threshold {n_threshold} for phecode {phecode}\n')
         return result
     
-    #additionally include sex
-    if sex_adjustment:
-        covars += [sex_col]
-    
     #exclude those with negative time
     dataset_analysis = dataset_analysis[dataset_analysis[time_col]>0]
+    
+    #check var of covariates, remove these with var()==0
+    for var in covariates:
+        if dataset_analysis[var].var() <= 0: #lowest var() allowed
+            covariates.remove(var)
 
     #error message
     e_stats = None
@@ -409,12 +410,12 @@ def cox_unconditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,
     
     try:
         model = PHReg(np.asarray(dataset_analysis[time_col],dtype=np.float32),
-                    np.asarray(dataset_analysis[[exp_col]+covars],dtype=np.float32),
+                    np.asarray(dataset_analysis[[exp_col]+covariates],dtype=np.float32),
                     status=np.asarray(dataset_analysis[outcome_col],dtype=np.int32))
         model_result = model.fit(method='bfgs',maxiter=300,disp=0)
         if pd.isna(model_result.params[0]) or pd.isna(model_result.bse[0]):
             e_stats = 'No converge for statsmodels Cox'
-            model = cph.fit(dataset_analysis[[time_col,outcome_col,exp_col]+covars],
+            model = cph.fit(dataset_analysis[[time_col,outcome_col,exp_col]+covariates],
                             fit_options=dict(step_size=0.2), duration_col=time_col, event_col=outcome_col)
             result_temp = model.summary.loc[exp_col]
             result += ['fitted_lifelines',str_exp,str_noexp]
@@ -428,7 +429,7 @@ def cox_unconditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,
         else:
             e_stats = e
         try:
-            model = cph.fit(dataset_analysis[[time_col,outcome_col,exp_col]+covars],
+            model = cph.fit(dataset_analysis[[time_col,outcome_col,exp_col]+covariates],
                             fit_options=dict(step_size=0.2), duration_col=time_col, event_col=outcome_col)
             result_temp = model.summary.loc[exp_col]
             result += ['fitted_lifelines',str_exp,str_noexp]
@@ -453,10 +454,9 @@ def cox_unconditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,
             
     return result
 
-    
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
