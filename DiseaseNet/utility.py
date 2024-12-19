@@ -830,7 +830,7 @@ def check_kwargs_com_tra(method:str,comorbidity_strength_cols:list,binomial_test
     # check that no unexpected keyword arguments are present for column definitions
     allowed_column_kwargs = set(default_kwargs.keys())
     extra_column_kwargs = set(kwargs.keys()) - set([
-        'alpha', 'auto_penalty','alpha_range', 'n_PC', 'explained_variance'
+        'alpha', 'auto_penalty','alpha_range', 'n_PC', 'explained_variance' ,'enforce_time_interval'
     ])
     invalid_column_kwargs = extra_column_kwargs - allowed_column_kwargs
     if invalid_column_kwargs:
@@ -854,7 +854,7 @@ def check_kwargs_com_tra(method:str,comorbidity_strength_cols:list,binomial_test
         raise ValueError(f"The following required columns are missing in 'comorbidity_strength_result': {missing_columns_strength}")
     if missing_columns_binomial:
         raise ValueError(f"The following required columns are missing in 'binomial_test_result': {missing_columns_binomial}")
-    
+        
     alpha = None
     auto_penalty = None
     n_PC = None
@@ -922,6 +922,12 @@ def check_kwargs_com_tra(method:str,comorbidity_strength_cols:list,binomial_test
         if any(param in kwargs for param in method_specific_params):
             raise ValueError(f"No additional parameters are required for method '{method}'.")
         parameter_dict = {'method':'CN'}
+    
+    #enforce parameter
+    enforce_time_interval = kwargs.pop('enforce_time_interval', True)
+    if not isinstance(enforce_time_interval, bool):
+        raise TypeError(f"'enforce_time_interval' should be a bool, got {type(enforce_time_interval).__name__}.")
+    parameter_dict.update({'enforce_time_interval':enforce_time_interval})
     
     # After method-specific validation, ensure no unexpected kwargs remain
     if kwargs:

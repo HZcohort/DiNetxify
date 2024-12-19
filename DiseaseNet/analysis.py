@@ -1106,6 +1106,11 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
         If None, the log will be written to the temporary files directory with file prefix of DiseaseNet_.
     
     **kwargs
+        Analysis option
+            enforce_time_interval : bool, default=True
+                If set to True, applies the specified minimum and maximum time intervals when determining the D2 outcome among individuals diagnosed with D1. 
+                These time interval requirements should be defined using the DiseaseNet.DiseaseNetworkData.disease_pair() function.
+    
         Additional keyword argument to define the required columns in 'comorbidity_strength_result' and 'binomial_test_result':
             phecode_d1_col : str, default='phecode_d1'
                 Name of the column in 'comorbidity_strength_result' and 'binomial_test_result' that specifies the phecode identifiers for disease 1 of the disease pair.
@@ -1120,7 +1125,7 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
 
         RPCN Method Parameters:
             alpha : non-negative scalar
-                The weight multiplying the l1 penalty term (default 1e-6) for other diseases covariates. 
+                The weight multiplying the l1 penalty term (fixed 1e-6) for other diseases covariates. 
                 Ignored if 'auto_penalty' is enabled.
             auto_penalty : bool, default=True
                 If 'True', automatically determines the best 'alpha' based on model AIC value.

@@ -46,6 +46,7 @@ def logistic_model(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,id_col,en
 
     """
     #method and parameters
+    enforce_time_interval = parameters['enforce_time_interval']
     method = parameters['method']
     if method == 'RPCN':
         #alpha_initial = [1, 10, 20, 30, 40, 50] #alpha starting value range if using auto_penalty
@@ -68,11 +69,12 @@ def logistic_model(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,id_col,en
     phenotype_df_exposed['d1'] = phenotype_df_exposed.apply(lambda row: 1 if row['d1_date']<row['outcome_date'] else 0, axis=1)
     phenotype_df_exposed['constant'] = 1 #not used in condtional model fitting
     
-    #for those with both d1 exposure and d2 outcome, need further verify (time interval requirement, as specified in trajectory)
-    d1_d2 = phenotype_df_exposed[(phenotype_df_exposed['d2']==1) & (phenotype_df_exposed['d1']==1)]
-    d1_d2_eid = [x for x in d1_d2[id_col].values if (d1,d2) not in trajectory_temporal[x]]
-    d1_d2_index = d1_d2[d1_d2[id_col].isin(d1_d2_eid)].index
-    phenotype_df_exposed.loc[d1_d2_index,'d2'] = 0 #invalid cases
+    if enforce_time_interval==True:
+        #for those with both d1 exposure and d2 outcome, further verify time interval requirement, as specified in disease pair construction
+        d1_d2 = phenotype_df_exposed[(phenotype_df_exposed['d2']==1) & (phenotype_df_exposed['d1']==1)]
+        d1_d2_eid = [x for x in d1_d2[id_col].values if (d1,d2) not in trajectory_temporal[x]]
+        d1_d2_index = d1_d2[d1_d2[id_col].isin(d1_d2_eid)].index
+        phenotype_df_exposed.loc[d1_d2_index,'d2'] = 0 #invalid cases
     
     #create other diseases variable
     if method in ['RPCN','PCN_PCA']:        
