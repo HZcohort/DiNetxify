@@ -184,7 +184,7 @@ def cox_conditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,
     
     #check var of covariates, remove these with var()==0
     for var in covariates:
-        dataset_analysis[var] = dataset_analysis[var].astype(np.float32)
+        dataset_analysis[var] = dataset_analysis[var].astype(float)
         if dataset_analysis.groupby(by=matching_col)[var].var().mean() <= 0: #lowest var() allowed
             covariates.remove(var)
 
@@ -194,10 +194,10 @@ def cox_conditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,
     error_message = None
     
     try:
-        model = PHReg(np.asarray(dataset_analysis[time_col],dtype=np.float32),
-                    np.asarray(dataset_analysis[[exp_col]+covariates],dtype=np.float32),
-                    status=np.asarray(dataset_analysis[outcome_col],dtype=np.int32), 
-                    strata=np.asarray(dataset_analysis[matching_col],dtype=np.int32))
+        model = PHReg(np.asarray(dataset_analysis[time_col],dtype=float),
+                    np.asarray(dataset_analysis[[exp_col]+covariates],dtype=float),
+                    status=np.asarray(dataset_analysis[outcome_col],dtype=int), 
+                    strata=np.asarray(dataset_analysis[matching_col]))
         model_result = model.fit(method='bfgs',maxiter=300,disp=0)
         if pd.isna(model_result.params[0]) or pd.isna(model_result.bse[0]):
             e_stats = 'No converge for statsmodels Cox'
@@ -409,9 +409,9 @@ def cox_unconditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,
     error_message = None
     
     try:
-        model = PHReg(np.asarray(dataset_analysis[time_col],dtype=np.float32),
-                    np.asarray(dataset_analysis[[exp_col]+covariates],dtype=np.float32),
-                    status=np.asarray(dataset_analysis[outcome_col],dtype=np.int32))
+        model = PHReg(np.asarray(dataset_analysis[time_col],dtype=float),
+                    np.asarray(dataset_analysis[[exp_col]+covariates],dtype=float),
+                    status=np.asarray(dataset_analysis[outcome_col],dtype=int))
         model_result = model.fit(method='bfgs',maxiter=300,disp=0)
         if pd.isna(model_result.params[0]) or pd.isna(model_result.bse[0]):
             e_stats = 'No converge for statsmodels Cox'

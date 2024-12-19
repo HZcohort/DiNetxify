@@ -94,7 +94,7 @@ def logistic_model(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,id_col,en
     
     #check var of covariates, remove these with var()==0
     for var in covariates:
-        phenotype_df_exposed[var] = phenotype_df_exposed[var].astype(np.float32)
+        phenotype_df_exposed[var] = phenotype_df_exposed[var].astype(float)
         if phenotype_df_exposed.groupby(by='group_matching_ids')[var].var().mean() <= 0:
             covariates.remove(var)
             del phenotype_df_exposed[var]
@@ -106,12 +106,10 @@ def logistic_model(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,id_col,en
     time_start = time.time()
     message = f'{d1} and {d2}: '
     
-    #phenotype_df_exposed.to_csv(rf'D:/我的坚果云/PPHD Project/Disease Trajectories-3D/module_test/df_test/{int(d1)}_{int(d2)}.csv')
-    
     #simple method
     if method == 'CN':
         try:
-            model = sm.ConditionalLogit(np.asarray(phenotype_df_exposed['d2'],dtype=np.int16),
+            model = sm.ConditionalLogit(np.asarray(phenotype_df_exposed['d2'],dtype=int),
                                         phenotype_df_exposed[['d1']+covariates].values,
                                         groups=phenotype_df_exposed['group_matching_ids'].values)
             result = model.fit(disp=False,method='bfgs')
@@ -129,7 +127,7 @@ def logistic_model(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,id_col,en
             try:
                 #model
                 model_1_vars = ['d1','constant']+all_diseases_var #only disease variables
-                model = sm.Logit(np.asarray(phenotype_df_exposed['d2'],dtype=np.int16),
+                model = sm.Logit(np.asarray(phenotype_df_exposed['d2'],dtype=int),
                                  phenotype_df_exposed[model_1_vars].values) #use unconditional model for selcting disease variables
                 
                 # Initial alphas to check
@@ -146,7 +144,7 @@ def logistic_model(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,id_col,en
                 final_best_alpha, final_disease_vars = find_best_alpha_and_vars(model,alpha_range,alpha_lst,model_1_vars)
                 
                 #fit the final model
-                model_final = sm.ConditionalLogit(np.asarray(phenotype_df_exposed['d2'],dtype=np.int16),
+                model_final = sm.ConditionalLogit(np.asarray(phenotype_df_exposed['d2'],dtype=int),
                                                   phenotype_df_exposed[final_disease_vars+covariates].values,
                                                   groups=phenotype_df_exposed['group_matching_ids'].values)
                 result_final = model_final.fit(disp=False,method='bfgs')
@@ -164,13 +162,13 @@ def logistic_model(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,id_col,en
             try:
                 #fit the initial model to get the non-zero disease list
                 model_1_vars = ['d1','constant']+all_diseases_var #only disease variables
-                model = sm.Logit(np.asarray(phenotype_df_exposed['d2'],dtype=np.int16),
+                model = sm.Logit(np.asarray(phenotype_df_exposed['d2'],dtype=int),
                                  phenotype_df_exposed[model_1_vars].values)
                 result = model.fit_regularized(method='l1', alpha=alpha_lst*alpha_single, disp=False)
                 non_zero_indices = np.nonzero(result.params != 0)[0]
                 final_disease_vars = [model_1_vars[i] for i in non_zero_indices]
                 #fit the final conditional model
-                model_final = sm.ConditionalLogit(np.asarray(phenotype_df_exposed['d2'],dtype=np.int16),
+                model_final = sm.ConditionalLogit(np.asarray(phenotype_df_exposed['d2'],dtype=int),
                                                   phenotype_df_exposed[final_disease_vars+covariates].values,
                                                   groups=phenotype_df_exposed['group_matching_ids'].values)
                 result_final = model_final.fit(disp=False,method='bfgs')
@@ -190,7 +188,7 @@ def logistic_model(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,id_col,en
         try:
             #generate PC from other diseases variables
             pca = PCA(n_components=pca_number)
-            disease_vars_transformed = pca.fit_transform(np.asarray(phenotype_df_exposed[all_diseases_var],dtype=np.float32))
+            disease_vars_transformed = pca.fit_transform(np.asarray(phenotype_df_exposed[all_diseases_var],dtype=float))
             pca_cols = [f'PCA_{i}' for i in range(disease_vars_transformed.shape[1])]
             disease_vars_transformed = pd.DataFrame(disease_vars_transformed,columns=pca_cols)
             disease_vars_transformed.index = phenotype_df_exposed.index
@@ -199,7 +197,7 @@ def logistic_model(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,id_col,en
             variance_explained = sum(pca.explained_variance_ratio_)
             
             #fit model with PCA covariates
-            model_final = sm.ConditionalLogit(np.asarray(phenotype_df_exposed_PCA['d2'],dtype=np.int16),
+            model_final = sm.ConditionalLogit(np.asarray(phenotype_df_exposed_PCA['d2'],dtype=int),
                                    phenotype_df_exposed_PCA[['d1']+covariates+pca_cols].values,
                                    groups=phenotype_df_exposed['group_matching_ids'].values)
             result_final = model_final.fit(disp=False,method='bfgs')
