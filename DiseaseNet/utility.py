@@ -977,7 +977,7 @@ def covariates_check(covariates:list,phenotype_info:dict,matching_var_dict:dict=
     Parameters
     ----------
     covariates : list or None, list of covariates.
-    matching_dict : dict or None, dictionary of matching variables and criteria used
+    matching_var_dict : dict or None, dictionary of matching variables and criteria used
     phenotype_info : dict, phenotype information from DiseaseNetwork data
 
     Returns
@@ -994,7 +994,7 @@ def covariates_check(covariates:list,phenotype_info:dict,matching_var_dict:dict=
         if invalid_vars:
             raise ValueError(f"Invalid covariates '{invalid_vars}'. Allowed covariates are: {all_possible_covars}.")
     else:
-        if sex_col in matching_var_dict:
+        if matching_var_dict is not None and sex_col in matching_var_dict:
             all_possible_covars.remove(sex_col)
             covariates = all_possible_covars 
         else:
