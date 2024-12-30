@@ -176,9 +176,12 @@ class DiseaseNetworkData:
         if len(value_notin) > 0:
             raise ValueError(f"{value_notin} not specified in the column_names dictionary")
         #check duplicate columns
-        duplicate_cols = set(column_names.values()).intersection(set(covariates))
-        if len(duplicate_cols)>0:
-            raise ValueError(f"The variable {duplicate_cols} is specified both as a required variable and in the covariates.")
+        duplicate_cols_0 = set(column_names.values()).intersection(set(covariates)) #duplicate of original column names
+        duplicate_cols_1 = set(self.__phenotype_col_dict[self.study_design].values()).intersection(set(covariates)) #duplicate of renamed column names
+        if len(duplicate_cols_0)>0:
+            raise ValueError(f"The variable {duplicate_cols_0} is specified both as a required variable and in the covariates.")
+        if len(duplicate_cols_1)>0:
+            raise ValueError(f"The covariates {duplicate_cols_1} have duplicate names that conflict with required variables. Please rename them.")
         #check other columns
         all_cols = list(column_names.values())+covariates
         date_cols = [column_names[x] for x in ['Index date','End date']]
