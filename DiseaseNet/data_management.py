@@ -61,7 +61,8 @@ class DiseaseNetworkData:
                                                'Exposure':self.__index_date_col,
                                                'Sex':self.__sex_col,
                                                'Index date': self.__index_date_col,
-                                               'End date': self.__end_date_col,}}
+                                               'End date': self.__end_date_col},
+                                     'register':{}}
         #medical records data
         self.__diagnosis_code_options = ['ICD-9-CM', 'ICD-9-WHO', 'ICD-10-CM', 'ICD-10-WHO']
         self.__phecode_level_options = [1,2]
