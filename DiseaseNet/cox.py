@@ -99,7 +99,11 @@ def cox_conditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,
     d_lst = phecode_dict['leaf_list']
     
     #df processing
-    dataset_analysis = data.phenotype_df[covariates+[id_col,index_date_col,end_date_col,exp_col,sex_col,matching_col]]
+    #make sure sex_col is always included but not duplicated
+    if sex_col in covariates:
+        dataset_analysis = data.phenotype_df[covariates+[id_col,index_date_col,end_date_col,exp_col,matching_col]]
+    else:
+        dataset_analysis = data.phenotype_df[covariates+[id_col,index_date_col,end_date_col,exp_col,sex_col,matching_col]]
     
     if pd.isna(exl_range):
         dataset_analysis[exl_flag_col] = 0
@@ -321,7 +325,12 @@ def cox_unconditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,
     d_lst = phecode_dict['leaf_list']
     
     #df processing
-    dataset_analysis = data.phenotype_df[covariates+[id_col,index_date_col,end_date_col,exp_col,sex_col]]
+    #make sure sex_col is always included but not duplicated
+    if sex_col in covariates:
+        dataset_analysis = data.phenotype_df[covariates+[id_col,index_date_col,end_date_col,exp_col]]
+    else:
+        dataset_analysis = data.phenotype_df[covariates+[id_col,index_date_col,end_date_col,exp_col,sex_col]]
+
     if pd.isna(exl_range):
         dataset_analysis[exl_flag_col] = 0
     else:

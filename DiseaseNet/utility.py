@@ -982,7 +982,7 @@ def covariates_check(covariates:list,phenotype_info:dict,matching_var_dict:dict=
 
     Returns
     -------
-    List of final covariates list.
+    List of final covariates.
 
     """
     sex_col = phenotype_info['phenotype_col_dict']['Sex']
