@@ -62,7 +62,7 @@ class DiseaseNetworkData:
                                                'Sex':self.__sex_col,
                                                'Index date': self.__index_date_col,
                                                'End date': self.__end_date_col},
-                                     'register':{}}
+                                     'registry':{}}
         #medical records data
         self.__diagnosis_code_options = ['ICD-9-CM', 'ICD-9-WHO', 'ICD-10-CM', 'ICD-10-WHO']
         self.__phecode_level_options = [1,2]
@@ -102,7 +102,7 @@ class DiseaseNetworkData:
         self.__warning_medical_records = []
 
     
-    def phenotype_data(self, phenotype_data_path:str, column_names:dict, covariates:list, force:bool=False):
+    def     (self, phenotype_data_path:str, column_names:dict, covariates:list, force:bool=False):
         """
         
         Merges phenotype and medical records data into the main data attribute.
