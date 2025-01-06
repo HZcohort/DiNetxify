@@ -22,7 +22,11 @@ def decimal_to_short(code:float) -> str:
     parts[0] = parts[0].zfill(3)
     return "".join(parts)
 
-def read_check_csv(path_file:str, cols_check:list, date_cols:list, date_fmt:str, separator_lst:list=[',', '\t'],
+def read_check_csv(path_file:str, 
+                   cols_check:list, 
+                   date_cols:list, 
+                   date_fmt:str, 
+                   separator_lst:list=[',', '\t'],
                    return_df:bool=True):
     """
     
@@ -188,7 +192,7 @@ def convert_column(dataframe, column:str):
         else:
             return pd.get_dummies(df[new_column], prefix=column, drop_first=True).astype('int'),'categorical'
 
-def phenotype_required_columns(dataframe,col_dict:dict,date_fmt:str):
+def phenotype_required_columns(dataframe,col_dict:dict,date_fmt:str,study_design:str):
     """
     
     This function processes required columns in the given phenotype dataframe. 
@@ -226,7 +230,6 @@ def phenotype_required_columns(dataframe,col_dict:dict,date_fmt:str):
     eid_col = col_dict['Participant ID']
     index_date_col = col_dict['Index date']
     end_date_col = col_dict['End date']
-    exposure_col = col_dict['Exposure']
     sex_col = col_dict['Sex']
     
     try:
@@ -241,15 +244,17 @@ def phenotype_required_columns(dataframe,col_dict:dict,date_fmt:str):
         raise ValueError("Duplicates found in Participant ID column, which is not allowed")
 
     # process the exposure column
-    unique_vals = dataframe[exposure_col].unique()
-    n_unique_vals = len(unique_vals)
-    if n_unique_vals != 2:
-        raise ValueError('The exposure variable does not have 2 unique values')
-    else:
-        if all(isinstance(x, (int, np.integer, float, np.floating)) and x in {0, 1} for x in unique_vals):
-            None
+    if study_design != "register":
+        exposure_col = col_dict['Exposure']
+        unique_vals = dataframe[exposure_col].unique()
+        n_unique_vals = len(unique_vals)
+        if n_unique_vals != 2:
+            raise ValueError('The exposure variable does not have 2 unique values')
         else:
-            raise TypeError("The exposure variable does not have 2 unique values")
+            if all(isinstance(x, (int, np.integer, float, np.floating)) and x in {0, 1} for x in unique_vals):
+                None
+            else:
+                raise TypeError("The exposure variable does not have 2 unique values")
     
     #prcess the sex column
     unique_vals = dataframe[sex_col].unique()
@@ -263,8 +268,14 @@ def phenotype_required_columns(dataframe,col_dict:dict,date_fmt:str):
             raise TypeError("The sex variable does not have 2 unique values")
     
     
-def medical_records_process(medical_records:str,col_dict:dict,code_type:str,date_fmt:str,chunk_n,seperator,
-                            all_phecode_dict:dict,phecode_map:dict):
+def medical_records_process(medical_records:str,
+                            col_dict:dict,
+                            code_type:str,
+                            date_fmt:str,
+                            chunk_n,
+                            seperator,
+                            all_phecode_dict:dict,
+                            phecode_map:dict):
     """
     Read the medical records dataframe (in chunks), mapped to phecode and update the provided nested dictionary.
 
@@ -1010,11 +1021,3 @@ def covariates_check(covariates:list,phenotype_info:dict,matching_var_dict:dict=
             if var in covariates and phenotype_info['phenotype_covariates_type'][var]=='categorical':
                 raise ValueError(f'Categorical covariate {var} has already been used for matching.')
         return covariates_final
-                
-
-
-
-
-
-
-

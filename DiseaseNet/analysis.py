@@ -15,9 +15,19 @@ from .utility import check_kwargs_com_tra,covariates_check,matching_var_check
 import warnings
 warnings.filterwarnings('ignore')
 
-def phewas(data:DiseaseNetworkData, covariates:list=None, proportion_threshold:float=None, n_threshold:int=None, 
-           n_cpus:int=1, correction:str='bonferroni', cutoff:float=0.05, system_inc:list=None, system_exl:list=None, 
-           phecode_inc:list=None, phecode_exl:list=None, log_file:str=None, lifelines_disable:bool=False) -> pd.DataFrame:
+def phewas(data:DiseaseNetworkData, 
+           covariates:list=None, 
+           proportion_threshold:float=None, 
+           n_threshold:int=None, 
+           n_cpus:int=1, 
+           correction:str='bonferroni', 
+           cutoff:float=0.05, 
+           system_inc:list=None, 
+           system_exl:list=None, 
+           phecode_inc:list=None, 
+           phecode_exl:list=None, 
+           log_file:str=None, 
+           lifelines_disable:bool=False) -> pd.DataFrame:
     """
     Conducts Phenome-wide association studies (PheWAS) using the specified DiseaseNetworkData object.
 
@@ -141,7 +151,11 @@ def phewas(data:DiseaseNetworkData, covariates:list=None, proportion_threshold:f
     correction_method_check(correction,cutoff)
     
     #check inclusion and exclusion list
-    phecode_lst_all = filter_phecodes(phecode_info,system_inc,system_exl,phecode_inc,phecode_exl)
+    phecode_lst_all = filter_phecodes(phecode_info,
+                                      system_inc,
+                                      system_exl,
+                                      phecode_inc,
+                                      phecode_exl)
     print(f'A total of {len(phecode_lst_all)} phecodes included in the PheWAS analysis.')
     
     #check log files
@@ -171,6 +185,31 @@ def phewas(data:DiseaseNetworkData, covariates:list=None, proportion_threshold:f
                 for phecode in phecode_lst_all:
                     parameters_all.append([data,n_threshold,phecode,covariates,log_file_final,lifelines_disable])
                 result_all = p.starmap(cox_unconditional, parameters_all)    
+    if data.study_design == "register":
+        phecode_number, disease, system, sex = {}, [], [], []
+        for value in data.diagnosis.values():
+            for phecode in value.keys():
+                if data.phecode_level == 1:
+                    for key, dicts in data.phecode_info.items():
+                        if phecode in dicts["exclude_list"]:
+                            phecode = key
+                if phecode in phecode_number:
+                    phecode_number[phecode] += 1
+                else:    
+                    phecode_number[phecode] = 1
+                    disease.append(data.phecode_info[phecode]['phenotype'])
+                    system.append(data.phecode_info[phecode]['category'])
+                    sex.append(data.phecode_info[phecode]["sex"])
+        phewas_df = pd.DataFrame({"phecode":phecode_number.keys(),
+                                  "disease":disease,
+                                  "system":system,
+                                  "sex":sex,
+                                  "N_cases_exposed":phecode_number.values()})
+        if n_threshold:
+            phewas_df["phewas_p_significance"] = phewas_df["N_cases_exposed"].apply(lambda x: True if x>n_threshold else False)
+        if proportion_threshold:
+            phewas_df["phewas_p_significance"] = phewas_df["N_cases_exposed"].apply(lambda x: True if x/n_exposed>proportion_threshold else False)
+        return phewas_df
     
     time_end = time.time()
     time_spent = (time_end - time_start)/60
@@ -185,7 +224,6 @@ def phewas(data:DiseaseNetworkData, covariates:list=None, proportion_threshold:f
     
     #p-value correction
     phewas_df = phewas_multipletests(phewas_df, correction=correction,cutoff=cutoff)
-
     return phewas_df
 
 

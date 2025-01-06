@@ -244,8 +244,12 @@ def cox_conditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,
             
     return result
 
-def cox_unconditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,
-                      covariates:list,log_file:str,lifelines_disable:bool):
+def cox_unconditional(data:DiseaseNetworkData,
+                      n_threshold:int,
+                      phecode:float,
+                      covariates:list,
+                      log_file:str,
+                      lifelines_disable:bool):
     """
     Perfoming Cox unconditional analysis based on the provided DiseaseNetworkData object.
 

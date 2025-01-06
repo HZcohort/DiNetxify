@@ -5,49 +5,57 @@ from scipy import stats
 import numpy as np
 import copy
 import random
+import pandas as pd
 import math
+import networkx as nx
+import os
 
-class ThreeDimensionalDiseaseNetwork(object):
-    """
-    3D-disease network plot
-    """
-    def __init__(self, _commorbidity:object, _trajectory:object, 
+class ThreeDimensionalDiseaseNetwork():
+    def __init__(self, _commorbidity:pd.DataFrame, _trajectory:pd.DataFrame, 
                  _original_disease:float, _original_disease_location:tuple,
-                 _original_diseaseSize:float, _desribe:object, 
-                 source='d1', target='d2'):
-        """
-        args:
-            _commorbidity, DataFrame comorbidity connection
-            _trajectory, DataFrame trajectory connection
-            _original_disease, the origin disease phecode
-            _original_disease_location
-        """
+                 _original_diseaseSize:float, phewas_result:pd.DataFrame,
+                 source='phecode_d1', target='phecode_d2'):
         # primary attribution
+        self.__module_dir = os.path.dirname(__file__)
         self.__commorbidity = _commorbidity
-        self.__trajectory = _trajectory
+        self.__phecode_number = dict(zip(phewas_result["phecode"], phewas_result["N_cases_exposed"]))
         self.__original_disease = _original_disease
         self.__size = _original_diseaseSize
         self.__location = _original_disease_location
-        self.__describe = _desribe
-        self.__color = ['saddlebrown', 'dimgray', 'darkorange',
-                        'yellow', 'darkgreen', 'blue',
-                        'purple', 'aquamarine', 'rosybrown',
-                        'cadetblue', 'salmon', 'violet',
-                        'crimson', 'indigo', 'thistle',
-                        'PaleGodenrod', 'fuchsia', 'deeppink']
+        self.__describe = pd.read_csv(os.path.join(self.__module_dir, "data/phecode_1.2/phecode_info.csv"))
+        
+        df = _trajectory.loc[~_trajectory['phecode_d1'].isin(_trajectory.phecode_d2.values)]
+        df_lst = set(df.phecode_d1.values)
+        d0_d1 = []
+        for d in df_lst:
+            d0_d1.append([_original_disease, d, '%f-%f' % (_original_disease,d)])
+        d0_d1 = pd.DataFrame(d0_d1,columns=['phecode_d1', 'phecode_d2', 'name_disease_pair'])
+        self.__trajectory = pd.concat([_trajectory, d0_d1])
+        
         self.__disease_pairs = [[row[source], row[target]] for _, row in self.__trajectory.iterrows()]
 
-        self.__color_sixteen = ['#F46D5A', '#5DA5DA', '#5EBCD1', '#C1D37F', '#CE5A57',
-                                 '#A5C5D9', '#F5B36D', '#7FCDBB', '#ED9A8D', '#94B447',
-                                   '#8C564B', '#E7CB94', '#8C9EB2', '#E0E0E0']
-
+        self.__color_sixteen = [
+                                "#FF5733",
+                                "#33FF57",  
+                                "#3357FF",  
+                                "#FFFF33",  
+                                "#FF33FF",  
+                                "#33FFFF",  
+                                "#C70039",  
+                                "#900C3F",  
+                                "#581845",  
+                                "#1ABC9C",  
+                                "#2ECC71",  
+                                "#3498DB",
+                                "#9B59B6",  
+                                "#E74C3C",
+                                "#F1C40F",  
+                                "#FF7F50",  
+                                "#FFD700",]
         # nodes of networks
-        self.__commorbidity_nodes = list(set(list(_commorbidity[source])+
-                                             list(_commorbidity[target])))
-        self.__trajectory_nodes = list(set(list(_trajectory[source])+
-                                           list(_trajectory[target])))
-        self.__trajectory_nodes.remove(self.__original_disease)
-
+        self.__commorbidity_nodes = list(set(list(_commorbidity[source])+list(_commorbidity[target])))
+        self.__trajectory_nodes = list(set(list(_trajectory[source])+list(_trajectory[target])))
+        
     @staticmethod
     def split_name(name:str):
         """"""
@@ -162,20 +170,15 @@ class ThreeDimensionalDiseaseNetwork(object):
         _location_dict = {node:loction}
         return _location_dict, _hash_dict
 
-    def get_node_size(self, node:float, source='d1', target='d2',
-                      source_number_str='number_d1', 
-                      target_number_str='number_d2'):
+    def get_node_size(self, node:float):
         """"""
-        size = np.sqrt(self.__commorbidity\
-                       .loc[self.__commorbidity[target]==node][target_number_str]\
-                       .mean())
-        if pd.isnull(size):
-            size = np.sqrt(self.__commorbidity\
-                            .loc[self.__commorbidity[source]==node][source_number_str]\
-                            .mean())
+        size = np.sqrt(self.__phecode_number[node])
         return size
 
-    def cluster(self, iter_time=5000, source='d1', target='d2', weight='coef'):
+    def cluster(self, iter_time=5000, 
+                source='phecode_d1',
+                target='phecode_d2',
+                weight='comorbidity_beta'):
         """"""
         if hasattr(self, "final_cluster"):
             return self.final_cluster
@@ -203,11 +206,10 @@ class ThreeDimensionalDiseaseNetwork(object):
 
     def location_random(self, max_radius:float, min_radius:float):
         """"""
-        if not hasattr(self, "dimension"):
-            self._dimension()
-
         if not hasattr(self, "final_cluster"):
             self.cluster()
+        if not hasattr(self, "dimension"):
+            self._dimension()
         
         self.__max_radius = max_radius
         self.__min_radius = min_radius
@@ -249,7 +251,7 @@ class ThreeDimensionalDiseaseNetwork(object):
         self.location_dict = location_dict
         return self.location_dict
     
-    def trajectory(self, source='d1', target='d2'):
+    def trajectory(self, source='phecode_d1', target='phecode_d2'):
         """"""
         if hasattr(self, "trajectory_dimension"):
             return self.trajectory_dimension
@@ -297,7 +299,7 @@ class ThreeDimensionalDiseaseNetwork(object):
         self.trajectory_dimension = trajectory_dimension
         return self.trajectory_dimension
     
-    def commorbidity(self, source='d1', target='d2'):
+    def commorbidity(self, source='phecode_d1', target='phecode_d2'):
         """"""
         if not hasattr(self, "trajectory_dimension"):
             self.trajectory()
@@ -327,7 +329,7 @@ class ThreeDimensionalDiseaseNetwork(object):
                                                       self.__trajectory_nodes[x])
                                    for x in indexs]
                 if nodes_dimension:
-                    dimension_number = stats.mode(nodes_dimension,keepdims=False)[0]
+                    dimension_number = stats.mode(nodes_dimension, keepdims=False)[0]
                     commorbidity_dimension_dict.update({node:dimension_number})
                 else:
                     continue
@@ -343,10 +345,28 @@ class ThreeDimensionalDiseaseNetwork(object):
                                                                  commorbidity_dimension_dict)
                     nodes_dimension += self.except_dimension(list(self.__commorbidity.loc[self.__commorbidity[target]==node][source]), 
                                                                  commorbidity_dimension_dict)
-                    dimension_number = stats.mode(nodes_dimension,keepdims=False)[0]
+                    dimension_number = stats.mode(nodes_dimension, keepdims=False)[0]
                     commorbidity_dimension_dict.update({node:dimension_number})
                 except:
                     continue
+        
+        # make cluster:dimension dict
+        hash_dict = {n:[] for n in range(self.maximum_class_number)}
+        for key, value in commorbidity_dimension_dict.items():
+            if np.isnan(value):
+                continue
+            hash_dict[self.final_cluster[key]].append(int(value))
+        for key, value in hash_dict.items():
+            dimension = stats.mode(value, keepdims=False)[0]
+            if np.isnan(dimension):
+                dimension = max(self.trajectory().keys())
+            hash_dict[key] = dimension
+        # 
+        for phecode in commorbidity_dimension_dict.keys():
+            if np.isnan(commorbidity_dimension_dict[phecode]):
+                cluster_number = self.final_cluster[phecode]
+                commorbidity_dimension_dict.update({phecode:hash_dict[cluster_number]})
+
         self.commorbidity_dimension = commorbidity_dimension_dict
         return self.commorbidity_dimension
     
@@ -391,14 +411,13 @@ class ThreeDimensionalDiseaseNetwork(object):
             describe='phenotype'):
         """"""
         code_system = dict(zip(self.__describe[code], self.__describe[cluster_name]))
-        # system_color = dict(zip(set(self.__describe[cluster_name]),
-        #                             self.__color))
+
         system_list = ['circulatory system', 'sense organs', 'injuries & poisonings', 'neurological', 
                         'dermatologic', 'digestive', 'hematopoietic', 'musculoskeletal', 
                         'endocrine/metabolic', 'mental disorders', 'infectious diseases', 
-                        'genitourinary', 'neoplasms', 'respiratory']
-        system_color = dict(zip(system_list,
-                            self.__color_sixteen))
+                        'genitourinary', 'neoplasms', 'respiratory', "symptoms", "congenital anomalies",
+                        "mental disorders" ]
+        system_color = dict(zip(system_list, self.__color_sixteen))
         code_color = {node:system_color.get(code_system.get(node)) 
                       for node in code_system.keys()}
         self.color_map = code_color
@@ -434,18 +453,18 @@ class ThreeDimensionalDiseaseNetwork(object):
         
         """
         for _, row in self.__commorbidity.iterrows():
-            if row["d1"] in incluster and \
-            self.final_cluster[row["d2"]]==self.final_cluster[row["d1"]]:
-                incluster.append(row["d2"])
+            if row["phecode_d1"] in incluster and \
+            self.final_cluster[row["phecode_d2"]]==self.final_cluster[row["phecode_d1"]]:
+                incluster.append(row["phecode_d2"])
 
-            if row["d2"] in incluster and \
-            self.final_cluster[row["d2"]]==self.final_cluster[row["d1"]]:
-                incluster.append(row["d1"])
+            if row["phecode_d2"] in incluster and \
+            self.final_cluster[row["phecode_d2"]]==self.final_cluster[row["phecode_d1"]]:
+                incluster.append(row["phecode_d1"])
 
         return list(set(incluster))
 
     def __full_plot(self, line_color:str, line_width:float,
-                    source='d1', target='d2'):
+                    source='phecode_d1', target='phecode_d2'):
         """
         plot all nodes and edges
         """
@@ -508,8 +527,8 @@ class ThreeDimensionalDiseaseNetwork(object):
     def __half_plot(self, main_line_width:float, 
                     nonMain_line_color='silver', 
                     nonMain_line_width=1,
-                    source='d1', target='d2',
-                    factor='coef'):
+                    source='phecode_d1', target='phecode_d2',
+                    factor='comorbidity_beta'):
         """
         half plot
         """
@@ -659,14 +678,13 @@ class ThreeDimensionalDiseaseNetwork(object):
 
         return plot_data
 
-    def __compact_plot(self, main_line_width:float, 
-                    nonMain_line_color='silver', 
-                    nonMain_line_width=1,
-                    source='d1', target='d2',
-                    factor='coef'):
-        """
-        compact plot
-        """
+    def __compact_plot(self,
+                       main_line_width:float,
+                       nonMain_line_color='silver',
+                       nonMain_line_width=1,
+                       source='phecode_d1',
+                       target='phecode_d2',
+                       factor='comorbidity_beta'):
         plot_data = []
         # plot nodes (incluster)
         system_list = ['circulatory system', 'sense organs', 'injuries & poisonings', 'neurological', 
@@ -764,11 +782,11 @@ class ThreeDimensionalDiseaseNetwork(object):
                     line_color:'str', line_width:float, file_name:'str',
                     location_method='random'):
         """"""
-        if not hasattr(self, "dimension"):
-            self._dimension()
-
         if not hasattr(self, "final_cluster"):
             self.cluster()
+            
+        if not hasattr(self, "dimension"):
+            self._dimension()
 
         if not hasattr(self, 'location_dict'):
             if location_method == 'random':

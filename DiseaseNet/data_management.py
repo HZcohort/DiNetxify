@@ -39,12 +39,15 @@ class DiseaseNetworkData:
     
     """
     
-    def __init__(self, study_design:str='cohort', phecode_level:int=1, date_fmt:str='%Y-%m-%d', phecode_version:str='1.2'):
+    def __init__(self, 
+                 study_design:str='cohort', 
+                 phecode_level:int=1, 
+                 date_fmt:str='%Y-%m-%d', 
+                 phecode_version:str='1.2'):
         #fixed attributes
         #phenotype data
         self.__module_dir = os.path.dirname(__file__)
-        self.__test_date = '2023-1-1'
-        self.__study_design_options = ['matched cohort','cohort']
+        self.__study_design_options = ['matched cohort','cohort','register']
         self.__id_col = 'eid'
         self.__exposure_col = 'exposure'
         self.__sex_col = 'sex'
@@ -62,7 +65,10 @@ class DiseaseNetworkData:
                                                'Sex':self.__sex_col,
                                                'Index date': self.__index_date_col,
                                                'End date': self.__end_date_col},
-                                     'register':{}}
+                                     'register':{"Participant ID":self.__id_col,
+                                                 "Sex":self.__sex_col,
+                                                 "Index date":self.__index_date_col,
+                                                 "End date":self.__end_date_col}}
         #medical records data
         self.__diagnosis_code_options = ['ICD-9-CM', 'ICD-9-WHO', 'ICD-10-CM', 'ICD-10-WHO']
         self.__phecode_level_options = [1,2]
@@ -102,7 +108,11 @@ class DiseaseNetworkData:
         self.__warning_medical_records = []
 
     
-    def phenotype_data(self, phenotype_data_path:str, column_names:dict, covariates:list, force:bool=False):
+    def phenotype_data(self, 
+                       phenotype_data_path:str, 
+                       column_names:dict, 
+                       covariates:list, 
+                       force:bool=False):
         """
         
         Merges phenotype and medical records data into the main data attribute.
@@ -199,7 +209,7 @@ class DiseaseNetworkData:
         rename_dict = {column_names[k]:self.__phenotype_info['phenotype_col_dict'][k] for k in column_names.keys()}
         phenotype_data_.rename(columns=rename_dict,inplace=True)
         #check and convert, change inplace
-        phenotype_required_columns(phenotype_data_,self.__phenotype_info['phenotype_col_dict'],self.date_fmt)
+        phenotype_required_columns(phenotype_data_,self.__phenotype_info['phenotype_col_dict'],self.date_fmt,self.study_design)
         #convert covariates
         self.__phenotype_info['phenotype_covariates_converted'] = {}
         self.__phenotype_info['phenotype_covariates_list'] = []
@@ -221,7 +231,8 @@ class DiseaseNetworkData:
         if n_after_remove < n_before_remove:
             self.__warning_phenotype.append(f'Warning: {n_before_remove-n_after_remove} individuals removed after processing')
             print(self.__warning_phenotype[-1])
-        
+        if self.study_design == "register":
+            self.phenotype_df["exposure"] = 1
         #generate basic statistic for printing
         self.__phenotype_statistics['n_cohort'] = len(self.phenotype_df)
         self.__phenotype_statistics['n_exposed'] = len(self.phenotype_df[self.phenotype_df[self.__exposure_col]==1])
@@ -257,14 +268,18 @@ class DiseaseNetworkData:
         self.__phenotype_statistics['n_neg_follow_exposed'] = len(self.phenotype_df[(self.phenotype_df[self.__exposure_col]==1) & 
                                                                                     (self.phenotype_df['follow_up']<=0)])
         self.__phenotype_statistics['n_neg_follow_unexposed'] = len(self.phenotype_df[(self.phenotype_df[self.__exposure_col]==0) & 
-                                                                                      (self.phenotype_df['follow_up']<=0)])
+                                                                                    (self.phenotype_df['follow_up']<=0)])
         if self.__phenotype_statistics['n_neg_follow_unexposed'] > 0 or self.__phenotype_statistics['n_neg_follow_exposed'] > 0:
             self.__warning_phenotype.append(f"Warning: {self.__phenotype_statistics['n_neg_follow_exposed']} exposed individuals and {self.__phenotype_statistics['n_neg_follow_unexposed']} unexposed individuals have negative or zero follow-up time.\nConsider removing them before merge.")
             print(self.__warning_phenotype[-1])
         #----------
        
-    def merge_medical_records(self, medical_records_data_path:str, diagnosis_code:str, 
-                              column_names:dict, date_fmt:str=None, chunksize:int=1000000):
+    def merge_medical_records(self, 
+                              medical_records_data_path:str, 
+                              diagnosis_code:str, 
+                              column_names:dict, 
+                              date_fmt:str=None, 
+                              chunksize:int=1000000):
         """
         Merge the loaded phenotype data with one or more medical records data.
         If you have multiple medical records data to merge (e.g., with different diagnosis code types), you can call this function multiple times.
@@ -480,7 +495,11 @@ class DiseaseNetworkData:
             print(f'Phecode level set to {self.phecode_level} now.')
     
     
-    def disease_pair(self, phewas_result:pd.DataFrame, min_interval_days:int=0, max_interval_days:int=np.inf, force:bool=False, **kwargs):
+    def disease_pair(self, 
+                     phewas_result:pd.DataFrame, 
+                     min_interval_days:int=0, 
+                     max_interval_days:int=np.inf, 
+                     force:bool=False, **kwargs):
         """
         This function reads PheWAS results from a DataFrame generated by the 'DiseaseNet.pheewas' method. 
         It filters for phecodes with significant associations and constructs all possible temporal (D1 → D2, where D2 is diagnosed after D1) and non-temporal disease pairs (D1 - D2) for each exposed individual, based on the identified significant phecodes.
@@ -560,8 +579,10 @@ class DiseaseNetworkData:
         if len(valid_phecodes) <= 10:
             print(f'Warning: only {len(valid_phecodes)} significant phecodes are found.')
         self.__significant_phecodes = valid_phecodes
-        
-        exp_col = self.__phenotype_info['phenotype_col_dict']['Exposure']
+        if self.study_design == "register":
+            exp_col = "exposure"
+        else:
+            exp_col = self.__phenotype_info['phenotype_col_dict']['Exposure']
         exposed_index = self.phenotype_df[self.phenotype_df[exp_col]==1].index
 
         self.trajectory = d1d2_from_diagnosis_history(self.phenotype_df.loc[exposed_index],
