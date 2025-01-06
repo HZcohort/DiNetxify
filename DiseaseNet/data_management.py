@@ -65,7 +65,7 @@ class DiseaseNetworkData:
                                                'Sex':self.__sex_col,
                                                'Index date': self.__index_date_col,
                                                'End date': self.__end_date_col},
-                                     'register':{"Participant ID":self.__id_col,
+                                     'registry':{"Participant ID":self.__id_col,
                                                  "Sex":self.__sex_col,
                                                  "Index date":self.__index_date_col,
                                                  "End date":self.__end_date_col}}
