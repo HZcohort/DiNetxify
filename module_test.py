@@ -50,7 +50,7 @@ Created on Fri Jul 26 12:49:35 2024
 from DiseaseNet.data_management import DiseaseNetworkData as dnd
 from DiseaseNet.analysis import phewas
 
-data = dnd(study_design="register")
+data = dnd(study_design="registry")
 data.phenotype_data("C:/Users/bovin/Desktop/data.csv",
                     {"Participant ID": "eid",
                      "Sex": "sex",

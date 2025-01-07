@@ -47,7 +47,7 @@ class DiseaseNetworkData:
         #fixed attributes
         #phenotype data
         self.__module_dir = os.path.dirname(__file__)
-        self.__study_design_options = ['matched cohort','cohort','register']
+        self.__study_design_options = ['matched cohort','cohort','registry']
         self.__id_col = 'eid'
         self.__exposure_col = 'exposure'
         self.__sex_col = 'sex'
@@ -81,7 +81,7 @@ class DiseaseNetworkData:
             raise ValueError(f"Choose from the following study design: {self.__study_design_options}")
         #check date format
         try:
-            datetime.strftime(datetime.now(),date_fmt)
+            datetime.strftime(datetime.now(), date_fmt)
         except:
             raise ValueError("The specified date format is invalid. Visit https://docs.python.org/3/library/datetime.html#strftime-and-strptime-behavior for details.")
         #check phecode_level
@@ -231,7 +231,7 @@ class DiseaseNetworkData:
         if n_after_remove < n_before_remove:
             self.__warning_phenotype.append(f'Warning: {n_before_remove-n_after_remove} individuals removed after processing')
             print(self.__warning_phenotype[-1])
-        if self.study_design == "register":
+        if self.study_design == "registry":
             self.phenotype_df["exposure"] = 1
         #generate basic statistic for printing
         self.__phenotype_statistics['n_cohort'] = len(self.phenotype_df)

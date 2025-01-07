@@ -185,7 +185,7 @@ def phewas(data:DiseaseNetworkData,
                 for phecode in phecode_lst_all:
                     parameters_all.append([data,n_threshold,phecode,covariates,log_file_final,lifelines_disable])
                 result_all = p.starmap(cox_unconditional, parameters_all)    
-    if data.study_design == "register":
+    if data.study_design == "registry":
         phecode_number, disease, system, sex = {}, [], [], []
         for value in data.diagnosis.values():
             for phecode in value.keys():
@@ -223,7 +223,7 @@ def phewas(data:DiseaseNetworkData,
     phewas_df = pd.DataFrame(result_all, columns=columns_selected)
     
     #p-value correction
-    phewas_df = phewas_multipletests(phewas_df, correction=correction,cutoff=cutoff)
+    phewas_df = phewas_multipletests(phewas_df, correction=correction, cutoff=cutoff)
     return phewas_df
 
 
