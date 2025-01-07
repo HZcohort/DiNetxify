@@ -186,31 +186,9 @@ def phewas(data:DiseaseNetworkData,
                     parameters_all.append([data,n_threshold,phecode,covariates,log_file_final,lifelines_disable])
                 result_all = p.starmap(cox_unconditional, parameters_all)    
     if data.study_design == "registry":
-        phecode_number, disease, system, sex = {}, [], [], []
-        for value in data.diagnosis.values():
-            for phecode in value.keys():
-                if data.phecode_level == 1:
-                    for key, dicts in data.phecode_info.items():
-                        if phecode in dicts["exclude_list"]:
-                            phecode = key
-                if phecode in phecode_number:
-                    phecode_number[phecode] += 1
-                else:    
-                    phecode_number[phecode] = 1
-                    disease.append(data.phecode_info[phecode]['phenotype'])
-                    system.append(data.phecode_info[phecode]['category'])
-                    sex.append(data.phecode_info[phecode]["sex"])
-        phewas_df = pd.DataFrame({"phecode":phecode_number.keys(),
-                                  "disease":disease,
-                                  "system":system,
-                                  "sex":sex,
-                                  "N_cases_exposed":phecode_number.values()})
-        if n_threshold:
-            phewas_df["phewas_p_significance"] = phewas_df["N_cases_exposed"].apply(lambda x: True if x>n_threshold else False)
-        if proportion_threshold:
-            phewas_df["phewas_p_significance"] = phewas_df["N_cases_exposed"].apply(lambda x: True if x/n_exposed>proportion_threshold else False)
-        return phewas_df
-    
+        for phecode in phecode_lst_all:
+            result_all.append(cox_unconditional(data,n_threshold,phecode,covariates,log_file_final,lifelines_disable))
+
     time_end = time.time()
     time_spent = (time_end - time_start)/60
     print(f'PheWAS analysis finished (elapsed {time_spent:.1f} mins)')
@@ -222,6 +200,17 @@ def phewas(data:DiseaseNetworkData,
     columns_selected = columns[0:max_columns]
     phewas_df = pd.DataFrame(result_all, columns=columns_selected)
     
+    if data.study_design == "registry":
+        if proportion_threshold:
+            phewas_df["N_total"] = phewas_df["sex"].apply(lambda x:len(data.phenotype_df) if x=="Both" 
+                                                          else len(data.phenotype_df.loc[data.phenotype_df[data.get_attribute('phenotype_info')['phenotype_col_dict']['Sex']]==1]) if x=="Female"
+                                                          else len(data.phenotype_df.loc[data.phenotype_df[data.get_attribute('phenotype_info')['phenotype_col_dict']['Sex']]==0]))
+            phewas_df["phewas_p_significance"] = phewas_df.apply(lambda row: True if row["N_cases_exposed"]/row["N_total"] >= proportion_threshold 
+                                                                 else False, axis=1)
+        if n_threshold:
+            phewas_df["phewas_p_significance"] = phewas_df["N_cases_exposed"].apply(lambda x:True if x>=n_threshold else False)
+        return phewas_df
+
     #p-value correction
     phewas_df = phewas_multipletests(phewas_df, correction=correction, cutoff=cutoff)
     return phewas_df
@@ -526,8 +515,13 @@ def comorbidity_strength_multipletests(df:pd.DataFrame, correction_phi:str='bonf
     return df
 
 
-def binomial_test(data:DiseaseNetworkData, comorbidity_strength_result:pd.DataFrame, n_cpus:int=1, log_file:str=None, 
-                  correction:str='bonferroni', cutoff:float=0.05, enforce_temporal_order:bool=False, **kwargs) -> pd.DataFrame:
+def binomial_test(data:DiseaseNetworkData, 
+                  comorbidity_strength_result:pd.DataFrame, 
+                  n_cpus:int=1, 
+                  log_file:str=None, 
+                  correction:str='bonferroni', 
+                  cutoff:float=0.05, 
+                  enforce_temporal_order:bool=False, **kwargs) -> pd.DataFrame:
     """
     Conduct binomial test for disease pairs with significant comorbidity stregnth to select those with significant temporal orders (i.e., D1 -> D2).
 

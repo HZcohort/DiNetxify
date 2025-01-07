@@ -16,8 +16,12 @@ import warnings
 warnings.filterwarnings('ignore')
 
 
-def cox_conditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,
-                    covariates:list,log_file:str,lifelines_disable:bool):
+def cox_conditional(data:DiseaseNetworkData,
+                    n_threshold:int,
+                    phecode:float,
+                    covariates:list,
+                    log_file:str,
+                    lifelines_disable:bool):
     """
     Perfoming Cox conditional analysis based on the provided DiseaseNetworkData object.
 
@@ -60,7 +64,6 @@ def cox_conditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,
     phecode_dict = data.phecode_info[phecode]
     disease_name = phecode_dict['phenotype']
     system = phecode_dict['category']
-    level = phecode_dict['level']
     sex_specific = phecode_dict['sex']
     if sex_specific == 'Female':
         sex_code = 1
@@ -196,7 +199,7 @@ def cox_conditional(data:DiseaseNetworkData,n_threshold:int,phecode:float,
     e_stats = None
     e_lifelines = None
     error_message = None
-    
+
     try:
         model = PHReg(np.asarray(dataset_analysis[time_col],dtype=float),
                     np.asarray(dataset_analysis[[exp_col]+covariates],dtype=float),
@@ -291,7 +294,6 @@ def cox_unconditional(data:DiseaseNetworkData,
     phecode_dict = data.phecode_info[phecode]
     disease_name = phecode_dict['phenotype']
     system = phecode_dict['category']
-    level = phecode_dict['level']
     sex_specific = phecode_dict['sex']
     if sex_specific == 'Female':
         sex_code = 1
@@ -302,12 +304,15 @@ def cox_unconditional(data:DiseaseNetworkData,
     exl_range = phecode_dict['phecode_exclude_range']
     
     #result list
-    result = [phecode,disease_name,system]
+    result = [phecode,disease_name,system,sex_specific]
     
     #information about the dataframe
     info_dict = data.get_attribute('phenotype_info')
     id_col = info_dict['phenotype_col_dict']['Participant ID']
-    exp_col = info_dict['phenotype_col_dict']['Exposure']
+    if data.study_design == "registry":
+        exp_col = "exposure"
+    else:
+        exp_col = info_dict['phenotype_col_dict']['Exposure']
     sex_col = info_dict['phenotype_col_dict']['Sex']
     index_date_col = info_dict['phenotype_col_dict']['Index date']
     end_date_col = info_dict['phenotype_col_dict']['End date']
@@ -362,17 +367,18 @@ def cox_unconditional(data:DiseaseNetworkData,
         write_log(log_file,f'No individuals remaining after filtering for phecode {phecode}\n')
         return result
     
+    if data.study_design != "registry":
     #check number
-    number_exposed = len(dataset_analysis[dataset_analysis[exp_col]==1])
-    number_unexposed = len(dataset_analysis[dataset_analysis[exp_col]==0])
-    if number_exposed == 0:
-        result += [0,'Disease specific (zero exposed)']
-        write_log(log_file,f'No exposed individuals remaining after filtering for phecode {phecode}\n')
-        return result
-    if number_unexposed == 0:
-        result += [0,'Disease specific (zero unexposed)']
-        write_log(log_file,f'No unexposed individuals remaining after filtering for phecode {phecode}\n')
-        return result
+        number_exposed = len(dataset_analysis[dataset_analysis[exp_col]==1])
+        number_unexposed = len(dataset_analysis[dataset_analysis[exp_col]==0])
+        if number_exposed == 0:
+            result += [0,'Disease specific (zero exposed)']
+            write_log(log_file,f'No exposed individuals remaining after filtering for phecode {phecode}\n')
+            return result
+        if number_unexposed == 0:
+            result += [0,'Disease specific (zero unexposed)']
+            write_log(log_file,f'No unexposed individuals remaining after filtering for phecode {phecode}\n')
+            return result
     
     #define diagnosis time and outcome
     outcome_time_lst = []
@@ -391,6 +397,9 @@ def cox_unconditional(data:DiseaseNetworkData,
     length = len(dataset_analysis[(dataset_analysis[exp_col]==1) & (dataset_analysis[outcome_col]==1)])
     result += [length]
     
+    if data.study_design == "registry":
+        return result
+    
     #calculate time in years
     dataset_analysis[time_col] = (dataset_analysis[end_date_col] - dataset_analysis[index_date_col]).dt.days/365.25
     
@@ -408,6 +417,9 @@ def cox_unconditional(data:DiseaseNetworkData,
         write_log(log_file,f'Number of cases {length} less than threshold {n_threshold} for phecode {phecode}\n')
         return result
     
+    if data.study_design == "registry":
+        return result
+
     #exclude those with negative time
     dataset_analysis = dataset_analysis[dataset_analysis[time_col]>0]
     

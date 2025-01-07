@@ -41,14 +41,14 @@ Created on Fri Jul 26 12:49:35 2024
 #                     columns=["eid", "sex", "birth_year", "birth_month", "birth_day", "income", "bmi", "date_start", "date_end"])
 # data.to_csv("C:/Users/bovin/Desktop/data.csv")
 # date_dignosed = [f"{random.choices(range(1976,1978), k=1)[0]}-{random.choices(range(1,13), k=1)[0]}-{random.choices(range(1,28), k=1)[0]}" for i in range(10000)]
-# disease_icd10 = ["C809" for i in range(10000)]
+# disease_icd10 = random.choices(["C809", "C800", "N390", "C859", "Y280", "C221", "C61", "C260"], k=10000)
 # inp_data = pd.DataFrame({"eid":eid,
 #                          "icd10":disease_icd10,
 #                          "date_dignosed":date_dignosed},
 #                          columns=["eid", "icd10", "date_dignosed"]).to_csv("C:/Users/bovin/Desktop/inp.csv")
 
 from DiseaseNet.data_management import DiseaseNetworkData as dnd
-from DiseaseNet.analysis import phewas
+from DiseaseNet.analysis import phewas, comorbidity_strength, binomial_test
 
 data = dnd(study_design="registry")
 data.phenotype_data("C:/Users/bovin/Desktop/data.csv",
@@ -62,5 +62,9 @@ data.merge_medical_records("C:/Users/bovin/Desktop/inp.csv",
                            {"Participant ID": "eid",
                             "Diagnosis code": "icd10",
                             "Date of diagnosis": "date_dignosed"})
-phewas_result = phewas(data, n_threshold=10, n_cpus=1)
+phewas_result = phewas(data, proportion_threshold=0.1)
+phewas_result.to_csv("C:/Users/bovin/Desktop/s.csv")
 data.disease_pair(phewas_result)
+comorbidity_strength_result = comorbidity_strength(data, proportion_threshold=0.1)
+comorbidity_strength_result.to_csv("C:/Users/bovin/Desktop/sa.csv")
+binomial_test_result = binomial_test(data, comorbidity_strength_result)

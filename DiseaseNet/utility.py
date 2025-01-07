@@ -244,7 +244,7 @@ def phenotype_required_columns(dataframe,col_dict:dict,date_fmt:str,study_design
         raise ValueError("Duplicates found in Participant ID column, which is not allowed")
 
     # process the exposure column
-    if study_design != "register":
+    if study_design != "registry":
         exposure_col = col_dict['Exposure']
         unique_vals = dataframe[exposure_col].unique()
         n_unique_vals = len(unique_vals)

@@ -579,7 +579,7 @@ class DiseaseNetworkData:
         if len(valid_phecodes) <= 10:
             print(f'Warning: only {len(valid_phecodes)} significant phecodes are found.')
         self.__significant_phecodes = valid_phecodes
-        if self.study_design == "register":
+        if self.study_design == "registry":
             exp_col = "exposure"
         else:
             exp_col = self.__phenotype_info['phenotype_col_dict']['Exposure']
