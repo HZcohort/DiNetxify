@@ -367,6 +367,9 @@ def cox_unconditional(data:DiseaseNetworkData,
         write_log(log_file,f'No individuals remaining after filtering for phecode {phecode}\n')
         return result
     
+    #at_risk number
+    n_at_risk = len(dataset_analysis)
+
     if data.study_design != "registry":
     #check number
         number_exposed = len(dataset_analysis[dataset_analysis[exp_col]==1])
@@ -398,7 +401,7 @@ def cox_unconditional(data:DiseaseNetworkData,
     result += [length]
     
     if data.study_design == "registry":
-        return result
+        return result, n_at_risk
     
     #calculate time in years
     dataset_analysis[time_col] = (dataset_analysis[end_date_col] - dataset_analysis[index_date_col]).dt.days/365.25

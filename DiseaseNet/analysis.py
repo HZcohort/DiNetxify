@@ -186,8 +186,11 @@ def phewas(data:DiseaseNetworkData,
                     parameters_all.append([data,n_threshold,phecode,covariates,log_file_final,lifelines_disable])
                 result_all = p.starmap(cox_unconditional, parameters_all)    
     if data.study_design == "registry":
+        n_at_risk_lst = []
         for phecode in phecode_lst_all:
-            result_all.append(cox_unconditional(data,n_threshold,phecode,covariates,log_file_final,lifelines_disable))
+            result, number = cox_unconditional(data,n_threshold,phecode,covariates,log_file_final,lifelines_disable)
+            result_all.append(result)
+            n_at_risk_lst.append(number)
 
     time_end = time.time()
     time_spent = (time_end - time_start)/60
@@ -202,9 +205,7 @@ def phewas(data:DiseaseNetworkData,
     
     if data.study_design == "registry":
         if proportion_threshold:
-            phewas_df["N_total"] = phewas_df["sex"].apply(lambda x:len(data.phenotype_df) if x=="Both" 
-                                                          else len(data.phenotype_df.loc[data.phenotype_df[data.get_attribute('phenotype_info')['phenotype_col_dict']['Sex']]==1]) if x=="Female"
-                                                          else len(data.phenotype_df.loc[data.phenotype_df[data.get_attribute('phenotype_info')['phenotype_col_dict']['Sex']]==0]))
+            phewas_df["N_total"] = n_at_risk_lst
             phewas_df["phewas_p_significance"] = phewas_df.apply(lambda row: True if row["N_cases_exposed"]/row["N_total"] >= proportion_threshold 
                                                                  else False, axis=1)
         if n_threshold:
