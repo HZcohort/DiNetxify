@@ -244,17 +244,16 @@ def phenotype_required_columns(dataframe,col_dict:dict,date_fmt:str,study_design
         raise ValueError("Duplicates found in Participant ID column, which is not allowed")
 
     # process the exposure column
-    if study_design != "registry":
-        exposure_col = col_dict['Exposure']
-        unique_vals = dataframe[exposure_col].unique()
-        n_unique_vals = len(unique_vals)
-        if n_unique_vals != 2:
-            raise ValueError('The exposure variable does not have 2 unique values')
+    exposure_col = col_dict['Exposure']
+    unique_vals = dataframe[exposure_col].unique()
+    n_unique_vals = len(unique_vals)
+    if n_unique_vals != 2:
+        raise ValueError('The exposure variable does not have 2 unique values')
+    else:
+        if all(isinstance(x, (int, np.integer, float, np.floating)) and x in {0, 1} for x in unique_vals):
+            None
         else:
-            if all(isinstance(x, (int, np.integer, float, np.floating)) and x in {0, 1} for x in unique_vals):
-                None
-            else:
-                raise TypeError("The exposure variable does not have 2 unique values")
+            raise TypeError("The exposure variable does not have 2 unique values")
     
     #prcess the sex column
     unique_vals = dataframe[sex_col].unique()

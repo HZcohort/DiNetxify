@@ -11,10 +11,16 @@ import networkx as nx
 import os
 
 class ThreeDimensionalDiseaseNetwork():
-    def __init__(self, _commorbidity:pd.DataFrame, _trajectory:pd.DataFrame, 
-                 _original_disease:float, _original_disease_location:tuple,
-                 _original_diseaseSize:float, phewas_result:pd.DataFrame,
-                 source='phecode_d1', target='phecode_d2'):
+    def __init__(self, 
+                 _commorbidity:pd.DataFrame, 
+                 _trajectory:pd.DataFrame, 
+                 _original_disease:float, 
+                 _original_disease_location:tuple,
+                 _original_diseaseSize:float, 
+                 phewas_result:pd.DataFrame,
+                 source='phecode_d1', 
+                 target='phecode_d2'):
+        
         # primary attribution
         self.__module_dir = os.path.dirname(__file__)
         self.__commorbidity = _commorbidity
@@ -34,31 +40,23 @@ class ThreeDimensionalDiseaseNetwork():
         
         self.__disease_pairs = [[row[source], row[target]] for _, row in self.__trajectory.iterrows()]
 
-        self.__color_sixteen = [
-                                "#FF5733",
-                                "#33FF57",  
-                                "#3357FF",  
-                                "#FFFF33",  
-                                "#FF33FF",  
-                                "#33FFFF",  
-                                "#C70039",  
-                                "#900C3F",  
-                                "#581845",  
-                                "#1ABC9C",  
-                                "#2ECC71",  
-                                "#3498DB",
-                                "#9B59B6",  
-                                "#E74C3C",
-                                "#F1C40F",  
-                                "#FF7F50",  
-                                "#FFD700",]
+        self.__color_sixteen = ["#FF5733","#33FF57","#3357FF","#FFFF33","#FF33FF","#33FFFF","#C70039",  
+                                "#900C3F","#581845","#1ABC9C","#2ECC71","#3498DB","#9B59B6","#E74C3C",
+                                "#F1C40F","#FF7F50","#FFD700"]
         # nodes of networks
         self.__commorbidity_nodes = list(set(list(_commorbidity[source])+list(_commorbidity[target])))
         self.__trajectory_nodes = list(set(list(_trajectory[source])+list(_trajectory[target])))
         
     @staticmethod
-    def split_name(name:str):
-        """"""
+    def split_name(name:str) -> str:
+        """split the name of disease
+
+        Args:
+            name (str): disease
+
+        Returns:
+            str: translated disease
+        """
         words = name.split(' ')
         total_number, new_word = 0, ''
         for word in words:
@@ -72,15 +70,32 @@ class ThreeDimensionalDiseaseNetwork():
         return new_word.strip(' ')
 
     @staticmethod
-    def get_dimension(dimension_dict:dict, node:float):
-        """"""
-        for dimnesion_number, item in dimension_dict.items():
+    def get_dimension(dimension_dict:dict, 
+                      node:float) -> float:
+        """get the dimension of the phecode
+
+        Args:
+            dimension_dict (dict): {dimension:phecode}
+            node (float): phecode
+
+        Returns:
+            float: the number of dimension
+        """
+        for dimension_number, item in dimension_dict.items():
             if node in item:
-                return dimnesion_number
+                return dimension_number
             
     @staticmethod
-    def except_dimension(nodes:list, dimension_dict:dict):
-        """
+    def except_dimension(nodes:list, 
+                         dimension_dict:dict) -> list:
+        """get the dimension of except phecodes  
+
+        Args:
+            nodes (list): phecodes
+            dimension_dict (dict): {dimension:phecode}
+
+        Returns:
+            list: the dimension of nodes
         """
         nodes_dimension = []
         for item in nodes:
@@ -89,8 +104,16 @@ class ThreeDimensionalDiseaseNetwork():
         return nodes_dimension
 
     @staticmethod
-    def ball_cordinate(center, r):
-        """
+    def ball_cordinate(center:tuple,
+                       r:float) -> tuple:
+        """_summary_
+
+        Args:
+            center (tuple): _description_
+            r (float): _description_
+
+        Returns:
+            tuple: _description_
         """
         theta1 = np.linspace(0, 2*np.pi, 50)
         phi1 = np.linspace(0, np.pi, 50)
@@ -102,18 +125,34 @@ class ThreeDimensionalDiseaseNetwork():
         z += center[2]
         return (x,y,z)
 
-    def plotly_ball(self, center, r, name, label, color, 
+    def plotly_ball(self, 
+                    center:tuple, 
+                    r:float, 
+                    name:str, 
+                    label:str, 
+                    color:str, 
                     light_dict=dict(ambient=0.2, 
                                     diffuse=0.8, 
                                     specular=0.4,
                                     roughness=0.2, 
-                                    fresnel=2.0,
-                                    ),
-                    light_position_dict=dict(
-                                            x=1.5,
-                                            y=1.5,
-                                            z=1.5
-                    )):
+                                    fresnel=2.0),
+                    light_position_dict=dict(x=1.5,
+                                             y=1.5,
+                                             z=1.5)):
+        """_summary_
+
+        Args:
+            center (tuple): _description_
+            r (float): _description_
+            name (str): _description_
+            label (str): _description_
+            color (str): _description_
+            light_dict (_type_, optional): _description_. Defaults to dict(ambient=0.2, diffuse=0.8, specular=0.4, roughness=0.2, fresnel=2.0).
+            light_position_dict (_type_, optional): _description_. Defaults to dict(x=1.5, y=1.5, z=1.5).
+
+        Returns:
+            _type_: _description_
+        """
         x_, y_, z_ = self.ball_cordinate(center, r)
         colorscale_ = [[0.0, color], [0.5, color], [1.0, color]]
         return x_, y_, z_, colorscale_, light_dict, label, name, light_position_dict

@@ -309,10 +309,7 @@ def cox_unconditional(data:DiseaseNetworkData,
     #information about the dataframe
     info_dict = data.get_attribute('phenotype_info')
     id_col = info_dict['phenotype_col_dict']['Participant ID']
-    if data.study_design == "registry":
-        exp_col = "exposure"
-    else:
-        exp_col = info_dict['phenotype_col_dict']['Exposure']
+    exp_col = info_dict['phenotype_col_dict']['Exposure']
     sex_col = info_dict['phenotype_col_dict']['Sex']
     index_date_col = info_dict['phenotype_col_dict']['Index date']
     end_date_col = info_dict['phenotype_col_dict']['End date']
@@ -418,9 +415,6 @@ def cox_unconditional(data:DiseaseNetworkData,
     if length < n_threshold:
         result += [f'Less than threshold of {n_threshold}',str_exp,str_noexp]
         write_log(log_file,f'Number of cases {length} less than threshold {n_threshold} for phecode {phecode}\n')
-        return result
-    
-    if data.study_design == "registry":
         return result
 
     #exclude those with negative time

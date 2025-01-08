@@ -233,6 +233,7 @@ class DiseaseNetworkData:
             print(self.__warning_phenotype[-1])
         if self.study_design == "registry":
             self.phenotype_df["exposure"] = 1
+            self.__phenotype_col_dict["registry"]["Exposure"] = "exposure"
         #generate basic statistic for printing
         self.__phenotype_statistics['n_cohort'] = len(self.phenotype_df)
         self.__phenotype_statistics['n_exposed'] = len(self.phenotype_df[self.phenotype_df[self.__exposure_col]==1])
@@ -579,10 +580,7 @@ class DiseaseNetworkData:
         if len(valid_phecodes) <= 10:
             print(f'Warning: only {len(valid_phecodes)} significant phecodes are found.')
         self.__significant_phecodes = valid_phecodes
-        if self.study_design == "registry":
-            exp_col = "exposure"
-        else:
-            exp_col = self.__phenotype_info['phenotype_col_dict']['Exposure']
+        exp_col = self.__phenotype_info['phenotype_col_dict']['Exposure']
         exposed_index = self.phenotype_df[self.phenotype_df[exp_col]==1].index
 
         self.trajectory = d1d2_from_diagnosis_history(self.phenotype_df.loc[exposed_index],

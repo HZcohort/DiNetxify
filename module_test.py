@@ -50,21 +50,23 @@ Created on Fri Jul 26 12:49:35 2024
 from DiseaseNet.data_management import DiseaseNetworkData as dnd
 from DiseaseNet.analysis import phewas, comorbidity_strength, binomial_test
 
-data = dnd(study_design="registry")
-data.phenotype_data("C:/Users/bovin/Desktop/data.csv",
-                    {"Participant ID": "eid",
-                     "Sex": "sex",
-                     "Index date": "date_start",
-                     "End date": "date_end"},
-                     ["bmi", "income"])
-data.merge_medical_records("C:/Users/bovin/Desktop/inp.csv", 
-                           "ICD-10-WHO",
-                           {"Participant ID": "eid",
-                            "Diagnosis code": "icd10",
-                            "Date of diagnosis": "date_dignosed"})
-phewas_result = phewas(data, proportion_threshold=0.1)
-phewas_result.to_csv("C:/Users/bovin/Desktop/s.csv")
-data.disease_pair(phewas_result)
-comorbidity_strength_result = comorbidity_strength(data, proportion_threshold=0.1)
-comorbidity_strength_result.to_csv("C:/Users/bovin/Desktop/sa.csv")
-binomial_test_result = binomial_test(data, comorbidity_strength_result)
+
+if __name__ == "__main__":
+    data = dnd(study_design="registry")
+    data.phenotype_data("C:/Users/bovin/Desktop/data.csv",
+                        {"Participant ID": "eid",
+                        "Sex": "sex",
+                        "Index date": "date_start",
+                        "End date": "date_end"},
+                        ["bmi", "income"])
+    data.merge_medical_records("C:/Users/bovin/Desktop/inp.csv", 
+                            "ICD-10-WHO",
+                            {"Participant ID": "eid",
+                                "Diagnosis code": "icd10",
+                                "Date of diagnosis": "date_dignosed"})
+    phewas_result = phewas(data, proportion_threshold=0.1, n_cpus=5)
+    phewas_result.to_csv("C:/Users/bovin/Desktop/s.csv")
+    data.disease_pair(phewas_result)
+    comorbidity_strength_result = comorbidity_strength(data, proportion_threshold=0.1)
+    comorbidity_strength_result.to_csv("C:/Users/bovin/Desktop/sa.csv")
+    binomial_test_result = binomial_test(data, comorbidity_strength_result)
