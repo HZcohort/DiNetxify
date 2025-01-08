@@ -62,8 +62,8 @@ if __name__ == "__main__":
     data.merge_medical_records("C:/Users/bovin/Desktop/inp.csv", 
                             "ICD-10-WHO",
                             {"Participant ID": "eid",
-                                "Diagnosis code": "icd10",
-                                "Date of diagnosis": "date_dignosed"})
+                            "Diagnosis code": "icd10",
+                            "Date of diagnosis": "date_dignosed"})
     phewas_result = phewas(data, proportion_threshold=0.1, n_cpus=5)
     phewas_result.to_csv("C:/Users/bovin/Desktop/s.csv")
     data.disease_pair(phewas_result)
