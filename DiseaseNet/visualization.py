@@ -841,19 +841,19 @@ class ThreeDimensionalDiseaseNetwork():
         plot_data = []
 
         # plot the origin disease
-        origin_data = go.Scatter3d(x=[self.__location[0]],
-                                   y=[self.__location[1]],
-                                   z=[self.__location[2]],
-                                   mode='markers',
-                                   marker=dict(symbol='circle',size=self.__size,color='black'),
-                                   text=['Depression'],
-                                   hoverinfo='text',
-                                   legendgroup='origin',
-                                   legendgrouptitle_text='Origin of Trajectories',
-                                   name='Depression',
-                                   showlegend=True)
-
-        plot_data += [origin_data]
+        if self.__original_disease != 9999:
+            origin_data = go.Scatter3d(x=[self.__location[0]],
+                                    y=[self.__location[1]],
+                                    z=[self.__location[2]],
+                                    mode='markers',
+                                    marker=dict(symbol='circle',size=self.__size,color='black'),
+                                    text=['Depression'],
+                                    hoverinfo='text',
+                                    legendgroup='origin',
+                                    legendgrouptitle_text='Origin of Trajectories',
+                                    name='Depression',
+                                    showlegend=True)
+            plot_data += [origin_data]
         # plot the nodes and edges
         if plot_method == 'full':
             plot_data += self.__full_plot(line_color, line_width)
