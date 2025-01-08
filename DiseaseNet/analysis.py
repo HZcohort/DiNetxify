@@ -888,7 +888,7 @@ def comorbidity_network(data:DiseaseNetworkData, comorbidity_strength_result:pd.
     covariates = covariates_check(covariates,data.get_attribute('phenotype_info'))
     
     #check number of CPUs
-    n_cpus_check(n_cpus,'comorbidity_strength')
+    n_cpus_check(n_cpus,'comorbidity_network')
     if n_cpus>1:
         import multiprocessing
 

@@ -837,7 +837,6 @@ class ThreeDimensionalDiseaseNetwork():
         
         if not hasattr(self, "color_map"):
             self.color()
-        
         plot_data = []
 
         # plot the origin disease
