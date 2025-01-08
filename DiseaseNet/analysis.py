@@ -742,9 +742,15 @@ def binomial_multipletests(df:pd.DataFrame, correction:str='bonferroni', cutoff:
     return df
 
 
-def comorbidity_network(data:DiseaseNetworkData, comorbidity_strength_result:pd.DataFrame, binomial_test_result:pd.DataFrame, 
-                        method:str='RPCN', covariates:list=None, n_cpus:int=1, 
-                        log_file:str=None, correction:str='bonferroni', cutoff:float=0.05, **kwargs) -> pd.DataFrame:
+def comorbidity_network(data:DiseaseNetworkData,
+                        comorbidity_strength_result:pd.DataFrame, 
+                        binomial_test_result:pd.DataFrame, 
+                        method:str='RPCN', 
+                        covariates:list=None, 
+                        n_cpus:int=1, 
+                        log_file:str=None, 
+                        correction:str='bonferroni', 
+                        cutoff:float=0.05, **kwargs) -> pd.DataFrame:
     """
     Perform comorbidity network analysis on disease pairs with significant comorbidity strength to identify pairs with confirmed comorbidity associations.
 
