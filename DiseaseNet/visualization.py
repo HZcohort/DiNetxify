@@ -11,13 +11,12 @@ import networkx as nx
 import os
 
 class ThreeDimensionalDiseaseNetwork():
-    def __init__(self, 
-                 _commorbidity:pd.DataFrame, 
-                 _trajectory:pd.DataFrame, 
-                 _original_disease:float, 
-                 _original_disease_location:tuple,
-                 _original_diseaseSize:float, 
+    def __init__(self, _commorbidity:pd.DataFrame, 
+                 _trajectory:pd.DataFrame,
                  phewas_result:pd.DataFrame,
+                 _original_disease:float=9999,
+                 _original_disease_location:tuple=(0,0,0),
+                 _original_diseaseSize:float=1,
                  source='phecode_d1', 
                  target='phecode_d2'):
         
@@ -25,11 +24,16 @@ class ThreeDimensionalDiseaseNetwork():
         self.__module_dir = os.path.dirname(__file__)
         self.__commorbidity = _commorbidity
         self.__phecode_number = dict(zip(phewas_result["phecode"], phewas_result["N_cases_exposed"]))
+        self.__describe = pd.read_csv(os.path.join(self.__module_dir, "data/phecode_1.2/phecode_info.csv"))
+        
         self.__original_disease = _original_disease
         self.__size = _original_diseaseSize
         self.__location = _original_disease_location
-        self.__describe = pd.read_csv(os.path.join(self.__module_dir, "data/phecode_1.2/phecode_info.csv"))
-        
+        self.__system_lst = ['circulatory system', 'sense organs', 'injuries & poisonings', 'neurological', 
+                             'dermatologic', 'digestive', 'hematopoietic', 'musculoskeletal', 
+                             'endocrine/metabolic', 'mental disorders', 'infectious diseases', 
+                             'genitourinary', 'neoplasms', 'respiratory', "symptoms", "congenital anomalies", "mental disorders" ]
+
         df = _trajectory.loc[~_trajectory['phecode_d1'].isin(_trajectory.phecode_d2.values)]
         df_lst = set(df.phecode_d1.values)
         d0_d1 = []
@@ -37,12 +41,12 @@ class ThreeDimensionalDiseaseNetwork():
             d0_d1.append([_original_disease, d, '%f-%f' % (_original_disease,d)])
         d0_d1 = pd.DataFrame(d0_d1,columns=['phecode_d1', 'phecode_d2', 'name_disease_pair'])
         self.__trajectory = pd.concat([_trajectory, d0_d1])
-        
-        self.__disease_pairs = [[row[source], row[target]] for _, row in self.__trajectory.iterrows()]
 
+        self.__disease_pairs = [[row[source], row[target]] for _, row in self.__trajectory.iterrows()]
         self.__color_sixteen = ["#FF5733","#33FF57","#3357FF","#FFFF33","#FF33FF","#33FFFF","#C70039",  
                                 "#900C3F","#581845","#1ABC9C","#2ECC71","#3498DB","#9B59B6","#E74C3C",
                                 "#F1C40F","#FF7F50","#FFD700"]
+        
         # nodes of networks
         self.__commorbidity_nodes = list(set(list(_commorbidity[source])+list(_commorbidity[target])))
         self.__trajectory_nodes = list(set(list(_trajectory[source])+list(_trajectory[target])))
@@ -125,8 +129,7 @@ class ThreeDimensionalDiseaseNetwork():
         z += center[2]
         return (x,y,z)
 
-    def plotly_ball(self, 
-                    center:tuple, 
+    def plotly_ball(self, center:tuple, 
                     r:float, 
                     name:str, 
                     label:str, 
@@ -158,11 +161,23 @@ class ThreeDimensionalDiseaseNetwork():
         return x_, y_, z_, colorscale_, light_dict, label, name, light_position_dict
 
 
-    def __calculate_location_random(self, node:float, _hash_dict:dict,
+    def __calculate_location_random(self, node:float, 
+                                    _hash_dict:dict,
                                     begin_angle=0.25,
                                     end_angele=0.25,
                                     _iter_time=10000):
-        """"""
+        """_summary_
+
+        Args:
+            node (float): _description_
+            _hash_dict (dict): _description_
+            begin_angle (float, optional): _description_. Defaults to 0.25.
+            end_angele (float, optional): _description_. Defaults to 0.25.
+            _iter_time (int, optional): _description_. Defaults to 10000.
+
+        Returns:
+            _type_: _description_
+        """
         # get the cluster number
         cluster_number = self.final_cluster[node]
 
@@ -170,7 +185,6 @@ class ThreeDimensionalDiseaseNetwork():
         for dimension_number, nodes in self.dimension.items():
             if node in nodes: break
         
-        # print(dimension_number, nodes)
         # calculate
         if _hash_dict[cluster_number]:
             iter_time, flag = 0, True
@@ -209,8 +223,15 @@ class ThreeDimensionalDiseaseNetwork():
         _location_dict = {node:loction}
         return _location_dict, _hash_dict
 
-    def get_node_size(self, node:float):
-        """"""
+    def get_node_size(self, node:float) -> float:
+        """_summary_
+
+        Args:
+            node (float): _description_
+
+        Returns:
+            float: _description_
+        """
         size = np.sqrt(self.__phecode_number[node])
         return size
 
@@ -218,24 +239,31 @@ class ThreeDimensionalDiseaseNetwork():
                 source='phecode_d1',
                 target='phecode_d2',
                 weight='comorbidity_beta'):
-        """"""
+        """_summary_
+
+        Args:
+            iter_time (int, optional): _description_. Defaults to 5000.
+            source (str, optional): _description_. Defaults to 'phecode_d1'.
+            target (str, optional): _description_. Defaults to 'phecode_d2'.
+            weight (str, optional): _description_. Defaults to 'comorbidity_beta'.
+
+        Returns:
+            _type_: _description_
+        """
         if hasattr(self, "final_cluster"):
             return self.final_cluster
         
         # create network class and add the edges
         Graph_position = nx.Graph()
-        [Graph_position.add_edge(row[source],
-                                row[target],
-                                weight=row[weight])
-                                for _, row in self.__commorbidity.iterrows()]
+        [Graph_position.add_edge(row[source],row[target],weight=row[weight]) 
+         for _, row in self.__commorbidity.iterrows()]
         
         # random and repeated clustering the nodes
         result = []
         for i in range(iter_time):
             partition = community_louvain.best_partition(Graph_position, random_state=i)
             result.append([i, community_louvain.modularity(partition, Graph_position)])
-        random_df = pd.DataFrame(result, 
-                                columns=['rs', 'modularity']).sort_values(by='modularity')
+        random_df = pd.DataFrame(result, columns=['rs', 'modularity']).sort_values(by='modularity')
         best_rs = random_df.iloc[-1, 0]
 
         # final result with the best score
@@ -243,8 +271,17 @@ class ThreeDimensionalDiseaseNetwork():
         self.maximum_class_number = max(self.final_cluster.values()) + 1
         return self.final_cluster
 
-    def location_random(self, max_radius:float, min_radius:float):
-        """"""
+    def location_random(self, max_radius:float, 
+                        min_radius:float):
+        """_summary_
+
+        Args:
+            max_radius (float): _description_
+            min_radius (float): _description_
+
+        Returns:
+            _type_: _description_
+        """
         if not hasattr(self, "final_cluster"):
             self.cluster()
         if not hasattr(self, "dimension"):
@@ -286,11 +323,11 @@ class ThreeDimensionalDiseaseNetwork():
                 location_dict.update(one_dimension_location)
                 hash_dict[self.final_cluster[node]].update(one_dimension_location)
         location_dict.update({self.__original_disease:self.__location})
-
         self.location_dict = location_dict
         return self.location_dict
     
-    def trajectory(self, source='phecode_d1', target='phecode_d2'):
+    def trajectory(self, source='phecode_d1', 
+                   target='phecode_d2'):
         """"""
         if hasattr(self, "trajectory_dimension"):
             return self.trajectory_dimension
@@ -317,7 +354,7 @@ class ThreeDimensionalDiseaseNetwork():
             # further layers
                 # nodes of this layer
                 trajectory_disease = [x for item in temp_disease for x in 
-                                        trajectory_df.loc[trajectory_df[source]==item][target]]
+                                      trajectory_df.loc[trajectory_df[source]==item][target]]
                 
                 # break label
                 temp_disease = trajectory_disease.copy()
@@ -338,8 +375,17 @@ class ThreeDimensionalDiseaseNetwork():
         self.trajectory_dimension = trajectory_dimension
         return self.trajectory_dimension
     
-    def commorbidity(self, source='phecode_d1', target='phecode_d2'):
-        """"""
+    def commorbidity(self, source='phecode_d1', 
+                     target='phecode_d2'):
+        """_summary_
+
+        Args:
+            source (str, optional): _description_. Defaults to 'phecode_d1'.
+            target (str, optional): _description_. Defaults to 'phecode_d2'.
+
+        Returns:
+            _type_: _description_
+        """
         if not hasattr(self, "trajectory_dimension"):
             self.trajectory()
         # nodes only exist the commorbidity network
@@ -410,7 +456,11 @@ class ThreeDimensionalDiseaseNetwork():
         return self.commorbidity_dimension
     
     def _dimension(self):
-        """"""
+        """_summary_
+
+        Returns:
+            _type_: _description_
+        """
         if not hasattr(self, "commorbidity_dimension"):
             self.commorbidity()
         
@@ -443,31 +493,30 @@ class ThreeDimensionalDiseaseNetwork():
                                   len(self.dimension))
         return self.dimension
 
-    def color(
-            self, 
-            code='phecode',
-            cluster_name='category', 
-            describe='phenotype'):
-        """"""
-        code_system = dict(zip(self.__describe[code], self.__describe[cluster_name]))
+    def color(self, code='phecode',
+              cluster_name='category', 
+              describe='phenotype'):
+        """_summary_
 
-        system_list = ['circulatory system', 'sense organs', 'injuries & poisonings', 'neurological', 
-                        'dermatologic', 'digestive', 'hematopoietic', 'musculoskeletal', 
-                        'endocrine/metabolic', 'mental disorders', 'infectious diseases', 
-                        'genitourinary', 'neoplasms', 'respiratory', "symptoms", "congenital anomalies",
-                        "mental disorders" ]
-        system_color = dict(zip(system_list, self.__color_sixteen))
+        Args:
+            code (str, optional): _description_. Defaults to 'phecode'.
+            cluster_name (str, optional): _description_. Defaults to 'category'.
+            describe (str, optional): _description_. Defaults to 'phenotype'.
+
+        Returns:
+            _type_: _description_
+        """
+        code_system = dict(zip(self.__describe[code], self.__describe[cluster_name]))
+        system_color = dict(zip(self.__system_lst, self.__color_sixteen))
         code_color = {node:system_color.get(code_system.get(node)) 
                       for node in code_system.keys()}
         self.color_map = code_color
         self.__code_system = code_system
         self.__system_color = system_color
         self.__code_name = {cd:self.split_name('%s (%.1f)' % (words, cd))
-                            for cd, words in self.__describe[[code, describe]]\
-                            .values}
+                            for cd, words in self.__describe[[code, describe]].values}
         self.code_name = {cd:self.split_name('%s (%.1f)' % (words, cd))
-                            for cd, words in self.__describe[[code, describe]]\
-                            .values}
+                            for cd, words in self.__describe[[code, describe]].values}
         self.__clusterNumber_system = {}
         self.__clusterNumber_color = {}
         from collections import Counter
@@ -484,13 +533,9 @@ class ThreeDimensionalDiseaseNetwork():
                     disease_list.append(self.__code_system[key])
             self.__clusterNumber_system[cluster_number] = most_frequent_element(disease_list)
             self.__clusterNumber_color[cluster_number] = self.__system_color[most_frequent_element(disease_list)]
-            
         return self.color_map
 
     def incluster_commorbidity(self, incluster:list[str]) -> list[str]:
-        """
-        
-        """
         for _, row in self.__commorbidity.iterrows():
             if row["phecode_d1"] in incluster and \
             self.final_cluster[row["phecode_d2"]]==self.final_cluster[row["phecode_d1"]]:
@@ -502,82 +547,61 @@ class ThreeDimensionalDiseaseNetwork():
 
         return list(set(incluster))
 
-    def __full_plot(self, line_color:str, line_width:float,
-                    source='phecode_d1', target='phecode_d2'):
-        """
-        plot all nodes and edges
-        """
+    def __full_plot(self, line_color:str, 
+                    line_width:float,
+                    source='phecode_d1', 
+                    target='phecode_d2'):
         plot_data = []
-
-        # plot nodes way 4
-        system_list = ['circulatory system', 'sense organs', 'injuries & poisonings', 'neurological', 
-                        'dermatologic', 'digestive', 'hematopoietic', 'musculoskeletal', 
-                        'endocrine/metabolic', 'mental disorders', 'infectious diseases', 
-                        'genitourinary', 'neoplasms', 'respiratory']
-        for system in system_list:
-            system_nodes = [x for x in self.__commorbidity_nodes 
-                            if self.__code_system[x]==system]
+        for system in self.__system_lst:
+            system_nodes = [x for x in self.__commorbidity_nodes if self.__code_system[x]==system]
             if system_nodes:
                 for node in system_nodes:
-                    x_, y_, z_, colorscale_, light_dict, label, name, light_position = self.plotly_ball(list(self.location_dict[node]),
+                    x_, y_, z_, colorscale_, light_dict, _, name, light_position = self.plotly_ball(list(self.location_dict[node]),
                                                                                                         self.get_node_size(node)/13,
                                                                                                         str(self.__code_name[node]),
                                                                                                         'Disease',
                                                                                                         self.__system_color[self.__code_system[node]])
-                
                     if node == system_nodes[0]:
                         data = go.Surface(x=x_, y=y_, z=z_, colorscale=colorscale_, showlegend=True,
-                                    lighting=light_dict, hovertemplate=name, name='%s Disease' % (system.title()), showscale=False,
-                                    legendgroup='ball', legendgrouptitle_text='Diseases',lightposition=light_position
-                                    )
+                                          lighting=light_dict, hovertemplate=name, name='%s Disease' % (system.title()), showscale=False,
+                                          legendgroup='ball', legendgrouptitle_text='Diseases',lightposition=light_position)
                     else:
                         data = go.Surface(x=x_, y=y_, z=z_, colorscale=colorscale_, showlegend=False,
-                                    lighting=light_dict, hovertemplate=name, name='%s Disease' % (system.title()), showscale=False,
-                                    legendgroup='ball', legendgrouptitle_text='Diseases',lightposition=light_position
-                                    )
+                                          lighting=light_dict, hovertemplate=name, name='%s Disease' % (system.title()), showscale=False,
+                                          legendgroup='ball', legendgrouptitle_text='Diseases',lightposition=light_position)
                     plot_data += [data]
-
         # plot edges
         graph = nx.DiGraph()
-        [graph.add_edge(row[source], row[target]) for _, row in self.__trajectory.iterrows()]
+        if self.__original_disease == 9999:
+            [graph.add_edge(row[source], row[target]) for _, row in self.__trajectory.iterrows() if row[source]!=9999]
+        else:
+            [graph.add_edge(row[source], row[target]) for _, row in self.__trajectory.iterrows()]
         edges_x, edges_y, edges_z = [], [], []
         for edge in graph.edges():
             edges_x += [self.location_dict[edge[0]][0], self.location_dict[edge[1]][0], None]
             edges_y += [self.location_dict[edge[0]][1], self.location_dict[edge[1]][1], None]
             edges_z += [self.location_dict[edge[0]][2], self.location_dict[edge[1]][2], None]
 
-        trace_edges = go.Scatter3d(
-            x=edges_x,
-            y=edges_y,
-            z=edges_z,
-            line=dict(color=line_color,
-                      width=line_width),
-            mode='lines',
-            hoverinfo='none',
-            legendgroup='none',
-            legendgrouptitle_text='All Trajectories',
-            name='Trajectories',
-            showlegend=True
-        )
-
+        trace_edges = go.Scatter3d(x=edges_x,
+                                   y=edges_y,
+                                   z=edges_z,
+                                   line=dict(color=line_color,width=line_width),
+                                   mode='lines',
+                                   hoverinfo='none',
+                                   legendgroup='none',
+                                   legendgrouptitle_text='All Trajectories',
+                                   name='Trajectories',
+                                   showlegend=True)
         plot_data += [trace_edges]
         return plot_data
     
     def __half_plot(self, main_line_width:float, 
                     nonMain_line_color='silver', 
                     nonMain_line_width=1,
-                    source='phecode_d1', target='phecode_d2',
-                    factor='comorbidity_beta'):
-        """
-        half plot
-        """
+                    source='phecode_d1', 
+                    target='phecode_d2'):
         plot_data = []
-
         # plot nodes (incluster)
-        system_list = ['circulatory system', 'sense organs', 'injuries & poisonings', 'neurological', 
-                        'dermatologic', 'digestive', 'hematopoietic', 'musculoskeletal', 
-                        'endocrine/metabolic', 'mental disorders', 'infectious diseases', 
-                        'genitourinary', 'neoplasms', 'respiratory']
         self.incluster_nodes = []
         for cluster_number in set(self.final_cluster.values()):
             cluster_nodes = []
@@ -597,11 +621,11 @@ class ThreeDimensionalDiseaseNetwork():
                 source_list = target_list
             self.incluster_nodes += cluster_nodes
 
-        for system in system_list:
+        for system in self.__system_lst:
             system_nodes = [x for x in self.incluster_nodes if self.__code_system[x]==system]
             if system_nodes:
                 for node in system_nodes:
-                    x_, y_, z_, colorscale_, light_dict, label, name, light_position = self.plotly_ball(list(self.location_dict[node]),
+                    x_, y_, z_, colorscale_, light_dict, _, name, light_position = self.plotly_ball(list(self.location_dict[node]),
                                                                                                         self.get_node_size(node)/13,
                                                                                                         str(self.__code_name[node]),
                                                                                                         'Disease',
@@ -609,20 +633,18 @@ class ThreeDimensionalDiseaseNetwork():
                 
                     if node == system_nodes[0]:
                         data = go.Surface(x=x_, y=y_, z=z_, colorscale=colorscale_, showlegend=True,
-                                    lighting=light_dict, hovertemplate=name, name='%s Disease' % (system.title()), showscale=False,
-                                    legendgroup='ball', legendgrouptitle_text='Diseases', lightposition=light_position
-                                    )
+                                          lighting=light_dict, hovertemplate=name, name='%s Disease' % (system.title()), showscale=False,
+                                          legendgroup='ball', legendgrouptitle_text='Diseases', lightposition=light_position)
                     else:
                         data = go.Surface(x=x_, y=y_, z=z_, colorscale=colorscale_, showlegend=False,
-                                    lighting=light_dict, hovertemplate=name, name='%s Disease' % (system.title()), showscale=False,
-                                    legendgroup='ball', legendgrouptitle_text='Diseases', lightposition=light_position
-                                    )
+                                          lighting=light_dict, hovertemplate=name, name='%s Disease' % (system.title()), showscale=False,
+                                          legendgroup='ball', legendgrouptitle_text='Diseases', lightposition=light_position)
                     plot_data += [data]
 
         # plot nodes (outcluster)
         self.outcluster_nodes = [x for x in self.__commorbidity_nodes if x not in self.incluster_nodes]
         for node in self.outcluster_nodes:
-            x_, y_, z_, colorscale_, light_dict, label, name, light_position = self.plotly_ball(list(self.location_dict[node]),
+            x_, y_, z_, colorscale_, light_dict, _, name, light_position = self.plotly_ball(list(self.location_dict[node]),
                                                                                                 self.get_node_size(node)/13,
                                                                                                 str(self.__code_name[node]),
                                                                                                 'Disease',
@@ -630,14 +652,12 @@ class ThreeDimensionalDiseaseNetwork():
         
             if node == self.outcluster_nodes[0]:
                 data = go.Surface(x=x_, y=y_, z=z_, colorscale=colorscale_, showlegend=True,
-                            lighting=light_dict, hovertemplate=name, name='Outer disease', showscale=False,
-                            legendgroup='ball', legendgrouptitle_text='Diseases', lightposition=light_position
-                            )
+                                  lighting=light_dict, hovertemplate=name, name='Outer disease', showscale=False,
+                                  legendgroup='ball', legendgrouptitle_text='Diseases', lightposition=light_position)
             else:
                 data = go.Surface(x=x_, y=y_, z=z_, colorscale=colorscale_, showlegend=False,
-                            lighting=light_dict, hovertemplate=name, name='Outer disease', showscale=False,
-                            legendgroup='ball', legendgrouptitle_text='Diseases', lightposition=light_position
-                            )
+                                  lighting=light_dict, hovertemplate=name, name='Outer disease', showscale=False,
+                                  legendgroup='ball', legendgrouptitle_text='Diseases', lightposition=light_position)
             plot_data += [data]
 
         # plot edges (incluster)
@@ -654,14 +674,13 @@ class ThreeDimensionalDiseaseNetwork():
                                             ==node][target].values if self.final_cluster[x]==system]
                     target_list += template_target_list
                     if template_target_list:
-                        [graph.add_edge(node, target) for target in template_target_list]
+                        [graph.add_edge(node, target) for target in template_target_list if node!=9999]
                         [incluster_trajectory.append([node, target]) for target in template_target_list]
 
                 system_nodes += target_list
                 system_nodes = list(set(system_nodes))
                 end_number_nodes = len(system_nodes)
-                if end_number_nodes == begin_number_nodes:
-                    break
+                if end_number_nodes == begin_number_nodes: break
                 source_list = target_list
 
             edges_color, edges_x, edges_y, edges_z = [], [], [], []
@@ -671,17 +690,15 @@ class ThreeDimensionalDiseaseNetwork():
                 edges_y += [self.location_dict[edge[0]][1], self.location_dict[edge[1]][1], None]
                 edges_z += [self.location_dict[edge[0]][2], self.location_dict[edge[1]][2], None]
 
-            trace_edges = go.Scatter3d(
-                                    x=edges_x,
-                                    y=edges_y, 
-                                    z=edges_z, 
-                                    line=dict(color=edges_color*3, 
-                                            width=main_line_width),
-                                    mode='lines',
-                                    hoverinfo='none',
-                                    legendgroup='1',
-                                    legendgrouptitle_text='All Trajectories',
-                                    name='Cluster %i Trajectories' % (system+1))
+            trace_edges = go.Scatter3d(x=edges_x,
+                                       y=edges_y, 
+                                       z=edges_z, 
+                                       line=dict(color=edges_color*3,width=main_line_width),
+                                       mode='lines',
+                                       hoverinfo='none',
+                                       legendgroup='1',
+                                       legendgrouptitle_text='All Trajectories',
+                                       name='Cluster %i Trajectories' % (system+1))
             plot_data += [trace_edges]
 
         # plot edges (outcluster)
@@ -691,10 +708,8 @@ class ThreeDimensionalDiseaseNetwork():
             if disease_pairs not in self.incluster_trajectory:
                 self.incluster_trajectory.append(disease_pairs)
                 
-        # incluster_trajectory = []
-        [graph.add_edge(disease_pairs[0], disease_pairs[1])
-          for disease_pairs in self.__disease_pairs
-          if disease_pairs not in incluster_trajectory]
+        [graph.add_edge(disease_pairs[0], disease_pairs[1]) for disease_pairs 
+         in self.__disease_pairs if (disease_pairs not in incluster_trajectory) & (disease_pairs[0]!=9999)]
         
         edges_x, edges_y, edges_z = [], [], []
         for edge in graph.edges():
@@ -702,34 +717,23 @@ class ThreeDimensionalDiseaseNetwork():
             edges_y += [self.location_dict[edge[0]][1], self.location_dict[edge[1]][1], None]
             edges_z += [self.location_dict[edge[0]][2], self.location_dict[edge[1]][2], None]
 
-        trace_edges = go.Scatter3d(
-                                x=edges_x,
-                                y=edges_y, 
-                                z=edges_z, 
-                                line=dict(color=nonMain_line_color, 
-                                        width=nonMain_line_width),
-                                mode='lines',
-                                hoverinfo='none',
-                                legendgroup='1',
-                                legendgrouptitle_text='All Trajectories',
-                                name="Insignificant Trajectories")
+        trace_edges = go.Scatter3d(x=edges_x,
+                                   y=edges_y, 
+                                   z=edges_z, 
+                                   line=dict(color=nonMain_line_color,width=nonMain_line_width),
+                                   mode='lines',
+                                   hoverinfo='none',
+                                   legendgroup='1',
+                                   legendgrouptitle_text='All Trajectories',
+                                   name="Insignificant Trajectories")
         plot_data += [trace_edges]
-
         return plot_data
 
-    def __compact_plot(self,
-                       main_line_width:float,
-                       nonMain_line_color='silver',
-                       nonMain_line_width=1,
+    def __compact_plot(self,main_line_width:float,
                        source='phecode_d1',
-                       target='phecode_d2',
-                       factor='comorbidity_beta'):
+                       target='phecode_d2'):
         plot_data = []
         # plot nodes (incluster)
-        system_list = ['circulatory system', 'sense organs', 'injuries & poisonings', 'neurological', 
-                        'dermatologic', 'digestive', 'hematopoietic', 'musculoskeletal', 
-                        'endocrine/metabolic', 'mental disorders', 'infectious diseases', 
-                        'genitourinary', 'neoplasms', 'respiratory']
         self.incluster_nodes = []
         for cluster_number in set(self.final_cluster.values()):
             cluster_nodes = []
@@ -743,19 +747,18 @@ class ThreeDimensionalDiseaseNetwork():
                 cluster_nodes += target_list
                 cluster_nodes = list(set(cluster_nodes))
                 end_number_nodes = len(cluster_nodes)
-                # print(end_number_nodes, begin_number_nodes)
                 if end_number_nodes == begin_number_nodes:
                     break
                 source_list = target_list
             self.incluster_nodes += cluster_nodes
         compact_node = []
-        for system in system_list:
+        for system in self.__system_lst:
             system_nodes = [x for x in self.incluster_nodes if self.__code_system[x]==system]
             
             if system_nodes:
                 for node in system_nodes:
                     compact_node.append(node)
-                    x_, y_, z_, colorscale_, light_dict, label, name, light_position = self.plotly_ball(list(self.location_dict[node]),
+                    x_, y_, z_, colorscale_, light_dict, _, name, light_position = self.plotly_ball(list(self.location_dict[node]),
                                                                                                         self.get_node_size(node)/13,
                                                                                                         str(self.__code_name[node]),
                                                                                                         'Disease',
@@ -764,13 +767,11 @@ class ThreeDimensionalDiseaseNetwork():
                     if node == system_nodes[0]:
                         data = go.Surface(x=x_, y=y_, z=z_, colorscale=colorscale_, showlegend=True,
                                     lighting=light_dict, hovertemplate=name, name='%s Disease' % (system.title()), showscale=False,
-                                    legendgroup='ball', legendgrouptitle_text='Diseases', lightposition=light_position
-                                    )
+                                    legendgroup='ball', legendgrouptitle_text='Diseases', lightposition=light_position)
                     else:
                         data = go.Surface(x=x_, y=y_, z=z_, colorscale=colorscale_, showlegend=False,
-                                    lighting=light_dict, hovertemplate=name, name='%s Disease' % (system.title()), showscale=False,
-                                    legendgroup='ball', legendgrouptitle_text='Diseases', lightposition=light_position
-                                    )
+                                          lighting=light_dict, hovertemplate=name, name='%s Disease' % (system.title()), showscale=False,
+                                          legendgroup='ball', legendgrouptitle_text='Diseases', lightposition=light_position)
                     plot_data += [data]
         self.compact_node = compact_node
         # plot edges (incluster)
@@ -786,13 +787,11 @@ class ThreeDimensionalDiseaseNetwork():
                                             ==node][target].values if self.final_cluster[x]==system]
                     target_list += template_target_list
                     if template_target_list:
-                        [graph.add_edge(node, target) for target in template_target_list]
-
+                        [graph.add_edge(node, target) for target in template_target_list if node != 9999]
                 system_nodes += target_list
                 system_nodes = list(set(system_nodes))
                 end_number_nodes = len(system_nodes)
-                if end_number_nodes == begin_number_nodes:
-                    break
+                if end_number_nodes == begin_number_nodes:break
                 source_list = target_list
 
             edges_color, edges_x, edges_y, edges_z = [], [], [], []
@@ -802,25 +801,30 @@ class ThreeDimensionalDiseaseNetwork():
                 edges_y += [self.location_dict[edge[0]][1], self.location_dict[edge[1]][1], None]
                 edges_z += [self.location_dict[edge[0]][2], self.location_dict[edge[1]][2], None]
 
-            trace_edges = go.Scatter3d(
-                                    x=edges_x,
-                                    y=edges_y, 
-                                    z=edges_z, 
-                                    line=dict(color=edges_color*3, 
-                                            width=main_line_width),
-                                    mode='lines',
-                                    hoverinfo='none',
-                                    legendgroup='1',
-                                    legendgrouptitle_text='All Trajectories',
-                                    name='Cluster %i Trajectory' % (system+1))
+            trace_edges = go.Scatter3d(x=edges_x,
+                                       y=edges_y, 
+                                       z=edges_z, 
+                                       line=dict(color=edges_color*3, width=main_line_width),
+                                       mode='lines',
+                                       hoverinfo='none',
+                                       legendgroup='1',
+                                       legendgrouptitle_text='All Trajectories',
+                                       name='Cluster %i Trajectory' % (system+1))
             plot_data += [trace_edges]
         return plot_data
 
-    
-    def plot_plotly(self, max_radius:float, min_radius:float, plot_method:str,
-                    line_color:'str', line_width:float, file_name:'str',
+    def plot_plotly(self, max_radius:float, 
+                    min_radius:float, 
+                    plot_method:str,
+                    line_color:str, 
+                    line_width:float, 
+                    file_name:str,
+                    layout_width:float=900,
+                    layout_height:float=900,
+                    font_style:str='Times New Roman',
+                    font_size:float=15,
                     location_method='random'):
-        """"""
+        
         if not hasattr(self, "final_cluster"):
             self.cluster()
             
@@ -842,19 +846,15 @@ class ThreeDimensionalDiseaseNetwork():
             y=[self.__location[1]],
             z=[self.__location[2]],
             mode='markers',
-            marker=dict(
-            symbol='circle',
-            size=self.__size,
-            color='black'
-            ),
+            marker=dict(symbol='circle',
+                        size=self.__size,
+                        color='black'),
             text=['Depression'],
             hoverinfo='text',
             legendgroup='origin',
             legendgrouptitle_text='Origin of Trajectories',
             name='Depression',
-            showlegend=True
-        )
-
+            showlegend=True)
 
         plot_data += [origin_data]
         # plot the nodes and edges
@@ -868,40 +868,31 @@ class ThreeDimensionalDiseaseNetwork():
             raise KeyError("the plot_method is not exist")
     
         # axis
-        axis = dict(
-            showbackground=False, 
-            showline=False,
-            zeroline = False,
-            showgrid = False,
-            showticklabels = False,
-            title='',
-        )
+        axis = dict(showbackground=False, 
+                    showline=False,
+                    zeroline = False,
+                    showgrid = False,
+                    showticklabels = False,
+                    title='')
         # layout
-        layout = go.Layout(
-            title=dict(text="", 
-                       font=dict(size=30,
-                                 family='Times New Roman'),
-                       x=0.45),
-            width=900, 
-            height=900, 
-            showlegend=True,
-            scene=dict(xaxis=dict(axis),
-                       yaxis=dict(axis),
-                       zaxis=dict(axis)),
-            margin=dict(t=100), 
-            hovermode='closest', 
-            legend=dict(title=dict(text='Trace of clusters'),
-                        font=dict(family='Times New Roman',
-                                  size=15),
-                        itemclick=False
-                        ), 
-            font=dict(family='Times New Roman')
-        )
+        layout = go.Layout(title=dict(text="", 
+                                      font=dict(size=30,family=font_style),
+                                      x=0.45),
+                            width=layout_width,
+                            height=layout_height,
+                            showlegend=True,
+                            scene=dict(xaxis=dict(axis),
+                                       yaxis=dict(axis),
+                                       zaxis=dict(axis)),
+                            margin=dict(t=100),
+                            hovermode='closest', 
+                            legend=dict(title=dict(text='Trace of clusters'),
+                            font=dict(family=font_style,size=font_size),
+                            itemclick=False), 
+                            font=dict(family=font_style))
 
         # plot the figure
-        fig = go.Figure(data=plot_data,
-                        layout=layout)
+        fig = go.Figure(data=plot_data, layout=layout)
         
-        # fig.write_html(file_name, auto_open=False)
-        py.plot(fig,
-                filename=file_name)
+        # create the file of the figure
+        py.plot(fig, filename=file_name)
