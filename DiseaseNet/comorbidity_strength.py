@@ -54,7 +54,11 @@ def com_phi(n:int,c:int,p1:int,p2:int):
 
     """
     phi = (c*n-p1*p2)/(((p1*p2)*(n-p1)*(n-p2))**0.5)
-    z_phi = 0.5*np.log((1+phi)/(1-phi))
+    try:
+        z_phi = 0.5*np.log((1+phi)/(1-phi))
+    except:
+        phi -= 1e-3 #when phi == exactly 1 in some cases
+        z_phi = 0.5*np.log((1+phi)/(1-phi))
     z_phi_theta = (1/(n-3))**0.5
     z_phi_t = abs(z_phi/z_phi_theta)
     p_phi = (1-t.cdf(z_phi_t,n))*2

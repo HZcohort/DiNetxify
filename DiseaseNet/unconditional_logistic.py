@@ -61,7 +61,7 @@ def logistic_model(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,id_col,tr
         for disease in all_diseases_lst:
             phenotype_df_exposed[str(disease)] = phenotype_df_exposed[id_col].apply(lambda x: 1 if disease in history_level[x] or disease in trajectory_eligible_withdate[x] else 0)
             all_diseases_var.append(str(disease))
-    alpha_lst = np.array([0]*(2) + [1]*len(all_diseases_var))
+        alpha_lst = np.array([0]*(2) + [1]*len(all_diseases_var))
     
     #d1 and d2 variable
     phenotype_df_exposed['d1'] = phenotype_df_exposed[id_col].apply(lambda x: 1 if d1 in trajectory_eligible_withdate[x] else 0)

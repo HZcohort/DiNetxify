@@ -145,6 +145,10 @@ def phewas(data:DiseaseNetworkData,
     #check number of CPUs
     n_cpus_check(n_cpus,'PheWAS')
     if n_cpus>1:
+        import os
+        os.environ["MKL_NUM_THREADS"] = '1'
+        os.environ["OPENBLAS_NUM_THREADS"] = '1'
+        os.environ["OMP_NUM_THREADS"] = '1'
         import multiprocessing
 
     #check p-value correction method and cutoff
@@ -174,6 +178,7 @@ def phewas(data:DiseaseNetworkData,
                 parameters_all = []
                 for phecode in phecode_lst_all:
                     parameters_all.append([data,n_threshold,phecode,covariates,log_file_final,lifelines_disable])
+                #start main function
                 result_all = p.starmap(cox_conditional, parameters_all)
     if data.study_design == 'cohort':
         if n_cpus == 1:
@@ -898,6 +903,10 @@ def comorbidity_network(data:DiseaseNetworkData,
     #check number of CPUs
     n_cpus_check(n_cpus,'comorbidity_network')
     if n_cpus>1:
+        import os
+        os.environ["MKL_NUM_THREADS"] = '1'
+        os.environ["OPENBLAS_NUM_THREADS"] = '1'
+        os.environ["OMP_NUM_THREADS"] = '1'
         import multiprocessing
 
     #check p-value correction method and cutoff
@@ -941,7 +950,7 @@ def comorbidity_network(data:DiseaseNetworkData,
     #generate a new history dictionary
     if data.phecode_level == 1:
         history_level = {id_:set([int(phecode)/1 for phecode in vals]) for id_,vals in history.items()}
-    elif data.phecode_level == 1:
+    elif data.phecode_level == 2:
         history_level = {id_:set([int(phecode*10)/10 for phecode in vals]) for id_,vals in history.items()}
     
     time_start = time.time()
