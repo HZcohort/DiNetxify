@@ -903,6 +903,10 @@ def comorbidity_network(data:DiseaseNetworkData,
     #check number of CPUs
     n_cpus_check(n_cpus,'comorbidity_network')
     if n_cpus>1:
+        import os
+        os.environ["MKL_NUM_THREADS"] = '1'
+        os.environ["OPENBLAS_NUM_THREADS"] = '1'
+        os.environ["OMP_NUM_THREADS"] = '1'
         import multiprocessing
 
     #check p-value correction method and cutoff
