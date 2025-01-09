@@ -217,7 +217,9 @@ def phewas(data:DiseaseNetworkData,
     return phewas_df
 
 
-def phewas_multipletests(df:pd.DataFrame, correction:str='bonferroni', cutoff:float=0.05) -> pd.DataFrame:
+def phewas_multipletests(df:pd.DataFrame, 
+                         correction:str='bonferroni', 
+                         cutoff:float=0.05) -> pd.DataFrame:
     """
     Adjusts PheWAS p-values for multiple comparisons using specified correction methods.
 

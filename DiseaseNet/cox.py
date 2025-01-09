@@ -398,6 +398,7 @@ def cox_unconditional(data:DiseaseNetworkData,
     result += [length]
     
     if data.study_design == "registry":
+        write_log(log_file, f"The analysis of {result[0]} disease has done")
         return result, n_at_risk
     
     #calculate time in years
