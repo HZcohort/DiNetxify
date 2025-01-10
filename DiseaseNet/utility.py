@@ -465,30 +465,30 @@ def threshold_check(proportion_threshold, n_threshold, n_exposed):
     else:
         raise ValueError("Either 'n_threshold' or 'proportion_threshold' must be specified.")
 
-def n_cpus_check(n_cpus,analysis_name):
+def n_process_check(n_process:int,analysis_name:str):
     """
-    Check the number of CPUs specified for analysis.
+    Check the number of process specified for analysis.
 
     Parameters:
-        n_cpus (int): The number of CPUs to use.
+        n_process (int): The number of process to use.
 
     Returns:
         None
 
     Side Effects:
-        Prints a message about the CPU usage for the analysis.
+        Prints a message about the process usage for the analysis.
 
     Raises:
-        ValueError: If 'n_cpus' is not a positive integer.
+        ValueError: If 'n_process' is not a positive integer.
     """
-    if not isinstance(n_cpus, int):
-        raise TypeError("The 'n_cpus' must be an int.")
-    if n_cpus == 1:
+    if not isinstance(n_process, int):
+        raise TypeError("The 'n_process' must be an int.")
+    if n_process == 1:
         print('Multi-threading is not used.')
-    elif n_cpus > 1:
-        print(f'Use {n_cpus} CPU cores for {analysis_name} analysis.')
+    elif n_process > 1:
+        print(f'Use {n_process} process for {analysis_name} analysis.')
     else:
-        raise ValueError("The specified number of CPUs is not valid. Please enter a positive integer.")
+        raise ValueError("The specified number of process is not valid. Please enter a positive integer.")
 
 def correction_method_check(correction, cutoff):
     """

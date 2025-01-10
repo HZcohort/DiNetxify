@@ -9,7 +9,7 @@ import pandas as pd
 import numpy as np
 import time
 from .data_management import DiseaseNetworkData
-from .utility import log_file_detect,filter_phecodes,threshold_check,n_cpus_check,correction_method_check,states_p_adjust
+from .utility import log_file_detect,filter_phecodes,threshold_check,n_process_check,correction_method_check,states_p_adjust
 from .utility import check_kwargs_com_tra,covariates_check,matching_var_check
 
 import warnings
@@ -19,7 +19,7 @@ def phewas(data:DiseaseNetworkData,
            covariates:list=None, 
            proportion_threshold:float=None, 
            n_threshold:int=None, 
-           n_cpus:int=1, 
+           n_process:int=1, 
            correction:str='bonferroni', 
            cutoff:float=0.05, 
            system_inc:list=None, 
@@ -53,9 +53,9 @@ def phewas(data:DiseaseNetworkData,
         If the number of cases is below this threshold, the phecode is excluded from the analysis.
         n_threshold and proportion_threshold are mutually exclusive.      
 
-    n_cpus : int, default=1
-        Number of CPU cores to utilize for the analysis. 
-        Multiprocessing is engaged if more than one core is specified.
+    n_process : int, default=1
+        Number of process to utilize for the analysis. 
+        Multiprocessing is engaged if more than one process is specified.
 
     correction : str, default='bonferroni'
         Method for p-value correction from the statsmodels.stats.multitest.multipletests.
@@ -142,9 +142,9 @@ def phewas(data:DiseaseNetworkData,
     n_exposed = data.get_attribute('phenotype_statistics')['n_exposed']
     n_threshold = threshold_check(proportion_threshold,n_threshold,n_exposed)
     
-    #check number of CPUs
-    n_cpus_check(n_cpus,'PheWAS')
-    if n_cpus>1:
+    #check number of process
+    n_process_check(n_process,'PheWAS')
+    if n_process>1:
         import os
         os.environ["MKL_NUM_THREADS"] = '1'
         os.environ["OPENBLAS_NUM_THREADS"] = '1'
@@ -152,14 +152,10 @@ def phewas(data:DiseaseNetworkData,
         import multiprocessing
 
     #check p-value correction method and cutoff
-    correction_method_check(correction,cutoff)
+    correction_method_check(correction, cutoff)
     
     #check inclusion and exclusion list
-    phecode_lst_all = filter_phecodes(phecode_info,
-                                      system_inc,
-                                      system_exl,
-                                      phecode_inc,
-                                      phecode_exl)
+    phecode_lst_all = filter_phecodes(phecode_info, system_inc, system_exl, phecode_inc, phecode_exl)
     print(f'A total of {len(phecode_lst_all)} phecodes included in the PheWAS analysis.')
     
     #check log files
@@ -170,22 +166,22 @@ def phewas(data:DiseaseNetworkData,
     #list of phecode
     result_all = []
     if data.study_design == 'matched cohort':
-        if n_cpus == 1:
+        if n_process == 1:
             for phecode in phecode_lst_all:
                 result_all.append(cox_conditional(data,n_threshold,phecode,covariates,log_file_final,lifelines_disable))
-        elif n_cpus > 1:
-            with multiprocessing.get_context('spawn').Pool(n_cpus) as p:
+        elif n_process > 1:
+            with multiprocessing.get_context('spawn').Pool(n_process) as p:
                 parameters_all = []
                 for phecode in phecode_lst_all:
                     parameters_all.append([data,n_threshold,phecode,covariates,log_file_final,lifelines_disable])
                 #start main function
                 result_all = p.starmap(cox_conditional, parameters_all)
     if data.study_design == 'cohort':
-        if n_cpus == 1:
+        if n_process == 1:
             for phecode in phecode_lst_all:
                 result_all.append(cox_unconditional(data,n_threshold,phecode,covariates,log_file_final,lifelines_disable))
-        elif n_cpus > 1:
-            with multiprocessing.get_context('spawn').Pool(n_cpus) as p:
+        elif n_process > 1:
+            with multiprocessing.get_context('spawn').Pool(n_process) as p:
                 parameters_all = []
                 for phecode in phecode_lst_all:
                     parameters_all.append([data,n_threshold,phecode,covariates,log_file_final,lifelines_disable])
@@ -278,7 +274,7 @@ def phewas_multipletests(df:pd.DataFrame,
 
 
 def comorbidity_strength(data:DiseaseNetworkData, proportion_threshold:float=None, n_threshold:int=None, 
-                         n_cpus:int=1, log_file:str=None, correction_phi:str='bonferroni', cutoff_phi:float=0.05, 
+                         n_process:int=1, log_file:str=None, correction_phi:str='bonferroni', cutoff_phi:float=0.05, 
                          correction_RR:str='bonferroni', cutoff_RR:float=0.05) -> pd.DataFrame:
     """
     Conducts comorbidity strength estimation among exposed individuals on all possible disease pairs using the specified DiseaseNetworkData object.
@@ -299,8 +295,8 @@ def comorbidity_strength(data:DiseaseNetworkData, proportion_threshold:float=Non
         If the number of co-occurrences is below this threshold, the disease pair is excluded from the analysis.
         n_threshold and proportion_threshold are mutually exclusive.         
 
-    n_cpus : int, default=1
-        Number of CPU cores to utilize for the analysis. 
+    n_process : int, default=1
+        Number of process cores to utilize for the analysis. 
         Multiprocessing is engaged if more than one core is specified.
 
     correction_phi : str, default='bonferroni'
@@ -372,9 +368,9 @@ def comorbidity_strength(data:DiseaseNetworkData, proportion_threshold:float=Non
     n_exposed = data.get_attribute('phenotype_statistics')['n_exposed']
     n_threshold = threshold_check(proportion_threshold,n_threshold,n_exposed)
     
-    #check number of CPUs
-    n_cpus_check(n_cpus,'comorbidity_strength')
-    if n_cpus>1:
+    #check number of process
+    n_process_check(n_process,'comorbidity_strength')
+    if n_process>1:
         import os
         os.environ["MKL_NUM_THREADS"] = '1'
         os.environ["OPENBLAS_NUM_THREADS"] = '1'
@@ -404,11 +400,11 @@ def comorbidity_strength(data:DiseaseNetworkData, proportion_threshold:float=Non
     time_start = time.time()
     #list of phecode
     result_all = []
-    if n_cpus == 1:
+    if n_process == 1:
         for d1,d2,describe in d1d2_pair_lst:
             result_all.append(com_phi_rr(trajectory_dict,d1,d2,describe,n_threshold,log_file_final))
-    elif n_cpus > 1:
-        with multiprocessing.get_context('spawn').Pool(n_cpus) as p:
+    elif n_process > 1:
+        with multiprocessing.get_context('spawn').Pool(n_process) as p:
             parameters_all = []
             for d1,d2,describe in d1d2_pair_lst:
                 parameters_all.append([trajectory_dict,d1,d2,describe,n_threshold,log_file_final])
@@ -522,7 +518,7 @@ def comorbidity_strength_multipletests(df:pd.DataFrame, correction_phi:str='bonf
 
 def binomial_test(data:DiseaseNetworkData, 
                   comorbidity_strength_result:pd.DataFrame, 
-                  n_cpus:int=1, 
+                  n_process:int=1, 
                   log_file:str=None, 
                   correction:str='bonferroni', 
                   cutoff:float=0.05, 
@@ -538,8 +534,8 @@ def binomial_test(data:DiseaseNetworkData,
     comorbidity_strength_result : pd.DataFrame
         DataFrame containing comorbidity strength analysis results produced by the 'DiseaseNet.comorbidity_strength' function.
 
-    n_cpus : int, default=1
-        Number of CPU cores to utilize for the analysis. 
+    n_process : int, default=1
+        Number of process cores to utilize for the analysis. 
         Multiprocessing is engaged if more than one core is specified.
 
     correction : str, default='bonferroni'
@@ -621,10 +617,10 @@ def binomial_test(data:DiseaseNetworkData,
         if col not in comorbidity_strength_result.columns:
             raise ValueError(f"Column {col} not in 'comorbidity_strength_result' DataFrame.")
 
-    #check number of CPUs
-    n_cpus_check(n_cpus,'binomial_test')
-    if n_cpus>1:
-        n_cpus = 1
+    #check number of process
+    n_process_check(n_process,'binomial_test')
+    if n_process>1:
+        n_process = 1
         print('Multiprocessing has been disabled for this analysis.')
 
     #check p-value correction method and cutoff
@@ -650,14 +646,14 @@ def binomial_test(data:DiseaseNetworkData,
     time_start = time.time()
     #list of disease pair
     result_all = []
-    if n_cpus == 1:
+    if n_process == 1:
         for d1,d2,n_com,n_d1d2,n_d2d1 in comorbidity_sig[[phecode_d1_col,phecode_d2_col,n_nontemporal_col,
                                                           n_temporal_d1d2_col,n_temporal_d2d1_col]].values:
             result_all.append(binomial(d1,d2,n_com,n_d1d2,n_d2d1,enforce_temporal_order,log_file_final))
-    elif n_cpus > 1:
+    elif n_process > 1:
         raise ValueError('Multiprocessing has been disabled for this analysis.')
     """
-        with multiprocessing.get_context('spawn').Pool(n_cpus) as p:
+        with multiprocessing.get_context('spawn').Pool(n_process) as p:
             parameters_all = []
             for d1,d2,n_com,n_d1d2,n_d2d1 in comorbidity_sig[[phecode_d1_col,phecode_d2_col,n_nontemporal_col,
                                                               n_temporal_d1d2_col,n_temporal_d2d1_col]].values:
@@ -750,7 +746,7 @@ def comorbidity_network(data:DiseaseNetworkData,
                         binomial_test_result:pd.DataFrame, 
                         method:str='RPCN', 
                         covariates:list=None, 
-                        n_cpus:int=1, 
+                        n_process:int=1, 
                         log_file:str=None, 
                         correction:str='bonferroni', 
                         cutoff:float=0.05, **kwargs) -> pd.DataFrame:
@@ -808,8 +804,8 @@ def comorbidity_network(data:DiseaseNetworkData,
         To include the required variable sex as a covariate, always use 'sex' instead of its original column name.
         For other covariates specified in the 'DiseaseNet.DiseaseNetworkData.phenotype_data()' function, use their original column names.
 
-    n_cpus : int, default=1
-        Number of CPU cores to utilize for the analysis. 
+    n_process : int, default=1
+        Number of process cores to utilize for the analysis. 
         Multiprocessing is engaged if more than one core is specified.
 
     correction : str, default='bonferroni'
@@ -896,9 +892,9 @@ def comorbidity_network(data:DiseaseNetworkData,
     # check covariates
     covariates = covariates_check(covariates,data.get_attribute('phenotype_info'))
     
-    #check number of CPUs
-    n_cpus_check(n_cpus,'comorbidity_network')
-    if n_cpus>1:
+    #check number of process
+    n_process_check(n_process,'comorbidity_network')
+    if n_process>1:
         import os
         os.environ["MKL_NUM_THREADS"] = '1'
         os.environ["OPENBLAS_NUM_THREADS"] = '1'
@@ -952,12 +948,12 @@ def comorbidity_network(data:DiseaseNetworkData,
     time_start = time.time()
     #list of disease pair
     result_all = []
-    if n_cpus == 1:
+    if n_process == 1:
         for d1,d2 in comorbidity_sig[[phecode_d1_col,phecode_d2_col]].values:
             result_all.append(logistic_model(d1,d2,phenotype_df_exposed,id_col,trajectory_eligible,trajectory_eligible_withdate,
                                              history_level,covariates,all_diseases_lst,log_file_final,parameter_dict))
-    elif n_cpus > 1:
-        with multiprocessing.get_context('spawn').Pool(n_cpus) as p:
+    elif n_process > 1:
+        with multiprocessing.get_context('spawn').Pool(n_process) as p:
             parameters_all = []
             for d1,d2 in comorbidity_sig[[phecode_d1_col,phecode_d2_col]].values:
                 parameters_all.append([d1,d2,phenotype_df_exposed,id_col,trajectory_eligible,trajectory_eligible_withdate,
@@ -1055,7 +1051,7 @@ def comorbidity_multipletests(df:pd.DataFrame, correction:str='bonferroni', cuto
 
 def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.DataFrame, binomial_test_result:pd.DataFrame, 
                        method:str='RPCN', matching_var_dict:dict={'sex':'exact'}, matching_n:int=2, covariates:list=None, 
-                       n_cpus:int=1, log_file:str=None, correction:str='bonferroni', cutoff:float=0.05, **kwargs) -> pd.DataFrame:
+                       n_process:int=1, log_file:str=None, correction:str='bonferroni', cutoff:float=0.05, **kwargs) -> pd.DataFrame:
     """
     Perform temporal comorbidity network (disease trajectory) analysis on disease pairs with significant comorbidity strength and temporal order, to identify pairs with confirmed temporal comorbidity associations.
     For each disease pair D1 → D2, a nested case-control dataset is constructed using incidence density sampling, treating D2 as the outcome and D1 as the exposure. 
@@ -1124,8 +1120,8 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
         To include the required variable sex as a covariate, always use 'sex' instead of its original column name.
         For other covariates specified in the 'DiseaseNet.DiseaseNetworkData.phenotype_data()' function, use their original column names.
 
-    n_cpus : int, default=1
-        Number of CPU cores to utilize for the analysis. 
+    n_process : int, default=1
+        Number of process to utilize for the analysis. 
         Multiprocessing is engaged if more than one core is specified.
 
     correction : str, default='bonferroni'
@@ -1220,9 +1216,9 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
     #check covariates
     covariates = covariates_check(covariates,data.get_attribute('phenotype_info'),matching_var_dict)
     
-    #check number of CPUs
-    n_cpus_check(n_cpus,'trajectory')
-    if n_cpus>1:
+    #check number of process
+    n_process_check(n_process,'trajectory')
+    if n_process>1:
         import os
         os.environ["MKL_NUM_THREADS"] = '1'
         os.environ["OPENBLAS_NUM_THREADS"] = '1'
@@ -1282,13 +1278,13 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
     time_start = time.time()
     #list of disease pair
     result_all = []
-    if n_cpus == 1:
+    if n_process == 1:
         for d1,d2 in trajectory_sig[[phecode_d1_col,phecode_d2_col]].values:
             result_all.append(logistic_model(d1,d2,phenotype_df_exposed,id_col,end_date_col,trajectory_eligible,trajectory_temporal,
                                              trajectory_eligible_withdate,history_level,covariates,all_diseases_lst,
                                              matching_var_dict,matching_n,log_file_final,parameter_dict))
-    elif n_cpus > 1:
-        with multiprocessing.get_context('spawn').Pool(n_cpus) as p:
+    elif n_process > 1:
+        with multiprocessing.get_context('spawn').Pool(n_process) as p:
             parameters_all = []
             for d1,d2 in trajectory_sig[[phecode_d1_col,phecode_d2_col]].values:
                 parameters_all.append([d1,d2,phenotype_df_exposed,id_col,end_date_col,trajectory_eligible,trajectory_temporal,

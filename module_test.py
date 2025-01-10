@@ -64,7 +64,7 @@ if __name__ == "__main__":
                             {"Participant ID": "eid",
                             "Diagnosis code": "icd10",
                             "Date of diagnosis": "date_dignosed"})
-    phewas_result = phewas(data, proportion_threshold=0.1, n_cpus=5)
+    phewas_result = phewas(data, proportion_threshold=0.1)
     phewas_result.to_csv("C:/Users/bovin/Desktop/s.csv")
     # data.disease_pair(phewas_result)
     # comorbidity_strength_result = comorbidity_strength(data, proportion_threshold=0.1)

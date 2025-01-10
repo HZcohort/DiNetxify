@@ -275,8 +275,7 @@ class DiseaseNetworkData:
             print(self.__warning_phenotype[-1])
         #----------
        
-    def merge_medical_records(self, 
-                              medical_records_data_path:str, 
+    def merge_medical_records(self, medical_records_data_path:str, 
                               diagnosis_code:str, 
                               column_names:dict, 
                               date_fmt:str=None, 
@@ -423,7 +422,7 @@ class DiseaseNetworkData:
         self.__medical_recods_statistics['n_phecode_diagnosis_per_unexposed'] = np.mean([len(self.diagnosis[id_]) for id_ in unexposed_id])
         self.__medical_recods_statistics['n_phecode_history_per_unexposed'] = np.mean([len(self.history[id_]) for id_ in unexposed_id])
 
-    def get_attribute(self, attr_name):
+    def get_attribute(self, attr_name:str):
         """
         Retrieves the value of a specified attribute, providing controlled access to the class's private and protected data.
         
@@ -460,7 +459,7 @@ class DiseaseNetworkData:
         else:
             raise ValueError(f"Attribute {attr_name} not found")
     
-    def modify_phecode_level(self,phecode_level:int):
+    def modify_phecode_level(self, phecode_level:int):
         """
         Modify the phecode level setting.
         
@@ -496,8 +495,7 @@ class DiseaseNetworkData:
             print(f'Phecode level set to {self.phecode_level} now.')
     
     
-    def disease_pair(self, 
-                     phewas_result:pd.DataFrame, 
+    def disease_pair(self, phewas_result:pd.DataFrame, 
                      min_interval_days:int=0, 
                      max_interval_days:int=np.inf, 
                      force:bool=False, **kwargs):
