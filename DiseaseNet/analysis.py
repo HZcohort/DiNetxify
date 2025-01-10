@@ -149,6 +149,8 @@ def phewas(data:DiseaseNetworkData,
         os.environ["MKL_NUM_THREADS"] = '1'
         os.environ["OPENBLAS_NUM_THREADS"] = '1'
         os.environ["OMP_NUM_THREADS"] = '1'
+        os.environ["THREADPOOL_LIMIT"] = '1'
+        os.environ["VECLIB_MAXIMUM_THREADS"] = '1'
         import multiprocessing
 
     #check p-value correction method and cutoff
@@ -373,6 +375,8 @@ def comorbidity_strength(data:DiseaseNetworkData, proportion_threshold:float=Non
         os.environ["MKL_NUM_THREADS"] = '1'
         os.environ["OPENBLAS_NUM_THREADS"] = '1'
         os.environ["OMP_NUM_THREADS"] = '1'
+        os.environ["THREADPOOL_LIMIT"] = '1'
+        os.environ["VECLIB_MAXIMUM_THREADS"] = '1'
         import multiprocessing
     
     #get all significant phecodes
@@ -889,6 +893,8 @@ def comorbidity_network(data:DiseaseNetworkData,
         os.environ["MKL_NUM_THREADS"] = '1'
         os.environ["OPENBLAS_NUM_THREADS"] = '1'
         os.environ["OMP_NUM_THREADS"] = '1'
+        os.environ["THREADPOOL_LIMIT"] = '1'
+        os.environ["VECLIB_MAXIMUM_THREADS"] = '1'
         import multiprocessing
 
     #check p-value correction method and cutoff
@@ -1207,6 +1213,8 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
         os.environ["MKL_NUM_THREADS"] = '1'
         os.environ["OPENBLAS_NUM_THREADS"] = '1'
         os.environ["OMP_NUM_THREADS"] = '1'
+        os.environ["THREADPOOL_LIMIT"] = '1'
+        os.environ["VECLIB_MAXIMUM_THREADS"] = '1'
         import multiprocessing
 
     #check p-value correction method and cutoff
