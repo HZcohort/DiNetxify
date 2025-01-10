@@ -8,6 +8,7 @@ Created on Thu Dec 5 19:48:09 2024
 import pandas as pd
 import numpy as np
 import time
+import random
 from .data_management import DiseaseNetworkData
 from .utility import log_file_detect,filter_phecodes,threshold_check,n_process_check,correction_method_check,states_p_adjust
 from .utility import check_kwargs_com_tra,covariates_check,matching_var_check
@@ -390,6 +391,7 @@ def comorbidity_strength(data:DiseaseNetworkData, proportion_threshold:float=Non
             d1d2_pair_lst.append((d1,d2,'Disease pair with different sex specificity'))
         else:
             d1d2_pair_lst.append((d1,d2,None))
+    d1d2_pair_lst = random.shuffle(d1d2_pair_lst)
     
     time_start = time.time()
     #list of phecode
@@ -1260,7 +1262,7 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
     #generate a new history dictionary
     if data.phecode_level == 1:
         history_level = {id_:set([int(phecode)/1 for phecode in vals]) for id_,vals in history.items()}
-    elif data.phecode_level == 1:
+    elif data.phecode_level == 2:
         history_level = {id_:set([int(phecode*10)/10 for phecode in vals]) for id_,vals in history.items()}
     
     time_start = time.time()
