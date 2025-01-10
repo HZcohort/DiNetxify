@@ -186,6 +186,10 @@ class DiseaseNetworkData:
         value_notin = [x for x in self.__phenotype_info['phenotype_col_dict'].keys() if x not in column_names.keys()]
         if len(value_notin) > 0:
             raise ValueError(f"{value_notin} not specified in the column_names dictionary")
+        #check whether unknow columns are in the dictionary
+        value_unknown = [x for x in column_names.keys() if x not in self.__phenotype_info['phenotype_col_dict'].keys()]
+        if len(value_unknown) > 0:
+            raise ValueError(f"{value_unknown} in the column_names dictionary is not required for the study design {self.study_design}")        
         #check duplicate columns
         duplicate_cols_0 = set(column_names.values()).intersection(set(covariates)) #duplicate of original column names
         duplicate_cols_1 = set(self.__phenotype_col_dict[self.study_design].values()).intersection(set(covariates)) #duplicate of renamed column names

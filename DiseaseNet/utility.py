@@ -759,15 +759,17 @@ def d1d2_from_diagnosis_history(df:pd.DataFrame, id_col:str, sex_col:str, phecod
     """
     sex_value_dict = {'Female':1,'Male':0}
     eligible_disease_dict = {}
+    eligible_withdate_dict = {}
     d1d2_temporl_pair_dict = {}
     d1d2_com_pair_dict = {}
     
     from itertools import combinations
     
     for id_,sex in df[[id_col,sex_col]].values:
-        temp_deligible_dict = {}
+        temp_deligible_list = []
         temp_dpair_temporal_lst = []
         temp_dpair_com_lst = []
+        temp_deligible_dict_withdate = {}
         diagnosis_ = diagnosis_dict[id_]
         history_ = history_dict[id_]
         #generate eligible disease dictionary
@@ -778,15 +780,17 @@ def d1d2_from_diagnosis_history(df:pd.DataFrame, id_col:str, sex_col:str, phecod
             if len(exl_lst.intersection(set(history_)))==0 and (sex_specific=='Both' or sex_value_dict[sex_specific]==sex):
                 try:
                     date = min([diagnosis_[x] for x in leaf_lst if x in diagnosis_])
+                    temp_deligible_dict_withdate[phecode] = date
+                    temp_deligible_list.append(phecode)
                 except:
-                    date = pd.NaT
-                temp_deligible_dict[phecode] = date
+                    temp_deligible_list.append(phecode)
         #generate disease pair dictionary
-        temp_deligible_dict_withdate = {i:j for i,j in temp_deligible_dict.items() if not pd.isna(j)}
         if len(temp_deligible_dict_withdate) <= 1:
-            eligible_disease_dict[id_] = temp_deligible_dict
+            eligible_disease_dict[id_] = temp_deligible_list
             d1d2_temporl_pair_dict[id_] = temp_dpair_temporal_lst
             d1d2_com_pair_dict[id_] = temp_dpair_com_lst
+            eligible_withdate_dict[id_] = temp_deligible_dict_withdate
+            
         else:
             for d1,d2 in combinations(temp_deligible_dict_withdate,2):
                 date1, date2 = temp_deligible_dict_withdate[d1], temp_deligible_dict_withdate[d2]
@@ -801,11 +805,14 @@ def d1d2_from_diagnosis_history(df:pd.DataFrame, id_col:str, sex_col:str, phecod
                     else:
                         temp_dpair_temporal_lst.append((d1,d2))
             #save for the individual
-            eligible_disease_dict[id_] = temp_deligible_dict
+            eligible_disease_dict[id_] = temp_deligible_list
             d1d2_temporl_pair_dict[id_] = temp_dpair_temporal_lst
             d1d2_com_pair_dict[id_] = temp_dpair_com_lst
+            eligible_withdate_dict[id_] = temp_deligible_dict_withdate
+    
     #final dictionary
     trajectory_dict = {'eligible_disease':eligible_disease_dict,
+                       'eligible_disease_withdate':eligible_withdate_dict,
                        'd1d2_temporal_pair':d1d2_temporl_pair_dict,
                        'd1d2_com_pair':d1d2_com_pair_dict}
     

@@ -62,10 +62,10 @@ def logistic_model(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,id_col,en
     phenotype_df_exposed = phenotype_df_exposed[phenotype_df_exposed[id_col].isin(d1d2_eligible_lst)]
     
     #matching
-    phenotype_df_exposed['d2_date'] = phenotype_df_exposed[id_col].apply(lambda x: trajectory_eligible[x][d2])
+    phenotype_df_exposed['d2_date'] = phenotype_df_exposed[id_col].apply(lambda x: trajectory_eligible_withdate[x].get(d2,pd.NaT))
     df_matched = matching_ids(phenotype_df_exposed,matching_var_dict,matching_n,id_col,'d2_date',end_date_col)
     phenotype_df_exposed = pd.merge(df_matched,phenotype_df_exposed[[id_col,end_date_col,'d2_date']+covariates+list(matching_var_dict.keys())],on=id_col,how='left')
-    phenotype_df_exposed['d1_date'] = phenotype_df_exposed[id_col].apply(lambda x: trajectory_eligible[x][d1])
+    phenotype_df_exposed['d1_date'] = phenotype_df_exposed[id_col].apply(lambda x: trajectory_eligible_withdate[x].get(d1,pd.NaT))
     phenotype_df_exposed['d1'] = phenotype_df_exposed.apply(lambda row: 1 if row['d1_date']<row['outcome_date'] else 0, axis=1)
     phenotype_df_exposed['constant'] = 1 #not used in condtional model fitting
     

@@ -96,13 +96,7 @@ def com_phi_rr(trajectory:dict,d1:float,d2:float,message:str,n_threshold:int,log
 
     """
     eligible_d_dict = trajectory['eligible_disease']
-    eligible_d_dict_withdate = {}
-    for id_,dict_ in eligible_d_dict.items():
-        temp_lst = []
-        for d,dt in dict_.items():
-            if not pd.isna(dt):
-                temp_lst.append(d)
-        eligible_d_dict_withdate[id_] = temp_lst
+    eligible_d_dict_withdate = trajectory['eligible_disease_withdate']
     temporal_pair_dict = trajectory['d1d2_temporal_pair']
     com_pair_dict = trajectory['d1d2_com_pair']
     

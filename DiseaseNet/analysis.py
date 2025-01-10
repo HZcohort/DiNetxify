@@ -163,33 +163,23 @@ def phewas(data:DiseaseNetworkData,
     print(message)
 
     time_start = time.time()
-    #list of phecode
+    #list of phecode to run
     result_all = []
-    if data.study_design == 'matched cohort':
-        if n_process == 1:
-            for phecode in phecode_lst_all:
-                result_all.append(cox_conditional(data,n_threshold,phecode,covariates,log_file_final,lifelines_disable))
-        elif n_process > 1:
-            with multiprocessing.get_context('spawn').Pool(n_process) as p:
-                parameters_all = []
-                for phecode in phecode_lst_all:
-                    parameters_all.append([data,n_threshold,phecode,covariates,log_file_final,lifelines_disable])
-                #start main function
-                result_all = p.starmap(cox_conditional, parameters_all)
-    if data.study_design == 'cohort':
-        if n_process == 1:
-            for phecode in phecode_lst_all:
-                result_all.append(cox_unconditional(data,n_threshold,phecode,covariates,log_file_final,lifelines_disable))
-        elif n_process > 1:
-            with multiprocessing.get_context('spawn').Pool(n_process) as p:
-                parameters_all = []
-                for phecode in phecode_lst_all:
-                    parameters_all.append([data,n_threshold,phecode,covariates,log_file_final,lifelines_disable])
-                result_all = p.starmap(cox_unconditional, parameters_all)    
-    if data.study_design == "registry":
+    if n_process == 1:
         for phecode in phecode_lst_all:
-            result = cox_unconditional(data,n_threshold,phecode,covariates,log_file_final,lifelines_disable)
-            result_all.append(result)
+            if data.study_design == 'matched cohort':
+                result_all.append(cox_conditional(data, n_threshold, phecode, covariates, log_file_final, lifelines_disable))
+            else:
+                result_all.append(cox_unconditional(data, n_threshold, phecode, covariates, log_file_final, lifelines_disable))
+    elif n_process > 1:
+        parameters_all = []
+        for phecode in phecode_lst_all:
+            parameters_all.append([data, n_threshold, phecode, covariates, log_file_final, lifelines_disable])
+        with multiprocessing.get_context('spawn').Pool(n_process) as p:
+            if data.study_design == 'matched cohort':
+                result_all = p.starmap(cox_conditional, parameters_all)
+            else:
+                result_all = p.starmap(cox_unconditional, parameters_all)
 
     time_end = time.time()
     time_spent = (time_end - time_start)/60
@@ -360,14 +350,22 @@ def comorbidity_strength(data:DiseaseNetworkData, proportion_threshold:float=Non
         if getattr(data, attr) is None:
             raise ValueError(f"Attribute '{attr}' is empty.")
     
-    #retrieve phecode information
+    #retrieve phecode information and others
     phecode_info = data.phecode_info
     trajectory_dict = data.trajectory
-    
+
     #check threshold
     n_exposed = data.get_attribute('phenotype_statistics')['n_exposed']
     n_threshold = threshold_check(proportion_threshold,n_threshold,n_exposed)
     
+    #check p-value correction method and cutoff
+    correction_method_check(correction_phi,cutoff_phi)
+    correction_method_check(correction_RR,cutoff_RR)
+    
+    #check log files
+    log_file_final,message = log_file_detect(log_file,'com_strength')
+    print(message)
+
     #check number of process
     n_process_check(n_process,'comorbidity_strength')
     if n_process>1:
@@ -376,14 +374,6 @@ def comorbidity_strength(data:DiseaseNetworkData, proportion_threshold:float=Non
         os.environ["OPENBLAS_NUM_THREADS"] = '1'
         os.environ["OMP_NUM_THREADS"] = '1'
         import multiprocessing
-
-    #check p-value correction method and cutoff
-    correction_method_check(correction_phi,cutoff_phi)
-    correction_method_check(correction_RR,cutoff_RR)
-    
-    #check log files
-    log_file_final,message = log_file_detect(log_file,'com_strength')
-    print(message)
     
     #get all significant phecodes
     phecodes_sig = data.get_attribute('significant_phecodes')
@@ -404,10 +394,10 @@ def comorbidity_strength(data:DiseaseNetworkData, proportion_threshold:float=Non
         for d1,d2,describe in d1d2_pair_lst:
             result_all.append(com_phi_rr(trajectory_dict,d1,d2,describe,n_threshold,log_file_final))
     elif n_process > 1:
+        parameters_all = []
+        for d1,d2,describe in d1d2_pair_lst:
+            parameters_all.append([trajectory_dict,d1,d2,describe,n_threshold,log_file_final])
         with multiprocessing.get_context('spawn').Pool(n_process) as p:
-            parameters_all = []
-            for d1,d2,describe in d1d2_pair_lst:
-                parameters_all.append([trajectory_dict,d1,d2,describe,n_threshold,log_file_final])
             result_all = p.starmap(com_phi_rr, parameters_all)
 
     time_end = time.time()
@@ -914,19 +904,13 @@ def comorbidity_network(data:DiseaseNetworkData,
     #get necessary data for model fitting
     phecode_info = data.phecode_info
     trajectory_eligible = data.trajectory['eligible_disease']
+    trajectory_eligible_withdate = data.trajectory['eligible_disease_withdate']
     history = data.history
     phenotype_df = data.phenotype_df
     exp_col = data.get_attribute('phenotype_info')['phenotype_col_dict']['Exposure']
     id_col = data.get_attribute('phenotype_info')['phenotype_col_dict']['Participant ID']
     exposed_index = phenotype_df[phenotype_df[exp_col]==1].index
     phenotype_df_exposed = data.phenotype_df.loc[exposed_index,[id_col]+covariates]
-    trajectory_eligible_withdate = {}
-    for id_,dict_ in trajectory_eligible.items():
-        temp_lst = []
-        for d,dt in dict_.items():
-            if not pd.isna(dt):
-                temp_lst.append(d)
-        trajectory_eligible_withdate[id_] = temp_lst
     
     #get all disease pairs with significant comorbidity strength
     comorbidity_sig = comorbidity_strength_result[(comorbidity_strength_result[significance_phi_col]==True) & 
@@ -953,11 +937,11 @@ def comorbidity_network(data:DiseaseNetworkData,
             result_all.append(logistic_model(d1,d2,phenotype_df_exposed,id_col,trajectory_eligible,trajectory_eligible_withdate,
                                              history_level,covariates,all_diseases_lst,log_file_final,parameter_dict))
     elif n_process > 1:
+        parameters_all = []
+        for d1,d2 in comorbidity_sig[[phecode_d1_col,phecode_d2_col]].values:
+            parameters_all.append([d1,d2,phenotype_df_exposed,id_col,trajectory_eligible,trajectory_eligible_withdate,
+                                   history_level,covariates,all_diseases_lst,log_file_final,parameter_dict])
         with multiprocessing.get_context('spawn').Pool(n_process) as p:
-            parameters_all = []
-            for d1,d2 in comorbidity_sig[[phecode_d1_col,phecode_d2_col]].values:
-                parameters_all.append([d1,d2,phenotype_df_exposed,id_col,trajectory_eligible,trajectory_eligible_withdate,
-                                                 history_level,covariates,all_diseases_lst,log_file_final,parameter_dict])
             result_all = p.starmap(logistic_model, parameters_all)
 
     time_end = time.time()
@@ -1240,6 +1224,7 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
     
     trajectory_eligible = data.trajectory['eligible_disease']
     trajectory_temporal = data.trajectory['d1d2_temporal_pair']
+    trajectory_eligible_withdate = data.trajectory['eligible_disease_withdate']
     history = data.history
     phenotype_df = data.phenotype_df
     exp_col = data.get_attribute('phenotype_info')['phenotype_col_dict']['Exposure']
@@ -1247,13 +1232,6 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
     end_date_col = data.get_attribute('phenotype_info')['phenotype_col_dict']['End date']
     exposed_index = phenotype_df[phenotype_df[exp_col]==1].index
     phenotype_df_exposed = data.phenotype_df.loc[exposed_index,[id_col,end_date_col]+covariates+list(matching_var_dict.keys())]
-    trajectory_eligible_withdate = {}
-    for id_,dict_ in trajectory_eligible.items():
-        temp_lst = []
-        for d,dt in dict_.items():
-            if not pd.isna(dt):
-                temp_lst.append(d)
-        trajectory_eligible_withdate[id_] = temp_lst
     
     #get all disease pairs with significant temporal orders
     trajectory_sig = binomial_test_result[binomial_test_result[significance_binomial_col]==True]
@@ -1284,12 +1262,12 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
                                              trajectory_eligible_withdate,history_level,covariates,all_diseases_lst,
                                              matching_var_dict,matching_n,log_file_final,parameter_dict))
     elif n_process > 1:
+        parameters_all = []
+        for d1,d2 in trajectory_sig[[phecode_d1_col,phecode_d2_col]].values:
+            parameters_all.append([d1,d2,phenotype_df_exposed,id_col,end_date_col,trajectory_eligible,trajectory_temporal,
+                                    trajectory_eligible_withdate,history_level,covariates,all_diseases_lst,
+                                    matching_var_dict,matching_n,log_file_final,parameter_dict])
         with multiprocessing.get_context('spawn').Pool(n_process) as p:
-            parameters_all = []
-            for d1,d2 in trajectory_sig[[phecode_d1_col,phecode_d2_col]].values:
-                parameters_all.append([d1,d2,phenotype_df_exposed,id_col,end_date_col,trajectory_eligible,trajectory_temporal,
-                                       trajectory_eligible_withdate,history_level,covariates,all_diseases_lst,
-                                       matching_var_dict,matching_n,log_file_final,parameter_dict])
             result_all = p.starmap(logistic_model, parameters_all)
 
     time_end = time.time()
