@@ -844,6 +844,8 @@ def comorbidity_network(data:DiseaseNetworkData,
                 Ignored if 'auto_penalty' is enabled.
             auto_penalty : bool, default=True
                 If 'True', automatically determines the best 'alpha' based on model AIC value.
+            alpha_range ： tuple, default=(1,15)
+                When 'auto_penalty' is True, search the optimal 'alpha' in this range.
 
         PCN_PCA Method Parameters:
             n_PC : int, default=5
