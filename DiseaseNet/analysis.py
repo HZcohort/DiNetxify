@@ -391,7 +391,7 @@ def comorbidity_strength(data:DiseaseNetworkData, proportion_threshold:float=Non
             d1d2_pair_lst.append((d1,d2,'Disease pair with different sex specificity'))
         else:
             d1d2_pair_lst.append((d1,d2,None))
-    d1d2_pair_lst = random.shuffle(d1d2_pair_lst)
+    random.shuffle(d1d2_pair_lst)
     
     time_start = time.time()
     #list of phecode
