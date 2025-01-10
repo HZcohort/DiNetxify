@@ -191,11 +191,9 @@ def phewas(data:DiseaseNetworkData,
                     parameters_all.append([data,n_threshold,phecode,covariates,log_file_final,lifelines_disable])
                 result_all = p.starmap(cox_unconditional, parameters_all)    
     if data.study_design == "registry":
-        n_at_risk_lst = []
         for phecode in phecode_lst_all:
-            result, number = cox_unconditional(data,n_threshold,phecode,covariates,log_file_final,lifelines_disable)
+            result = cox_unconditional(data,n_threshold,phecode,covariates,log_file_final,lifelines_disable)
             result_all.append(result)
-            n_at_risk_lst.append(number)
 
     time_end = time.time()
     time_spent = (time_end - time_start)/60
@@ -209,12 +207,7 @@ def phewas(data:DiseaseNetworkData,
     phewas_df = pd.DataFrame(result_all, columns=columns_selected)
     
     if data.study_design == "registry":
-        if proportion_threshold:
-            phewas_df["N_total"] = n_at_risk_lst
-            phewas_df["phewas_p_significance"] = phewas_df.apply(lambda row: True if row["N_cases_exposed"]/row["N_total"] >= proportion_threshold 
-                                                                 else False, axis=1)
-        if n_threshold:
-            phewas_df["phewas_p_significance"] = phewas_df["N_cases_exposed"].apply(lambda x:True if x>=n_threshold else False)
+        phewas_df["phewas_p_significance"] = phewas_df["N_cases_exposed"].apply(lambda x:True if x>=n_threshold else False)
         return phewas_df
 
     #p-value correction
@@ -382,6 +375,10 @@ def comorbidity_strength(data:DiseaseNetworkData, proportion_threshold:float=Non
     #check number of CPUs
     n_cpus_check(n_cpus,'comorbidity_strength')
     if n_cpus>1:
+        import os
+        os.environ["MKL_NUM_THREADS"] = '1'
+        os.environ["OPENBLAS_NUM_THREADS"] = '1'
+        os.environ["OMP_NUM_THREADS"] = '1'
         import multiprocessing
 
     #check p-value correction method and cutoff
@@ -629,7 +626,6 @@ def binomial_test(data:DiseaseNetworkData,
     if n_cpus>1:
         n_cpus = 1
         print('Multiprocessing has been disabled for this analysis.')
-        #import multiprocessing
 
     #check p-value correction method and cutoff
     correction_method_check(correction,cutoff)
@@ -1227,6 +1223,10 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
     #check number of CPUs
     n_cpus_check(n_cpus,'trajectory')
     if n_cpus>1:
+        import os
+        os.environ["MKL_NUM_THREADS"] = '1'
+        os.environ["OPENBLAS_NUM_THREADS"] = '1'
+        os.environ["OMP_NUM_THREADS"] = '1'
         import multiprocessing
 
     #check p-value correction method and cutoff

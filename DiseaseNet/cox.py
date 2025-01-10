@@ -363,9 +363,6 @@ def cox_unconditional(data:DiseaseNetworkData,
         result += [0,'Sex specific potentially']
         write_log(log_file,f'No individuals remaining after filtering for phecode {phecode}\n')
         return result
-    
-    #at_risk number
-    n_at_risk = len(dataset_analysis)
 
     if data.study_design != "registry":
     #check number
@@ -397,10 +394,6 @@ def cox_unconditional(data:DiseaseNetworkData,
     length = len(dataset_analysis[(dataset_analysis[exp_col]==1) & (dataset_analysis[outcome_col]==1)])
     result += [length]
     
-    if data.study_design == "registry":
-        write_log(log_file, f"The analysis of {result[0]} disease has done")
-        return result, n_at_risk
-    
     #calculate time in years
     dataset_analysis[time_col] = (dataset_analysis[end_date_col] - dataset_analysis[index_date_col]).dt.days/365.25
     
@@ -408,16 +401,24 @@ def cox_unconditional(data:DiseaseNetworkData,
     n_exp = len(dataset_analysis.loc[(dataset_analysis[exp_col]==1) & (dataset_analysis[outcome_col]==1)])
     n_unexp = len(dataset_analysis.loc[(dataset_analysis[exp_col]==0) & (dataset_analysis[outcome_col]==1)])
     time_exp = dataset_analysis.groupby(by=exp_col)[time_col].sum().loc[1]/1000
-    time_unexp = dataset_analysis.groupby(by=exp_col)[time_col].sum().loc[0]/1000
     str_exp = '%i/%.2f (%.2f)' % (n_exp,time_exp,n_exp/time_exp)
-    str_noexp = '%i/%.2f (%.2f)' % (n_unexp,time_unexp,n_unexp/time_unexp)
+    if data.study_design != "registry":
+        time_unexp = dataset_analysis.groupby(by=exp_col)[time_col].sum().loc[0]/1000
+        str_noexp = '%i/%.2f (%.2f)' % (n_unexp,time_unexp,n_unexp/time_unexp)
     
     #return and save results if less than threshold
-    if length < n_threshold:
+    if (length < n_threshold) and (data.study_design != "registry"):
         result += [f'Less than threshold of {n_threshold}',str_exp,str_noexp]
         write_log(log_file,f'Number of cases {length} less than threshold {n_threshold} for phecode {phecode}\n')
+    elif (length < n_threshold) and (data.study_design == "registry"):
+        result += [f'Less than threshold of {n_threshold}',str_exp]
+        write_log(log_file,f'Number of cases {length} less than threshold {n_threshold} for phecode {phecode}\n')
         return result
-
+    if data.study_design == "registry":
+        result += [f"Analysis has done",str_exp]
+        write_log(log_file,f"The analysis of {result[0]} disease has done")
+        return result
+    
     #exclude those with negative time
     dataset_analysis = dataset_analysis[dataset_analysis[time_col]>0]
     
