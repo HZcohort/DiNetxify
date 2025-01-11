@@ -245,7 +245,7 @@ def find_best_alpha_and_vars(model, best_range, alpha_lst, co_vars):
     counter = 0  # Counter to track the number of increases after a minimum
     counter_failed = 0 #counter for failed models
     thresold = 3 # early stop threshold
-    thresold_failed = 2 # early stop threshold for failed models
+    thresold_failed = 3 # early stop threshold for failed models
 
     for alpha in refined_alphas:
         try:
@@ -273,7 +273,7 @@ def find_best_alpha_and_vars(model, best_range, alpha_lst, co_vars):
         if counter >= thresold:
             break
 
-    final_best_alpha = min(refined_aic_dict, key=refined_aic_dict.get)
+    final_best_alpha = min(refined_aic_dict, key=refined_aic_dict.get) * alpha_lst[-1]
     final_disease_vars = refined_vars_dict[final_best_alpha]
     if len(final_disease_vars) == 0:
         raise ValueError(f"All models failed when trying to find the best alpha for L1 regularization (stoped at {alpha*alpha_lst[-1]}).")
