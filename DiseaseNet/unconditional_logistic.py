@@ -136,7 +136,6 @@ def logistic_model(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,id_col,tr
             except Exception as e:
                 result_lst += [f'{method}_auto',e]
                 message += f'method={method}_auto; error encountered: {e}; '
-                phenotype_df_exposed[['d2']+final_disease_vars+covariates].to_csv(f'{log_file}_{d1}_{d2}.csv',index=False)
 
         else:
             try:
