@@ -239,9 +239,9 @@ def find_best_alpha_and_vars(model, best_range, alpha_lst, co_vars):
     refined_vars_dict = {}
     min_aic = float('inf')
     counter = 0  # Counter to track the number of increases after a minimum
+    counter_failed = 0 #counter for failed models
     thresold = 3 # early stop threshold
     thresold_failed = 2 # early stop threshold for failed models
-    counter_failed = 0 #counter for failed models
 
     for alpha in refined_alphas:
         try:
@@ -255,7 +255,7 @@ def find_best_alpha_and_vars(model, best_range, alpha_lst, co_vars):
             refined_vars_dict[alpha] = []
             counter_failed += 1
 
-        if counter_failed >= thresold_failed: #stop if failed 3 times consecutively
+        if counter_failed >= thresold_failed: #stop if failed 2 times
             break
 
         # Check for AIC minimum and count increases
