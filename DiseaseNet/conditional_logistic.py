@@ -269,10 +269,15 @@ def find_best_alpha_and_vars(model, best_range, alpha_lst, co_vars):
     thresold = 3 # early stop threshold
 
     for alpha in refined_alphas:
-        result = model.fit_regularized(method='l1', alpha=alpha_lst*alpha, disp=False)
-        non_zero_indices = np.nonzero(result.params != 0)[0]
-        refined_vars_dict[alpha] = [co_vars[i] for i in non_zero_indices if co_vars[i]!='constant']
-        refined_aic_dict[alpha] = result.aic
+        try:
+            result = model.fit_regularized(method='l1', alpha=alpha_lst*alpha, disp=False)
+            non_zero_indices = np.nonzero(result.params != 0)[0]
+            refined_vars_dict[alpha] = [co_vars[i] for i in non_zero_indices if co_vars[i]!='constant']
+            refined_aic_dict[alpha] = result.aic
+        except:
+            # If the model fails to converge, set AIC to infinity
+            refined_aic_dict[alpha] = float('inf')
+            refined_vars_dict[alpha] = []
         
         # Check for AIC minimum and count increases
         if result.aic < min_aic:
@@ -287,6 +292,8 @@ def find_best_alpha_and_vars(model, best_range, alpha_lst, co_vars):
 
     final_best_alpha = min(refined_aic_dict, key=refined_aic_dict.get)
     final_disease_vars = refined_vars_dict[final_best_alpha]
+    if len(final_disease_vars) == 0:
+        raise ValueError("All models failed when trying to find the best alpha for L1 regularization.")
     
     return final_best_alpha, final_disease_vars
 
