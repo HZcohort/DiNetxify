@@ -786,7 +786,7 @@ def comorbidity_network(data:DiseaseNetworkData,
             If 'True', automatically determine the optimal 'alpha' based on model AIC value.
         - 'alpha_range' : tuple, default=(1,15)
             When 'auto_penalty' is True, search the optimal 'alpha' in this range.
-        - 'scaling_factor' : non-negative scalar, default=1
+        - 'scaling_factor' : positive scalar, default=1
             The scaling factor for the alpha when 'auto_penalty' is True.
         
         **Additional Options for PCN_PCA:**
@@ -1090,7 +1090,7 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
             If 'True', automatically determine the optimal 'alpha' based on model AIC value.
         - 'alpha_range' : tuple, default=(1,15)
             When 'auto_penalty' is True, search the optimal 'alpha' in this range.
-        - 'scaling_factor' : non-negative scalar, default=1
+        - 'scaling_factor' : positive scalar, default=1
             The scaling factor for the alpha when 'auto_penalty' is True.
         
         **Additional Options for PCN_PCA:**

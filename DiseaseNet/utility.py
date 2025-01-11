@@ -900,8 +900,8 @@ def check_kwargs_com_tra(method:str,comorbidity_strength_cols:list,binomial_test
             for alpha_value in alpha_range:
                 if not isinstance(alpha_value, int) or alpha_value<0:
                     raise TypeError(f"Upper and lower bounds defined in 'alpha_range' should be int>=0, got {alpha_value}.")
-            if not isinstance(scaling_factor, (int, float)):
-                raise TypeError(f"'scaling_factor' should be a scalar, got {type(scaling_factor).__name__}.")
+            if not isinstance(scaling_factor, (int, float)) or scaling_factor <= 0:
+                raise TypeError(f"'scaling_factor' should be a positive scalar, got {type(scaling_factor).__name__}.")
             parameter_dict = {'method':'RPCN','auto_penalty':True,'alpha':alpha, 'alpha_range':alpha_range, 'scaling_factor':scaling_factor}
         else:
             # If auto_penalty is False, alpha must be provided, while alpha_range shoud not be provided
