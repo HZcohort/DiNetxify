@@ -46,6 +46,7 @@ def logistic_model(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,id_col,tr
         auto_penalty = parameters['auto_penalty']
         alpha_single = parameters['alpha']
         alpha_range = parameters['alpha_range']
+        scaling_factor = parameters['scaling_factor']
     elif method == 'PCN_PCA':
         pca_number = parameters.get('explained_variance',parameters.get('n_PC')) #retrive explained_variance first if given, otherwise use n_PC
     
@@ -61,7 +62,10 @@ def logistic_model(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,id_col,tr
         for disease in all_diseases_lst:
             phenotype_df_exposed[str(disease)] = phenotype_df_exposed[id_col].apply(lambda x: 1 if disease in history_level[x] or disease in trajectory_eligible_withdate[x] else 0)
             all_diseases_var.append(str(disease))
-        alpha_lst = np.array([0]*(2) + [1]*len(all_diseases_var))
+        if auto_penalty:
+            alpha_lst = np.array([0]*(2) + [1]*len(all_diseases_var)) * scaling_factor #consider the scaling factor when using auto_penalty
+        else:
+            alpha_lst = np.array([0]*(2) + [1]*len(all_diseases_var))
     
     #d1 and d2 variable
     phenotype_df_exposed['d1'] = phenotype_df_exposed[id_col].apply(lambda x: 1 if d1 in trajectory_eligible_withdate[x] else 0)
@@ -272,7 +276,7 @@ def find_best_alpha_and_vars(model, best_range, alpha_lst, co_vars):
     final_best_alpha = min(refined_aic_dict, key=refined_aic_dict.get)
     final_disease_vars = refined_vars_dict[final_best_alpha]
     if len(final_disease_vars) == 0:
-        raise ValueError(f"All models failed when trying to find the best alpha for L1 regularization (Stoped at {alpha}).")
+        raise ValueError(f"All models failed when trying to find the best alpha for L1 regularization (stoped at {alpha}).")
     
     return final_best_alpha, final_disease_vars
 

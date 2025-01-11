@@ -848,8 +848,7 @@ def check_kwargs_com_tra(method:str,comorbidity_strength_cols:list,binomial_test
     # check that no unexpected keyword arguments are present for column definitions
     allowed_column_kwargs = set(default_kwargs.keys())
     extra_column_kwargs = set(kwargs.keys()) - set([
-        'alpha', 'auto_penalty','alpha_range', 'n_PC', 'explained_variance' ,'enforce_time_interval'
-    ])
+        'alpha', 'auto_penalty','alpha_range', 'n_PC', 'explained_variance' ,'enforce_time_interval', 'scaling_factor'])
     invalid_column_kwargs = extra_column_kwargs - allowed_column_kwargs
     if invalid_column_kwargs:
         raise ValueError(f"Invalid keyword arguments: {invalid_column_kwargs}")
@@ -875,6 +874,7 @@ def check_kwargs_com_tra(method:str,comorbidity_strength_cols:list,binomial_test
         
     alpha = None
     auto_penalty = None
+    scaling_factor = None
     n_PC = None
     explained_variance = None
     
@@ -884,6 +884,7 @@ def check_kwargs_com_tra(method:str,comorbidity_strength_cols:list,binomial_test
         alpha = kwargs.pop('alpha', None)
         auto_penalty = kwargs.pop('auto_penalty', True)
         alpha_range = kwargs.pop('alpha_range',(1,15))
+        scaling_factor = kwargs.pop('scaling_factor', 1)
 
         if not isinstance(auto_penalty, bool):
             raise TypeError(f"'auto_penalty' should be a bool, got {type(auto_penalty).__name__}.")
@@ -899,11 +900,15 @@ def check_kwargs_com_tra(method:str,comorbidity_strength_cols:list,binomial_test
             for alpha_value in alpha_range:
                 if not isinstance(alpha_value, int) or alpha_value<0:
                     raise TypeError(f"Upper and lower bounds defined in 'alpha_range' should be int>=0, got {alpha_value}.")
-            parameter_dict = {'method':'RPCN','auto_penalty':True,'alpha':alpha, 'alpha_range':alpha_range}
+            if not isinstance(scaling_factor, (int, float)):
+                raise TypeError(f"'scaling_factor' should be a scalar, got {type(scaling_factor).__name__}.")
+            parameter_dict = {'method':'RPCN','auto_penalty':True,'alpha':alpha, 'alpha_range':alpha_range, 'scaling_factor':scaling_factor}
         else:
             # If auto_penalty is False, alpha must be provided, while alpha_range shoud not be provided
             if 'alpha_range' in kwargs:
                 raise ValueError("When 'auto_penalty' is False, 'alpha_range' should not be provided.")
+            if 'scaling_factor' in kwargs:
+                raise ValueError("When 'auto_penalty' is False, 'scaling_factor' should not be provided.")
             if alpha is None:
                 raise ValueError("When 'auto_penalty' is False, 'alpha' must be provided.")
             if not isinstance(alpha, (int, float)):
@@ -912,7 +917,7 @@ def check_kwargs_com_tra(method:str,comorbidity_strength_cols:list,binomial_test
                 raise ValueError("'alpha' must be a positive scaler.")
             elif alpha<=1:
                 print("Warning: The provided 'alpha' value is low. The optimal 'alpha' value is normally within the range of (1, 15].")
-            parameter_dict = {'method':'RPCN','auto_penalty':False,'alpha':alpha, 'alpha_range':alpha_range}
+            parameter_dict = {'method':'RPCN','auto_penalty':False,'alpha':alpha, 'alpha_range':alpha_range, 'scaling_factor':scaling_factor}
             
     elif method == 'PCN_PCA':
         # PCN_PCA-specific parameters
