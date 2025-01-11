@@ -253,8 +253,8 @@ def find_best_alpha_and_vars(model, best_range, alpha_lst, co_vars):
             refined_vars_dict[alpha] = []
         
         # Check for AIC minimum and count increases
-        if result.aic < min_aic:
-            min_aic = result.aic
+        if refined_aic_dict[alpha] < min_aic:
+            min_aic = refined_aic_dict[alpha]
             counter = 0  # Reset counter on new minimum
         else:
             counter += 1  # Increment counter on increase
