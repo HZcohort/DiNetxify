@@ -272,7 +272,7 @@ def find_best_alpha_and_vars(model, best_range, alpha_lst, co_vars):
         try:
             result = model.fit_regularized(method='l1', alpha=alpha_lst*alpha, disp=False)
             non_zero_indices = np.nonzero(result.params != 0)[0]
-            refined_vars_dict[alpha] = [co_vars[i] for i in non_zero_indices if co_vars[i]!='constant']
+            refined_vars_dict[alpha] = [co_vars[i] for i in non_zero_indices if co_vars[i]!='constant'] #constant should not be included for the final model
             refined_aic_dict[alpha] = result.aic
         except:
             # If the model fails to converge, set AIC to infinity
