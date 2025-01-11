@@ -125,7 +125,7 @@ class DiseaseNetworkData:
                 
         column_names : dict
             A dictionary mapping required variable names to their corresponding identifiers in the dataset. 
-            Expected keys include 'Participant ID', 'Index date', 'End date', 'Exposure', 'Sex', and 'Matching identifier' (if applicable). 
+            Expected keys include 'Participant ID', 'Index date', 'End date', 'Exposure' (for cohort study), 'Sex', and 'Matching identifier' (for matched cohort study). 
             For example:
             column_names={'Participant ID': 'eid',
                           'Exposure': 'status',
