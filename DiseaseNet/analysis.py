@@ -780,7 +780,7 @@ def comorbidity_network(data:DiseaseNetworkData,
         
         **Additional Options for RPCN:**
         - 'alpha' : non-negative scalar
-            The weight multiplying the l1 penalty term (fixed value of 1e-6) for other diseases covariates. 
+            The weight multiplying the l1 penalty term for other diseases covariates. 
             Ignored if 'auto_penalty' is enabled.
         - 'auto_penalty' : bool, default=True
             If 'True', automatically determine the optimal 'alpha' based on model AIC value.
@@ -1082,7 +1082,7 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
         
         **Additional Options for RPCN:**
         - 'alpha' : non-negative scalar
-            The weight multiplying the l1 penalty term (fixed value of 1e-6) for other diseases covariates. 
+            The weight multiplying the l1 penalty term for other diseases covariates. 
             Ignored if 'auto_penalty' is enabled.
         - 'auto_penalty' : bool, default=True
             If 'True', automatically determine the optimal 'alpha' based on model AIC value.
