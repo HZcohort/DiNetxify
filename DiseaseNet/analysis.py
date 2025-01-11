@@ -39,7 +39,7 @@ def phewas(data:DiseaseNetworkData,
     
     covariates : list, default=None
         List of phenotypic covariates to include in the model.
-        By default, includes ['sex'] and all covariates specified in the 'DiseaseNet.DiseaseNetworkData.phenotype_data()' function.
+        By default, includes 'sex' and all covariates specified in the 'DiseaseNet.DiseaseNetworkData.phenotype_data()' function.
         If you want to include the required variable sex as covariate, always use 'sex' rather than its original column name. 
         For other covariates you specified in the 'DiseaseNet.DiseaseNetworkData.phenotype_data()' function, use their original column name.
         For matched cohort study, including a matching variable as covariate could cause issue of Singular Matrix in model fitting.
@@ -844,12 +844,14 @@ def comorbidity_network(data:DiseaseNetworkData,
         
         RPCN Method Parameters:
             alpha : non-negative scalar
-                The weight multiplying the l1 penalty term (default 1e-6) for other diseases covariates. 
+                The weight multiplying the l1 penalty term for other diseases covariates. 
                 Ignored if 'auto_penalty' is enabled.
             auto_penalty : bool, default=True
                 If 'True', automatically determines the best 'alpha' based on model AIC value.
-            alpha_range ： tuple, default=(1,15)
+            alpha_range : tuple, default=(1,15)
                 When 'auto_penalty' is True, search the optimal 'alpha' in this range.
+            scaling_factor : positive scalar, default=1
+                The scaling factor for the alpha when 'auto_penalty' is True.
 
         PCN_PCA Method Parameters:
             n_PC : int, default=5
@@ -1165,10 +1167,14 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
 
         RPCN Method Parameters:
             alpha : non-negative scalar
-                The weight multiplying the l1 penalty term (fixed 1e-6) for other diseases covariates. 
+                The weight multiplying the l1 penalty term for other diseases covariates. 
                 Ignored if 'auto_penalty' is enabled.
             auto_penalty : bool, default=True
                 If 'True', automatically determines the best 'alpha' based on model AIC value.
+            alpha_range : tuple, default=(1,15)
+                When 'auto_penalty' is True, search the optimal 'alpha' in this range.
+            scaling_factor : positive scalar, default=1
+                The scaling factor for the alpha when 'auto_penalty' is True.
 
         PCN_PCA Method Parameters:
             n_PC : int, default=5

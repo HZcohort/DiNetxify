@@ -1086,7 +1086,7 @@ def find_best_alpha_and_vars(model, best_range, alpha_lst, co_vars):
 
     final_best_alpha = min(refined_aic_dict, key=refined_aic_dict.get)
     if refined_aic_dict[final_best_alpha] == float('inf'):
-        raise ValueError(f"All models failed when trying to find the best alpha for L1 regularization (stoped at {alpha*alpha_lst[-1]}).")
+        raise ValueError(f"All models failed when trying to find the best alpha for L1 regularization, consider change the 'alpha_range' or 'scaling_factor'.")
     else:
         final_best_alpha = final_best_alpha * alpha_lst[-1]
         final_disease_vars = refined_vars_dict[final_best_alpha]
