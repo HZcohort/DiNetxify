@@ -11,7 +11,7 @@ from datetime import datetime
 import statsmodels.api as sm
 from statsmodels.discrete.conditional_models import ConditionalResultsWrapper
 import time
-from .utility import write_log
+from .utility import write_log,find_best_alpha_and_vars
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -114,7 +114,7 @@ def logistic_model(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,id_col,en
     if method == 'CN':
         try:
             model = sm.ConditionalLogit(np.asarray(phenotype_df_exposed['d2'],dtype=int),
-                                        phenotype_df_exposed[['d1']+covariates].values,
+                                        np.asarray(phenotype_df_exposed[['d1']+covariates],dtype=float),
                                         groups=phenotype_df_exposed['group_matching_ids'].values)
             result = model.fit(disp=False,method='bfgs')
             result = MyConditionalResultsWrapper(result)
@@ -132,7 +132,7 @@ def logistic_model(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,id_col,en
                 #model
                 model_1_vars = ['d1','constant']+all_diseases_var #only disease variables
                 model = sm.Logit(np.asarray(phenotype_df_exposed['d2'],dtype=int),
-                                 phenotype_df_exposed[model_1_vars].values) #use unconditional model for selcting disease variables
+                                 np.asarray(phenotype_df_exposed[model_1_vars],dtype=float)) #use unconditional model for selcting disease variables
                 
                 # Initial alphas to check
                 """
@@ -149,10 +149,10 @@ def logistic_model(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,id_col,en
                 
                 #fit the final model
                 model_final = sm.ConditionalLogit(np.asarray(phenotype_df_exposed['d2'],dtype=int),
-                                                  phenotype_df_exposed[final_disease_vars+covariates].values,
+                                                  np.asarray(phenotype_df_exposed[final_disease_vars+covariates],dtype=float),
                                                   groups=phenotype_df_exposed['group_matching_ids'].values)
                 result_final = model_final.fit(disp=False,method='bfgs')
-                result_final = MyConditionalResultsWrapper(result_final)
+                result_final = MyConditionalResultsWrapper(result_final) #add aic property
                 beta,se,p,aic = result_final.params[0], result_final.bse[0],result_final.pvalues[0],result_final.aic
                 z_value_dict = {var:z for var,z in zip(final_disease_vars+covariates,result_final.tvalues)}
                 disease_z_value = {var:z_value_dict[var] for var in final_disease_vars[2::]} #z-value dictionary for other disease variables
@@ -167,16 +167,16 @@ def logistic_model(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,id_col,en
                 #fit the initial model to get the non-zero disease list
                 model_1_vars = ['d1','constant']+all_diseases_var #only disease variables
                 model = sm.Logit(np.asarray(phenotype_df_exposed['d2'],dtype=int),
-                                 phenotype_df_exposed[model_1_vars].values)
+                                 np.asarray(phenotype_df_exposed[model_1_vars],dtype=float)) #use unconditional model for selcting disease variables
                 result = model.fit_regularized(method='l1', alpha=alpha_lst*alpha_single, disp=False)
                 non_zero_indices = np.nonzero(result.params != 0)[0]
                 final_disease_vars = [model_1_vars[i] for i in non_zero_indices]
                 #fit the final conditional model
                 model_final = sm.ConditionalLogit(np.asarray(phenotype_df_exposed['d2'],dtype=int),
-                                                  phenotype_df_exposed[final_disease_vars+covariates].values,
+                                                  np.asarray(phenotype_df_exposed[final_disease_vars+covariates],dtype=float),
                                                   groups=phenotype_df_exposed['group_matching_ids'].values)
                 result_final = model_final.fit(disp=False,method='bfgs')
-                result_final = MyConditionalResultsWrapper(result_final)
+                result_final = MyConditionalResultsWrapper(result_final) #add aic property
                 beta,se,p,aic = result_final.params[0], result_final.bse[0],result_final.pvalues[0],result_final.aic
                 z_value_dict = {var:z for var,z in zip(final_disease_vars+covariates,result_final.tvalues)}
                 disease_z_value = {var:z_value_dict[var] for var in final_disease_vars[2::]} #z-value dictionary for other disease variables
@@ -202,10 +202,10 @@ def logistic_model(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,id_col,en
             
             #fit model with PCA covariates
             model_final = sm.ConditionalLogit(np.asarray(phenotype_df_exposed_PCA['d2'],dtype=int),
-                                   phenotype_df_exposed_PCA[['d1']+covariates+pca_cols].values,
-                                   groups=phenotype_df_exposed['group_matching_ids'].values)
+                                              np.asarray(phenotype_df_exposed_PCA[['d1']+covariates+pca_cols],dtype=float),
+                                              groups=phenotype_df_exposed['group_matching_ids'].values)
             result_final = model_final.fit(disp=False,method='bfgs')
-            result_final = MyConditionalResultsWrapper(result_final)
+            result_final = MyConditionalResultsWrapper(result_final) #add aic property
             beta,se,p,aic = result_final.params[0], result_final.bse[0],result_final.pvalues[0],result_final.aic
             z_value_dict = {var:z for var,z in zip(['d1']+covariates+pca_cols,result_final.tvalues)}
             pca_z_value = {var:z_value_dict[var] for var in pca_cols} #z-value dictionary for other disease variables
@@ -248,58 +248,6 @@ def determine_best_range(aic_dict):
         return (alpha_values[-2], alpha_values[-1])
     else:  # Best alpha is between two values
         return (alpha_values[min_aic_index - 1], alpha_values[min_aic_index + 1])
-
-
-def find_best_alpha_and_vars(model, best_range, alpha_lst, co_vars):
-    """
-    Function to find the best alpha for L1 regularization and the corresponding non-zero variables using an early stopping rule based on consecutive AIC increases.
-    
-    Parameters:
-        model (statsmodels object): The statistical model to be fitted.
-        best_range (tuple): A tuple (min_alpha, max_alpha) defining the range to explore.
-        alpha_lst (float): The alpha multiplier applied during regularization.
-        co_vars (list): List of variable names in the model.
-    
-    Returns:
-        tuple: (final_best_alpha, final_disease_vars) where 'final_best_alpha' is the alpha value that
-               results in the lowest AIC before AIC starts to increase consistently, and 'final_disease_vars'
-               is a list of variables that are non-zero at this alpha level.
-    """
-    refined_alphas = np.linspace(best_range[0], best_range[1], num=best_range[1]-best_range[0]+1)
-    refined_aic_dict = {}
-    refined_vars_dict = {}
-    min_aic = float('inf')
-    counter = 0  # Counter to track the number of increases after a minimum
-    thresold = 3 # early stop threshold
-
-    for alpha in refined_alphas:
-        try:
-            result = model.fit_regularized(method='l1', alpha=alpha_lst*alpha, disp=False)
-            non_zero_indices = np.nonzero(result.params != 0)[0]
-            refined_vars_dict[alpha] = [co_vars[i] for i in non_zero_indices if co_vars[i]!='constant'] #constant should not be included for the final model
-            refined_aic_dict[alpha] = result.aic
-        except:
-            # If the model fails to converge, set AIC to infinity
-            refined_aic_dict[alpha] = float('inf')
-            refined_vars_dict[alpha] = []
-        
-        # Check for AIC minimum and count increases
-        if refined_aic_dict[alpha] < min_aic:
-            min_aic = refined_aic_dict[alpha]
-            counter = 0  # Reset counter on new minimum
-        else:
-            counter += 1  # Increment counter on increase
-        
-        # Break loop if AIC increases 5 times consecutively after a minimum
-        if counter >= thresold:
-            break
-
-    final_best_alpha = min(refined_aic_dict, key=refined_aic_dict.get) * alpha_lst[-1]
-    final_disease_vars = refined_vars_dict[final_best_alpha]
-    if len(final_disease_vars) == 0:
-        raise ValueError(f"All models failed when trying to find the best alpha for L1 regularization (stoped at {alpha*alpha_lst[-1]}).")
-    
-    return final_best_alpha, final_disease_vars
 
 def matching_ids(df:pd.DataFrame,matching_var_dict:dict,matching_n:int,id_col,outcome_date_col:str,end_date_col:str):
     """

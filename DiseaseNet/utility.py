@@ -821,14 +821,14 @@ def d1d2_from_diagnosis_history(df:pd.DataFrame, id_col:str, sex_col:str, phecod
 
 def check_kwargs_com_tra(method:str,comorbidity_strength_cols:list,binomial_test_result_cols,**kwargs):
     """
-    Check the **kwargs from comorbidity_network function
+    Check the **kwargs from comorbidity_network/disease_trajectory function
     
     Parameters
     ----------
-    method : str comorbidity network analysis method
+    method : str comorbidity_network/disease_trajectory analysis method
     comorbidity_strength_cols : list columns of comorbidity_strength_result dataframe
     binomial_test_result_cols : TYPE columns of binomial_test_result dataframe
-    **kwargs : **kwargs from comorbidity_network function
+    **kwargs : **kwargs from comorbidity_network/disease_trajectory function
 
     Returns
     -------
@@ -1033,3 +1033,61 @@ def covariates_check(covariates:list,phenotype_info:dict,matching_var_dict:dict=
             if var in covariates and phenotype_info['phenotype_covariates_type'][var]=='categorical':
                 raise ValueError(f'Categorical covariate {var} has already been used for matching.')
         return covariates_final
+
+def find_best_alpha_and_vars(model, best_range, alpha_lst, co_vars):
+    """
+    Function to find the best alpha for L1 regularization and the corresponding non-zero variables using an early stopping rule based on consecutive AIC increases.
+    
+    Parameters:
+        model (statsmodels object): The statistical model to be fitted.
+        best_range (tuple): A tuple (min_alpha, max_alpha) defining the range to explore.
+        alpha_lst (float): The alpha multiplier applied during regularization.
+        co_vars (list): List of variable names in the model.
+    
+    Returns:
+        tuple: (final_best_alpha, final_disease_vars) where 'final_best_alpha' is the alpha value that
+               results in the lowest AIC before AIC starts to increase consistently, and 'final_disease_vars'
+               is a list of variables that are non-zero at this alpha level.
+    """
+    refined_alphas = np.linspace(best_range[0], best_range[1], num=best_range[1]-best_range[0]+1)
+    refined_aic_dict = {}
+    refined_vars_dict = {}
+    min_aic = float('inf')
+    counter = 0  # Counter to track the number of increases after a minimum
+    counter_failed = 0 #counter for failed models
+    thresold = thresold_failed = int(len(refined_alphas)*0.5) # early stop threshold and early stop threshold for failed models
+
+    for alpha in refined_alphas:
+        try:
+            result = model.fit_regularized(method='l1', alpha=alpha_lst*alpha, disp=False)
+            non_zero_indices = np.nonzero(result.params != 0)[0]
+            refined_vars_dict[alpha] = [co_vars[i] for i in non_zero_indices] #constant needs to be included
+            refined_aic_dict[alpha] = result.aic
+        except:
+            # If the model fails to converge, set AIC to infinity
+            refined_aic_dict[alpha] = float('inf')
+            refined_vars_dict[alpha] = []
+            counter_failed += 1
+            continue
+
+        if counter_failed >= thresold_failed: #stop if failed 2 times
+            break
+
+        # Check for AIC minimum and count increases
+        if refined_aic_dict[alpha] < min_aic:
+            min_aic = refined_aic_dict[alpha]
+            counter = 0  # Reset counter on new minimum
+        else:
+            counter += 1  # Increment counter on increase
+        
+        # Break loop if AIC increases 5 times consecutively after a minimum
+        if counter >= thresold:
+            break
+
+    final_best_alpha = min(refined_aic_dict, key=refined_aic_dict.get)
+    if refined_aic_dict[final_best_alpha] == float('inf'):
+        raise ValueError(f"All models failed when trying to find the best alpha for L1 regularization (stoped at {alpha*alpha_lst[-1]}).")
+    else:
+        final_best_alpha = final_best_alpha * alpha_lst[-1]
+        final_disease_vars = refined_vars_dict[final_best_alpha]
+    return final_best_alpha, final_disease_vars
