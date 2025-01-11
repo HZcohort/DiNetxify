@@ -8,7 +8,7 @@ Created on Thu Dec 12 02:25:20 2024
 import pandas as pd
 import numpy as np
 from scipy.stats import t
-from .data_management import DiseaseNetworkData
+#from .data_management import DiseaseNetworkData
 from .utility import write_log
 
 def com_rr(n:int,c:int,p1:int,p2:int):
