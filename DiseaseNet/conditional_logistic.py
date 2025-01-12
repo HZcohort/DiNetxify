@@ -146,6 +146,7 @@ def logistic_model(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,id_col,en
                 """
                 #search within the defined range
                 final_best_alpha, final_disease_vars = find_best_alpha_and_vars(model,alpha_range,alpha_lst,model_1_vars)
+                final_disease_vars = [x for x in final_disease_vars if x != 'constant'] #remove constant
                 
                 #fit the final model
                 model_final = sm.ConditionalLogit(np.asarray(phenotype_df_exposed['d2'],dtype=int),
