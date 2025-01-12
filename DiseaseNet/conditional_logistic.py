@@ -84,7 +84,7 @@ def logistic_model(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,id_col,en
         for disease in all_diseases_lst:
             phenotype_df_exposed[str(disease)] = phenotype_df_exposed[id_col].apply(lambda x: 1 if disease in history_level[x] or disease in trajectory_eligible_withdate[x] else 0)
             all_diseases_var.append(str(disease))
-        if auto_penalty:
+        if method == 'RPCN' and auto_penalty:
             alpha_lst = np.array([0]*(2) + [1]*len(all_diseases_var)) * scaling_factor #consider the scaling factor when using auto_penalty
         else:
             alpha_lst = np.array([0]*(2) + [1]*len(all_diseases_var))
