@@ -23,7 +23,7 @@ class DiseaseNetworkData:
     Parameters:
     ----------
     study_design : str
-        Specify the type of study design, either "cohort" or "matched cohort".
+        Specify the type of study design, either "cohort", "matched cohort", or "registry".
     
     phecode_level : int
         The level of phecode to use for analysis, where level 1 (with a total of 585 medical conditions) corresponds to 3-digit ICD-10 codes and level 2 (a total of 1257 medical conditions) to 4-digit ICD-10 codes. 
@@ -125,7 +125,7 @@ class DiseaseNetworkData:
                 
         column_names : dict
             A dictionary mapping required variable names to their corresponding identifiers in the dataset. 
-            Expected keys include 'Participant ID', 'Index date', 'End date', 'Exposure' (for cohort study), 'Sex', and 'Matching identifier' (for matched cohort study). 
+            Expected keys include 'Participant ID', 'Index date', 'End date', 'Exposure' (for cohort and matched cohortstudy), 'Sex', and 'Matching identifier' (for matched cohort study). 
             For example:
             column_names={'Participant ID': 'eid',
                           'Exposure': 'status',
@@ -597,7 +597,7 @@ class DiseaseNetworkData:
 
     def load(self, file:str, force:bool=False):
         """
-        Load data from a .npy file and restore the attributes to this DiseaseNet.DiseaseNetworkData object. 
+        Load data from a numpy.npy file and restore the attributes to this DiseaseNet.DiseaseNetworkData object. 
         This method is intended for restoring data to an empty object. 
         If data is already present in any attribute and 'force' is not set to True, an error will be raised to prevent accidental data overwrite.
         
@@ -642,7 +642,7 @@ class DiseaseNetworkData:
 
     def save(self, file:str):
         """
-        Save the DiseaseNet.DiseaseNetworkData object's attributes to a .npy file, which can be restored using the corresponding load method.
+        Save the DiseaseNet.DiseaseNetworkData object's attributes to a numpy.npy file, which can be restored using the corresponding load method.
     
         Parameters
         ----------
