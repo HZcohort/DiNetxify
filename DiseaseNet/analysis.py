@@ -16,6 +16,7 @@ from .utility import check_kwargs_com_tra,covariates_check,matching_var_check
 import warnings
 warnings.filterwarnings('ignore')
 
+
 def phewas(data:DiseaseNetworkData, 
            covariates:list=None, 
            proportion_threshold:float=None, 
@@ -117,7 +118,6 @@ def phewas(data:DiseaseNetworkData,
         A pandas DataFrame object that contains the results of PheWAS analysis.
 
     """
-    from .cox import cox_conditional,cox_unconditional
     
     #data type check
     if not isinstance(data,DiseaseNetworkData):
@@ -143,17 +143,6 @@ def phewas(data:DiseaseNetworkData,
     n_exposed = data.get_attribute('phenotype_statistics')['n_exposed']
     n_threshold = threshold_check(proportion_threshold,n_threshold,n_exposed)
     
-    #check number of process
-    n_process,start_mehtod = n_process_check(n_process,'PheWAS')
-    if n_process>1:
-        import os
-        import multiprocessing
-        os.environ["MKL_NUM_THREADS"] = '1'
-        os.environ["OPENBLAS_NUM_THREADS"] = '1'
-        os.environ["OMP_NUM_THREADS"] = '1'
-        os.environ["THREADPOOL_LIMIT"] = '1'
-        os.environ["VECLIB_MAXIMUM_THREADS"] = '1'
-
     #check p-value correction method and cutoff
     correction_method_check(correction, cutoff)
     
@@ -165,24 +154,32 @@ def phewas(data:DiseaseNetworkData,
     log_file_final,message = log_file_detect(log_file,'phewas')
     print(message)
 
+    #check number of process
+    n_process,start_mehtod = n_process_check(n_process,'PheWAS')
+    if n_process>1:
+        import multiprocessing
+        from .cox import cox_conditional,cox_unconditional,init_worker #use original function as main function and init_worker to initialize global variables
+    else:
+        from .cox import cox_unconditional_wrapper,cox_conditional_wrapper #use wrapper function as main function
+
+    #random order
+    random.shuffle(phecode_lst_all)
+
     time_start = time.time()
     #list of phecode to run
     result_all = []
     if n_process == 1:
         for phecode in phecode_lst_all:
             if data.study_design == 'matched cohort':
-                result_all.append(cox_conditional(data, n_threshold, phecode, covariates, log_file_final, lifelines_disable))
+                result_all.append(cox_unconditional_wrapper(phecode,data,covariates,n_threshold,log_file_final,lifelines_disable))
             else:
-                result_all.append(cox_unconditional(data, n_threshold, phecode, covariates, log_file_final, lifelines_disable))
+                result_all.append(cox_conditional_wrapper(phecode,data,covariates,n_threshold,log_file_final,lifelines_disable))
     elif n_process > 1:
-        parameters_all = []
-        for phecode in phecode_lst_all:
-            parameters_all.append([data, n_threshold, phecode, covariates, log_file_final, lifelines_disable])
-        with multiprocessing.get_context(start_mehtod).Pool(n_process) as p:
+        with multiprocessing.get_context(start_mehtod).Pool(n_process, initializer=init_worker,initargs=(data,covariates,n_threshold,log_file_final,lifelines_disable)) as p:
             if data.study_design == 'matched cohort':
-                result_all = p.starmap(cox_conditional, parameters_all)
+                result_all = p.map(cox_conditional, phecode_lst_all)
             else:
-                result_all = p.starmap(cox_unconditional, parameters_all)
+                result_all = p.map(cox_unconditional, phecode_lst_all)
 
     time_end = time.time()
     time_spent = (time_end - time_start)/60

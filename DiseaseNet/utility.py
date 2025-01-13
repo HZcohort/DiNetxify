@@ -489,6 +489,13 @@ def n_process_check(n_process:int,analysis_name:str):
         return n_process,None
     elif n_process > 1:
         import os
+        #close multi-threading
+        os.environ["MKL_NUM_THREADS"] = '1'
+        os.environ["OPENBLAS_NUM_THREADS"] = '1'
+        os.environ["OMP_NUM_THREADS"] = '1'
+        os.environ["THREADPOOL_LIMIT"] = '1'
+        os.environ["VECLIB_MAXIMUM_THREADS"] = '1'
+        #system information
         max_process = os.cpu_count()
         operation_system = os.name
         if n_process > max_process:
@@ -496,7 +503,7 @@ def n_process_check(n_process:int,analysis_name:str):
         if operation_system == 'nt':
             start_method = 'spawn'
         elif operation_system == 'posix':
-            start_method = 'spawn' #somehow in linux fork/forkserver is even slower than spawn, so use spawn consistently
+            start_method = 'fork'
         else:
             raise ValueError(f"Unsupported operation system: {operation_system}")
         print(f'Use {n_process} process and set start method to {start_method} for {analysis_name} analysis.')
