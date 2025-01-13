@@ -23,7 +23,7 @@ class DiseaseNetworkData:
     Parameters:
     ----------
     study_design : str
-        Specify the type of study design, either "cohort" or "matched cohort".
+        Specify the type of study design, either "cohort", "matched cohort", or "registry".
     
     phecode_level : int
         The level of phecode to use for analysis, where level 1 (with a total of 585 medical conditions) corresponds to 3-digit ICD-10 codes and level 2 (a total of 1257 medical conditions) to 4-digit ICD-10 codes. 
@@ -125,7 +125,7 @@ class DiseaseNetworkData:
                 
         column_names : dict
             A dictionary mapping required variable names to their corresponding identifiers in the dataset. 
-            Expected keys include 'Participant ID', 'Index date', 'End date', 'Exposure', 'Sex', and 'Matching identifier' (if applicable). 
+            Expected keys include 'Participant ID', 'Index date', 'End date', 'Exposure' (for cohort and matched cohortstudy), 'Sex', and 'Matching identifier' (for matched cohort study). 
             For example:
             column_names={'Participant ID': 'eid',
                           'Exposure': 'status',
@@ -186,6 +186,10 @@ class DiseaseNetworkData:
         value_notin = [x for x in self.__phenotype_info['phenotype_col_dict'].keys() if x not in column_names.keys()]
         if len(value_notin) > 0:
             raise ValueError(f"{value_notin} not specified in the column_names dictionary")
+        #check whether unknow columns are in the dictionary
+        value_unknown = [x for x in column_names.keys() if x not in self.__phenotype_info['phenotype_col_dict'].keys()]
+        if len(value_unknown) > 0:
+            raise ValueError(f"{value_unknown} in the column_names dictionary is not required for the study design {self.study_design}")        
         #check duplicate columns
         duplicate_cols_0 = set(column_names.values()).intersection(set(covariates)) #duplicate of original column names
         duplicate_cols_1 = set(self.__phenotype_col_dict[self.study_design].values()).intersection(set(covariates)) #duplicate of renamed column names
@@ -593,7 +597,7 @@ class DiseaseNetworkData:
 
     def load(self, file:str, force:bool=False):
         """
-        Load data from a .npy file and restore the attributes to this DiseaseNet.DiseaseNetworkData object. 
+        Load data from a numpy.npy file and restore the attributes to this DiseaseNet.DiseaseNetworkData object. 
         This method is intended for restoring data to an empty object. 
         If data is already present in any attribute and 'force' is not set to True, an error will be raised to prevent accidental data overwrite.
         
@@ -638,7 +642,7 @@ class DiseaseNetworkData:
 
     def save(self, file:str):
         """
-        Save the DiseaseNet.DiseaseNetworkData object's attributes to a .npy file, which can be restored using the corresponding load method.
+        Save the DiseaseNet.DiseaseNetworkData object's attributes to a numpy.npy file, which can be restored using the corresponding load method.
     
         Parameters
         ----------

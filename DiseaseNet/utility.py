@@ -759,15 +759,17 @@ def d1d2_from_diagnosis_history(df:pd.DataFrame, id_col:str, sex_col:str, phecod
     """
     sex_value_dict = {'Female':1,'Male':0}
     eligible_disease_dict = {}
+    eligible_withdate_dict = {}
     d1d2_temporl_pair_dict = {}
     d1d2_com_pair_dict = {}
     
     from itertools import combinations
     
     for id_,sex in df[[id_col,sex_col]].values:
-        temp_deligible_dict = {}
+        temp_deligible_list = []
         temp_dpair_temporal_lst = []
         temp_dpair_com_lst = []
+        temp_deligible_dict_withdate = {}
         diagnosis_ = diagnosis_dict[id_]
         history_ = history_dict[id_]
         #generate eligible disease dictionary
@@ -778,15 +780,17 @@ def d1d2_from_diagnosis_history(df:pd.DataFrame, id_col:str, sex_col:str, phecod
             if len(exl_lst.intersection(set(history_)))==0 and (sex_specific=='Both' or sex_value_dict[sex_specific]==sex):
                 try:
                     date = min([diagnosis_[x] for x in leaf_lst if x in diagnosis_])
+                    temp_deligible_dict_withdate[phecode] = date
+                    temp_deligible_list.append(phecode)
                 except:
-                    date = pd.NaT
-                temp_deligible_dict[phecode] = date
+                    temp_deligible_list.append(phecode)
         #generate disease pair dictionary
-        temp_deligible_dict_withdate = {i:j for i,j in temp_deligible_dict.items() if not pd.isna(j)}
         if len(temp_deligible_dict_withdate) <= 1:
-            eligible_disease_dict[id_] = temp_deligible_dict
+            eligible_disease_dict[id_] = temp_deligible_list
             d1d2_temporl_pair_dict[id_] = temp_dpair_temporal_lst
             d1d2_com_pair_dict[id_] = temp_dpair_com_lst
+            eligible_withdate_dict[id_] = temp_deligible_dict_withdate
+            
         else:
             for d1,d2 in combinations(temp_deligible_dict_withdate,2):
                 date1, date2 = temp_deligible_dict_withdate[d1], temp_deligible_dict_withdate[d2]
@@ -801,11 +805,14 @@ def d1d2_from_diagnosis_history(df:pd.DataFrame, id_col:str, sex_col:str, phecod
                     else:
                         temp_dpair_temporal_lst.append((d1,d2))
             #save for the individual
-            eligible_disease_dict[id_] = temp_deligible_dict
+            eligible_disease_dict[id_] = temp_deligible_list
             d1d2_temporl_pair_dict[id_] = temp_dpair_temporal_lst
             d1d2_com_pair_dict[id_] = temp_dpair_com_lst
+            eligible_withdate_dict[id_] = temp_deligible_dict_withdate
+    
     #final dictionary
     trajectory_dict = {'eligible_disease':eligible_disease_dict,
+                       'eligible_disease_withdate':eligible_withdate_dict,
                        'd1d2_temporal_pair':d1d2_temporl_pair_dict,
                        'd1d2_com_pair':d1d2_com_pair_dict}
     
@@ -814,14 +821,14 @@ def d1d2_from_diagnosis_history(df:pd.DataFrame, id_col:str, sex_col:str, phecod
 
 def check_kwargs_com_tra(method:str,comorbidity_strength_cols:list,binomial_test_result_cols,**kwargs):
     """
-    Check the **kwargs from comorbidity_network function
+    Check the **kwargs from comorbidity_network/disease_trajectory function
     
     Parameters
     ----------
-    method : str comorbidity network analysis method
+    method : str comorbidity_network/disease_trajectory analysis method
     comorbidity_strength_cols : list columns of comorbidity_strength_result dataframe
     binomial_test_result_cols : TYPE columns of binomial_test_result dataframe
-    **kwargs : **kwargs from comorbidity_network function
+    **kwargs : **kwargs from comorbidity_network/disease_trajectory function
 
     Returns
     -------
@@ -841,8 +848,7 @@ def check_kwargs_com_tra(method:str,comorbidity_strength_cols:list,binomial_test
     # check that no unexpected keyword arguments are present for column definitions
     allowed_column_kwargs = set(default_kwargs.keys())
     extra_column_kwargs = set(kwargs.keys()) - set([
-        'alpha', 'auto_penalty','alpha_range', 'n_PC', 'explained_variance' ,'enforce_time_interval'
-    ])
+        'alpha', 'auto_penalty','alpha_range', 'n_PC', 'explained_variance' ,'enforce_time_interval', 'scaling_factor'])
     invalid_column_kwargs = extra_column_kwargs - allowed_column_kwargs
     if invalid_column_kwargs:
         raise ValueError(f"Invalid keyword arguments: {invalid_column_kwargs}")
@@ -868,6 +874,7 @@ def check_kwargs_com_tra(method:str,comorbidity_strength_cols:list,binomial_test
         
     alpha = None
     auto_penalty = None
+    scaling_factor = None
     n_PC = None
     explained_variance = None
     
@@ -877,6 +884,7 @@ def check_kwargs_com_tra(method:str,comorbidity_strength_cols:list,binomial_test
         alpha = kwargs.pop('alpha', None)
         auto_penalty = kwargs.pop('auto_penalty', True)
         alpha_range = kwargs.pop('alpha_range',(1,15))
+        scaling_factor = kwargs.pop('scaling_factor', 1)
 
         if not isinstance(auto_penalty, bool):
             raise TypeError(f"'auto_penalty' should be a bool, got {type(auto_penalty).__name__}.")
@@ -892,11 +900,15 @@ def check_kwargs_com_tra(method:str,comorbidity_strength_cols:list,binomial_test
             for alpha_value in alpha_range:
                 if not isinstance(alpha_value, int) or alpha_value<0:
                     raise TypeError(f"Upper and lower bounds defined in 'alpha_range' should be int>=0, got {alpha_value}.")
-            parameter_dict = {'method':'RPCN','auto_penalty':True,'alpha':alpha, 'alpha_range':alpha_range}
+            if not isinstance(scaling_factor, (int, float)) or scaling_factor <= 0:
+                raise TypeError(f"'scaling_factor' should be a positive scalar, got {type(scaling_factor).__name__}.")
+            parameter_dict = {'method':'RPCN','auto_penalty':True,'alpha':alpha, 'alpha_range':alpha_range, 'scaling_factor':scaling_factor}
         else:
             # If auto_penalty is False, alpha must be provided, while alpha_range shoud not be provided
             if 'alpha_range' in kwargs:
                 raise ValueError("When 'auto_penalty' is False, 'alpha_range' should not be provided.")
+            if 'scaling_factor' in kwargs:
+                raise ValueError("When 'auto_penalty' is False, 'scaling_factor' should not be provided.")
             if alpha is None:
                 raise ValueError("When 'auto_penalty' is False, 'alpha' must be provided.")
             if not isinstance(alpha, (int, float)):
@@ -905,7 +917,7 @@ def check_kwargs_com_tra(method:str,comorbidity_strength_cols:list,binomial_test
                 raise ValueError("'alpha' must be a positive scaler.")
             elif alpha<=1:
                 print("Warning: The provided 'alpha' value is low. The optimal 'alpha' value is normally within the range of (1, 15].")
-            parameter_dict = {'method':'RPCN','auto_penalty':False,'alpha':alpha, 'alpha_range':alpha_range}
+            parameter_dict = {'method':'RPCN','auto_penalty':False,'alpha':alpha, 'alpha_range':alpha_range, 'scaling_factor':scaling_factor}
             
     elif method == 'PCN_PCA':
         # PCN_PCA-specific parameters
@@ -1021,3 +1033,61 @@ def covariates_check(covariates:list,phenotype_info:dict,matching_var_dict:dict=
             if var in covariates and phenotype_info['phenotype_covariates_type'][var]=='categorical':
                 raise ValueError(f'Categorical covariate {var} has already been used for matching.')
         return covariates_final
+
+def find_best_alpha_and_vars(model, best_range, alpha_lst, co_vars):
+    """
+    Function to find the best alpha for L1 regularization and the corresponding non-zero variables using an early stopping rule based on consecutive AIC increases.
+    
+    Parameters:
+        model (statsmodels object): The statistical model to be fitted.
+        best_range (tuple): A tuple (min_alpha, max_alpha) defining the range to explore.
+        alpha_lst (float): The alpha multiplier applied during regularization.
+        co_vars (list): List of variable names in the model.
+    
+    Returns:
+        tuple: (final_best_alpha, final_disease_vars) where 'final_best_alpha' is the alpha value that
+               results in the lowest AIC before AIC starts to increase consistently, and 'final_disease_vars'
+               is a list of variables that are non-zero at this alpha level.
+    """
+    refined_alphas = np.linspace(best_range[0], best_range[1], num=best_range[1]-best_range[0]+1)
+    refined_aic_dict = {}
+    refined_vars_dict = {}
+    min_aic = float('inf')
+    counter = 0  # Counter to track the number of increases after a minimum
+    counter_failed = 0 #counter for failed models
+    thresold = thresold_failed = int(len(refined_alphas)*0.5) # early stop threshold and early stop threshold for failed models
+
+    for alpha in refined_alphas:
+        try:
+            result = model.fit_regularized(method='l1', alpha=alpha_lst*alpha, disp=False)
+            non_zero_indices = np.nonzero(result.params != 0)[0]
+            refined_vars_dict[alpha] = [co_vars[i] for i in non_zero_indices] #constant is included
+            refined_aic_dict[alpha] = result.aic
+        except:
+            # If the model fails to converge, set AIC to infinity
+            refined_aic_dict[alpha] = float('inf')
+            refined_vars_dict[alpha] = []
+            counter_failed += 1
+            continue
+
+        if counter_failed >= thresold_failed: #stop if failed 2 times
+            break
+
+        # Check for AIC minimum and count increases
+        if refined_aic_dict[alpha] < min_aic:
+            min_aic = refined_aic_dict[alpha]
+            counter = 0  # Reset counter on new minimum
+        else:
+            counter += 1  # Increment counter on increase
+        
+        # Break loop if AIC increases 5 times consecutively after a minimum
+        if counter >= thresold:
+            break
+
+    final_best_alpha = min(refined_aic_dict, key=refined_aic_dict.get)
+    if refined_aic_dict[final_best_alpha] == float('inf'):
+        raise ValueError(f"Models failed to fit when trying to find the best alpha for L1 regularization, consider change the 'alpha_range' or 'scaling_factor'.")
+    else:
+        final_best_alpha = final_best_alpha * alpha_lst[-1]
+        final_disease_vars = refined_vars_dict[final_best_alpha]
+    return final_best_alpha, final_disease_vars

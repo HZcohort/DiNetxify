@@ -8,6 +8,7 @@ Created on Thu Dec 5 19:48:09 2024
 import pandas as pd
 import numpy as np
 import time
+import random
 from .data_management import DiseaseNetworkData
 from .utility import log_file_detect,filter_phecodes,threshold_check,n_process_check,correction_method_check,states_p_adjust
 from .utility import check_kwargs_com_tra,covariates_check,matching_var_check
@@ -38,7 +39,7 @@ def phewas(data:DiseaseNetworkData,
     
     covariates : list, default=None
         List of phenotypic covariates to include in the model.
-        By default, includes ['sex'] and all covariates specified in the 'DiseaseNet.DiseaseNetworkData.phenotype_data()' function.
+        By default, includes 'sex' and all covariates specified in the 'DiseaseNet.DiseaseNetworkData.phenotype_data()' function.
         If you want to include the required variable sex as covariate, always use 'sex' rather than its original column name. 
         For other covariates you specified in the 'DiseaseNet.DiseaseNetworkData.phenotype_data()' function, use their original column name.
         For matched cohort study, including a matching variable as covariate could cause issue of Singular Matrix in model fitting.
@@ -149,6 +150,8 @@ def phewas(data:DiseaseNetworkData,
         os.environ["MKL_NUM_THREADS"] = '1'
         os.environ["OPENBLAS_NUM_THREADS"] = '1'
         os.environ["OMP_NUM_THREADS"] = '1'
+        os.environ["THREADPOOL_LIMIT"] = '1'
+        os.environ["VECLIB_MAXIMUM_THREADS"] = '1'
         import multiprocessing
 
     #check p-value correction method and cutoff
@@ -163,28 +166,22 @@ def phewas(data:DiseaseNetworkData,
     print(message)
 
     time_start = time.time()
-    #list of phecode
+    #list of phecode to run
     result_all = []
-    if data.study_design == 'matched cohort':
-        if n_process == 1:
-            for phecode in phecode_lst_all:
-                result_all.append(cox_conditional(data,n_threshold,phecode,covariates,log_file_final,lifelines_disable))
-        elif n_process > 1:
-            parameters_all = []
-            for phecode in phecode_lst_all:
-                parameters_all.append([data,n_threshold,phecode,covariates,log_file_final,lifelines_disable])
-            with multiprocessing.get_context('spawn').Pool(n_process) as p:
-                #start main function
+    if n_process == 1:
+        for phecode in phecode_lst_all:
+            if data.study_design == 'matched cohort':
+                result_all.append(cox_conditional(data, n_threshold, phecode, covariates, log_file_final, lifelines_disable))
+            else:
+                result_all.append(cox_unconditional(data, n_threshold, phecode, covariates, log_file_final, lifelines_disable))
+    elif n_process > 1:
+        parameters_all = []
+        for phecode in phecode_lst_all:
+            parameters_all.append([data, n_threshold, phecode, covariates, log_file_final, lifelines_disable])
+        with multiprocessing.get_context('spawn').Pool(n_process) as p:
+            if data.study_design == 'matched cohort':
                 result_all = p.starmap(cox_conditional, parameters_all)
-    if data.study_design == 'cohort' or data.study_design == "registry":
-        if n_process == 1:
-            for phecode in phecode_lst_all:
-                result_all.append(cox_unconditional(data,n_threshold,phecode,covariates,log_file_final,lifelines_disable))
-        elif n_process > 1:
-            parameters_all = []
-            for phecode in phecode_lst_all:
-                parameters_all.append([data,n_threshold,phecode,covariates,log_file_final,lifelines_disable])
-            with multiprocessing.get_context('spawn').Pool(n_process) as p:
+            else:
                 result_all = p.starmap(cox_unconditional, parameters_all)
 
     time_end = time.time()
@@ -356,23 +353,14 @@ def comorbidity_strength(data:DiseaseNetworkData, proportion_threshold:float=Non
         if getattr(data, attr) is None:
             raise ValueError(f"Attribute '{attr}' is empty.")
     
-    #retrieve phecode information
+    #retrieve phecode information and others
     phecode_info = data.phecode_info
     trajectory_dict = data.trajectory
-    
+
     #check threshold
     n_exposed = data.get_attribute('phenotype_statistics')['n_exposed']
     n_threshold = threshold_check(proportion_threshold,n_threshold,n_exposed)
     
-    #check number of process
-    n_process_check(n_process,'comorbidity_strength')
-    if n_process>1:
-        import os
-        os.environ["MKL_NUM_THREADS"] = '1'
-        os.environ["OPENBLAS_NUM_THREADS"] = '1'
-        os.environ["OMP_NUM_THREADS"] = '1'
-        import multiprocessing
-
     #check p-value correction method and cutoff
     correction_method_check(correction_phi,cutoff_phi)
     correction_method_check(correction_RR,cutoff_RR)
@@ -380,6 +368,17 @@ def comorbidity_strength(data:DiseaseNetworkData, proportion_threshold:float=Non
     #check log files
     log_file_final,message = log_file_detect(log_file,'com_strength')
     print(message)
+
+    #check number of process
+    n_process_check(n_process,'comorbidity_strength')
+    if n_process>1:
+        import os
+        os.environ["MKL_NUM_THREADS"] = '1'
+        os.environ["OPENBLAS_NUM_THREADS"] = '1'
+        os.environ["OMP_NUM_THREADS"] = '1'
+        os.environ["THREADPOOL_LIMIT"] = '1'
+        os.environ["VECLIB_MAXIMUM_THREADS"] = '1'
+        import multiprocessing
     
     #get all significant phecodes
     phecodes_sig = data.get_attribute('significant_phecodes')
@@ -392,6 +391,7 @@ def comorbidity_strength(data:DiseaseNetworkData, proportion_threshold:float=Non
             d1d2_pair_lst.append((d1,d2,'Disease pair with different sex specificity'))
         else:
             d1d2_pair_lst.append((d1,d2,None))
+    random.shuffle(d1d2_pair_lst)
     
     time_start = time.time()
     #list of phecode
@@ -780,12 +780,14 @@ def comorbidity_network(data:DiseaseNetworkData,
         
         **Additional Options for RPCN:**
         - 'alpha' : non-negative scalar
-            The weight multiplying the l1 penalty term (fixed value of 1e-6) for other diseases covariates. 
+            The weight multiplying the l1 penalty term for other diseases covariates. 
             Ignored if 'auto_penalty' is enabled.
         - 'auto_penalty' : bool, default=True
             If 'True', automatically determine the optimal 'alpha' based on model AIC value.
         - 'alpha_range' : tuple, default=(1,15)
             When 'auto_penalty' is True, search the optimal 'alpha' in this range.
+        - 'scaling_factor' : positive scalar, default=1
+            The scaling factor for the alpha when 'auto_penalty' is True.
         
         **Additional Options for PCN_PCA:**
         - 'n_PC' : int, default=5
@@ -842,10 +844,14 @@ def comorbidity_network(data:DiseaseNetworkData,
         
         RPCN Method Parameters:
             alpha : non-negative scalar
-                The weight multiplying the l1 penalty term (default 1e-6) for other diseases covariates. 
+                The weight multiplying the l1 penalty term for other diseases covariates. 
                 Ignored if 'auto_penalty' is enabled.
             auto_penalty : bool, default=True
                 If 'True', automatically determines the best 'alpha' based on model AIC value.
+            alpha_range : tuple, default=(1,15)
+                When 'auto_penalty' is True, search the optimal 'alpha' in this range.
+            scaling_factor : positive scalar, default=1
+                The scaling factor for the alpha when 'auto_penalty' is True.
 
         PCN_PCA Method Parameters:
             n_PC : int, default=5
@@ -895,6 +901,8 @@ def comorbidity_network(data:DiseaseNetworkData,
         os.environ["MKL_NUM_THREADS"] = '1'
         os.environ["OPENBLAS_NUM_THREADS"] = '1'
         os.environ["OMP_NUM_THREADS"] = '1'
+        os.environ["THREADPOOL_LIMIT"] = '1'
+        os.environ["VECLIB_MAXIMUM_THREADS"] = '1'
         import multiprocessing
 
     #check p-value correction method and cutoff
@@ -910,19 +918,13 @@ def comorbidity_network(data:DiseaseNetworkData,
     #get necessary data for model fitting
     phecode_info = data.phecode_info
     trajectory_eligible = data.trajectory['eligible_disease']
+    trajectory_eligible_withdate = data.trajectory['eligible_disease_withdate']
     history = data.history
     phenotype_df = data.phenotype_df
     exp_col = data.get_attribute('phenotype_info')['phenotype_col_dict']['Exposure']
     id_col = data.get_attribute('phenotype_info')['phenotype_col_dict']['Participant ID']
     exposed_index = phenotype_df[phenotype_df[exp_col]==1].index
     phenotype_df_exposed = data.phenotype_df.loc[exposed_index,[id_col]+covariates]
-    trajectory_eligible_withdate = {}
-    for id_,dict_ in trajectory_eligible.items():
-        temp_lst = []
-        for d,dt in dict_.items():
-            if not pd.isna(dt):
-                temp_lst.append(d)
-        trajectory_eligible_withdate[id_] = temp_lst
     
     #get all disease pairs with significant comorbidity strength
     comorbidity_sig = comorbidity_strength_result[(comorbidity_strength_result[significance_phi_col]==True) & 
@@ -952,7 +954,7 @@ def comorbidity_network(data:DiseaseNetworkData,
         parameters_all = []
         for d1,d2 in comorbidity_sig[[phecode_d1_col,phecode_d2_col]].values:
             parameters_all.append([d1,d2,phenotype_df_exposed,id_col,trajectory_eligible,trajectory_eligible_withdate,
-                                                history_level,covariates,all_diseases_lst,log_file_final,parameter_dict])
+                                   history_level,covariates,all_diseases_lst,log_file_final,parameter_dict])
         with multiprocessing.get_context('spawn').Pool(n_process) as p:
             result_all = p.starmap(logistic_model, parameters_all)
 
@@ -1084,12 +1086,14 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
         
         **Additional Options for RPCN:**
         - 'alpha' : non-negative scalar
-            The weight multiplying the l1 penalty term (fixed value of 1e-6) for other diseases covariates. 
+            The weight multiplying the l1 penalty term for other diseases covariates. 
             Ignored if 'auto_penalty' is enabled.
         - 'auto_penalty' : bool, default=True
             If 'True', automatically determine the optimal 'alpha' based on model AIC value.
         - 'alpha_range' : tuple, default=(1,15)
             When 'auto_penalty' is True, search the optimal 'alpha' in this range.
+        - 'scaling_factor' : positive scalar, default=1
+            The scaling factor for the alpha when 'auto_penalty' is True.
         
         **Additional Options for PCN_PCA:**
         - 'n_PC' : int, default=5
@@ -1163,10 +1167,14 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
 
         RPCN Method Parameters:
             alpha : non-negative scalar
-                The weight multiplying the l1 penalty term (fixed 1e-6) for other diseases covariates. 
+                The weight multiplying the l1 penalty term for other diseases covariates. 
                 Ignored if 'auto_penalty' is enabled.
             auto_penalty : bool, default=True
                 If 'True', automatically determines the best 'alpha' based on model AIC value.
+            alpha_range : tuple, default=(1,15)
+                When 'auto_penalty' is True, search the optimal 'alpha' in this range.
+            scaling_factor : positive scalar, default=1
+                The scaling factor for the alpha when 'auto_penalty' is True.
 
         PCN_PCA Method Parameters:
             n_PC : int, default=5
@@ -1219,6 +1227,8 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
         os.environ["MKL_NUM_THREADS"] = '1'
         os.environ["OPENBLAS_NUM_THREADS"] = '1'
         os.environ["OMP_NUM_THREADS"] = '1'
+        os.environ["THREADPOOL_LIMIT"] = '1'
+        os.environ["VECLIB_MAXIMUM_THREADS"] = '1'
         import multiprocessing
 
     #check p-value correction method and cutoff
@@ -1236,6 +1246,7 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
     
     trajectory_eligible = data.trajectory['eligible_disease']
     trajectory_temporal = data.trajectory['d1d2_temporal_pair']
+    trajectory_eligible_withdate = data.trajectory['eligible_disease_withdate']
     history = data.history
     phenotype_df = data.phenotype_df
     exp_col = data.get_attribute('phenotype_info')['phenotype_col_dict']['Exposure']
@@ -1243,13 +1254,6 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
     end_date_col = data.get_attribute('phenotype_info')['phenotype_col_dict']['End date']
     exposed_index = phenotype_df[phenotype_df[exp_col]==1].index
     phenotype_df_exposed = data.phenotype_df.loc[exposed_index,[id_col,end_date_col]+covariates+list(matching_var_dict.keys())]
-    trajectory_eligible_withdate = {}
-    for id_,dict_ in trajectory_eligible.items():
-        temp_lst = []
-        for d,dt in dict_.items():
-            if not pd.isna(dt):
-                temp_lst.append(d)
-        trajectory_eligible_withdate[id_] = temp_lst
     
     #get all disease pairs with significant temporal orders
     trajectory_sig = binomial_test_result[binomial_test_result[significance_binomial_col]==True]
@@ -1268,7 +1272,7 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
     #generate a new history dictionary
     if data.phecode_level == 1:
         history_level = {id_:set([int(phecode)/1 for phecode in vals]) for id_,vals in history.items()}
-    elif data.phecode_level == 1:
+    elif data.phecode_level == 2:
         history_level = {id_:set([int(phecode*10)/10 for phecode in vals]) for id_,vals in history.items()}
     
     time_start = time.time()
@@ -1290,7 +1294,7 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
 
     time_end = time.time()
     time_spent = (time_end - time_start)/60
-    print(f'Comorbidity network analysis finished (elapsed {time_spent:.1f} mins)')
+    print(f'Disease trajectory analysis finished (elapsed {time_spent:.1f} mins)')
     
     #result column names based on different method
     df_columns_common = ['phecode_d1','phecode_d2','name_disease_pair','N_exposed','n_total','n_with_d2/n_with_d1','n_with_d2/n_without_d1',
