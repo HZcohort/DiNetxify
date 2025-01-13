@@ -170,26 +170,22 @@ def phewas(data:DiseaseNetworkData,
             for phecode in phecode_lst_all:
                 result_all.append(cox_conditional(data,n_threshold,phecode,covariates,log_file_final,lifelines_disable))
         elif n_process > 1:
+            parameters_all = []
+            for phecode in phecode_lst_all:
+                parameters_all.append([data,n_threshold,phecode,covariates,log_file_final,lifelines_disable])
             with multiprocessing.get_context('spawn').Pool(n_process) as p:
-                parameters_all = []
-                for phecode in phecode_lst_all:
-                    parameters_all.append([data,n_threshold,phecode,covariates,log_file_final,lifelines_disable])
                 #start main function
                 result_all = p.starmap(cox_conditional, parameters_all)
-    if data.study_design == 'cohort':
+    if data.study_design == 'cohort' or data.study_design == "registry":
         if n_process == 1:
             for phecode in phecode_lst_all:
                 result_all.append(cox_unconditional(data,n_threshold,phecode,covariates,log_file_final,lifelines_disable))
         elif n_process > 1:
+            parameters_all = []
+            for phecode in phecode_lst_all:
+                parameters_all.append([data,n_threshold,phecode,covariates,log_file_final,lifelines_disable])
             with multiprocessing.get_context('spawn').Pool(n_process) as p:
-                parameters_all = []
-                for phecode in phecode_lst_all:
-                    parameters_all.append([data,n_threshold,phecode,covariates,log_file_final,lifelines_disable])
-                result_all = p.starmap(cox_unconditional, parameters_all)    
-    if data.study_design == "registry":
-        for phecode in phecode_lst_all:
-            result = cox_unconditional(data,n_threshold,phecode,covariates,log_file_final,lifelines_disable)
-            result_all.append(result)
+                result_all = p.starmap(cox_unconditional, parameters_all)
 
     time_end = time.time()
     time_spent = (time_end - time_start)/60
@@ -404,10 +400,10 @@ def comorbidity_strength(data:DiseaseNetworkData, proportion_threshold:float=Non
         for d1,d2,describe in d1d2_pair_lst:
             result_all.append(com_phi_rr(trajectory_dict,d1,d2,describe,n_threshold,log_file_final))
     elif n_process > 1:
+        parameters_all = []
+        for d1,d2,describe in d1d2_pair_lst:
+            parameters_all.append([trajectory_dict,d1,d2,describe,n_threshold,log_file_final])
         with multiprocessing.get_context('spawn').Pool(n_process) as p:
-            parameters_all = []
-            for d1,d2,describe in d1d2_pair_lst:
-                parameters_all.append([trajectory_dict,d1,d2,describe,n_threshold,log_file_final])
             result_all = p.starmap(com_phi_rr, parameters_all)
 
     time_end = time.time()
@@ -953,11 +949,11 @@ def comorbidity_network(data:DiseaseNetworkData,
             result_all.append(logistic_model(d1,d2,phenotype_df_exposed,id_col,trajectory_eligible,trajectory_eligible_withdate,
                                              history_level,covariates,all_diseases_lst,log_file_final,parameter_dict))
     elif n_process > 1:
+        parameters_all = []
+        for d1,d2 in comorbidity_sig[[phecode_d1_col,phecode_d2_col]].values:
+            parameters_all.append([d1,d2,phenotype_df_exposed,id_col,trajectory_eligible,trajectory_eligible_withdate,
+                                                history_level,covariates,all_diseases_lst,log_file_final,parameter_dict])
         with multiprocessing.get_context('spawn').Pool(n_process) as p:
-            parameters_all = []
-            for d1,d2 in comorbidity_sig[[phecode_d1_col,phecode_d2_col]].values:
-                parameters_all.append([d1,d2,phenotype_df_exposed,id_col,trajectory_eligible,trajectory_eligible_withdate,
-                                                 history_level,covariates,all_diseases_lst,log_file_final,parameter_dict])
             result_all = p.starmap(logistic_model, parameters_all)
 
     time_end = time.time()
@@ -1284,12 +1280,12 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
                                              trajectory_eligible_withdate,history_level,covariates,all_diseases_lst,
                                              matching_var_dict,matching_n,log_file_final,parameter_dict))
     elif n_process > 1:
+        parameters_all = []
+        for d1,d2 in trajectory_sig[[phecode_d1_col,phecode_d2_col]].values:
+            parameters_all.append([d1,d2,phenotype_df_exposed,id_col,end_date_col,trajectory_eligible,trajectory_temporal,
+                                    trajectory_eligible_withdate,history_level,covariates,all_diseases_lst,
+                                    matching_var_dict,matching_n,log_file_final,parameter_dict])
         with multiprocessing.get_context('spawn').Pool(n_process) as p:
-            parameters_all = []
-            for d1,d2 in trajectory_sig[[phecode_d1_col,phecode_d2_col]].values:
-                parameters_all.append([d1,d2,phenotype_df_exposed,id_col,end_date_col,trajectory_eligible,trajectory_temporal,
-                                       trajectory_eligible_withdate,history_level,covariates,all_diseases_lst,
-                                       matching_var_dict,matching_n,log_file_final,parameter_dict])
             result_all = p.starmap(logistic_model, parameters_all)
 
     time_end = time.time()

@@ -50,7 +50,6 @@ Created on Fri Jul 26 12:49:35 2024
 from DiseaseNet.data_management import DiseaseNetworkData as dnd
 from DiseaseNet.analysis import phewas, comorbidity_strength, binomial_test
 
-
 if __name__ == "__main__":
     data = dnd(study_design="registry")
     data.phenotype_data("C:/Users/bovin/Desktop/data.csv",
@@ -66,7 +65,7 @@ if __name__ == "__main__":
                             "Date of diagnosis": "date_dignosed"})
     phewas_result = phewas(data, proportion_threshold=0.1)
     phewas_result.to_csv("C:/Users/bovin/Desktop/s.csv")
-    # data.disease_pair(phewas_result)
+    data.disease_pair(phewas_result)
     # comorbidity_strength_result = comorbidity_strength(data, proportion_threshold=0.1)
     # comorbidity_strength_result.to_csv("C:/Users/bovin/Desktop/sa.csv")
     # binomial_test_result = binomial_test(data, comorbidity_strength_result)
