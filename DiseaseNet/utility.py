@@ -496,7 +496,7 @@ def n_process_check(n_process:int,analysis_name:str):
         if operation_system == 'nt':
             start_method = 'spawn'
         elif operation_system == 'posix':
-            start_method = 'fork'
+            start_method = 'spawn' #somehow in linux fork/forkserver is even slower than spawn, so use spawn consistently
         else:
             raise ValueError(f"Unsupported operation system: {operation_system}")
         print(f'Use {n_process} process and set start method to {start_method} for {analysis_name} analysis.')
@@ -675,7 +675,7 @@ def states_p_adjust(df,p_col,correction,cutoff,prefix_sig_col,prefix_padj_col):
     df_nona[f'{prefix_sig_col}_significance'] = reject_
     df_nona[f'{prefix_padj_col}_adjusted'] = corrected_p
     df_na[f'{prefix_sig_col}_significance'] = False
-    df_na[f'{prefix_padj_col}_adjusted'] = np.NaN
+    df_na[f'{prefix_padj_col}_adjusted'] = np.nan
     result = pd.concat([df_nona,df_na])
     return result
 

@@ -38,7 +38,7 @@ def binomial(d1:float,d2:float,n_com:int,n_d1d2:int,n_d2d1:int,enforce:bool,log_
         n_sum = n_d1d2+n_d2d1+n_com
     
     if n_d1d2 == n_d2d1 == 0:
-        return [d1,d2,f'{d1}->{d2}',n_com,n_d1d2,n_d2d1,np.NaN,np.NaN,'NA']
+        return [d1,d2,f'{d1}->{d2}',n_com,n_d1d2,n_d2d1,np.nan,np.nan,'NA']
     elif n_d1d2 > n_d2d1:
         test_result = binomtest(n_d1d2,n_sum,alternative='greater')
         p_value = test_result.pvalue

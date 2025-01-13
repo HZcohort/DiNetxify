@@ -259,7 +259,7 @@ def phewas_multipletests(df:pd.DataFrame,
             
             if correction_ == 'none':
                 df[f'{p_col}_significance'] = df[p_col].apply(lambda x: True if x<=cutoff_ else False)
-                df[f'{p_col}_adjusted'] = np.NaN
+                df[f'{p_col}_adjusted'] = np.nan
             else:
                 df = states_p_adjust(df,p_col,correction_,cutoff_,p_col,p_col)
             
@@ -505,7 +505,7 @@ def comorbidity_strength_multipletests(df:pd.DataFrame, correction_phi:str='bonf
             
             if correction_ == 'none':
                 df[f'{p_col}_significance'] = df[p_col].apply(lambda x: True if x<=cutoff_ else False)
-                df[f'{p_col}_adjusted'] = np.NaN
+                df[f'{p_col}_adjusted'] = np.nan
             else:
                 df = states_p_adjust(df,p_col,correction_,cutoff_,p_col,p_col)
             
@@ -726,7 +726,7 @@ def binomial_multipletests(df:pd.DataFrame, correction:str='bonferroni', cutoff:
             
             if correction_ == 'none':
                 df[f'{p_col}_significance'] = df[p_col].apply(lambda x: True if x<=cutoff_ else False)
-                df[f'{p_col}_adjusted'] = np.NaN
+                df[f'{p_col}_adjusted'] = np.nan
             else:
                 df = states_p_adjust(df,p_col,correction_,cutoff_,p_col,p_col)
     return df
@@ -1036,7 +1036,7 @@ def comorbidity_multipletests(df:pd.DataFrame, correction:str='bonferroni', cuto
             
             if correction_ == 'none':
                 df[f'{p_col}_significance'] = df[p_col].apply(lambda x: True if x<=cutoff_ else False)
-                df[f'{p_col}_adjusted'] = np.NaN
+                df[f'{p_col}_adjusted'] = np.nan
             else:
                 df = states_p_adjust(df,p_col,correction_,cutoff_,p_col,p_col)
     return df
@@ -1370,7 +1370,7 @@ def trajectory_multipletests(df:pd.DataFrame, correction:str='bonferroni', cutof
             
             if correction_ == 'none':
                 df[f'{p_col}_significance'] = df[p_col].apply(lambda x: True if x<=cutoff_ else False)
-                df[f'{p_col}_adjusted'] = np.NaN
+                df[f'{p_col}_adjusted'] = np.nan
             else:
                 df = states_p_adjust(df,p_col,correction_,cutoff_,p_col,p_col)
     return df

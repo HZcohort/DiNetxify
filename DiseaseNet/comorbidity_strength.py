@@ -121,7 +121,7 @@ def com_phi_rr(trajectory:dict,d1:float,d2:float,message:str,n_threshold:int,log
         phi,phi_theta,phi_p = com_phi(n,c,p1,p2)
         rr,rr_theta,rr_p = com_rr(n,c,p1,p2)
         write_log(log_file,f'{d1} and {d2}: Done\n')
-        return [d1,d2,f'{d1}-{d2}',N,n,n_p1p2,p1,p2,n_com,n_tra_d1_d2,n_tra_d2_d1,c,np.NaN,phi,phi_theta,phi_p,rr,rr_theta,rr_p]
+        return [d1,d2,f'{d1}-{d2}',N,n,n_p1p2,p1,p2,n_com,n_tra_d1_d2,n_tra_d2_d1,c,np.nan,phi,phi_theta,phi_p,rr,rr_theta,rr_p]
 
 
 
