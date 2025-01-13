@@ -1294,7 +1294,7 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
 
     time_end = time.time()
     time_spent = (time_end - time_start)/60
-    print(f'Comorbidity network analysis finished (elapsed {time_spent:.1f} mins)')
+    print(f'Disease trajectory analysis finished (elapsed {time_spent:.1f} mins)')
     
     #result column names based on different method
     df_columns_common = ['phecode_d1','phecode_d2','name_disease_pair','N_exposed','n_total','n_with_d2/n_with_d1','n_with_d2/n_without_d1',
