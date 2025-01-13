@@ -55,8 +55,8 @@ def phewas(data:DiseaseNetworkData,
         n_threshold and proportion_threshold are mutually exclusive.      
 
     n_process : int, default=1
-        Number of process to utilize for the analysis. 
-        Multiprocessing is engaged if more than one process is specified.
+        Specifies the number of parallel processes to use for the analysis.
+        Multiprocessing is enabled when `n_process` is set to a value greater than one.
 
     correction : str, default='bonferroni'
         Method for p-value correction from the statsmodels.stats.multitest.multipletests.
@@ -289,8 +289,8 @@ def comorbidity_strength(data:DiseaseNetworkData, proportion_threshold:float=Non
         n_threshold and proportion_threshold are mutually exclusive.         
 
     n_process : int, default=1
-        Number of process cores to utilize for the analysis. 
-        Multiprocessing is engaged if more than one core is specified.
+        Specifies the number of parallel processes to use for the analysis.
+        Multiprocessing is enabled when `n_process` is set to a value greater than one.
 
     correction_phi : str, default='bonferroni'
         Method for phi-correlation p-value correction from the statsmodels.stats.multitest.multipletests.
@@ -531,8 +531,7 @@ def binomial_test(data:DiseaseNetworkData,
         DataFrame containing comorbidity strength analysis results produced by the 'DiseaseNet.comorbidity_strength' function.
 
     n_process : int, default=1
-        Number of process cores to utilize for the analysis. 
-        Multiprocessing is engaged if more than one core is specified.
+        Multiprocessing is disabled for this analysis.
 
     correction : str, default='bonferroni'
         Method for binomial test p-value correction from the statsmodels.stats.multitest.multipletests.
@@ -803,8 +802,8 @@ def comorbidity_network(data:DiseaseNetworkData,
         For other covariates specified in the 'DiseaseNet.DiseaseNetworkData.phenotype_data()' function, use their original column names.
 
     n_process : int, default=1
-        Number of process cores to utilize for the analysis. 
-        Multiprocessing is engaged if more than one core is specified.
+        Specifies the number of parallel processes to use for the analysis.
+        Multiprocessing is enabled when `n_process` is set to a value greater than one.
 
     correction : str, default='bonferroni'
         Method for comorbidity network analysis p-value correction from the statsmodels.stats.multitest.multipletests.
@@ -1121,8 +1120,8 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
         For other covariates specified in the 'DiseaseNet.DiseaseNetworkData.phenotype_data()' function, use their original column names.
 
     n_process : int, default=1
-        Number of process to utilize for the analysis. 
-        Multiprocessing is engaged if more than one core is specified.
+        Specifies the number of parallel processes to use for the analysis.
+        Multiprocessing is enabled when `n_process` is set to a value greater than one.
 
     correction : str, default='bonferroni'
         Method for comorbidity network analysis p-value correction from the statsmodels.stats.multitest.multipletests.
