@@ -144,15 +144,15 @@ def phewas(data:DiseaseNetworkData,
     n_threshold = threshold_check(proportion_threshold,n_threshold,n_exposed)
     
     #check number of process
-    n_process_check(n_process,'PheWAS')
+    n_process,start_mehtod = n_process_check(n_process,'PheWAS')
     if n_process>1:
         import os
+        import multiprocessing
         os.environ["MKL_NUM_THREADS"] = '1'
         os.environ["OPENBLAS_NUM_THREADS"] = '1'
         os.environ["OMP_NUM_THREADS"] = '1'
         os.environ["THREADPOOL_LIMIT"] = '1'
         os.environ["VECLIB_MAXIMUM_THREADS"] = '1'
-        import multiprocessing
 
     #check p-value correction method and cutoff
     correction_method_check(correction, cutoff)
@@ -178,7 +178,7 @@ def phewas(data:DiseaseNetworkData,
         parameters_all = []
         for phecode in phecode_lst_all:
             parameters_all.append([data, n_threshold, phecode, covariates, log_file_final, lifelines_disable])
-        with multiprocessing.get_context('spawn').Pool(n_process) as p:
+        with multiprocessing.get_context(start_mehtod).Pool(n_process) as p:
             if data.study_design == 'matched cohort':
                 result_all = p.starmap(cox_conditional, parameters_all)
             else:
@@ -370,15 +370,15 @@ def comorbidity_strength(data:DiseaseNetworkData, proportion_threshold:float=Non
     print(message)
 
     #check number of process
-    n_process_check(n_process,'comorbidity_strength')
+    n_process,start_mehtod = n_process_check(n_process,'comorbidity_strength')
     if n_process>1:
         import os
+        import multiprocessing
         os.environ["MKL_NUM_THREADS"] = '1'
         os.environ["OPENBLAS_NUM_THREADS"] = '1'
         os.environ["OMP_NUM_THREADS"] = '1'
         os.environ["THREADPOOL_LIMIT"] = '1'
         os.environ["VECLIB_MAXIMUM_THREADS"] = '1'
-        import multiprocessing
     
     #get all significant phecodes
     phecodes_sig = data.get_attribute('significant_phecodes')
@@ -403,7 +403,7 @@ def comorbidity_strength(data:DiseaseNetworkData, proportion_threshold:float=Non
         parameters_all = []
         for d1,d2,describe in d1d2_pair_lst:
             parameters_all.append([trajectory_dict,d1,d2,describe,n_threshold,log_file_final])
-        with multiprocessing.get_context('spawn').Pool(n_process) as p:
+        with multiprocessing.get_context(start_mehtod).Pool(n_process) as p:
             result_all = p.starmap(com_phi_rr, parameters_all)
 
     time_end = time.time()
@@ -613,10 +613,9 @@ def binomial_test(data:DiseaseNetworkData,
             raise ValueError(f"Column {col} not in 'comorbidity_strength_result' DataFrame.")
 
     #check number of process
-    n_process_check(n_process,'binomial_test')
+    n_process,start_mehtod = n_process_check(n_process,'binomial_test')
     if n_process>1:
-        n_process = 1
-        print('Multiprocessing has been disabled for this analysis.')
+        raise ValueError('Multiprocessing has been disabled for this analysis.')
 
     #check p-value correction method and cutoff
     correction_method_check(correction,cutoff)
@@ -641,14 +640,11 @@ def binomial_test(data:DiseaseNetworkData,
     time_start = time.time()
     #list of disease pair
     result_all = []
-    if n_process == 1:
-        for d1,d2,n_com,n_d1d2,n_d2d1 in comorbidity_sig[[phecode_d1_col,phecode_d2_col,n_nontemporal_col,
-                                                          n_temporal_d1d2_col,n_temporal_d2d1_col]].values:
-            result_all.append(binomial(d1,d2,n_com,n_d1d2,n_d2d1,enforce_temporal_order,log_file_final))
-    elif n_process > 1:
-        raise ValueError('Multiprocessing has been disabled for this analysis.')
+    for d1,d2,n_com,n_d1d2,n_d2d1 in comorbidity_sig[[phecode_d1_col,phecode_d2_col,n_nontemporal_col,
+                                                      n_temporal_d1d2_col,n_temporal_d2d1_col]].values:
+        result_all.append(binomial(d1,d2,n_com,n_d1d2,n_d2d1,enforce_temporal_order,log_file_final))
     """
-        with multiprocessing.get_context('spawn').Pool(n_process) as p:
+        with multiprocessing.get_context(start_mehtod).Pool(n_process) as p:
             parameters_all = []
             for d1,d2,n_com,n_d1d2,n_d2d1 in comorbidity_sig[[phecode_d1_col,phecode_d2_col,n_nontemporal_col,
                                                               n_temporal_d1d2_col,n_temporal_d2d1_col]].values:
@@ -894,15 +890,15 @@ def comorbidity_network(data:DiseaseNetworkData,
     covariates = covariates_check(covariates,data.get_attribute('phenotype_info'))
     
     #check number of process
-    n_process_check(n_process,'comorbidity_network')
+    n_process,start_mehtod = n_process_check(n_process,'comorbidity_network')
     if n_process>1:
         import os
+        import multiprocessing
         os.environ["MKL_NUM_THREADS"] = '1'
         os.environ["OPENBLAS_NUM_THREADS"] = '1'
         os.environ["OMP_NUM_THREADS"] = '1'
         os.environ["THREADPOOL_LIMIT"] = '1'
         os.environ["VECLIB_MAXIMUM_THREADS"] = '1'
-        import multiprocessing
 
     #check p-value correction method and cutoff
     correction_method_check(correction,cutoff)
@@ -954,7 +950,7 @@ def comorbidity_network(data:DiseaseNetworkData,
         for d1,d2 in comorbidity_sig[[phecode_d1_col,phecode_d2_col]].values:
             parameters_all.append([d1,d2,phenotype_df_exposed,id_col,trajectory_eligible,trajectory_eligible_withdate,
                                    history_level,covariates,all_diseases_lst,log_file_final,parameter_dict])
-        with multiprocessing.get_context('spawn').Pool(n_process) as p:
+        with multiprocessing.get_context(start_mehtod).Pool(n_process) as p:
             result_all = p.starmap(logistic_model, parameters_all)
 
     time_end = time.time()
@@ -1220,15 +1216,15 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
     covariates = covariates_check(covariates,data.get_attribute('phenotype_info'),matching_var_dict)
     
     #check number of process
-    n_process_check(n_process,'trajectory')
+    n_process,start_mehtod = n_process_check(n_process,'trajectory')
     if n_process>1:
         import os
+        import multiprocessing
         os.environ["MKL_NUM_THREADS"] = '1'
         os.environ["OPENBLAS_NUM_THREADS"] = '1'
         os.environ["OMP_NUM_THREADS"] = '1'
         os.environ["THREADPOOL_LIMIT"] = '1'
         os.environ["VECLIB_MAXIMUM_THREADS"] = '1'
-        import multiprocessing
 
     #check p-value correction method and cutoff
     correction_method_check(correction,cutoff)
@@ -1288,7 +1284,7 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
             parameters_all.append([d1,d2,phenotype_df_exposed,id_col,end_date_col,trajectory_eligible,trajectory_temporal,
                                     trajectory_eligible_withdate,history_level,covariates,all_diseases_lst,
                                     matching_var_dict,matching_n,log_file_final,parameter_dict])
-        with multiprocessing.get_context('spawn').Pool(n_process) as p:
+        with multiprocessing.get_context(start_mehtod).Pool(n_process) as p:
             result_all = p.starmap(logistic_model, parameters_all)
 
     time_end = time.time()

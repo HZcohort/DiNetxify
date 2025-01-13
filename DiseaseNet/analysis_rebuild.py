@@ -70,7 +70,7 @@ class DiseaseNetworkAnalysis:
                 for phecode in phecode_lst_all:
                     result_all.append(cox_conditional(self.data, n_threshold, phecode, covariates, log_file_final, lifelines_disable))
             elif n_cpus > 1:
-                with multiprocessing.get_context('spawn').Pool(n_cpus) as p:
+                with multiprocessing.get_context(start_mehtod).Pool(n_cpus) as p:
                     parameters_all = [[self.data, n_threshold, phecode, covariates, log_file_final, lifelines_disable] for phecode in phecode_lst_all]
                     result_all = p.starmap(cox_conditional, parameters_all)
         elif self.data.study_design == 'cohort':
@@ -78,7 +78,7 @@ class DiseaseNetworkAnalysis:
                 for phecode in phecode_lst_all:
                     result_all.append(cox_unconditional(self.data, n_threshold, phecode, covariates, log_file_final, lifelines_disable))
             elif n_cpus > 1:
-                with multiprocessing.get_context('spawn').Pool(n_cpus) as p:
+                with multiprocessing.get_context(start_mehtod).Pool(n_cpus) as p:
                     parameters_all = [[self.data, n_threshold, phecode, covariates, log_file_final, lifelines_disable] for phecode in phecode_lst_all]
                     result_all = p.starmap(cox_unconditional, parameters_all)
 
@@ -109,7 +109,7 @@ class DiseaseNetworkAnalysis:
             for d1, d2, describe in d1d2_pair_lst:
                 result_all.append(com_phi_rr(self.data.trajectory, d1, d2, describe, n_threshold, log_file_final))
         elif n_cpus > 1:
-            with multiprocessing.get_context('spawn').Pool(n_cpus) as p:
+            with multiprocessing.get_context(start_mehtod).Pool(n_cpus) as p:
                 parameters_all = [[self.data.trajectory, d1, d2, describe, n_threshold, log_file_final] for d1, d2, describe in d1d2_pair_lst]
                 result_all = p.starmap(com_phi_rr, parameters_all)
 
