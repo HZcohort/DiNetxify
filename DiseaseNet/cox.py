@@ -49,6 +49,7 @@ def cox_conditional(phecode:float):
         A list of the Cox analysis results.
 
     """
+    #shared global variables
     global data_
     global n_threshold_
     global covariates_
