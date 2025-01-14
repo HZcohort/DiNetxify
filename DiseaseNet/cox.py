@@ -250,7 +250,12 @@ def cox_conditional(phecode:float):
             
     return result
 
-def cox_conditional_wrapper(phecode:str, data:DiseaseNetworkData, covariates:list, n_threshold:int, log_file:str, lifelines_disable:bool):
+def cox_conditional_wrapper(phecode:str, 
+                            data:DiseaseNetworkData, 
+                            covariates:list, 
+                            n_threshold:int, 
+                            log_file:str, 
+                            lifelines_disable:bool):
     """
     Wrapper for cox_conditional that assigns default values to global variables if needed.
 
