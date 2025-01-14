@@ -661,7 +661,7 @@ def states_p_adjust(df,p_col,correction,cutoff,prefix_sig_col,prefix_padj_col):
     df_nona[f'{prefix_sig_col}_significance'] = reject_
     df_nona[f'{prefix_padj_col}_adjusted'] = corrected_p
     df_na[f'{prefix_sig_col}_significance'] = False
-    df_na[f'{prefix_padj_col}_adjusted'] = np.NaN
+    df_na[f'{prefix_padj_col}_adjusted'] = np.nan
     result = pd.concat([df_nona,df_na])
     return result
 
