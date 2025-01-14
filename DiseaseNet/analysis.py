@@ -396,7 +396,8 @@ def comorbidity_strength(data:DiseaseNetworkData, proportion_threshold:float=Non
     elif n_process > 1:
         parameters_all = []
         for d1,d2,describe in d1d2_pair_lst:
-            parameters_all.append([trajectory_dict,d1,d2,describe,n_threshold,log_file_final])
+            # parameters_all.append([trajectory_dict,d1,d2,describe,n_threshold,log_file_final])
+            parameters_all.append([d1,d2,describe])
         with multiprocessing.get_context(start_mehtod).Pool(n_process, initializer=init_worker, initargs=(trajectory_dict,n_threshold,log_file_final)) as p:
             result_all = p.map(com_phi_rr, parameters_all)
 
@@ -939,8 +940,9 @@ def comorbidity_network(data:DiseaseNetworkData,
     elif n_process > 1:
         parameters_all = []
         for d1,d2 in comorbidity_sig[[phecode_d1_col,phecode_d2_col]].values:
-            parameters_all.append([d1,d2,phenotype_df_exposed,id_col,trajectory_eligible,trajectory_eligible_withdate,
-                                   history_level,covariates,all_diseases_lst,log_file_final,parameter_dict])
+            # parameters_all.append([d1,d2,phenotype_df_exposed,id_col,trajectory_eligible,trajectory_eligible_withdate,
+            #                        history_level,covariates,all_diseases_lst,log_file_final,parameter_dict])
+            parameters_all.append([d1,d2])
         with multiprocessing.get_context(start_mehtod).Pool(n_process, initializer=init_worker, initargs=(phenotype_df_exposed,id_col,trajectory_eligible,trajectory_eligible_withdate,
                                                                                                             history_level,covariates,all_diseases_lst,log_file_final,parameter_dict)) as p:
             result_all = p.map(logistic_model, parameters_all)
@@ -1270,9 +1272,10 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
     elif n_process > 1:
         parameters_all = []
         for d1,d2 in trajectory_sig[[phecode_d1_col,phecode_d2_col]].values:
-            parameters_all.append([d1,d2,phenotype_df_exposed,id_col,end_date_col,trajectory_eligible,trajectory_temporal,
-                                    trajectory_eligible_withdate,history_level,covariates,all_diseases_lst,
-                                    matching_var_dict,matching_n,log_file_final,parameter_dict])
+            # parameters_all.append([d1,d2,phenotype_df_exposed,id_col,end_date_col,trajectory_eligible,trajectory_temporal,
+            #                         trajectory_eligible_withdate,history_level,covariates,all_diseases_lst,
+            #                         matching_var_dict,matching_n,log_file_final,parameter_dict])
+            parameters_all.append([d1,d2])
         with multiprocessing.get_context(start_mehtod).Pool(n_process, initializer=init_worker, initargs=(phenotype_df_exposed,id_col,end_date_col,trajectory_eligible,trajectory_temporal,
                                                                                                             trajectory_eligible_withdate,history_level,covariates,all_diseases_lst,
                                                                                                             matching_var_dict,matching_n,log_file_final,parameter_dict)) as p:
