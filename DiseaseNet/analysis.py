@@ -399,7 +399,7 @@ def comorbidity_strength(data:DiseaseNetworkData, proportion_threshold:float=Non
             # parameters_all.append([trajectory_dict,d1,d2,describe,n_threshold,log_file_final])
             parameters_all.append([d1,d2,describe])
         with multiprocessing.get_context(start_mehtod).Pool(n_process, initializer=init_worker, initargs=(trajectory_dict,n_threshold,log_file_final)) as p:
-            result_all = p.map(com_phi_rr, parameters_all)
+            result_all = p.starmap(com_phi_rr, parameters_all)
 
     time_end = time.time()
     time_spent = (time_end - time_start)/60
@@ -945,7 +945,7 @@ def comorbidity_network(data:DiseaseNetworkData,
             parameters_all.append([d1,d2])
         with multiprocessing.get_context(start_mehtod).Pool(n_process, initializer=init_worker, initargs=(phenotype_df_exposed,id_col,trajectory_eligible,trajectory_eligible_withdate,
                                                                                                             history_level,covariates,all_diseases_lst,log_file_final,parameter_dict)) as p:
-            result_all = p.map(logistic_model, parameters_all)
+            result_all = p.starmap(logistic_model, parameters_all)
 
     time_end = time.time()
     time_spent = (time_end - time_start)/60
@@ -1279,7 +1279,7 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
         with multiprocessing.get_context(start_mehtod).Pool(n_process, initializer=init_worker, initargs=(phenotype_df_exposed,id_col,end_date_col,trajectory_eligible,trajectory_temporal,
                                                                                                             trajectory_eligible_withdate,history_level,covariates,all_diseases_lst,
                                                                                                             matching_var_dict,matching_n,log_file_final,parameter_dict)) as p:
-            result_all = p.map(logistic_model, parameters_all)
+            result_all = p.starmap(logistic_model, parameters_all)
 
     time_end = time.time()
     time_spent = (time_end - time_start)/60
