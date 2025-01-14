@@ -468,6 +468,7 @@ def threshold_check(proportion_threshold, n_threshold, n_exposed):
 def n_process_check(n_process:int,analysis_name:str):
     """
     Check the number of process specified for analysis.
+    Also check the operation system information to decide the maximum number of process that can be used and the method of start the process.
 
     Parameters:
         n_process (int): The number of process to use.
@@ -484,9 +485,29 @@ def n_process_check(n_process:int,analysis_name:str):
     if not isinstance(n_process, int):
         raise TypeError("The 'n_process' must be an int.")
     if n_process == 1:
-        print('Multi-threading is not used.')
+        print(f'Multiprocessing is not used for {analysis_name} analysis .')
+        return n_process,None
     elif n_process > 1:
-        print(f'Use {n_process} process for {analysis_name} analysis.')
+        import os
+        #close multi-threading
+        os.environ["MKL_NUM_THREADS"] = '1'
+        os.environ["OPENBLAS_NUM_THREADS"] = '1'
+        os.environ["OMP_NUM_THREADS"] = '1'
+        os.environ["THREADPOOL_LIMIT"] = '1'
+        os.environ["VECLIB_MAXIMUM_THREADS"] = '1'
+        #system information
+        max_process = os.cpu_count()
+        operation_system = os.name
+        if n_process > max_process:
+            raise ValueError(f"The specified number of process is greater than the number of logical cores ({max_process}).")
+        if operation_system == 'nt':
+            start_method = 'spawn'
+        elif operation_system == 'posix':
+            start_method = 'fork'
+        else:
+            raise ValueError(f"Unsupported operation system: {operation_system}")
+        print(f'Use {n_process} process and set start method to {start_method} for {analysis_name} analysis.')
+        return n_process,start_method
     else:
         raise ValueError("The specified number of process is not valid. Please enter a positive integer.")
 
