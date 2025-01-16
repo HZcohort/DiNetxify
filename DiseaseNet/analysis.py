@@ -338,7 +338,6 @@ def comorbidity_strength(data:DiseaseNetworkData, proportion_threshold:float=Non
 
     """
     from itertools import combinations
-    from .comorbidity_strength import com_phi_rr
     
     #data type check
     if not isinstance(data,DiseaseNetworkData):
@@ -856,7 +855,6 @@ def comorbidity_network(data:DiseaseNetworkData,
         A pandas DataFrame object that contains the results of comorbidity network analysis.
 
     """
-    from .unconditional_logistic import logistic_model
     
     #data type check
     if not isinstance(data,DiseaseNetworkData):
@@ -1178,7 +1176,6 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
         A pandas DataFrame object that contains the results of comorbidity network analysis.
 
     """
-    from .conditional_logistic import logistic_model
     
     #data type check
     if not isinstance(data,DiseaseNetworkData):

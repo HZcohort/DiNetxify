@@ -56,7 +56,6 @@ def cox_conditional(phecode:float):
     global log_file_
     global lifelines_disable_
 
-    
     if lifelines_disable_:
         cph = None
     else:
@@ -459,14 +458,14 @@ def cox_unconditional(phecode:float):
     #return and save results if less than threshold
     if (length < n_threshold_) and (data_.study_design != "registry"):
         result += [f'Less than threshold of {n_threshold_}',str_exp,str_noexp]
-        write_log(log_file_,f'Number of cases {length} less than threshold {n_threshold_} for phecode {phecode}\n')
+        write_log(log_file_, f'Number of cases {length} less than threshold {n_threshold_} for phecode {phecode}\n')
     elif (length < n_threshold_) and (data_.study_design == "registry"):
         result += [f'Less than threshold of {n_threshold_}',str_exp]
-        write_log(log_file_,f'Number of cases {length} less than threshold {n_threshold_} for phecode {phecode}\n')
+        write_log(log_file_, f'Number of cases {length} less than threshold {n_threshold_} for phecode {phecode}\n')
         return result
     if data_.study_design == "registry":
         result += [f"Analysis has done",str_exp]
-        write_log(log_file_,f"The analysis of {result[0]} disease has done")
+        write_log(log_file_, f"The analysis of {result[0]} disease has done")
         return result
     
     #exclude those with negative time
