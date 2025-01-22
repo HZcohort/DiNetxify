@@ -259,11 +259,11 @@ A class for handling disease network data creation and operations, for use in th
   - Specify the type of study design, either `"cohort"`, `"matched cohort"`, or `"registry"`.
 - `phecode_level : int`
   - The level of phecode to use for analysis:
-    - **Level 1:** Corresponds to 3-digit ICD-10 codes with a total of 585 medical conditions.
-    - **Level 2:** Corresponds to 4-digit ICD-10 codes with a total of 1257 medical conditions.
+    - Level 1: Corresponds to 3-digit ICD-10 codes with a total of 585 medical conditions.
+    - Level 2: Corresponds to 4-digit ICD-10 codes with a total of 1257 medical conditions.
   - Recommendation:
-    - **Level 2** offers a more granular analysis suitable for larger studies.
-    - **Level 1** is recommended for smaller studies to maintain statistical power.
+    - Level 2 offers a more granular analysis suitable for larger studies.
+    - Level 1 is recommended for smaller studies to maintain statistical power.
 - `date_fmt : str, default='%Y-%m-%d'`
   - The format of the date fields in your phenotype and medical records data.
 - `phecode_version : str, default='1.2'`
@@ -354,14 +354,14 @@ Merges the loaded phenotype data with one or more medical records data.
 - `diagnosis_code : str`
 
   - Diagnosis code type used in the medical records data.
-  - **Valid Options:** `'ICD-9-CM'`, `'ICD-9-WHO'`, `'ICD-10-CM'`, `'ICD-10-WHO'`.
-  - **Note:** Mixing different ICD code types within the same file is not allowed.
+  - Valid Options: `'ICD-9-CM'`, `'ICD-9-WHO'`, `'ICD-10-CM'`, `'ICD-10-WHO'`.
+  - Note: Mixing different ICD code types within the same file is not allowed.
 
 - `column_names : dict`
 
   - Maps required variable names to their corresponding identifiers in the medical records dataset.
 
-  - **Required Keys:** `'Participant ID'`, `'Diagnosis code'`, `'Date of diagnosis'`.
+  - Required Keys: `'Participant ID'`, `'Diagnosis code'`, `'Date of diagnosis'`.
 
   - Example:
 
@@ -401,8 +401,8 @@ Modifies the phecode level setting.
 
 - `phecode_level : int`
   - The level of phecode to use for analysis:
-    - **Level 1:** 3-digit ICD-10 codes (585 conditions).
-    - **Level 2:** 4-digit ICD-10 codes (1257 conditions).
+    - Level 1: 3-digit ICD-10 codes (585 conditions).
+    - Level 2: 4-digit ICD-10 codes (1257 conditions).
 
 **Returns:**
 
@@ -510,7 +510,7 @@ Conducts Phenome-wide Association Studies (PheWAS) using the specified DiseaseNe
   - Number of parallel processes to use. Set greater than one to enable multiprocessing.
 - `correction : str, default='bonferroni'`
   - Method for p-value correction.
-  - **Options:** `none`, `bonferroni`, `sidak`, `holm-sidak`, `holm`, `simes-hochberg`, `hommel`, `fdr_bh`, `fdr_by`, `fdr_tsbh`, `fdr_tsbky`.
+  - Options: `none`, `bonferroni`, `sidak`, `holm-sidak`, `holm`, `simes-hochberg`, `hommel`, `fdr_bh`, `fdr_by`, `fdr_tsbh`, `fdr_tsbky`.
 - `cutoff : float, default=0.05`
   - Significance threshold for adjusted PheWAS p-values.
 - `system_inc : list, default=None`
@@ -556,7 +556,7 @@ Adjusts PheWAS p-values for multiple comparisons using specified correction meth
   - DataFrame containing PheWAS results.
 - `correction : str, default='bonferroni'`
   - Method for p-value correction.
-  - **Options:** `none`, `bonferroni`, `sidak`, `holm-sidak`, `holm`, `simes-hochberg`, `hommel`, `fdr_bh`, `fdr_by`, `fdr_tsbh`, `fdr_tsbky`.
+  - Options: `none`, `bonferroni`, `sidak`, `holm-sidak`, `holm`, `simes-hochberg`, `hommel`, `fdr_bh`, `fdr_by`, `fdr_tsbh`, `fdr_tsbky`.
 - `cutoff : float, default=0.05`
   - Significance threshold for adjusted PheWAS p-values.
 
@@ -593,12 +593,12 @@ Conducts comorbidity strength estimation among exposed individuals for all possi
   - Path and prefix for the log file.
 - `correction_phi : str, default='bonferroni'`
   - P-value correction method for phi-correlation.
-  - **Options:** `none`, `bonferroni`, `sidak`, `holm-sidak`, `holm`, `simes-hochberg`, `hommel`, `fdr_bh`, `fdr_by`, `fdr_tsbh`, `fdr_tsbky`.
+  - Options: `none`, `bonferroni`, `sidak`, `holm-sidak`, `holm`, `simes-hochberg`, `hommel`, `fdr_bh`, `fdr_by`, `fdr_tsbh`, `fdr_tsbky`.
 - `cutoff_phi : float, default=0.05`
   - Significance threshold for adjusted phi-correlation p-values.
 - `correction_RR : str, default='bonferroni'`
   - P-value correction method for Relative Risk (RR).
-  - **Options:** Same as `correction_phi`.
+  - Options: Same as `correction_phi`.
 - `cutoff_RR : float, default=0.05`
   - Significance threshold for adjusted RR p-values.
 
@@ -659,7 +659,7 @@ Conducts binomial tests for disease pairs with significant comorbidity strength 
   - Path and prefix for the log file.
 - `correction : str, default='bonferroni'`
   - P-value correction method.
-  - **Options:** `none`, `bonferroni`, `sidak`, `holm-sidak`, `holm`, `simes-hochberg`, `hommel`, `fdr_bh`, `fdr_by`, `fdr_tsbh`, `fdr_tsbky`.
+  - Options: `none`, `bonferroni`, `sidak`, `holm-sidak`, `holm`, `simes-hochberg`, `hommel`, `fdr_bh`, `fdr_by`, `fdr_tsbh`, `fdr_tsbky`.
 - `cutoff : float, default=0.05`
   - Significance threshold for adjusted binomial p-values.
 - `enforce_temporal_order : bool, default=False`
@@ -695,7 +695,7 @@ Adjusts binomial test p-values for multiple comparisons.
   - DataFrame containing binomial test results.
 - `correction : str, default='bonferroni'`
   - P-value correction method.
-  - **Options:** `none`, `bonferroni`, `sidak`, `holm-sidak`, `holm`, `simes-hochberg`, `hommel`, `fdr_bh`, `fdr_by`, `fdr_tsbh`, `fdr_tsbky`.
+  - Options: `none`, `bonferroni`, `sidak`, `holm-sidak`, `holm`, `simes-hochberg`, `hommel`, `fdr_bh`, `fdr_by`, `fdr_tsbh`, `fdr_tsbky`.
 - `cutoff : float, default=0.05`
   - Significance threshold for adjusted binomial p-values.
 
@@ -726,11 +726,11 @@ Performs comorbidity network analysis on disease pairs with significant comorbid
   - DataFrame containing binomial test analysis results.
 - `method : str, default='RPCN'`
   - Specifies the comorbidity network analysis method.
-  - **Options:**
+  - Options:
     - `'RPCN'`: Regularized Partial Correlation Network.
     - `'PCN_PCA'`: Partial Correlation Network with PCA.
     - `'CN'`: Correlation Network.
-  - **Method Details:**
+  - Method Details:
     - RPCN:
       - Utilizes L1-regularized logistic regression to estimate partial correlations.
       - Includes phenotypic variables and other diseases as covariates.
@@ -748,7 +748,7 @@ Performs comorbidity network analysis on disease pairs with significant comorbid
   - Path and prefix for the log file.
 - `correction : str, default='bonferroni'`
   - P-value correction method.
-  - **Options:** `none`, `bonferroni`, `sidak`, `holm-sidak`, `holm`, `simes-hochberg`, `hommel`, `fdr_bh`, `fdr_by`, `fdr_tsbh`, `fdr_tsbky`.
+  - Options: `none`, `bonferroni`, `sidak`, `holm-sidak`, `holm`, `simes-hochberg`, `hommel`, `fdr_bh`, `fdr_by`, `fdr_tsbh`, `fdr_tsbky`.
 - `cutoff : float, default=0.05`
   - Significance threshold for adjusted comorbidity network analysis p-values.
 - `**kwargs`
@@ -789,7 +789,7 @@ Adjusts comorbidity network analysis p-values for multiple comparisons.
   - DataFrame containing comorbidity network analysis results.
 - `correction : str, default='bonferroni'`
   - P-value correction method.
-  - **Options:** `none`, `bonferroni`, `sidak`, `holm-sidak`, `holm`, `simes-hochberg`, `hommel`, `fdr_bh`, `fdr_by`, `fdr_tsbh`, `fdr_tsbky`.
+  - Options: `none`, `bonferroni`, `sidak`, `holm-sidak`, `holm`, `simes-hochberg`, `hommel`, `fdr_bh`, `fdr_by`, `fdr_tsbh`, `fdr_tsbky`.
 - `cutoff : float, default=0.05`
   - Significance threshold for adjusted p-values.
 
@@ -868,7 +868,7 @@ Performs temporal comorbidity network (disease trajectory) analysis to identify 
 - `correction : str, default='bonferroni'`
 
   - P-value correction method.
-  - **Options:** `none`, `bonferroni`, `sidak`, `holm-sidak`, `holm`, `simes-hochberg`, `hommel`, `fdr_bh`, `fdr_by`, `fdr_tsbh`, `fdr_tsbky`.
+  - Options: `none`, `bonferroni`, `sidak`, `holm-sidak`, `holm`, `simes-hochberg`, `hommel`, `fdr_bh`, `fdr_by`, `fdr_tsbh`, `fdr_tsbky`.
 
 - `cutoff : float, default=0.05`
 
@@ -915,7 +915,7 @@ Adjusts trajectory analysis p-values for multiple comparisons.
   - DataFrame containing trajectory analysis results.
 - `correction : str, default='bonferroni'`
   - P-value correction method.
-  - **Options:** `none`, `bonferroni`, `sidak`, `holm-sidak`, `holm`, `simes-hochberg`, `hommel`, `fdr_bh`, `fdr_by`, `fdr_tsbh`, `fdr_tsbky`.
+  - Options: `none`, `bonferroni`, `sidak`, `holm-sidak`, `holm`, `simes-hochberg`, `hommel`, `fdr_bh`, `fdr_by`, `fdr_tsbh`, `fdr_tsbky`.
 - `cutoff : float, default=0.05`
   - Significance threshold for adjusted p-values.
 
