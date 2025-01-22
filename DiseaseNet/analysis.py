@@ -1173,7 +1173,7 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
     Returns:
     ----------
     pd.DataFrame
-        A pandas DataFrame object that contains the results of comorbidity network analysis.
+        A pandas DataFrame object that contains the results of trajectory analysis.
 
     """
     
