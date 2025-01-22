@@ -47,25 +47,42 @@ Created on Fri Jul 26 12:49:35 2024
 #                          "date_dignosed":date_dignosed},
 #                          columns=["eid", "icd10", "date_dignosed"]).to_csv("C:/Users/bovin/Desktop/inp.csv")
 
-from DiseaseNet.data_management import DiseaseNetworkData as dnd
-from DiseaseNet.analysis import phewas, comorbidity_strength, binomial_test
+# from DiseaseNet.data_management import DiseaseNetworkData as dnd
+# from DiseaseNet.analysis import phewas, comorbidity_strength, binomial_test, comorbidity_network, disease_trajectory
+from DiseaseNet.visualization import ThreeDimensionalDiseaseNetwork as tddn
+import pandas as pd
 
 if __name__ == "__main__":
-    data = dnd(study_design="registry")
-    data.phenotype_data("C:/Users/bovin/Desktop/data.csv",
-                        {"Participant ID": "eid",
-                        "Sex": "sex",
-                        "Index date": "date_start",
-                        "End date": "date_end"},
-                        ["bmi", "income"])
-    data.merge_medical_records("C:/Users/bovin/Desktop/inp.csv", 
-                            "ICD-10-WHO",
-                            {"Participant ID": "eid",
-                            "Diagnosis code": "icd10",
-                            "Date of diagnosis": "date_dignosed"})
-    phewas_result = phewas(data, proportion_threshold=0.1, n_process=8)
+    # # 加载数据
+    # data = dnd(study_design="registry")
+    # data.phenotype_data("C:/Users/bovin/Desktop/data.csv",
+    #                     {"Participant ID": "eid",
+    #                     "Sex": "sex",
+    #                     "Index date": "date_start",
+    #                     "End date": "date_end"},
+    #                     ["bmi", "income"])
+    
+    # data.merge_medical_records("C:/Users/bovin/Desktop/inp.csv", 
+    #                         "ICD-10-WHO",
+    #                         {"Participant ID": "eid",
+    #                         "Diagnosis code": "icd10",
+    #                         "Date of diagnosis": "date_dignosed"})
+    # # 数据分析
+    # phewas_result = phewas(data, proportion_threshold=0.1, n_process=8)
+    # data.disease_pair(phewas_result)
+    # comorbidity_strength_result = comorbidity_strength(data, proportion_threshold=0.1)
+    # binomial_test_result = binomial_test(data, comorbidity_strength_result)
+    # comorbidity_network_result = comorbidity_network(data, comorbidity_strength_result, binomial_test_result)
+    # disease_trajectory_result = disease_trajectory(data, comorbidity_strength_result, binomial_test_result)
+
     # phewas_result.to_csv("C:/Users/bovin/Desktop/s.csv")
     # data.disease_pair(phewas_result)
     # comorbidity_strength_result = comorbidity_strength(data, proportion_threshold=0.1)
     # comorbidity_strength_result.to_csv("C:/Users/bovin/Desktop/sa.csv")
     # binomial_test_result = binomial_test(data, comorbidity_strength_result)
+
+    phewas_result = pd.read_csv("C:/Users/bovin/Desktop/phewas_result.csv")
+    disease_trajecty_result = pd.read_csv("C:/Users/bovin/Desktop/disease_trajectory_result.csv")
+    comorbidity_network_result = pd.read_csv("C:/Users/bovin/Desktop/comorbidity_network_result.csv")
+    my_network = tddn(comorbidity_network_result, disease_trajecty_result, phewas_result)
+    my_network.plot_3d(50, 15, "full", "black", 0.5, "C:/Users/bovin/Desktop/my_network")

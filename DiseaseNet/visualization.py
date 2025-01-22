@@ -1,6 +1,7 @@
 import plotly.offline as py
 import plotly.graph_objects as go
 import community as community_louvain
+import matplotlib.pyplot as plt
 from scipy import stats
 import numpy as np
 import copy
@@ -30,10 +31,10 @@ class ThreeDimensionalDiseaseNetwork():
         self.__system_lst = ['circulatory system', 'sense organs', 'injuries & poisonings', 'neurological', 
                              'dermatologic', 'digestive', 'hematopoietic', 'musculoskeletal', 
                              'endocrine/metabolic', 'mental disorders', 'infectious diseases', 
-                             'genitourinary', 'neoplasms', 'respiratory', "symptoms", "congenital anomalies", "mental disorders"]
+                             'genitourinary', 'neoplasms', 'respiratory', "symptoms", "congenital anomalies", "mental disorders", "others"]
         self.__color_sixteen = ["#FF5733","#33FF57","#3357FF","#FFFF33","#FF33FF","#33FFFF","#C70039",  
                                 "#900C3F","#581845","#1ABC9C","#2ECC71","#3498DB","#9B59B6","#E74C3C",
-                                "#F1C40F","#FF7F50","#FFD700"]
+                                "#F1C40F","#FF7F50","#FFD700", "#A52A2A"]
         # make sure the first layer of phecodes (original_disease-phecodes)
         df = _trajectory.loc[~_trajectory['phecode_d1'].isin(_trajectory.phecode_d2.values)]
         df_lst = set(df.phecode_d1.values)
@@ -688,8 +689,7 @@ class ThreeDimensionalDiseaseNetwork():
                 cluster_nodes += target_list
                 cluster_nodes = list(set(cluster_nodes))
                 end_number_nodes = len(cluster_nodes)
-                if end_number_nodes == begin_number_nodes:
-                    break
+                if end_number_nodes == begin_number_nodes: break
                 source_list = target_list
             self.incluster_nodes += cluster_nodes
         compact_node = []
@@ -750,17 +750,18 @@ class ThreeDimensionalDiseaseNetwork():
             plot_data += [trace_edges]
         return plot_data
 
-    def plot_plotly(self, max_radius:float, 
-                    min_radius:float, 
-                    plot_method:str,
-                    line_color:str, 
-                    line_width:float, 
-                    file_name:str,
-                    layout_width:float=900,
-                    layout_height:float=900,
-                    font_style:str='Times New Roman',
-                    font_size:float=15,
-                    location_method='random'):
+    def plot_3d(self, max_radius:float, 
+                min_radius:float,
+                plot_method:str,
+                line_color:str, 
+                line_width:float, 
+                file_name:str,
+                layout_width:float=900,
+                layout_height:float=900,
+                font_style:str='Times New Roman',
+                font_size:float=15,
+                location_method='random'):
+        
         if not hasattr(self, "final_cluster"):
             self.cluster()
         if not hasattr(self, "dimension"):
@@ -821,3 +822,172 @@ class ThreeDimensionalDiseaseNetwork():
         fig = go.Figure(data=plot_data, layout=layout)
         # create the file of the figure
         py.plot(fig, filename=file_name)
+
+    def comorbidity_network_plot(self, max_radius:float,
+                                 min_radius:float,
+                                 line_width:float=1,
+                                 source:str="phecode_d1",
+                                 target:str="phecode_d2",
+                                 location_method:str="random",
+                                 line_color:str="black"
+                                 ) -> None:
+
+        if not hasattr(self, "final_cluster"):
+            self.cluster()
+        if not hasattr(self, "dimension"):
+            self._dimension()
+        if not hasattr(self, 'location_dict'):
+            if location_method == 'random':
+                self.location_random(max_radius, min_radius)
+        if not hasattr(self, "color_map"):
+            self.color()
+
+        fig = go.Figure()
+
+        for _, row in self.__commorbidity.iterrows():
+            x_values = [self.location_dict[row[source]][0], self.location_dict[row[target]][0]]
+            y_values = [self.location_dict[row[source]][1], self.location_dict[row[target]][1]]
+            fig.add_trace(go.Scatter(x=x_values, 
+                                     y=y_values, 
+                                     mode='lines', 
+                                     line=dict(color=line_color, width=line_width)))
+
+        for system in self.__system_lst:
+            system_nodes = [x for x in self.__commorbidity_nodes if self.__code_system[x]==system]
+            if system_nodes:
+                for node in system_nodes:
+                    theta = np.linspace(0, 2*np.pi, 100)
+                    x_circle = self.location_dict[node][0] + self.get_node_size(node)/13 * np.cos(theta)
+                    y_circle = self.location_dict[node][1] + self.get_node_size(node)/13 * np.cos(theta)
+
+                    if node == system_nodes[0]:
+                        fig.add_trace(go.Scatter(x=x_circle, y=y_circle,
+                                                fill='toself',
+                                                fillcolor=self.__system_color[self.__code_system[node]],
+                                                showlegend=True,
+                                                hovertemplate=self.__code_name[node],
+                                                name='%s Disease' % (system.title()), 
+                                                showscale=False,
+                                                legendgroup='ball', 
+                                                legendgrouptitle_text='Diseases',
+                                                line=dict(color=self.__system_color[self.__code_system[node]], width=1)))
+                    else:
+                        fig.add_trace(go.Scatter(x=x_circle, y=y_circle,
+                                                fill='toself',
+                                                fillcolor=self.__system_color[self.__code_system[node]],
+                                                showlegend=False,
+                                                hovertemplate=self.__code_name[node],
+                                                name='%s Disease' % (system.title()), 
+                                                showscale=False,
+                                                legendgroup='ball', 
+                                                legendgrouptitle_text='Diseases',
+                                                line=dict(color=self.__system_color[self.__code_system[node]], width=1)))
+        fig.update_layout(
+            showlegend=False,
+            xaxis=dict(visible=False, scaleanchor="y"),  # 确保x、y比例一致
+            yaxis=dict(visible=False),
+            plot_bgcolor='white',
+            margin=dict(l=10, r=10, t=10, b=10)  # 去除边距
+        )
+
+        fig.show()
+
+    def incluster_trajectory_plot(self, distance:float, 
+                                  layer_distance:float,
+                                  line_width:float,
+                                  line_color:float,
+                                  max_radius:float,
+                                  min_radius:float,
+                                  location_method:str="random",
+                                  source:str="phecode_d1",
+                                  target:str="phecode_d2") -> None:
+        
+        if not hasattr(self, "final_cluster"):
+            self.cluster()
+        if not hasattr(self, "dimension"):
+            self._dimension()
+        if not hasattr(self, 'location_dict'):
+            if location_method == 'random':
+                self.location_random(max_radius, min_radius)
+        if not hasattr(self, "color_map"):
+            self.color()
+        # nodes incluster
+        cluster_nodes_dict = {}
+        for cluster_number in set(self.final_cluster.values()):
+            cluster_nodes = []
+            source_list = [self.__original_disease]
+            while True:
+                begin_number_nodes = len(cluster_nodes)
+                target_list = []
+                for node in source_list:
+                    target_list += [x for x in self.__trajectory[self.__trajectory[source]\
+                                    ==node][target].values if self.final_cluster[x]==cluster_number]
+                cluster_nodes += target_list
+                cluster_nodes = list(set(cluster_nodes))
+                end_number_nodes = len(cluster_nodes)
+                if end_number_nodes == begin_number_nodes: break
+                source_list = target_list
+            cluster_nodes_dict[cluster_number] = cluster_nodes
+
+        def calculate_circle_positions_with_ids(radii, spacing):
+            """
+            计算圆心的 x 坐标，使得圆均匀分布在 y 轴两侧，并且相互之间相离，保持固定的外切距离。
+
+            参数:
+                radii (list of float): 圆的半径列表，按给定顺序排列。
+                spacing (float): 圆与圆之间的额外距离（即外切距离）。
+
+            返回:
+                dict: {编号: x轴坐标}，编号从 1 开始，与输入顺序对应。
+            """
+            circle_positions = {}
+            position = 0
+            for i, radius in enumerate(radii):
+                circle_id = i + 1
+                if i == 0:
+                    circle_positions[circle_id] = position
+                    position += 2 * radius + spacing  
+                else:
+                    if i % 2 == 1:
+                        circle_positions[circle_id] = position  
+                    else:
+                        circle_positions[circle_id] = -position  
+                    position += 2 * radius + spacing 
+            return circle_positions
+
+        incluster_location = {}
+        for cluster_number, nodes_lst in cluster_nodes_dict.items():
+            temp_dimension = {x:[] for x in self.dimension.keys()}
+            for node in nodes_lst:
+                temp_dimension[self.commorbidity_dimension[node]].append(node)
+            for key, value in temp_dimension.items():
+                if value: x_value = calculate_circle_positions_with_ids([math.pow(self.get_node_size(x) / 4 * 3 / math.pi, 1/3) for x in value], distance)
+                for i, j in x_value.items():
+                    incluster_location[value[i-1]] = (j, self.__location[1]-key*layer_distance)
+        
+        for cluster_number, node_lst in cluster_nodes_dict.items():
+            edges = [(x, y) for x,y in dict(self.__trajectory[source], self.__trajectory[target]).items() if x in node_lst and y in node_lst]
+            G = nx.DiGraph()
+            G.add_edges_from(edges)
+            pos = {x:incluster_location[x] for x in node_lst}
+            color_values = [self.__system_color[self.__code_system[n]] for n in G.nodes()]
+            size_values = [self.get_node_size[n] for n in G.nodes()]
+            label_values = {n: self.__code_name[n] for n in G.nodes()}
+            plt.figure(figsize=(8, 8))
+            nx.draw_networkx(
+                G,
+                pos,
+                with_labels=True,
+                labels=label_values,
+                node_color=color_values,
+                node_size=size_values,
+                font_size=12, 
+                font_weight='bold',
+                edge_color=line_color,
+                arrows=True,
+                arrowsize=20,
+            )
+            # 关闭坐标轴
+            plt.title("dad")
+            plt.axis("off")
+            plt.show()

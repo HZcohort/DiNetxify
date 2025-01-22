@@ -485,7 +485,7 @@ def n_process_check(n_process:int,analysis_name:str):
     if not isinstance(n_process, int):
         raise TypeError("The 'n_process' must be an int.")
     if n_process == 1:
-        print(f'Multiprocessing is not used for {analysis_name} analysis .')
+        print(f'Multiprocessing is not used for {analysis_name} analysis.')
         return n_process,None
     elif n_process > 1:
         import os
@@ -1112,3 +1112,22 @@ def find_best_alpha_and_vars(model, best_range, alpha_lst, co_vars):
         final_best_alpha = final_best_alpha * alpha_lst[-1]
         final_disease_vars = refined_vars_dict[final_best_alpha]
     return final_best_alpha, final_disease_vars
+
+def check_variance_within(df:pd.DataFrame, co_variate:list) -> list:
+    """check the within variance of the co-variate and select the co-variates according within variance > 0.1
+
+    Args:
+        df (pd.DataFrame): matched cohort
+        co_variate (list): the other disease in the co_variate
+
+    Returns:
+        list: co_variate_ is a list of the new co-variates and del_variate is a list of the deleted co-variates
+    """
+    co_variate_ = []
+    for column_name in co_variate:
+        group_means = df.groupby('group')['value'].transform('mean')
+        ss_within = ((df['value'] - group_means) ** 2).sum()
+        variance_within = ss_within / (len(df) - df['group'].nunique())
+        if variance_within > 0.1: co_variate.append(column_name)
+    del_variate = [x for x in co_variate if x not in co_variate_]
+    return co_variate_, del_variate

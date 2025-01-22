@@ -607,7 +607,7 @@ def binomial_test(data:DiseaseNetworkData,
             raise ValueError(f"Column {col} not in 'comorbidity_strength_result' DataFrame.")
 
     #check number of process
-    n_process,start_mehtod = n_process_check(n_process,'binomial_test')
+    n_process, start_mehtod = n_process_check(n_process,'binomial_test')
     if n_process>1:
         raise ValueError('Multiprocessing has been disabled for this analysis.')
 
@@ -1304,7 +1304,6 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
     
     #p-value correction
     comorbidity_df = trajectory_multipletests(comorbidity_df, correction=correction,cutoff=cutoff)
-    
     return comorbidity_df
 
 

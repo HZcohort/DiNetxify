@@ -11,7 +11,7 @@ import numpy as np
 import statsmodels.api as sm
 from statsmodels.discrete.conditional_models import ConditionalResultsWrapper
 import time
-from .utility import write_log,find_best_alpha_and_vars
+from .utility import write_log,find_best_alpha_and_vars,check_variance_within
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -60,6 +60,8 @@ def logistic_model(d1:float,d2:float):
     global matching_n_
     global log_file_
     global parameters_
+    global check_within_variance_
+
     #method and parameters
     enforce_time_interval = parameters_['enforce_time_interval']
     method = parameters_['method']
@@ -131,7 +133,7 @@ def logistic_model(d1:float,d2:float):
             model = sm.ConditionalLogit(np.asarray(phenotype_df_exposed_['d2'],dtype=int),
                                         np.asarray(phenotype_df_exposed_[['d1']+covariates_],dtype=float),
                                         groups=phenotype_df_exposed_['group_matching_ids'].values)
-            result = model.fit(disp=False,method='bfgs')
+            result = model.fit(disp=False, method='bfgs')
             result = MyConditionalResultsWrapper(result)
             beta,se,p,aic = result.params[0], result.bse[0],result.pvalues[0],result.aic
             result_lst += [method,'fitted',beta,se,p,aic]
@@ -162,12 +164,15 @@ def logistic_model(d1:float,d2:float):
                 #search within the defined range
                 final_best_alpha, final_disease_vars = find_best_alpha_and_vars(model,alpha_range,alpha_lst,model_1_vars)
                 final_disease_vars = [x for x in final_disease_vars if x != 'constant'] #remove constant
-                
+                if check_within_variance_:
+                    final_disease_vars.remove("d1")
+                    final_disease_vars, del_var = check_variance_within(phenotype_df_exposed_, final_disease_vars)
+                    final_disease_vars.append("d1")
                 #fit the final model
                 model_final = sm.ConditionalLogit(np.asarray(phenotype_df_exposed_['d2'],dtype=int),
                                                   np.asarray(phenotype_df_exposed_[final_disease_vars+covariates_],dtype=float),
                                                   groups=phenotype_df_exposed_['group_matching_ids'].values)
-                result_final = model_final.fit(disp=False,method='bfgs')
+                result_final = model_final.fit(disp=False, method='bfgs')
                 result_final = MyConditionalResultsWrapper(result_final) #add aic property
                 beta,se,p,aic = result_final.params[0], result_final.bse[0],result_final.pvalues[0],result_final.aic
                 z_value_dict = {var:z for var,z in zip(final_disease_vars+covariates_,result_final.tvalues)}
@@ -191,15 +196,15 @@ def logistic_model(d1:float,d2:float):
                 model_final = sm.ConditionalLogit(np.asarray(phenotype_df_exposed_['d2'],dtype=int),
                                                   np.asarray(phenotype_df_exposed_[final_disease_vars+covariates_],dtype=float),
                                                   groups=phenotype_df_exposed_['group_matching_ids'].values)
-                result_final = model_final.fit(disp=False,method='bfgs')
+                result_final = model_final.fit(disp=False, method='bfgs')
                 result_final = MyConditionalResultsWrapper(result_final) #add aic property
                 beta,se,p,aic = result_final.params[0], result_final.bse[0],result_final.pvalues[0],result_final.aic
                 z_value_dict = {var:z for var,z in zip(final_disease_vars+covariates_,result_final.tvalues)}
                 disease_z_value = {var:z_value_dict[var] for var in final_disease_vars[2::]} #z-value dictionary for other disease variables
-                result_lst += [f'{method}_fixed_alpha','fitted',f'{final_disease_vars[2::]}',f'{disease_z_value}',alpha_single,beta,se,p,aic]
+                result_lst += [f'{method}_fixed_alpha',f'fitted and delete the variate: {del_var}',f'{final_disease_vars[2::]}',f'{disease_z_value}',alpha_single,beta,se,p,aic]
                 message += f'method={method}_fixed_alpha (alpha={alpha_single}, number of other disease included as covariates: {len(final_disease_vars[2::])}); successfully fitted; '
             except Exception as e:
-                result_lst += [f'{method}_fixed_alpha',e]
+                result_lst += [f'{method}_fixed_alpha', str(e)+" delete the variate:"+str(del_var)]
                 message += f'method={method}_fixed_alpha (alpha={alpha_single}); error encountered: {e}; '
 
         
@@ -220,7 +225,7 @@ def logistic_model(d1:float,d2:float):
             model_final = sm.ConditionalLogit(np.asarray(phenotype_df_exposed_PCA['d2'],dtype=int),
                                               np.asarray(phenotype_df_exposed_PCA[['d1']+covariates_+pca_cols],dtype=float),
                                               groups=phenotype_df_exposed_['group_matching_ids'].values)
-            result_final = model_final.fit(disp=False,method='bfgs')
+            result_final = model_final.fit(disp=False, method='bfgs')
             result_final = MyConditionalResultsWrapper(result_final) #add aic property
             beta,se,p,aic = result_final.params[0], result_final.bse[0],result_final.pvalues[0],result_final.aic
             z_value_dict = {var:z for var,z in zip(['d1']+covariates_+pca_cols,result_final.tvalues)}
@@ -240,7 +245,7 @@ def logistic_model(d1:float,d2:float):
 
 def logistic_model_wrapper(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,id_col,end_date_col,trajectory_eligible:dict,
                             trajectory_temporal:dict,trajectory_eligible_withdate:dict,history_level:dict,covariates:list,
-                            all_diseases_lst:list,matching_var_dict:dict,matching_n:int,log_file:str,parameters:dict):
+                            all_diseases_lst:list,matching_var_dict:dict,matching_n:int,log_file:str,parameters:dict,check_within_variance:bool=True):
     """
     Wrapper for logistic_model that assigns default values to global variables if needed.
 
@@ -276,6 +281,7 @@ def logistic_model_wrapper(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,i
     global matching_n_
     global log_file_
     global parameters_
+    global check_within_variance_
     #assign values
     phenotype_df_exposed_ = phenotype_df_exposed
     id_col_ = id_col
@@ -290,12 +296,13 @@ def logistic_model_wrapper(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,i
     matching_n_ = matching_n
     log_file_ = log_file
     parameters_ = parameters
+    check_within_variance_ = check_within_variance
     # Call the original function
     return logistic_model(d1, d2)
 
 def init_worker(phenotype_df_exposed:pd.DataFrame,id_col,end_date_col,trajectory_eligible:dict,
                    trajectory_temporal:dict,trajectory_eligible_withdate:dict,history_level:dict,covariates:list,
-                   all_diseases_lst:list,matching_var_dict:dict,matching_n:int,log_file:str,parameters:dict):
+                   all_diseases_lst:list,matching_var_dict:dict,matching_n:int,log_file:str,parameters:dict, check_within_variance:bool=True):
     """
     This function sets up the necessary global variables for a worker process in a multiprocessing environment.
     It assigns the provided parameters to global variables that can be accessed by logistic_model function in the worker process.
@@ -330,6 +337,7 @@ def init_worker(phenotype_df_exposed:pd.DataFrame,id_col,end_date_col,trajectory
     global matching_n_
     global log_file_
     global parameters_
+    global check_within_variance_
     #assign values
     phenotype_df_exposed_ = phenotype_df_exposed
     id_col_ = id_col
@@ -344,7 +352,7 @@ def init_worker(phenotype_df_exposed:pd.DataFrame,id_col,end_date_col,trajectory
     matching_n_ = matching_n
     log_file_ = log_file
     parameters_ = parameters
-
+    check_within_variance_ = check_within_variance
 def determine_best_range(aic_dict):
     """
     Determines the best range of alpha values based on the AIC values.
