@@ -933,4 +933,4 @@ Haowen Liu:
 
 ## License
 
-DiseaseNetPy is released under the MIT License.
+DiseaseNetPy is released under [The GNU General Public License v3.0](https://www.gnu.org/licenses/gpl-3.0.html)
