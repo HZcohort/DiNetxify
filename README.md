@@ -21,7 +21,7 @@ DiseaseNetPy is a Python package designed for comprehensive disease network anal
     - [comorbidity_multipletests](#comorbidity_multipletests)
     - [disease_trajectory](#disease_trajectory)
     - [trajectory_multipletests](#trajectory_multipletests)
-- [Issues reporting and recommendations](#Issues reporting and recommendations)
+- [Issues reporting and recommendations](#trajectory_multipletests)
 - [License](#license)
 
 ## Installation
