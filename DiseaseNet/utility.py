@@ -74,7 +74,7 @@ def read_check_csv(path_file:str,
                 raise ValueError(f'Tried with seperator "{sep}", but the required columns {cols_not_in} were not found')
             # Check for missing values in the required columns
             if df[cols_check].isnull().any().any():
-                print("Warning: missing values found in the first 50 rows")
+                raise ValueError("Missing values found in the first 50 rows, check the data")
             # Check date columns with the specified format
             for date_col in date_cols:
                 if not pd.to_datetime(df[date_col], format=date_fmt, errors='raise').notnull().all():
