@@ -229,11 +229,17 @@ class DiseaseNetworkData:
         self.phenotype_df = phenotype_data_[all_cols] #all other columns were not remained
         del phenotype_data_#save memory
         #remove
-        n_before_remove = len(self.phenotype_df)
-        self.phenotype_df = self.phenotype_df.dropna(how='any')
-        n_after_remove = len(self.phenotype_df)
-        if n_after_remove < n_before_remove:
-            self.__warning_phenotype.append(f'Warning: {n_before_remove-n_after_remove} individuals removed after processing')
+        n_before_any_remove = len(self.phenotype_df)
+        n_before_remove = n_before_any_remove
+        for var in self.__phenotype_info['phenotype_covariates_converted']:
+            self.phenotype_df = self.phenotype_df.dropna(subset=self.__phenotype_info['phenotype_covariates_converted'][var])
+            n_after_remove = len(self.phenotype_df)
+            if n_after_remove < n_before_remove:
+                self.__warning_phenotype.append(f'Warning: {n_before_remove-n_after_remove} individuals removed due to missing values in {var}.')
+                print(self.__warning_phenotype[-1])
+                n_before_remove = n_after_remove
+        if n_before_remove < n_before_any_remove:
+            self.__warning_phenotype.append(f'Warning: {n_before_any_remove-n_before_remove} individuals removed due to missing values in covariates.')
             print(self.__warning_phenotype[-1])
         if self.study_design == "registry":
             self.phenotype_df["exposure"] = 1
