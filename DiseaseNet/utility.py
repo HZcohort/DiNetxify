@@ -188,7 +188,7 @@ def convert_column(dataframe, column:str):
         else:
             print(f"Warning: '{column}' is treated as a categorical variable, but there are {n_unique_vals} unique values.")
         if df[new_column].isna().any():
-            return pd.get_dummies(df[new_column], prefix=column, dummy_na=True, drop_first=True),'categorical'
+            return pd.get_dummies(df[new_column], prefix=column, dummy_na=True, drop_first=True).astype('int'),'categorical'
         else:
             return pd.get_dummies(df[new_column], prefix=column, drop_first=True).astype('int'),'categorical'
 
