@@ -624,6 +624,7 @@ class DiseaseNetworkData:
         """
         import pickle
         import gzip
+        import gc
         
         # Check for existing data if force is not True
         if not force:
@@ -639,7 +640,9 @@ class DiseaseNetworkData:
         with gzip.open(file, 'rb') as f:
             data_dict = pickle.load(f)
         # Restore the pandas DataFrame attribute
-        self.phenotype_df = pd.DataFrame(data_dict.pop('phenotype_df'), columns=data_dict.pop('phenotype_df_columns'))
+        phenotype_data = data_dict.pop('phenotype_df')
+        phenotype_columns = data_dict.pop('phenotype_df_columns')
+        self.phenotype_df = pd.DataFrame(phenotype_data, columns=phenotype_columns)
         # Restore all simple attributes directly from data_dict
         simple_attrs = ['study_design', 'date_fmt', 'phecode_level', 'phecode_version',
                         'phecode_info', 'diagnosis', 'history', 'trajectory']
@@ -652,7 +655,9 @@ class DiseaseNetworkData:
         for attr in private_attrs:
             setattr(self, f'_DiseaseNetworkData{attr}', data_dict.pop(attr, None))
         # Clear the remaining data_dict to free memory
-        data_dict.clear()
+        del data_dict
+        gc.collect()
+        
         print("All attributes restored.")
 
     def save(self, file:str):
