@@ -603,15 +603,15 @@ class DiseaseNetworkData:
 
     def load(self, file:str, force:bool=False):
         """
-        Load data from a numpy.npy file and restore the attributes to this DiseaseNet.DiseaseNetworkData object. 
+        Load data from a gzip-compressed pickle file and restore the attributes to this DiseaseNet.DiseaseNetworkData object.
         This method is intended for restoring data to an empty object. 
         If data is already present in any attribute and 'force' is not set to True, an error will be raised to prevent accidental data overwrite.
-        
+
         Parameters
         ----------
         file : str
             The filename (string) from which the data object will be loaded.
-            The filename should include the .npy extension.
+            The '.pkl.gz' extension will be automatically appended if not already included.
         
         force : bool, default=False
             If True, the data will be loaded and existing attributes will be overwritten, even if they contain data. 
@@ -622,6 +622,9 @@ class DiseaseNetworkData:
         None.
     
         """
+        import pickle
+        import gzip
+        
         # Check for existing data if force is not True
         if not force:
             data_attrs = ['phenotype_df', 'diagnosis', 'history', 'trajectory']
@@ -629,37 +632,47 @@ class DiseaseNetworkData:
                 if getattr(self, attr) is not None:
                     raise ValueError(f"Attribute '{attr}' is not empty. Use force=True to overwrite existing data.")
 
+        # Add '.pkl.gz' extension if not present
+        if not file.endswith('.pkl.gz'):
+            file += '.pkl.gz'
         # Load the dictionary from .npy file
-        data_dict = np.load(file, allow_pickle=True).item()
-        #restore pandas dataframe attribute
-        self.phenotype_df = pd.DataFrame(data_dict['phenotype_df'], columns=data_dict['phenotype_df_columns'])
-        # Restoring all simple attributes directly from data_dict
-        simple_attrs = ['study_design', 'date_fmt', 'phecode_level', 'phecode_version', 'phecode_info',
-                        'diagnosis', 'history', 'trajectory']
+        with gzip.open(file, 'rb') as f:
+            data_dict = pickle.load(f)
+        # Restore the pandas DataFrame attribute
+        self.phenotype_df = pd.DataFrame(data_dict.pop('phenotype_df'), columns=data_dict.pop('phenotype_df_columns'))
+        # Restore all simple attributes directly from data_dict
+        simple_attrs = ['study_design', 'date_fmt', 'phecode_level', 'phecode_version',
+                        'phecode_info', 'diagnosis', 'history', 'trajectory']
         for attr in simple_attrs:
-            setattr(self, attr, data_dict.get(attr))
-        # Restoring all private attributes from data_dict
+            setattr(self, attr, data_dict.pop(attr, None))
+        # Restore all private attributes from data_dict
         private_attrs = ['__warning_phenotype', '__phenotype_statistics', '__phenotype_info',
-                        '__warning_medical_records', '__medical_recods_statistics', '__medical_recods_info',
-                        '__module_dir','__significant_phecodes']
+                         '__warning_medical_records', '__medical_recods_statistics', '__medical_recods_info',
+                         '__module_dir', '__significant_phecodes']
         for attr in private_attrs:
-            setattr(self, '_DiseaseNetworkData'+attr, data_dict.get(attr))
+            setattr(self, f'_DiseaseNetworkData{attr}', data_dict.pop(attr, None))
+        # Clear the remaining data_dict to free memory
+        data_dict.clear()
         print("All attributes restored.")
 
     def save(self, file:str):
         """
-        Save the DiseaseNet.DiseaseNetworkData object's attributes to a numpy.npy file, which can be restored using the corresponding load method.
+        Save the DiseaseNet.DiseaseNetworkData object's attributes to a gzip-compressed pickle file,
+        which can be restored using the corresponding load method.
     
         Parameters
         ----------
         file : str
             The filename or path prefix where the data object will be saved. 
-            The '.npy' extension will be automatically appended to this filename if not already included.
+            The '.pkl.gz' extension will be automatically appended if not already included.
     
         Returns
         -------
         None.
         """
+        import pickle
+        import gzip
+
         #attribute check
         data_attrs = ['phenotype_df']
         for attr in data_attrs:
@@ -690,9 +703,16 @@ class DiseaseNetworkData:
                      '__medical_recods_info': self.__medical_recods_info,
                      '__module_dir':self.__module_dir,
                      '__significant_phecodes':self.__significant_phecodes}
+        
+        # Add '.pkl.gz' extension if not present
+        if not file.endswith('.pkl.gz'):
+            file += '.pkl.gz'
+        
         #save it
-        np.save(file,save_dict)
-        print(f"DiseaseNetworkData is saved to {file}.npy")
+        with gzip.open(file, 'wb') as f:
+            pickle.dump(save_dict, f, protocol=pickle.HIGHEST_PROTOCOL)
+        
+        print(f"DiseaseNetworkData is saved to {file}.")
 
     def __str__(self):
         self.__print_string = 'DiseseNet.DiseaseNetworkData\n\n'
