@@ -25,12 +25,12 @@ class DiseaseAnalysis:
         self.phecode_info = data.phecode_info
 
     def _setup_multiprocessing(self):
-        """Configure multiprocessing pool based on n_process setting"""
+        """Configure multiprocessing environment"""
         if self.n_process > 1:
             import multiprocessing
             from .cox import init_worker
             return multiprocessing.get_context(self.start_method).Pool(
-                self.n_process, 
+                self.n_process,
                 initializer=init_worker,
                 initargs=(self.data, self.covariates, self.n_threshold,
                          self.log_file, self.lifelines_disable)
@@ -40,6 +40,7 @@ class DiseaseAnalysis:
     def threshold_check(self, proportion_threshold, n_threshold, n_exposed):
         """Validate and calculate thresholds"""
         return threshold_check(proportion_threshold, n_threshold, n_exposed)
+
 
 class PheWASAnalysis(DiseaseAnalysis):
     """PheWAS analysis implementation using OOP approach"""
@@ -56,11 +57,28 @@ class PheWASAnalysis(DiseaseAnalysis):
     def analyze(self, covariates=None, proportion_threshold=None, n_threshold=None,
                 n_process=1, correction='bonferroni', cutoff=0.05, system_inc=None,
                 system_exl=None, phecode_inc=None, phecode_exl=None, log_file=None,
-                lifelines_disable=False):
+                lifelines_disable=False, start_method=None):
         """Main analysis entry point"""
-        # Store parameters
+        
+        # Data type check
+        if not isinstance(self.data, DiseaseNetworkData):
+            raise TypeError("The input 'data' must be a DiseaseNetworkData object.")
+        
+        # Attribute check
+        data_attrs = ['phenotype_df', 'diagnosis', 'history']
+        for attr in data_attrs:
+            if getattr(self.data, attr) is None:
+                raise ValueError(f"Attribute '{attr}' is empty.")
+        
+        # Parameter validation
         self.covariates = covariates_check(covariates, self.data.get_attribute('phenotype_info'))
-        self.n_process = n_process
+        
+        if not isinstance(lifelines_disable, bool):
+            raise TypeError("The input 'lifelines_disable' must be a bool.")
+        
+        correction_method_check(correction, cutoff)
+        
+        self.n_process, self.start_method = n_process_check(n_process, 'PheWAS')
         self.correction = correction
         self.cutoff = cutoff
         self.system_inc = system_inc
@@ -68,42 +86,51 @@ class PheWASAnalysis(DiseaseAnalysis):
         self.phecode_inc = phecode_inc
         self.phecode_exl = phecode_exl
         self.lifelines_disable = lifelines_disable
-        self.log_file, _ = log_file_detect(log_file, 'phewas')
-
+        
+        self.log_file, message = log_file_detect(log_file, 'phewas')
+        print(message)
+        
         # Threshold calculation
         n_exposed = self.data.get_attribute('phenotype_statistics')['n_exposed']
         self.n_threshold = self.threshold_check(proportion_threshold, n_threshold, n_exposed)
-
-        # Original phewas logic would be converted to class methods here
+        
+        # Filter phecodes
         phecode_lst_all = self._filter_phecodes()
-        result_df = self._run_analysis(phecode_lst_all)
-        return self._process_results(result_df)
+        
+        # Run analysis
+        raw_results = self._run_analysis(phecode_lst_all)
+        
+        # Process results
+        phewas_df = self._process_results(raw_results)
+        
+        return phewas_df
 
     def _filter_phecodes(self):
         """Filter phecodes based on inclusion/exclusion criteria"""
-        return filter_phecodes(self.phecode_info, self.system_inc, self.system_exl,
-                              self.phecode_inc, self.phecode_exl)
+        phecode_list = filter_phecodes(self.phecode_info, self.system_inc, self.system_exl,
+                                       self.phecode_inc, self.phecode_exl)
+        print(f'A total of {len(phecode_list)} phecodes included in the PheWAS analysis.')
+        return phecode_list
 
     def _run_analysis(self, phecode_list):
         """Core analysis logic"""
         # Setup multiprocessing
         pool = self._setup_multiprocessing()
         random.shuffle(phecode_list)
+        from .cox import cox_conditional, cox_unconditional, cox_conditional_wrapper, cox_unconditional_wrapper
         
         try:
             if pool:
-                from .cox import cox_conditional, cox_unconditional
                 if self.data.study_design == 'matched cohort':
-                    results = pool.map(cox_conditional, phecode_list)
-                else:
                     results = pool.map(cox_unconditional, phecode_list)
+                else:
+                    results = pool.map(cox_conditional, phecode_list)
             else:
-                from .cox import cox_conditional_wrapper, cox_unconditional_wrapper
                 results = []
                 for phecode in phecode_list:
                     if self.data.study_design == 'matched cohort':
                         results.append(cox_unconditional_wrapper(
-                            phecode, self.data, self.covariates, self.n_threshold, 
+                            phecode, self.data, self.covariates, self.n_threshold,
                             self.log_file, self.lifelines_disable))
                     else:
                         results.append(cox_conditional_wrapper(
@@ -120,7 +147,8 @@ class PheWASAnalysis(DiseaseAnalysis):
         max_columns = max(len(x) for x in raw_results)
         columns = ['phecode','disease','system','sex','N_cases_exposed','describe',
                   'exposed_group','unexposed_group','phewas_coef','phewas_se','phewas_p']
-        phewas_df = pd.DataFrame(raw_results, columns=columns[:max_columns])
+        columns_selected = columns[:max_columns]
+        phewas_df = pd.DataFrame(raw_results, columns=columns_selected)
 
         # Handle registry study special case
         if self.data.study_design == "registry":
@@ -135,10 +163,9 @@ class PheWASAnalysis(DiseaseAnalysis):
             cutoff=self.cutoff)
 
 # Maintain original function for backward compatibility
+
+# Maintain original function for backward compatibility
 def phewas(data:DiseaseNetworkData, *args, **kwargs) -> pd.DataFrame:
-    """Legacy wrapper for PheWAS analysis"""
-    analysis = PheWASAnalysis(data)
-    return analysis.analyze(*args, **kwargs)
     """
     Conducts Phenome-wide association studies (PheWAS) using the specified DiseaseNetworkData object.
 
@@ -227,6 +254,8 @@ def phewas(data:DiseaseNetworkData, *args, **kwargs) -> pd.DataFrame:
         A pandas DataFrame object that contains the results of PheWAS analysis.
 
     """
+    analysis = PheWASAnalysis(data)
+    return analysis.analyze(*args, **kwargs)
 
 def phewas_multipletests(df:pd.DataFrame, 
                          correction:str='bonferroni', 
@@ -793,6 +822,19 @@ class ComorbidityNetworkAnalysis(DiseaseAnalysis):
         self.cutoff = 0.05
         self.log_file = None
         self.parameter_dict = {}
+        # Initialize method-specific parameters like original code
+        if self.method == 'RPCN':
+            self.parameter_dict.update({
+                'alpha': 1.0,
+                'auto_penalty': True,
+                'alpha_range': (1, 15),
+                'scaling_factor': 1.0
+            })
+        elif self.method == 'PCN_PCA':
+            self.parameter_dict.update({
+                'n_PC': 5,
+                'explained_variance': None
+            })
 
     def analyze(self, comorbidity_strength_result: pd.DataFrame, 
                 binomial_test_result: pd.DataFrame, method='RPCN',
@@ -1095,18 +1137,24 @@ class DiseaseTrajectoryAnalysis(DiseaseAnalysis):
         super().__init__(data)
         self.method = 'RPCN'
         self.covariates = None
-        self.matching_var_dict = {'sex': 'exact'}
+        self.matching_var_dict = {'sex': 'exact'}  # Default matching
         self.matching_n = 2
         self.correction = 'bonferroni'
         self.cutoff = 0.05
         self.log_file = None
         self.parameter_dict = {}
+        
+        # Validate matching variables on initialization like original code
+        if 'sex' not in self.matching_var_dict:
+            raise ValueError("'sex' must be included in matching_var_dict")
+        if self.matching_var_dict['sex'] != 'exact':
+            raise ValueError("Sex matching must use 'exact' method")
 
     def analyze(self, comorbidity_strength_result: pd.DataFrame,
                 binomial_test_result: pd.DataFrame, method='RPCN',
                 matching_var_dict=None, matching_n=2, covariates=None,
                 n_process=1, log_file=None, correction='bonferroni',
-                cutoff=0.05, **kwargs):
+                cutoff=0.05, enforce_time_interval=True, **kwargs):
         """Main analysis entry point"""
         # Store parameters
         self.method = method
@@ -1116,7 +1164,8 @@ class DiseaseTrajectoryAnalysis(DiseaseAnalysis):
         self.covariates = covariates_check(covariates, self.data.get_attribute('phenotype_info'), self.matching_var_dict)
         self.correction = correction
         self.cutoff = cutoff
-        self.log_file, _ = log_file_detect(log_file, 'disease_trajectory')
+        self.enforce_time_interval = enforce_time_interval
+        self.log_file, _ = log_file_detect(log_file, 'disease_trajectory') 
         self.parameter_dict = check_kwargs_com_tra(method,
                                                  comorbidity_strength_result.columns,
                                                  binomial_test_result.columns,
