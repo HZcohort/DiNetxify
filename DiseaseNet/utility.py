@@ -91,7 +91,7 @@ def read_check_csv(path_file:str,
     raise ValueError("File cannot be read with the given specifications or data format is incorrect, check the error information above.")
 
 
-def diff_date_years(dataframe,date1:str,date2:str,rounding:int=2):
+def diff_date_years(dataframe,date1:str,date2:str,rounding:int=4):
     """
     
     Calculate the difference of two dates (datetime format) in year in a dataframe.
@@ -110,7 +110,7 @@ def diff_date_years(dataframe,date1:str,date2:str,rounding:int=2):
     Returns
     -------
     pd.series
-        Difference between the two dates in year (2 digits).
+        Difference between the two dates in year (4 digits).
 
     """
     days_per_year = 365.25
@@ -174,7 +174,7 @@ def convert_column(dataframe, column:str):
     elif (df[new_column].dtype == float or df[new_column].dtype == int or df[new_column].dtype == object) and n_unique_vals>=10:
         # Treat as continuous
         n_missing_before = df[new_column].isna().sum()
-        df[new_column] = pd.to_numeric(df[new_column], errors='coerce').round(2)
+        df[new_column] = pd.to_numeric(df[new_column], errors='coerce')
         n_missing_after = df[new_column].isna().sum()
         if n_missing_after > n_missing_before:
             print(f"Warning: '{column}' is a continuous variable and {n_missing_after-n_missing_before} set to missing after conversion (total {n_missing_after} missing).")

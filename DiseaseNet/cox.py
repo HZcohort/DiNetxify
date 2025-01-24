@@ -456,16 +456,17 @@ def cox_unconditional(phecode:float):
         str_noexp = '%i/%.2f (%.2f)' % (n_unexp,time_unexp,n_unexp/time_unexp)
     
     #return and save results if less than threshold
-    if (length < n_threshold_) and (data_.study_design != "registry"):
+    if length < n_threshold_ and data_.study_design != "registry":
         result += [f'Less than threshold of {n_threshold_}',str_exp,str_noexp]
         write_log(log_file_, f'Number of cases {length} less than threshold {n_threshold_} for phecode {phecode}\n')
-    elif (length < n_threshold_) and (data_.study_design == "registry"):
+        return result
+    elif length < n_threshold_ and data_.study_design == "registry":
         result += [f'Less than threshold of {n_threshold_}',str_exp]
         write_log(log_file_, f'Number of cases {length} less than threshold {n_threshold_} for phecode {phecode}\n')
         return result
-    if data_.study_design == "registry":
-        result += [f"Analysis has done",str_exp]
-        write_log(log_file_, f"The analysis of {result[0]} disease has done")
+    elif length >= n_threshold_ and data_.study_design == "registry":
+        result += [f"Larger than or equal to threshold of {n_threshold_}",str_exp]
+        write_log(log_file_, f"Larger than or equal to threshold of {n_threshold_}")
         return result
     
     #exclude those with negative time

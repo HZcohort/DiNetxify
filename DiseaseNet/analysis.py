@@ -171,9 +171,9 @@ def phewas(data:DiseaseNetworkData,
     if n_process == 1:
         for phecode in phecode_lst_all:
             if data.study_design == 'matched cohort':
-                result_all.append(cox_unconditional_wrapper(phecode,data,covariates,n_threshold,log_file_final,lifelines_disable))
-            else:
                 result_all.append(cox_conditional_wrapper(phecode,data,covariates,n_threshold,log_file_final,lifelines_disable))
+            else:
+                result_all.append(cox_unconditional_wrapper(phecode,data,covariates,n_threshold,log_file_final,lifelines_disable))
     elif n_process > 1:
         with multiprocessing.get_context(start_mehtod).Pool(n_process, initializer=init_worker, initargs=(data,covariates,n_threshold,log_file_final,lifelines_disable)) as p:
             if data.study_design == 'matched cohort':
