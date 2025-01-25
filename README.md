@@ -248,7 +248,7 @@ trajectory_result.to_csv('/your/project/path/dep_trajectory.csv')  # Path to sav
 #### `DiseaseNetworkData`
 
 ```python
-class DiseaseNetworkData:
+class DiseaseNetworkData()
 ```
 
 A class for handling disease network data creation and operations, for use in the DiseaseNetPy module.
@@ -276,7 +276,8 @@ A class for handling disease network data creation and operations, for use in th
 ###### `phenotype_data`
 
 ```python
-def phenotype_data(self, phenotype_data_path:str, column_names:dict, covariates:list, force:bool=False):
+phenotype_data(self, phenotype_data_path:str, column_names:dict, 
+               covariates:list, force:bool=False):
 ```
 
 Merges phenotype and medical records data into the main data attribute.
@@ -337,8 +338,8 @@ Merges phenotype and medical records data into the main data attribute.
 ###### `merge_medical_records`
 
 ```python
-def merge_medical_records(self, medical_records_data_path:str, diagnosis_code:str, column_names:dict, date_fmt:str=None, 
-                          chunksize:int=1000000):
+merge_medical_records(self, medical_records_data_path:str, diagnosis_code:str,
+                      column_names:dict, date_fmt:str=None, chunksize:int=1000000)
 ```
 
 Merges the loaded phenotype data with one or more medical records data.
@@ -414,8 +415,8 @@ Modifies the phecode level setting.
 ###### `disease_pair`
 
 ```python
-def disease_pair(self, phewas_result:pd.DataFrame, min_interval_days:int=0, max_interval_days:int=np.inf, 
-                 force:bool=False, **kwargs):
+disease_pair(self, phewas_result:pd.DataFrame, min_interval_days:int=0,
+             max_interval_days:int=np.inf, force:bool=False, **kwargs)
 ```
 
 Constructs disease pairs based on PheWAS results.
@@ -445,7 +446,7 @@ Constructs disease pairs based on PheWAS results.
 ###### `load`
 
 ```python
-def load(self, file:str, force:bool=False):
+load(self, file:str, force:bool=False)
 ```
 
 Load data from a `.pkl.gz` (gzip-compressed pickle) file and restore the attributes to this DiseaseNetworkData object.
@@ -466,7 +467,7 @@ Load data from a `.pkl.gz` (gzip-compressed pickle) file and restore the attribu
 ###### `save`
 
 ```python
-def save(self, file:str):
+save(self, file:str)
 ```
 
 Saves the DiseaseNetworkData object's attributes to a `.pkl.gz` (gzip-compressed pickle) file
@@ -485,9 +486,12 @@ Saves the DiseaseNetworkData object's attributes to a `.pkl.gz` (gzip-compressed
 #### `phewas`
 
 ```python
-def phewas(data:DiseaseNetworkData, covariates:list=None, proportion_threshold:float=None, n_threshold:int=None,
-           n_process:int=1, correction:str='bonferroni', cutoff:float=0.05, system_inc:list=None, system_exl:list=None,
-           phecode_inc:list=None, phecode_exl:list=None, log_file:str=None, lifelines_disable:bool=False) -> pd.DataFrame:
+dnt.phewas(data:DiseaseNetworkData, covariates:list=None,
+           proportion_threshold:float=None, n_threshold:int=None,
+           n_process:int=1, correction:str='bonferroni', cutoff:float=0.05,
+           system_inc:list=None, system_exl:list=None,
+           phecode_inc:list=None, phecode_exl:list=None, log_file:str=None,
+           lifelines_disable:bool=False) -> pd.DataFrame
 ```
 
 Conducts Phenome-wide Association Studies (PheWAS) using the specified DiseaseNetworkData object.
@@ -545,7 +549,8 @@ Conducts Phenome-wide Association Studies (PheWAS) using the specified DiseaseNe
 #### `phewas_multipletests`
 
 ```python
-def phewas_multipletests(df:pd.DataFrame, correction:str='bonferroni', cutoff:float=0.05) -> pd.DataFrame:
+dnt.phewas_multipletests(df:pd.DataFrame, correction:str='bonferroni', 
+                         cutoff:float=0.05) -> pd.DataFrame
 ```
 
 Adjusts PheWAS p-values for multiple comparisons using specified correction methods.
@@ -570,9 +575,11 @@ Adjusts PheWAS p-values for multiple comparisons using specified correction meth
 #### `comorbidity_strength`
 
 ```python
-def comorbidity_strength(data:DiseaseNetworkData, proportion_threshold:float=None, n_threshold:int=None, 
-                         n_process:int=1, log_file:str=None, correction_phi:str='bonferroni', cutoff_phi:float=0.05, 
-                         correction_RR:str='bonferroni', cutoff_RR:float=0.05) -> pd.DataFrame:
+dnt.comorbidity_strength(data:DiseaseNetworkData, proportion_threshold:float=None, 
+                         n_threshold:int=None, n_process:int=1, log_file:str=None, 
+                         correction_phi:str='bonferroni', cutoff_phi:float=0.05, 
+                         correction_RR:str='bonferroni', 
+                         cutoff_RR:float=0.05) -> pd.DataFrame
 ```
 
 Conducts comorbidity strength estimation among exposed individuals for all possible disease pairs.
@@ -612,8 +619,10 @@ Conducts comorbidity strength estimation among exposed individuals for all possi
 #### `comorbidity_strength_multipletests`
 
 ```python
-def comorbidity_strength_multipletests(df:pd.DataFrame, correction_phi:str='bonferroni', cutoff_phi:float=0.05, 
-                                       correction_RR:str='bonferroni', cutoff_RR:float=0.05) -> pd.DataFrame:
+dnt.comorbidity_strength_multipletests(df:pd.DataFrame, correction_phi:str='bonferroni', 
+                                       cutoff_phi:float=0.05, 
+                                       correction_RR:str='bonferroni', 
+                                       cutoff_RR:float=0.05) -> pd.DataFrame
 ```
 
 Adjusts comorbidity strength p-values (phi-correlation and RR) for multiple comparisons.
@@ -641,8 +650,10 @@ Adjusts comorbidity strength p-values (phi-correlation and RR) for multiple comp
 #### `binomial_test`
 
 ```python
-def binomial_test(data:DiseaseNetworkData, comorbidity_strength_result:pd.DataFrame, n_process:int=1, log_file:str=None, 
-                  correction:str='bonferroni', cutoff:float=0.05, enforce_temporal_order:bool=False, **kwargs) -> pd.DataFrame:
+dnt.binomial_test(data:DiseaseNetworkData, comorbidity_strength_result:pd.DataFrame, 
+                  n_process:int=1, log_file:str=None, 
+                  correction:str='bonferroni', cutoff:float=0.05, 
+                  enforce_temporal_order:bool=False, **kwargs) -> pd.DataFrame
 ```
 
 Conducts binomial tests for disease pairs with significant comorbidity strength to identify significant temporal orders.
@@ -684,7 +695,8 @@ Conducts binomial tests for disease pairs with significant comorbidity strength 
 #### `binomial_multipletests`
 
 ```python
-def binomial_multipletests(df:pd.DataFrame, correction:str='bonferroni', cutoff:float=0.05) -> pd.DataFrame:
+dnt.binomial_multipletests(df:pd.DataFrame, correction:str='bonferroni', 
+                           cutoff:float=0.05) -> pd.DataFrame
 ```
 
 Adjusts binomial test p-values for multiple comparisons.
@@ -709,9 +721,11 @@ Adjusts binomial test p-values for multiple comparisons.
 #### `comorbidity_network`
 
 ```python
-def comorbidity_network(data:DiseaseNetworkData, comorbidity_strength_result:pd.DataFrame, binomial_test_result:pd.DataFrame, 
-                        method:str='RPCN', covariates:list=None, n_process:int=1, log_file:str=None, 
-                        correction:str='bonferroni', cutoff:float=0.05, **kwargs) -> pd.DataFrame:
+dnt.comorbidity_network(data:DiseaseNetworkData,comorbidity_strength_result:pd.DataFrame, 
+                        binomial_test_result:pd.DataFrame, method:str='RPCN', 
+                        covariates:list=None, n_process:int=1, log_file:str=None, 
+                        correction:str='bonferroni', 
+                        cutoff:float=0.05, **kwargs) -> pd.DataFrame
 ```
 
 Performs comorbidity network analysis on disease pairs with significant comorbidity strength.
@@ -778,7 +792,8 @@ Performs comorbidity network analysis on disease pairs with significant comorbid
 #### `comorbidity_multipletests`
 
 ```python
-def comorbidity_multipletests(df:pd.DataFrame, correction:str='bonferroni', cutoff:float=0.05) -> pd.DataFrame:
+dnt.comorbidity_multipletests(df:pd.DataFrame, correction:str='bonferroni', 
+                              cutoff:float=0.05) -> pd.DataFrame:
 ```
 
 Adjusts comorbidity network analysis p-values for multiple comparisons.
@@ -803,10 +818,12 @@ Adjusts comorbidity network analysis p-values for multiple comparisons.
 #### `disease_trajectory`
 
 ```python
-def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.DataFrame, binomial_test_result:pd.DataFrame, 
-                       method:str='RPCN', matching_var_dict:dict={'sex':'exact'}, matching_n:int=2, covariates:list=None,
-                       n_process:int=1, log_file:str=None, correction:str='bonferroni', cutoff:float=0.05, 
-                       **kwargs) -> pd.DataFrame:
+dnt.disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.DataFrame, 
+                       binomial_test_result:pd.DataFrame, 
+                       method:str='RPCN', matching_var_dict:dict={'sex':'exact'}, 
+                       matching_n:int=2, covariates:list=None,
+                       n_process:int=1, log_file:str=None, correction:str='bonferroni', 
+                       cutoff:float=0.05, **kwargs) -> pd.DataFrame
 ```
 
 Performs temporal comorbidity network (disease trajectory) analysis to identify pairs with confirmed temporal comorbidity associations.
@@ -904,7 +921,8 @@ Performs temporal comorbidity network (disease trajectory) analysis to identify 
 #### `trajectory_multipletests`
 
 ```python
-def trajectory_multipletests(df:pd.DataFrame, correction:str='bonferroni', cutoff:float=0.05) -> pd.DataFrame:
+dnt.trajectory_multipletests(df:pd.DataFrame, correction:str='bonferroni', 
+                             cutoff:float=0.05) -> pd.DataFrame
 ```
 
 Adjusts trajectory analysis p-values for multiple comparisons.
