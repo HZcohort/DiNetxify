@@ -277,7 +277,7 @@ A class for handling disease network data creation and operations, for use in th
 
 ```python
 phenotype_data(self, phenotype_data_path:str, column_names:dict, 
-               covariates:list, force:bool=False):
+               covariates:list, force:bool=False)
 ```
 
 Merges phenotype and medical records data into the main data attribute.
