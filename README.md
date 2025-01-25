@@ -448,12 +448,12 @@ Constructs disease pairs based on PheWAS results.
 def load(self, file:str, force:bool=False):
 ```
 
-Loads data from a `.npy` file into the DiseaseNetworkData object.
+Load data from a `.pkl.gz` (gzip-compressed pickle) file and restore the attributes to this DiseaseNetworkData object.
 
 **Parameters:**
 
 - `file : str`
-  - Filename with `.npy` extension.
+  - The filename with or without `.pkl.gz` extension.
 - `force : bool, default=False`
   - If `True`, overwrites existing data attributes.
 
@@ -469,12 +469,12 @@ Loads data from a `.npy` file into the DiseaseNetworkData object.
 def save(self, file:str):
 ```
 
-Saves the DiseaseNetworkData object's attributes to a `.npy` file.
+Saves the DiseaseNetworkData object's attributes to a `.pkl.gz` (gzip-compressed pickle) file
 
 **Parameters:**
 
 - `file : str`
-  - Filename or path prefix. `.npy` extension is appended if not included.
+  - The filename with or without `.pkl.gz` extension.
 
 **Returns:**
 
