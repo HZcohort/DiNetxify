@@ -8,7 +8,7 @@ Created on Sun Dec 15 02:13:51 2024
 import pandas as pd
 import numpy as np
 #from datetime import datetime
-import statsmodels.api as sm
+from statsmodels.discrete.discrete_model import Logit
 import time
 from .utility import write_log,find_best_alpha_and_vars
 
@@ -105,7 +105,7 @@ def logistic_model(d1:float,d2:float):
     #simple method
     if method == 'CN':
         try:
-            model = sm.Logit(np.asarray(phenotype_df_exposed_['d2'],dtype=int),
+            model = Logit(np.asarray(phenotype_df_exposed_['d2'],dtype=int),
                              np.asarray(phenotype_df_exposed_[['d1','constant']+covariates_]),dtype=float)
             result = model.fit(disp=False,method='bfgs')
             beta,se,p,aic = result.params[0], result.bse[0],result.pvalues[0],result.aic
@@ -121,7 +121,7 @@ def logistic_model(d1:float,d2:float):
             try:
                 #model
                 model_1_vars = ['d1','constant']+all_diseases_var #only disease variables
-                model = sm.Logit(np.asarray(phenotype_df_exposed_['d2'],dtype=int),
+                model = Logit(np.asarray(phenotype_df_exposed_['d2'],dtype=int),
                                  np.asarray(phenotype_df_exposed_[model_1_vars],dtype=float))
                 
                 # Initial alphas to check
@@ -137,7 +137,7 @@ def logistic_model(d1:float,d2:float):
                 #search within the defined range
                 final_best_alpha, final_disease_vars = find_best_alpha_and_vars(model,alpha_range,alpha_lst,model_1_vars)
                 #fit the final model
-                model_final = sm.Logit(np.asarray(phenotype_df_exposed_['d2'],dtype=int),
+                model_final = Logit(np.asarray(phenotype_df_exposed_['d2'],dtype=int),
                                        np.asarray(phenotype_df_exposed_[final_disease_vars+covariates_],dtype=float))
                 result_final = model_final.fit(disp=False,method='bfgs')
                 beta,se,p,aic = result_final.params[0], result_final.bse[0],result_final.pvalues[0],result_final.aic
@@ -153,14 +153,14 @@ def logistic_model(d1:float,d2:float):
             try:
                 #fit the initial model to get the non-zero disease list
                 model_1_vars = ['d1','constant']+all_diseases_var #only disease variables
-                model = sm.Logit(np.asarray(phenotype_df_exposed_['d2'],dtype=int),
+                model = Logit(np.asarray(phenotype_df_exposed_['d2'],dtype=int),
                                  np.asarray(phenotype_df_exposed_[model_1_vars],dtype=float))
                 result = model.fit_regularized(method='l1', alpha=alpha_lst*alpha_single, disp=False)
                 non_zero_indices = np.nonzero(result.params != 0)[0]
                 final_disease_vars = [model_1_vars[i] for i in non_zero_indices]
                 
                 #fit the final model
-                model_final = sm.Logit(np.asarray(phenotype_df_exposed_['d2'],dtype=int),
+                model_final = Logit(np.asarray(phenotype_df_exposed_['d2'],dtype=int),
                                        np.asarray(phenotype_df_exposed_[final_disease_vars+covariates_]),dtype=float)
                 result_final = model_final.fit(disp=False,method='bfgs')
                 beta,se,p,aic = result_final.params[0], result_final.bse[0],result_final.pvalues[0],result_final.aic
@@ -187,7 +187,7 @@ def logistic_model(d1:float,d2:float):
             variance_explained = sum(pca.explained_variance_ratio_)
             
             #fit model with PCA covariates
-            model_final = sm.Logit(np.asarray(phenotype_df_exposed_PCA['d2'],dtype=int),
+            model_final = Logit(np.asarray(phenotype_df_exposed_PCA['d2'],dtype=int),
                                    np.asarray(phenotype_df_exposed_PCA[['d1','constant']+covariates_+pca_cols],dtype=float))
             result_final = model_final.fit(disp=False,method='bfgs')
             beta,se,p,aic = result_final.params[0], result_final.bse[0],result_final.pvalues[0],result_final.aic
