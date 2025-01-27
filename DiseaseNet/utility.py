@@ -1009,7 +1009,7 @@ def matching_var_check(matching_var_dict:dict,phenotype_info:dict):
         if var_type == 'categorical' and val != 'exact':
             raise ValueError(f"Matching variable {var} is categorical, the matching criteria should always be 'exact', got {val}.")
         if var_type == 'continuous':
-            if not isinstance(val, (int,float)) or val <= 0:
+            if not isinstance(val, (int,float)) or val < 0:
                 raise ValueError(f"Invalid matching criteria {val} for matching variable {var}.")
                 
 
