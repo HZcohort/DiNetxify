@@ -1125,9 +1125,9 @@ def check_variance_within(df:pd.DataFrame, co_variate:list) -> list:
     """
     co_variate_ = []
     for column_name in co_variate:
-        group_means = df.groupby('group')['value'].transform('mean')
-        ss_within = ((df['value'] - group_means) ** 2).sum()
-        variance_within = ss_within / (len(df) - df['group'].nunique())
+        group_means = df.groupby('group_matching_ids')[column_name].transform('mean')
+        ss_within = ((df[column_name] - group_means) ** 2).sum()
+        variance_within = ss_within / (len(df) - df['group_matching_ids'].nunique())
         if variance_within > 0.1: co_variate.append(column_name)
     del_variate = [x for x in co_variate if x not in co_variate_]
     return co_variate_, del_variate

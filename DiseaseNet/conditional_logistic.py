@@ -170,8 +170,8 @@ def logistic_model(d1:float,d2:float):
                     final_disease_vars.append("d1")
                 #fit the final model
                 model_final = ConditionalLogit(np.asarray(phenotype_df_exposed_['d2'],dtype=int),
-                                                  np.asarray(phenotype_df_exposed_[final_disease_vars+covariates_],dtype=float),
-                                                  groups=phenotype_df_exposed_['group_matching_ids'].values)
+                                               np.asarray(phenotype_df_exposed_[final_disease_vars+covariates_],dtype=float),
+                                               groups=phenotype_df_exposed_['group_matching_ids'].values)
                 result_final = model_final.fit(disp=False, method='bfgs')
                 result_final = MyConditionalResultsWrapper(result_final) #add aic property
                 beta,se,p,aic = result_final.params[0], result_final.bse[0],result_final.pvalues[0],result_final.aic
@@ -353,6 +353,7 @@ def init_worker(phenotype_df_exposed:pd.DataFrame,id_col,end_date_col,trajectory
     log_file_ = log_file
     parameters_ = parameters
     check_within_variance_ = check_within_variance
+
 def determine_best_range(aic_dict):
     """
     Determines the best range of alpha values based on the AIC values.
