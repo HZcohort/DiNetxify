@@ -947,7 +947,7 @@ Adjusts trajectory analysis p-values for multiple comparisons.
 Please contact:
 Can Hou: houcan@wchscu.cn
 
-Haowen Liu: 
+Haowen Liu: haowenliu81@gmail.com
 
 ## License
 

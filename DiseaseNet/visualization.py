@@ -12,52 +12,53 @@ import networkx as nx
 import os
 
 class ThreeDimensionalDiseaseNetwork():
-    def __init__(self, _commorbidity:pd.DataFrame, 
-                 _trajectory:pd.DataFrame,
+    def __init__(self, commorbidity_network_result:pd.DataFrame, 
+                 disease_trajectory_result:pd.DataFrame,
                  phewas_result:pd.DataFrame,
-                 _original_disease:float=9999,
-                 _original_disease_location:tuple=(0,0,0),
-                 _original_diseaseSize:float=1,
-                 source='phecode_d1', 
-                 target='phecode_d2'):
+                 exposure_disease:float=9999,
+                 exposure_disease_location:tuple=(0,0,0),
+                 exposure_disease_size:float=1,
+                 source:str='phecode_d1',
+                 target:str='phecode_d2'):
         # primary attributions
         self.__module_dir = os.path.dirname(__file__)
-        self.__commorbidity = _commorbidity
+        self.__commorbidity_network_result = commorbidity_network_result
         self.__phecode_number = dict(zip(phewas_result["phecode"], phewas_result["N_cases_exposed"]))
         self.__describe = pd.read_csv(os.path.join(self.__module_dir, "data/phecode_1.2/phecode_info.csv"))
-        self.__original_disease = _original_disease
-        self.__size = _original_diseaseSize
-        self.__location = _original_disease_location
-        self.__system_lst = ['circulatory system', 'sense organs', 'injuries & poisonings', 'neurological', 
-                             'dermatologic', 'digestive', 'hematopoietic', 'musculoskeletal', 
-                             'endocrine/metabolic', 'mental disorders', 'infectious diseases', 
-                             'genitourinary', 'neoplasms', 'respiratory', "symptoms", "congenital anomalies", "mental disorders", "others"]
-        self.__color_sixteen = ["#FF5733","#33FF57","#3357FF","#FFFF33","#FF33FF","#33FFFF","#C70039",  
-                                "#900C3F","#581845","#1ABC9C","#2ECC71","#3498DB","#9B59B6","#E74C3C",
-                                "#F1C40F","#FF7F50","#FFD700", "#A52A2A"]
-        # make sure the first layer of phecodes (original_disease-phecodes)
-        df = _trajectory.loc[~_trajectory['phecode_d1'].isin(_trajectory.phecode_d2.values)]
-        df_lst = set(df.phecode_d1.values)
+        self.__exposure_disease = exposure_disease
+        self.__exposure_disease_size = exposure_disease_size
+        self.__exposure_disease_location = exposure_disease_location
+        self.__system = ['circulatory system', 'sense organs', 'injuries & poisonings', 'neurological',
+                         'dermatologic', 'digestive', 'hematopoietic', 'musculoskeletal', 
+                         'endocrine/metabolic', 'mental disorders', 'infectious diseases', 
+                         'genitourinary', 'neoplasms', 'respiratory', "symptoms", "congenital anomalies", 
+                         "mental disorders", "others"]
+        self.__system_color = ["#FF5733","#33FF57","#3357FF","#FFFF33","#FF33FF","#33FFFF","#C70039",
+                               "#900C3F","#581845","#1ABC9C","#2ECC71","#3498DB","#9B59B6","#E74C3C",
+                               "#F1C40F","#FF7F50","#FFD700", "#A52A2A"]
+        
+        # make sure the first layer of phecodes (exposure_disease->phecodes)
+        df = disease_trajectory_result.loc[~disease_trajectory_result['phecode_d1'].isin(disease_trajectory_result[target].values)]
+        df_lst = set(df[source].values)
         d0_d1 = []
-        for d in df_lst:
-            d0_d1.append([_original_disease, d, '%f-%f' % (_original_disease,d)])
+        for d in df_lst: d0_d1.append([exposure_disease, d, '%f-%f' % (exposure_disease,d)])
         d0_d1 = pd.DataFrame(d0_d1,columns=['phecode_d1', 'phecode_d2', 'name_disease_pair'])
+
         # primary attributions
-        self.__trajectory = pd.concat([_trajectory, d0_d1])
-        self.__disease_pairs = [[row[source], row[target]] for _, row in self.__trajectory.iterrows()]
-        # nodes of networks
-        self.__commorbidity_nodes = list(set(list(_commorbidity[source])+list(_commorbidity[target])))
-        self.__trajectory_nodes = list(set(list(_trajectory[source])+list(_trajectory[target])))
+        self.__disease_trajectory = pd.concat([disease_trajectory_result, d0_d1])
+        self.__trajectory_disease_pairs = [[row[source], row[target]] for _, row in self.__disease_trajectory.iterrows()]
+        self.__commorbidity_nodes = set(commorbidity_network_result[source].to_list() + commorbidity_network_result[target].to_list())
+        self.__trajectory_nodes = set(disease_trajectory_result[source].to_list() + disease_trajectory_result[target].to_list())
         
     @staticmethod
-    def split_name(name:str) -> str:
-        """split the name of disease.
+    def __split_name(name:str) -> str:
+        """line feed the name of disease.
 
         Args:
-            name (str): disease.
+            name (str): disease name.
 
         Returns:
-            str: translated words of the disease.
+            str: the disease name lined feed.
         """
         words = name.split(' ')
         total_number, new_word = 0, ''
@@ -72,8 +73,7 @@ class ThreeDimensionalDiseaseNetwork():
         return new_word.strip(' ')
 
     @staticmethod
-    def get_dimension(dimension_dict:dict, 
-                      node:float) -> float:
+    def __get_dimension(dimension_dict:dict, node:float) -> float:
         """get the dimension of the phecode.
 
         Args:
@@ -84,12 +84,10 @@ class ThreeDimensionalDiseaseNetwork():
             float: the number of dimension.
         """
         for dimension_number, item in dimension_dict.items():
-            if node in item:
-                return dimension_number
+            if node in item: return dimension_number
             
     @staticmethod
-    def except_dimension(nodes:list, 
-                         dimension_dict:dict) -> list:
+    def __except_dimension(nodes:list, dimension_dict:dict) -> list:
         """get the dimension of except phecodes.
 
         Args:
@@ -100,14 +98,12 @@ class ThreeDimensionalDiseaseNetwork():
             list: the dimension of nodes.
         """
         nodes_dimension = []
-        for item in nodes:
-            nodes_dimension.append(dimension_dict.get(item))
+        for item in nodes: nodes_dimension.append(dimension_dict.get(item))
         nodes_dimension = list(filter(None, nodes_dimension))
         return nodes_dimension
 
     @staticmethod
-    def ball_cordinate(center:tuple,
-                       r:float) -> tuple:
+    def __ball_cordinate(center:tuple, r:float) -> tuple:
         """get the cordinate of sphere.
 
         Args:
@@ -125,7 +121,7 @@ class ThreeDimensionalDiseaseNetwork():
         x += center[0]
         y += center[1]
         z += center[2]
-        return (x,y,z)
+        return (x, y, z)
 
     def plotly_ball(self, center:tuple, 
                     r:float, 
@@ -155,9 +151,9 @@ class ThreeDimensionalDiseaseNetwork():
             name (str): the name of disease.
             light_position_dict (dict{str:float}): the location of the light. Defaults to dict(x=1.5, y=1.5, z=1.5).
         """
-        x_, y_, z_ = self.ball_cordinate(center, r)
-        colorscale_ = [[0.0, color], [0.5, color], [1.0, color]]
-        return x_, y_, z_, colorscale_, light_dict, label, name, light_position_dict
+        x, y, z = self.__ball_cordinate(center, r)
+        colorscale = [[0.0, color], [0.5, color], [1.0, color]]
+        return x, y, z, colorscale, light_dict, label, name, light_position_dict
 
 
     def __calculate_location_random(self, node:float, 
@@ -247,7 +243,7 @@ class ThreeDimensionalDiseaseNetwork():
         # create network class and add the edges
         Graph_position = nx.Graph()
         [Graph_position.add_edge(row[source],row[target],weight=row[weight]) 
-         for _, row in self.__commorbidity.iterrows()]
+         for _, row in self.__commorbidity_network_result.iterrows()]
         # random and repeated clustering the nodes
         result = []
         for i in range(iter_time):
@@ -304,7 +300,7 @@ class ThreeDimensionalDiseaseNetwork():
                 one_dimension_location, hash_dict = self.__calculate_location_random(node, hash_dict)
                 location_dict.update(one_dimension_location)
                 hash_dict[self.final_cluster[node]].update(one_dimension_location)
-        location_dict.update({self.__original_disease:self.__location})
+        location_dict.update({self.__exposure_disease:self.__exposure_disease_location})
         self.location_dict = location_dict
         return self.location_dict
     
@@ -323,15 +319,15 @@ class ThreeDimensionalDiseaseNetwork():
             return self.trajectory_dimension
         # make sure the dimension of trajectory nodes
         temp_disease, trajectory_dimension, dimension_number = [], {}, -1
-        trajectory_df = self.__trajectory.copy()
+        trajectory_df = self.__disease_trajectory.copy()
         while True:
             dimension_number += 1
             # first layers of nodes connecting self.__original_disease
             if len(temp_disease) == 0:
                 # nodes of this layer
-                temp_disease = [x for x in trajectory_df.loc[trajectory_df[source]==self.__original_disease][target]]
+                temp_disease = [x for x in trajectory_df.loc[trajectory_df[source]==self.__exposure_disease][target]]
                 # index of the edges in DataFrame
-                index = [x for x in trajectory_df.loc[trajectory_df[source]==self.__original_disease].index]
+                index = [x for x in trajectory_df.loc[trajectory_df[source]==self.__exposure_disease].index]
                 trajectory_df.drop(index)
                 # save in the dict
                 trajectory_dimension.update({dimension_number:temp_disease})
@@ -374,10 +370,10 @@ class ThreeDimensionalDiseaseNetwork():
                      nodes_of_commorbidity_except_trajectory}
         # recording the times
         for i, value in enumerate(self.__trajectory_nodes):
-            for item in self.__commorbidity.loc[self.__commorbidity[source]==value][target]:
+            for item in self.__commorbidity_network_result.loc[self.__commorbidity_network_result[source]==value][target]:
                 if item in nodes_of_commorbidity_except_trajectory:
                     hash_dict[item][i] += 1
-            for item in self.__commorbidity.loc[self.__commorbidity[target]==value][source]:
+            for item in self.__commorbidity_network_result.loc[self.__commorbidity_network_result[target]==value][source]:
                 if item in nodes_of_commorbidity_except_trajectory:
                     hash_dict[item][i] += 1
         # the dimension number of nodes only in commorbidity network and connecting the trajectory nodes
@@ -385,7 +381,7 @@ class ThreeDimensionalDiseaseNetwork():
         for node in nodes_of_commorbidity_except_trajectory:
             indexs = np.flatnonzero(hash_dict[node])
             try:
-                nodes_dimension = [self.get_dimension(self.trajectory_dimension, 
+                nodes_dimension = [self.__get_dimension(self.trajectory_dimension, 
                                                       self.__trajectory_nodes[x]) for x in indexs]
                 if nodes_dimension:
                     dimension_number = stats.mode(nodes_dimension, keepdims=False)[0]
@@ -397,9 +393,9 @@ class ThreeDimensionalDiseaseNetwork():
             other_nodes = [x for x in hash_dict.keys() if x not in commorbidity_dimension_dict]
             for node in other_nodes:
                 try:
-                    nodes_dimension = self.except_dimension(list(self.__commorbidity.loc[self.__commorbidity[source]==node][target]), 
+                    nodes_dimension = self.__except_dimension(list(self.__commorbidity_network_result.loc[self.__commorbidity_network_result[source]==node][target]), 
                                                                  commorbidity_dimension_dict)
-                    nodes_dimension += self.except_dimension(list(self.__commorbidity.loc[self.__commorbidity[target]==node][source]), 
+                    nodes_dimension += self.__except_dimension(list(self.__commorbidity_network_result.loc[self.__commorbidity_network_result[target]==node][source]), 
                                                                  commorbidity_dimension_dict)
                     dimension_number = stats.mode(nodes_dimension, keepdims=False)[0]
                     commorbidity_dimension_dict.update({node:dimension_number})
@@ -448,7 +444,7 @@ class ThreeDimensionalDiseaseNetwork():
         self.dimension = all_nodes_dimension
         print("There are total %i layers" % (len(self.dimension)))
         self.end_height = int(input("input the height of the lowest layer:"))
-        self.height = np.linspace(self.__location[-1]-20, self.end_height, len(self.dimension))
+        self.height = np.linspace(self.__exposure_disease_location[-1]-20, self.end_height, len(self.dimension))
         return self.dimension
 
     def color(self, code='phecode',
@@ -465,15 +461,15 @@ class ThreeDimensionalDiseaseNetwork():
             _type_: _description_
         """
         code_system = dict(zip(self.__describe[code], self.__describe[cluster_name]))
-        system_color = dict(zip(self.__system_lst, self.__color_sixteen))
+        system_color = dict(zip(self.__system, self.__system_color))
         code_color = {node:system_color.get(code_system.get(node)) 
                       for node in code_system.keys()}
         self.color_map = code_color
         self.__code_system = code_system
         self.__system_color = system_color
-        self.__code_name = {cd:self.split_name('%s (%.1f)' % (words, cd))
+        self.__code_name = {cd:self.__split_name('%s (%.1f)' % (words, cd))
                             for cd, words in self.__describe[[code, describe]].values}
-        self.code_name = {cd:self.split_name('%s (%.1f)' % (words, cd))
+        self.code_name = {cd:self.__split_name('%s (%.1f)' % (words, cd))
                             for cd, words in self.__describe[[code, describe]].values}
         self.__clusterNumber_system = {}
         self.__clusterNumber_color = {}
@@ -492,7 +488,7 @@ class ThreeDimensionalDiseaseNetwork():
         return self.color_map
 
     def incluster_commorbidity(self, incluster:list[str]) -> list[str]:
-        for _, row in self.__commorbidity.iterrows():
+        for _, row in self.__commorbidity_network_result.iterrows():
             if row["phecode_d1"] in incluster and \
             self.final_cluster[row["phecode_d2"]]==self.final_cluster[row["phecode_d1"]]:
                 incluster.append(row["phecode_d2"])
@@ -506,7 +502,7 @@ class ThreeDimensionalDiseaseNetwork():
                     source='phecode_d1', 
                     target='phecode_d2'):
         plot_data = []
-        for system in self.__system_lst:
+        for system in self.__system:
             system_nodes = [x for x in self.__commorbidity_nodes if self.__code_system[x]==system]
             if system_nodes:
                 for node in system_nodes:
@@ -526,10 +522,10 @@ class ThreeDimensionalDiseaseNetwork():
                     plot_data += [data]
         # plot edges
         graph = nx.DiGraph()
-        if self.__original_disease == 9999:
-            [graph.add_edge(row[source], row[target]) for _, row in self.__trajectory.iterrows() if row[source]!=9999]
+        if self.__exposure_disease == 9999:
+            [graph.add_edge(row[source], row[target]) for _, row in self.__disease_trajectory.iterrows() if row[source]!=9999]
         else:
-            [graph.add_edge(row[source], row[target]) for _, row in self.__trajectory.iterrows()]
+            [graph.add_edge(row[source], row[target]) for _, row in self.__disease_trajectory.iterrows()]
         edges_x, edges_y, edges_z = [], [], []
         for edge in graph.edges():
             edges_x += [self.location_dict[edge[0]][0], self.location_dict[edge[1]][0], None]
@@ -559,12 +555,12 @@ class ThreeDimensionalDiseaseNetwork():
         self.incluster_nodes = []
         for cluster_number in set(self.final_cluster.values()):
             cluster_nodes = []
-            source_list = [self.__original_disease]
+            source_list = [self.__exposure_disease]
             while True:
                 begin_number_nodes = len(cluster_nodes)
                 target_list = []
                 for node in source_list:
-                    target_list += [x for x in self.__trajectory[self.__trajectory[source]\
+                    target_list += [x for x in self.__disease_trajectory[self.__disease_trajectory[source]\
                                     ==node][target].values if self.final_cluster[x]==cluster_number]
                 cluster_nodes += target_list
                 cluster_nodes = list(set(cluster_nodes))
@@ -574,7 +570,7 @@ class ThreeDimensionalDiseaseNetwork():
                 source_list = target_list
             self.incluster_nodes += cluster_nodes
 
-        for system in self.__system_lst:
+        for system in self.__system:
             system_nodes = [x for x in self.incluster_nodes if self.__code_system[x]==system]
             if system_nodes:
                 for node in system_nodes:
@@ -614,12 +610,12 @@ class ThreeDimensionalDiseaseNetwork():
         for system in set(self.final_cluster.values()):
             graph = nx.DiGraph()
             system_nodes = []
-            source_list = [self.__original_disease]
+            source_list = [self.__exposure_disease]
             while True:
                 begin_number_nodes = len(system_nodes)
                 target_list = []
                 for node in source_list:
-                    template_target_list = [x for x in self.__trajectory[self.__trajectory[source]\
+                    template_target_list = [x for x in self.__disease_trajectory[self.__disease_trajectory[source]\
                                             ==node][target].values if self.final_cluster[x]==system]
                     target_list += template_target_list
                     if template_target_list:
@@ -653,7 +649,7 @@ class ThreeDimensionalDiseaseNetwork():
             if disease_pairs not in self.incluster_trajectory:
                 self.incluster_trajectory.append(disease_pairs)
         [graph.add_edge(disease_pairs[0], disease_pairs[1]) for disease_pairs 
-         in self.__disease_pairs if (disease_pairs not in incluster_trajectory) & (disease_pairs[0]!=9999)]
+         in self.__trajectory_disease_pairs if (disease_pairs not in incluster_trajectory) & (disease_pairs[0]!=9999)]
         edges_x, edges_y, edges_z = [], [], []
         for edge in graph.edges():
             edges_x += [self.location_dict[edge[0]][0], self.location_dict[edge[1]][0], None]
@@ -679,12 +675,12 @@ class ThreeDimensionalDiseaseNetwork():
         self.incluster_nodes = []
         for cluster_number in set(self.final_cluster.values()):
             cluster_nodes = []
-            source_list = [self.__original_disease]
+            source_list = [self.__exposure_disease]
             while True:
                 begin_number_nodes = len(cluster_nodes)
                 target_list = []
                 for node in source_list:
-                    target_list += [x for x in self.__trajectory[self.__trajectory[source]\
+                    target_list += [x for x in self.__disease_trajectory[self.__disease_trajectory[source]\
                                     ==node][target].values if self.final_cluster[x]==cluster_number]
                 cluster_nodes += target_list
                 cluster_nodes = list(set(cluster_nodes))
@@ -693,7 +689,7 @@ class ThreeDimensionalDiseaseNetwork():
                 source_list = target_list
             self.incluster_nodes += cluster_nodes
         compact_node = []
-        for system in self.__system_lst:
+        for system in self.__system:
             system_nodes = [x for x in self.incluster_nodes if self.__code_system[x]==system]
             if system_nodes:
                 for node in system_nodes:
@@ -717,12 +713,12 @@ class ThreeDimensionalDiseaseNetwork():
         for system in set(self.final_cluster.values()):
             graph = nx.DiGraph()
             system_nodes = []
-            source_list = [self.__original_disease]
+            source_list = [self.__exposure_disease]
             while True:
                 begin_number_nodes = len(system_nodes)
                 target_list = []
                 for node in source_list:
-                    template_target_list = [x for x in self.__trajectory[self.__trajectory[source]\
+                    template_target_list = [x for x in self.__disease_trajectory[self.__disease_trajectory[source]\
                                             ==node][target].values if self.final_cluster[x]==system]
                     target_list += template_target_list
                     if template_target_list:
@@ -773,12 +769,12 @@ class ThreeDimensionalDiseaseNetwork():
             self.color()
         plot_data = []
         # plot the origin disease
-        if self.__original_disease != 9999:
-            origin_data = go.Scatter3d(x=[self.__location[0]],
-                                    y=[self.__location[1]],
-                                    z=[self.__location[2]],
+        if self.__exposure_disease != 9999:
+            origin_data = go.Scatter3d(x=[self.__exposure_disease_location[0]],
+                                    y=[self.__exposure_disease_location[1]],
+                                    z=[self.__exposure_disease_location[2]],
                                     mode='markers',
-                                    marker=dict(symbol='circle',size=self.__size,color='black'),
+                                    marker=dict(symbol='circle',size=self.__exposure_disease_size,color='black'),
                                     text=['Depression'],
                                     hoverinfo='text',
                                     legendgroup='origin',
@@ -844,7 +840,7 @@ class ThreeDimensionalDiseaseNetwork():
 
         fig = go.Figure()
 
-        for _, row in self.__commorbidity.iterrows():
+        for _, row in self.__commorbidity_network_result.iterrows():
             x_values = [self.location_dict[row[source]][0], self.location_dict[row[target]][0]]
             y_values = [self.location_dict[row[source]][1], self.location_dict[row[target]][1]]
             fig.add_trace(go.Scatter(x=x_values, 
@@ -852,7 +848,7 @@ class ThreeDimensionalDiseaseNetwork():
                                      mode='lines', 
                                      line=dict(color=line_color, width=line_width)))
 
-        for system in self.__system_lst:
+        for system in self.__system:
             system_nodes = [x for x in self.__commorbidity_nodes if self.__code_system[x]==system]
             if system_nodes:
                 for node in system_nodes:
@@ -915,12 +911,12 @@ class ThreeDimensionalDiseaseNetwork():
         cluster_nodes_dict = {}
         for cluster_number in set(self.final_cluster.values()):
             cluster_nodes = []
-            source_list = [self.__original_disease]
+            source_list = [self.__exposure_disease]
             while True:
                 begin_number_nodes = len(cluster_nodes)
                 target_list = []
                 for node in source_list:
-                    target_list += [x for x in self.__trajectory[self.__trajectory[source]\
+                    target_list += [x for x in self.__disease_trajectory[self.__disease_trajectory[source]\
                                     ==node][target].values if self.final_cluster[x]==cluster_number]
                 cluster_nodes += target_list
                 cluster_nodes = list(set(cluster_nodes))
@@ -963,10 +959,10 @@ class ThreeDimensionalDiseaseNetwork():
             for key, value in temp_dimension.items():
                 if value: x_value = calculate_circle_positions_with_ids([math.pow(self.get_node_size(x) / 4 * 3 / math.pi, 1/3) for x in value], distance)
                 for i, j in x_value.items():
-                    incluster_location[value[i-1]] = (j, self.__location[1]-key*layer_distance)
+                    incluster_location[value[i-1]] = (j, self.__exposure_disease_location[1]-key*layer_distance)
         
         for cluster_number, node_lst in cluster_nodes_dict.items():
-            edges = [(x, y) for x,y in dict(self.__trajectory[source], self.__trajectory[target]).items() if x in node_lst and y in node_lst]
+            edges = [(x, y) for x,y in dict(self.__disease_trajectory[source], self.__disease_trajectory[target]).items() if x in node_lst and y in node_lst]
             G = nx.DiGraph()
             G.add_edges_from(edges)
             pos = {x:incluster_location[x] for x in node_lst}
