@@ -42,7 +42,7 @@ def binomial(d1:float,d2:float,n_com:int,n_d1d2:int,n_d2d1:int,enforce:bool,log_
     elif n_d1d2 > n_d2d1:
         test_result = binomtest(n_d1d2,n_sum,alternative='greater')
         p_value = test_result.pvalue
-        proportion = test_result.statistic
+        proportion = test_result.proportion_estimate
         proportion_low = test_result.proportion_ci().low
         proportion_high = test_result.proportion_ci().high
         write_log(log_file,f'{d1} to {d2}: done\n')
@@ -50,7 +50,7 @@ def binomial(d1:float,d2:float,n_com:int,n_d1d2:int,n_d2d1:int,enforce:bool,log_
     else:
         test_result = binomtest(n_d2d1,n_sum,alternative='greater')
         p_value = test_result.pvalue
-        proportion = test_result.statistic
+        proportion = test_result.proportion_estimate
         proportion_low = test_result.proportion_ci().low
         proportion_high = test_result.proportion_ci().high
         write_log(log_file,f'{d2} to {d1}: done\n')
