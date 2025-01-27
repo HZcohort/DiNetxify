@@ -8,8 +8,8 @@ Created on Tue Dec 17 14:56:02 2024
 import pandas as pd
 import numpy as np
 #from datetime import datetime
-import statsmodels.api as sm
-from statsmodels.discrete.conditional_models import ConditionalResultsWrapper
+from statsmodels.discrete.discrete_model import Logit
+from statsmodels.discrete.conditional_models import ConditionalLogit,ConditionalResultsWrapper
 import time
 from .utility import write_log,find_best_alpha_and_vars,check_variance_within
 
@@ -130,7 +130,7 @@ def logistic_model(d1:float,d2:float):
     #simple method
     if method == 'CN':
         try:
-            model = sm.ConditionalLogit(np.asarray(phenotype_df_exposed_['d2'],dtype=int),
+            model = ConditionalLogit(np.asarray(phenotype_df_exposed_['d2'],dtype=int),
                                         np.asarray(phenotype_df_exposed_[['d1']+covariates_],dtype=float),
                                         groups=phenotype_df_exposed_['group_matching_ids'].values)
             result = model.fit(disp=False, method='bfgs')
@@ -148,7 +148,7 @@ def logistic_model(d1:float,d2:float):
             try:
                 #model
                 model_1_vars = ['d1','constant']+all_diseases_var #only disease variables
-                model = sm.Logit(np.asarray(phenotype_df_exposed_['d2'],dtype=int),
+                model = Logit(np.asarray(phenotype_df_exposed_['d2'],dtype=int),
                                  np.asarray(phenotype_df_exposed_[model_1_vars],dtype=float)) #use unconditional model for selcting disease variables
                 
                 # Initial alphas to check
@@ -169,7 +169,7 @@ def logistic_model(d1:float,d2:float):
                     final_disease_vars, del_var = check_variance_within(phenotype_df_exposed_, final_disease_vars)
                     final_disease_vars.append("d1")
                 #fit the final model
-                model_final = sm.ConditionalLogit(np.asarray(phenotype_df_exposed_['d2'],dtype=int),
+                model_final = ConditionalLogit(np.asarray(phenotype_df_exposed_['d2'],dtype=int),
                                                   np.asarray(phenotype_df_exposed_[final_disease_vars+covariates_],dtype=float),
                                                   groups=phenotype_df_exposed_['group_matching_ids'].values)
                 result_final = model_final.fit(disp=False, method='bfgs')
@@ -187,13 +187,13 @@ def logistic_model(d1:float,d2:float):
             try:
                 #fit the initial model to get the non-zero disease list
                 model_1_vars = ['d1','constant']+all_diseases_var #only disease variables
-                model = sm.Logit(np.asarray(phenotype_df_exposed_['d2'],dtype=int),
+                model = Logit(np.asarray(phenotype_df_exposed_['d2'],dtype=int),
                                  np.asarray(phenotype_df_exposed_[model_1_vars],dtype=float)) #use unconditional model for selcting disease variables
                 result = model.fit_regularized(method='l1', alpha=alpha_lst*alpha_single, disp=False)
                 non_zero_indices = np.nonzero(result.params != 0)[0]
                 final_disease_vars = [model_1_vars[i] for i in non_zero_indices]
                 #fit the final conditional model
-                model_final = sm.ConditionalLogit(np.asarray(phenotype_df_exposed_['d2'],dtype=int),
+                model_final = ConditionalLogit(np.asarray(phenotype_df_exposed_['d2'],dtype=int),
                                                   np.asarray(phenotype_df_exposed_[final_disease_vars+covariates_],dtype=float),
                                                   groups=phenotype_df_exposed_['group_matching_ids'].values)
                 result_final = model_final.fit(disp=False, method='bfgs')
@@ -222,7 +222,7 @@ def logistic_model(d1:float,d2:float):
             variance_explained = sum(pca.explained_variance_ratio_)
             
             #fit model with PCA covariates
-            model_final = sm.ConditionalLogit(np.asarray(phenotype_df_exposed_PCA['d2'],dtype=int),
+            model_final = ConditionalLogit(np.asarray(phenotype_df_exposed_PCA['d2'],dtype=int),
                                               np.asarray(phenotype_df_exposed_PCA[['d1']+covariates_+pca_cols],dtype=float),
                                               groups=phenotype_df_exposed_['group_matching_ids'].values)
             result_final = model_final.fit(disp=False, method='bfgs')
