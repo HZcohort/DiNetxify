@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Jan 1 19:48:09 2025
+
+@author: Haowen Liu - Biomedical Big data center of West China Hospital, Sichuan University
+"""
+
 import plotly.offline as py
 import plotly.graph_objects as go
 import community as community_louvain
