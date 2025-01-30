@@ -1113,21 +1113,64 @@ def find_best_alpha_and_vars(model, best_range, alpha_lst, co_vars):
         final_disease_vars = refined_vars_dict[final_best_alpha]
     return final_best_alpha, final_disease_vars
 
-def check_variance_within(df:pd.DataFrame, co_variate:list) -> list:
-    """check the within variance of the co-variate and select the co-variates according within variance > 0.1
+def check_variance_vif(df:pd.DataFrame, covar_lst:list, disease_var_lst:list=None, pca_var_lst:list=None, group_col:str=None,
+                       vif_cutoff:int=5) -> list:
+    """
+    Check within group variance and Variance inflation factor (VIF) for the all the covariates.
+    Covariate with 0 within group variance will be removed.
+    Covariate with VIF > 5 will be removed.
 
     Args:
-        df (pd.DataFrame): matched cohort
-        co_variate (list): the other disease in the co_variate
+        df (pd.DataFrame): dataframe for analysis
+        covar_lst (list): phenotypical covariates, should always be included
+        disease_var_lst (list): disease variables
+        pca_var_lst (list): pca variables
+        group_col (str): group column for within group variance check
+        vif_cutoff (int): VIF cutoff value
 
     Returns:
-        list: co_variate_ is a list of the new co-variates and del_variate is a list of the deleted co-variates
+        list: a nested list of covariates to be removed.
     """
-    co_variate_ = []
-    for column_name in co_variate:
-        group_means = df.groupby('group_matching_ids')[column_name].transform('mean')
-        ss_within = ((df[column_name] - group_means) ** 2).sum()
-        variance_within = ss_within / (len(df) - df['group_matching_ids'].nunique())
-        if variance_within > 0.1: co_variate.append(column_name)
-    del_variate = [x for x in co_variate if x not in co_variate_]
-    return co_variate_, del_variate
+    from statsmodels.stats.outliers_influence import variance_inflation_factor
+
+    #keep the order, make sure covar_lst is the last for VIF check
+    all_vars = disease_var_lst if disease_var_lst is not None else [] + pca_var_lst if pca_var_lst is not None else [] + covar_lst
+    var_removed = []
+    #return empty list if no variables are provided
+    if len(all_vars) == 0:
+        return []
+
+    #if group_col is provided, calculate the within group variance
+    if group_col is not None:
+        for var in all_vars:
+            group_means = df.groupby(group_col)[var].transform('mean')
+            ss_within = ((df[var] - group_means) ** 2).sum()
+            variance_within = ss_within / (len(df) - df[group_col].nunique())
+            if variance_within == 0: var_removed.append(var)
+    #if not provided, check the whole dataset variance
+    else:
+        for var in all_vars:
+            if df[var].var() == 0: var_removed.append(var)
+
+    #always check VIF
+    all_vars = [x for x in all_vars if x not in var_removed] #remove the variables with 0 within group variance
+    vars_all_set = all_vars.copy() #variables that remained unchanged during the VIF check loop
+    for var in vars_all_set:
+        index_ = all_vars.index(var)
+        vif = variance_inflation_factor(df[all_vars],index_)
+        if vif >= vif_cutoff:
+            all_vars.remove(var)
+            var_removed.append(var)
+    
+    #check the removed variables
+    covar_removed = [x for x in var_removed if x in covar_lst]
+    disease_removed = [x for x in var_removed if x in disease_var_lst]
+    pca_removed = [x for x in var_removed if x in pca_var_lst]
+    if disease_var_lst is not None:
+        return covar_removed,disease_removed
+    elif pca_var_lst is not None:
+        return covar_removed,pca_removed
+    elif disease_var_lst is None and pca_var_lst is None:
+        return covar_removed
+    else:
+        raise ValueError("Invalid input.")

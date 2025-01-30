@@ -51,6 +51,11 @@ def logistic_model(d1:float,d2:float):
     global log_file_
     global parameters_
 
+    #default columns
+    d1_col = 'd1'
+    d2_col = 'd2'
+    constant_col = 'constant'
+
     #method and parameters
     method = parameters_['method']
     if method == 'RPCN':
@@ -80,14 +85,14 @@ def logistic_model(d1:float,d2:float):
             alpha_lst = np.array([0]*(2) + [1]*len(all_diseases_var))
     
     #d1 and d2 variable
-    phenotype_df_exposed_['d1'] = phenotype_df_exposed_[id_col_].apply(lambda x: 1 if d1 in trajectory_eligible_withdate_[x] else 0)
-    phenotype_df_exposed_['d2'] = phenotype_df_exposed_[id_col_].apply(lambda x: 1 if d2 in trajectory_eligible_withdate_[x] else 0)
-    phenotype_df_exposed_['constant'] = 1
+    phenotype_df_exposed_[d1_col] = phenotype_df_exposed_[id_col_].apply(lambda x: 1 if d1 in trajectory_eligible_withdate_[x] else 0)
+    phenotype_df_exposed_[d2_col] = phenotype_df_exposed_[id_col_].apply(lambda x: 1 if d2 in trajectory_eligible_withdate_[x] else 0)
+    phenotype_df_exposed_[constant_col] = 1
     #statistics
     n = len(phenotype_df_exposed_) #number of individuals in the sub-cohort
-    N_d1 = len(phenotype_df_exposed_[phenotype_df_exposed_['d1']==1])
-    N_d2_withd1 = len(phenotype_df_exposed_[(phenotype_df_exposed_['d2']==1) & (phenotype_df_exposed_['d1']==1)])
-    N_d2_nod1 = len(phenotype_df_exposed_[(phenotype_df_exposed_['d2']==1) & (phenotype_df_exposed_['d1']==0)])
+    N_d1 = len(phenotype_df_exposed_[phenotype_df_exposed_[d1_col]==1])
+    N_d2_withd1 = len(phenotype_df_exposed_[(phenotype_df_exposed_[d2_col]==1) & (phenotype_df_exposed_[d1_col]==1)])
+    N_d2_nod1 = len(phenotype_df_exposed_[(phenotype_df_exposed_[d2_col]==1) & (phenotype_df_exposed_[d1_col]==0)])
     
     #check var of covariates, remove these with var()==0
     for var in covariates_:
@@ -106,8 +111,8 @@ def logistic_model(d1:float,d2:float):
     #simple method
     if method == 'CN':
         try:
-            model = Logit(np.asarray(phenotype_df_exposed_['d2'], dtype=int),
-                          np.asarray(phenotype_df_exposed_[['d1','constant']+covariates_], dtype=float))
+            model = Logit(np.asarray(phenotype_df_exposed_[d2_col], dtype=int),
+                          np.asarray(phenotype_df_exposed_[[d1_col,constant_col]+covariates_], dtype=float))
             result = model.fit(disp=False, method='bfgs')
             beta,se,p,aic = result.params[0], result.bse[0],result.pvalues[0],result.aic
             result_lst += [method,'fitted',beta,se,p,aic]
@@ -121,8 +126,8 @@ def logistic_model(d1:float,d2:float):
         if auto_penalty:
             try:
                 #model
-                model_1_vars = ['d1','constant']+all_diseases_var #only disease variables
-                model = Logit(np.asarray(phenotype_df_exposed_['d2'], dtype=int),
+                model_1_vars = [d1_col,constant_col]+all_diseases_var #only disease variables
+                model = Logit(np.asarray(phenotype_df_exposed_[d2_col], dtype=int),
                               np.asarray(phenotype_df_exposed_[model_1_vars], dtype=float))
                 
                 # Initial alphas to check
@@ -138,7 +143,7 @@ def logistic_model(d1:float,d2:float):
                 #search within the defined range
                 final_best_alpha, final_disease_vars = find_best_alpha_and_vars(model,alpha_range,alpha_lst,model_1_vars)
                 #fit the final model
-                model_final = Logit(np.asarray(phenotype_df_exposed_['d2'],dtype=int),
+                model_final = Logit(np.asarray(phenotype_df_exposed_[d2_col],dtype=int),
                                     np.asarray(phenotype_df_exposed_[final_disease_vars+covariates_],dtype=float))
                 result_final = model_final.fit(disp=False, method='bfgs')
                 beta,se,p,aic = result_final.params[0], result_final.bse[0],result_final.pvalues[0],result_final.aic
@@ -153,15 +158,15 @@ def logistic_model(d1:float,d2:float):
         else:
             try:
                 #fit the initial model to get the non-zero disease list
-                model_1_vars = ['d1','constant']+all_diseases_var #only disease variables
-                model = Logit(np.asarray(phenotype_df_exposed_['d2'],dtype=int),
+                model_1_vars = [d1_col,constant_col]+all_diseases_var #only disease variables
+                model = Logit(np.asarray(phenotype_df_exposed_[d2_col],dtype=int),
                                  np.asarray(phenotype_df_exposed_[model_1_vars],dtype=float))
                 result = model.fit_regularized(method='l1', alpha=alpha_lst*alpha_single, disp=False)
                 non_zero_indices = np.nonzero(result.params != 0)[0]
                 final_disease_vars = [model_1_vars[i] for i in non_zero_indices]
                 
                 #fit the final model
-                model_final = Logit(np.asarray(phenotype_df_exposed_['d2'],dtype=int),
+                model_final = Logit(np.asarray(phenotype_df_exposed_[d2_col],dtype=int),
                                        np.asarray(phenotype_df_exposed_[final_disease_vars+covariates_]),dtype=float)
                 result_final = model_final.fit(disp=False,method='bfgs')
                 beta,se,p,aic = result_final.params[0], result_final.bse[0],result_final.pvalues[0],result_final.aic
@@ -183,16 +188,16 @@ def logistic_model(d1:float,d2:float):
             pca_cols = [f'PCA_{i}' for i in range(disease_vars_transformed.shape[1])]
             disease_vars_transformed = pd.DataFrame(disease_vars_transformed,columns=pca_cols)
             disease_vars_transformed.index = phenotype_df_exposed_.index
-            phenotype_df_exposed_PCA = pd.concat([phenotype_df_exposed_[['d1','d2','constant']+covariates_],
+            phenotype_df_exposed_PCA = pd.concat([phenotype_df_exposed_[[d1_col,d2_col,constant_col]+covariates_],
                                                   disease_vars_transformed],axis=1)
             variance_explained = sum(pca.explained_variance_ratio_)
             
             #fit model with PCA covariates
-            model_final = Logit(np.asarray(phenotype_df_exposed_PCA['d2'],dtype=int),
-                                np.asarray(phenotype_df_exposed_PCA[['d1','constant']+covariates_+pca_cols],dtype=float))
+            model_final = Logit(np.asarray(phenotype_df_exposed_PCA[d2_col],dtype=int),
+                                np.asarray(phenotype_df_exposed_PCA[[d1_col,constant_col]+covariates_+pca_cols],dtype=float))
             result_final = model_final.fit(disp=False,method='bfgs')
             beta,se,p,aic = result_final.params[0], result_final.bse[0],result_final.pvalues[0],result_final.aic
-            z_value_dict = {var:z for var,z in zip(['d1','constant']+covariates_+pca_cols,result_final.tvalues)}
+            z_value_dict = {var:z for var,z in zip([d1_col,constant_col]+covariates_+pca_cols,result_final.tvalues)}
             pca_z_value = {var:z_value_dict[var] for var in pca_cols} #z-value dictionary for other disease variables
             result_lst += [f'{method}_n_components={pca_number}','fitted',f'{pca_cols}',f'{pca_z_value}',variance_explained,beta,se,p,aic]
             message += f'method={method}_n_components={pca_number} (number of PC included as covariates: {len(pca_cols)}, total variance explained by PC: {variance_explained:.3f}); successfully fitted; '

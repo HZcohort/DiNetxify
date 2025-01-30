@@ -106,7 +106,13 @@ class DiseaseNetworkData:
         self.trajectory = None
         self.__warning_phenotype = []
         self.__warning_medical_records = []
-
+        #variable names placeholder
+        self.__varialbe_name_place_holder = list(self.__phenotype_col_dict[self.study_design].values()) #required variables
+        self.__varialbe_name_place_holder += ['flag_exl','outcome_date','outcome','time_years'] #variables reserved for cox analysis
+        self.__varialbe_name_place_holder += ['d1','d2','constant','d1_date','d2_date','outcome_date','group_matching_ids'] #variables reserved for conditional/unconditional logistic regression
+        self.__varialbe_name_place_holder += [f'PCA_{i}' for i in range(100)] #variables reserved for PCA
+        self.__varialbe_name_place_holder += [str(x) for x in self.phecode_info] #variables reserved for other diseases
+        self.__varialbe_name_place_holder += ['follow_up',self.__exposure_col] #other reserved variables
     
     def phenotype_data(self, 
                        phenotype_data_path:str, 
@@ -190,13 +196,13 @@ class DiseaseNetworkData:
         value_unknown = [x for x in column_names.keys() if x not in self.__phenotype_info['phenotype_col_dict'].keys()]
         if len(value_unknown) > 0:
             raise ValueError(f"{value_unknown} in the column_names dictionary is not required for the study design {self.study_design}")        
-        #check duplicate columns
+        #check variable names conflict
         duplicate_cols_0 = set(column_names.values()).intersection(set(covariates)) #duplicate of original column names
-        duplicate_cols_1 = set(self.__phenotype_col_dict[self.study_design].values()).intersection(set(covariates)) #duplicate of renamed column names
+        duplicate_cols_1 = set(self.__varialbe_name_place_holder).intersection(set(covariates)) #duplicate of renamed column names
         if len(duplicate_cols_0)>0:
             raise ValueError(f"The variable {duplicate_cols_0} is specified both as a required variable and in the covariates.")
         if len(duplicate_cols_1)>0:
-            raise ValueError(f"The covariates {duplicate_cols_1} have duplicate names that conflict with required variables. Please rename them.")
+            raise ValueError(f"The covariates {duplicate_cols_1} have duplicate names that conflict with reserved variables. Please rename them.")
         #check other columns
         all_cols = list(column_names.values())+covariates
         date_cols = [column_names[x] for x in ['Index date','End date']]
@@ -242,8 +248,8 @@ class DiseaseNetworkData:
             self.__warning_phenotype.append(f'Warning: {n_before_any_remove-n_before_remove} individuals removed due to missing values in covariates.')
             print(self.__warning_phenotype[-1])
         if self.study_design == "registry":
-            self.phenotype_df["exposure"] = 1
-            self.__phenotype_col_dict["registry"]["Exposure"] = "exposure"
+            self.phenotype_df[self.__exposure_col] = 1
+            self.__phenotype_col_dict["registry"]["Exposure"] = self.__exposure_col #add exposure column for registry study
         #generate basic statistic for printing
         self.__phenotype_statistics['n_cohort'] = len(self.phenotype_df)
         self.__phenotype_statistics['n_exposed'] = len(self.phenotype_df[self.phenotype_df[self.__exposure_col]==1])

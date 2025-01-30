@@ -61,6 +61,15 @@ def logistic_model(d1:float,d2:float):
     global log_file_
     global parameters_
 
+    #default columns
+    d1_date_col = 'd1_date'
+    d2_date_col = 'd2_date'
+    d1_col = 'd1'
+    d2_col = 'd2'
+    constant_col = 'constant'
+    outcome_date_col = 'outcome_date'
+    mathcing_id_col = 'group_matching_ids'
+
     #method and parameters
     enforce_time_interval = parameters_['enforce_time_interval']
     method = parameters_['method']
@@ -79,19 +88,21 @@ def logistic_model(d1:float,d2:float):
     phenotype_df_exposed_ = phenotype_df_exposed_[phenotype_df_exposed_[id_col_].isin(d1d2_eligible_lst)]
     
     #matching
-    phenotype_df_exposed_['d2_date'] = phenotype_df_exposed_[id_col_].apply(lambda x: trajectory_eligible_withdate_[x].get(d2,pd.NaT))
-    df_matched = matching_ids(phenotype_df_exposed_,matching_var_dict_,matching_n_,id_col_,'d2_date',end_date_col_)
-    phenotype_df_exposed_ = pd.merge(df_matched,phenotype_df_exposed_[[id_col_,end_date_col_,'d2_date']+covariates_+list(matching_var_dict_.keys())],on=id_col_,how='left')
-    phenotype_df_exposed_['d1_date'] = phenotype_df_exposed_[id_col_].apply(lambda x: trajectory_eligible_withdate_[x].get(d1,pd.NaT))
-    phenotype_df_exposed_['d1'] = phenotype_df_exposed_.apply(lambda row: 1 if row['d1_date']<row['outcome_date'] else 0, axis=1)
-    phenotype_df_exposed_['constant'] = 1 #not used in condtional model fitting
+    phenotype_df_exposed_[d2_date_col] = phenotype_df_exposed_[id_col_].apply(lambda x: trajectory_eligible_withdate_[x].get(d2,pd.NaT))
+    df_matched = matching_ids(phenotype_df_exposed_,matching_var_dict_,matching_n_,id_col_,d2_date_col,end_date_col_,
+                              d2_col,outcome_date_col,mathcing_id_col)
+    phenotype_df_exposed_ = pd.merge(df_matched,phenotype_df_exposed_[[id_col_]+covariates_+list(matching_var_dict_.keys())],
+                                     on=id_col_,how='left')
+    phenotype_df_exposed_[d1_date_col] = phenotype_df_exposed_[id_col_].apply(lambda x: trajectory_eligible_withdate_[x].get(d1,pd.NaT))
+    phenotype_df_exposed_[d1_col] = phenotype_df_exposed_.apply(lambda row: 1 if row[d1_date_col]<row[outcome_date_col] else 0, axis=1)
+    phenotype_df_exposed_[constant_col] = 1 #not used in condtional model fitting
     
     if enforce_time_interval==True:
         #for those with both d1 exposure and d2 outcome, further verify time interval requirement, as specified in disease pair construction
-        d1_d2 = phenotype_df_exposed_[(phenotype_df_exposed_['d2']==1) & (phenotype_df_exposed_['d1']==1)]
+        d1_d2 = phenotype_df_exposed_[(phenotype_df_exposed_[d2_col]==1) & (phenotype_df_exposed_[d1_col]==1)]
         d1_d2_eid = [x for x in d1_d2[id_col_].values if (d1,d2) not in trajectory_temporal_[x]]
         d1_d2_index = d1_d2[d1_d2[id_col_].isin(d1_d2_eid)].index
-        phenotype_df_exposed_.loc[d1_d2_index,'d2'] = 0 #invalid cases
+        phenotype_df_exposed_.loc[d1_d2_index,d2_col] = 0 #invalid cases
     
     #create other diseases variable
     if method in ['RPCN','PCN_PCA']:        
@@ -107,16 +118,12 @@ def logistic_model(d1:float,d2:float):
 
     #statistics
     n = len(phenotype_df_exposed_) #number of individuals in the matched case-control study
-    N_d2 = len(phenotype_df_exposed_[phenotype_df_exposed_['d2']==1])
-    N_nod2 = len(phenotype_df_exposed_[phenotype_df_exposed_['d2']==0])
-    N_d1_withd2 = len(phenotype_df_exposed_[(phenotype_df_exposed_['d2']==1) & (phenotype_df_exposed_['d1']==1)])
-    N_d1_nod2 = len(phenotype_df_exposed_[(phenotype_df_exposed_['d2']==0) & (phenotype_df_exposed_['d1']==1)])
-    
-    # for var in covariates_:
-    #     phenotype_df_exposed_[var] = phenotype_df_exposed_[var].astype(float)
-    #     if phenotype_df_exposed_.groupby(by='group_matching_ids')[var].var().mean() <= 0:
-    #         covariates_.remove(var)
-    #         del phenotype_df_exposed_[var]
+    N_d2 = len(phenotype_df_exposed_[phenotype_df_exposed_[d2_col]==1])
+    N_nod2 = len(phenotype_df_exposed_[phenotype_df_exposed_[d2_col]==0])
+    N_d1_withd2 = len(phenotype_df_exposed_[(phenotype_df_exposed_[d2_col]==1) & (phenotype_df_exposed_[d1_col]==1)])
+    N_d1_nod2 = len(phenotype_df_exposed_[(phenotype_df_exposed_[d2_col]==0) & (phenotype_df_exposed_[d1_col]==1)])
+
+    #remove variables that could cause singular matrix error
     final_disease_vars, del_var = check_variance_within(phenotype_df_exposed_, covariates_)
     
     #result list
@@ -129,9 +136,9 @@ def logistic_model(d1:float,d2:float):
     #simple method
     if method == 'CN':
         try:
-            model = ConditionalLogit(np.asarray(phenotype_df_exposed_['d2'],dtype=int),
-                                     np.asarray(phenotype_df_exposed_[['d1']+covariates_],dtype=float),
-                                     groups=phenotype_df_exposed_['group_matching_ids'].values)
+            model = ConditionalLogit(np.asarray(phenotype_df_exposed_[d2_col],dtype=int),
+                                     np.asarray(phenotype_df_exposed_[[d1_col]+covariates_],dtype=float),
+                                     groups=phenotype_df_exposed_[mathcing_id_col].values)
             result = model.fit(disp=False, method='bfgs')
             result = MyConditionalResultsWrapper(result)
             beta,se,p,aic = result.params[0], result.bse[0],result.pvalues[0],result.aic
@@ -146,8 +153,8 @@ def logistic_model(d1:float,d2:float):
         if auto_penalty:
             try:
                 #model
-                model_1_vars = ['d1','constant']+all_diseases_var #only disease variables
-                model = Logit(np.asarray(phenotype_df_exposed_['d2'],dtype=int),
+                model_1_vars = [d1_col,constant_col]+all_diseases_var #only disease variables
+                model = Logit(np.asarray(phenotype_df_exposed_[d2_col],dtype=int),
                               np.asarray(phenotype_df_exposed_[model_1_vars],dtype=float)) #use unconditional model for selcting disease variables
                 
                 # Initial alphas to check
@@ -162,11 +169,11 @@ def logistic_model(d1:float,d2:float):
                 """
                 #search within the defined range
                 final_best_alpha, final_disease_vars = find_best_alpha_and_vars(model,alpha_range,alpha_lst,model_1_vars)
-                final_disease_vars = [x for x in final_disease_vars if x != 'constant'] #remove constant
+                final_disease_vars = [x for x in final_disease_vars if x != constant_col] #remove constant
                 #fit the final model
-                model_final = ConditionalLogit(np.asarray(phenotype_df_exposed_['d2'],dtype=int),
+                model_final = ConditionalLogit(np.asarray(phenotype_df_exposed_[d2_col],dtype=int),
                                                np.asarray(phenotype_df_exposed_[final_disease_vars+covariates_],dtype=float),
-                                               groups=phenotype_df_exposed_['group_matching_ids'].values)
+                                               groups=phenotype_df_exposed_[mathcing_id_col].values)
                 result_final = model_final.fit(disp=False, method='bfgs')
                 result_final = MyConditionalResultsWrapper(result_final) #add aic property
                 beta,se,p,aic = result_final.params[0], result_final.bse[0],result_final.pvalues[0],result_final.aic
@@ -181,16 +188,16 @@ def logistic_model(d1:float,d2:float):
         else:
             try:
                 #fit the initial model to get the non-zero disease list
-                model_1_vars = ['d1','constant']+all_diseases_var #only disease variables
-                model = Logit(np.asarray(phenotype_df_exposed_['d2'],dtype=int),
+                model_1_vars = [d1_col,constant_col]+all_diseases_var #only disease variables
+                model = Logit(np.asarray(phenotype_df_exposed_[d2_col],dtype=int),
                                  np.asarray(phenotype_df_exposed_[model_1_vars],dtype=float)) #use unconditional model for selcting disease variables
                 result = model.fit_regularized(method='l1', alpha=alpha_lst*alpha_single, disp=False)
                 non_zero_indices = np.nonzero(result.params != 0)[0]
                 final_disease_vars = [model_1_vars[i] for i in non_zero_indices]
                 #fit the final conditional model
-                model_final = ConditionalLogit(np.asarray(phenotype_df_exposed_['d2'],dtype=int),
+                model_final = ConditionalLogit(np.asarray(phenotype_df_exposed_[d2_col],dtype=int),
                                                   np.asarray(phenotype_df_exposed_[final_disease_vars+covariates_],dtype=float),
-                                                  groups=phenotype_df_exposed_['group_matching_ids'].values)
+                                                  groups=phenotype_df_exposed_[mathcing_id_col].values)
                 result_final = model_final.fit(disp=False, method='bfgs')
                 result_final = MyConditionalResultsWrapper(result_final) #add aic property
                 beta,se,p,aic = result_final.params[0], result_final.bse[0],result_final.pvalues[0],result_final.aic
@@ -212,18 +219,18 @@ def logistic_model(d1:float,d2:float):
             pca_cols = [f'PCA_{i}' for i in range(disease_vars_transformed.shape[1])]
             disease_vars_transformed = pd.DataFrame(disease_vars_transformed,columns=pca_cols)
             disease_vars_transformed.index = phenotype_df_exposed_.index
-            phenotype_df_exposed_PCA = pd.concat([phenotype_df_exposed_[['d1','d2']+covariates_],
+            phenotype_df_exposed_PCA = pd.concat([phenotype_df_exposed_[[d1_col,d2_col]+covariates_],
                                                   disease_vars_transformed],axis=1)
             variance_explained = sum(pca.explained_variance_ratio_)
             
             #fit model with PCA covariates
-            model_final = ConditionalLogit(np.asarray(phenotype_df_exposed_PCA['d2'],dtype=int),
-                                              np.asarray(phenotype_df_exposed_PCA[['d1']+covariates_+pca_cols],dtype=float),
-                                              groups=phenotype_df_exposed_['group_matching_ids'].values)
+            model_final = ConditionalLogit(np.asarray(phenotype_df_exposed_PCA[d2_col],dtype=int),
+                                              np.asarray(phenotype_df_exposed_PCA[[d1_col]+covariates_+pca_cols],dtype=float),
+                                              groups=phenotype_df_exposed_[mathcing_id_col].values)
             result_final = model_final.fit(disp=False, method='bfgs')
             result_final = MyConditionalResultsWrapper(result_final) #add aic property
             beta,se,p,aic = result_final.params[0], result_final.bse[0],result_final.pvalues[0],result_final.aic
-            z_value_dict = {var:z for var,z in zip(['d1']+covariates_+pca_cols,result_final.tvalues)}
+            z_value_dict = {var:z for var,z in zip([d1_col]+covariates_+pca_cols,result_final.tvalues)}
             pca_z_value = {var:z_value_dict[var] for var in pca_cols} #z-value dictionary for other disease variables
             result_lst += [f'{method}_n_components={pca_number}',f'fitted and delete the variate: {del_var}',f'{pca_cols}',f'{pca_z_value}',variance_explained,beta,se,p,aic]
             message += f'method={method}_n_components={pca_number} (number of PC included as covariates: {len(pca_cols)}, total variance explained by PC: {variance_explained:.3f}); successfully fitted; '
@@ -372,7 +379,8 @@ def determine_best_range(aic_dict):
     else:  # Best alpha is between two values
         return (alpha_values[min_aic_index - 1], alpha_values[min_aic_index + 1])
 
-def matching_ids(df:pd.DataFrame,matching_var_dict:dict,matching_n:int,id_col,outcome_date_col:str,end_date_col:str):
+def matching_ids(df:pd.DataFrame,matching_var_dict:dict,matching_n:int,id_col,outcome_date_col:str,end_date_col:str,
+                 save_outcome_col:str,save_outcome_date_col:str, save_matching_col:str):
     """
     Incidence density sampling matching.
 
@@ -384,6 +392,11 @@ def matching_ids(df:pd.DataFrame,matching_var_dict:dict,matching_n:int,id_col,ou
     id_col : str, id column
     outcome_date_col : str, date of outcome
     end_date_col : str, date of end follow-up
+    
+    #the following columns are used for saving the results
+    save_outcome_col : str, column name for outcome
+    save_outcome_date_col : str, column name for outcome date
+    save_matching_col : str, column name for matching
 
     Returns
     -------
@@ -412,7 +425,7 @@ def matching_ids(df:pd.DataFrame,matching_var_dict:dict,matching_n:int,id_col,ou
         result += [[case.loc[index,id_col],1,outcome_time,iter_]]
         result += [[eid,0,outcome_time,iter_] for eid in sample[id_col].to_list()]
         iter_ += 1
-    temp = pd.DataFrame(result,columns=[id_col,'d2','outcome_date','group_matching_ids'])
+    temp = pd.DataFrame(result,columns=[id_col,save_outcome_col,save_outcome_date_col,save_matching_col])
     return temp
 
 
