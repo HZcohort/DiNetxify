@@ -18,8 +18,8 @@ import math
 import networkx as nx
 import os
 
-class ThreeDimensionalDiseaseNetwork():
-    def __init__(self, commorbidity_network_result:pd.DataFrame, 
+class ThreeDimensionalDiseaseNetwork(object):
+    def __init__(self, comorbidity_network_result:pd.DataFrame, 
                  disease_trajectory_result:pd.DataFrame,
                  phewas_result:pd.DataFrame,
                  exposure_disease:float=9999,
@@ -27,9 +27,21 @@ class ThreeDimensionalDiseaseNetwork():
                  exposure_disease_size:float=1,
                  source:str='phecode_d1',
                  target:str='phecode_d2'):
+        """initialize the peoperty of ThreeDimensionalDiseaseNetwork class.
+
+        Args:
+            comorbidity_network_result (pd.DataFrame): the result of comorbidity network analysis.
+            disease_trajectory_result (pd.DataFrame): the result of trajectory network analysis.
+            phewas_result (pd.DataFrame): the result of PHEWAS analysis.
+            exposure_disease (float, optional): the exposure disease phecode in the cohort studies, if it equals to 9999 there is a registry study. Defaults to 9999.
+            exposure_disease_location (tuple, optional): the location of exposure disease phecode in the cohort studies. Defaults to (0,0,0).
+            exposure_disease_size (float, optional): the size of exposure disease phecode in the cohort studies. Defaults to 1.
+            source (str, optional): the D1 (from D1 to D2). Defaults to 'phecode_d1'.
+            target (str, optional): the D2 (from D1 to D2). Defaults to 'phecode_d2'.
+        """
         # primary attributions
         self.__module_dir = os.path.dirname(__file__)
-        self.__commorbidity_network_result = commorbidity_network_result
+        self.__comorbidity_network_result = comorbidity_network_result
         self.__phecode_number = dict(zip(phewas_result["phecode"], phewas_result["N_cases_exposed"]))
         self.__describe = pd.read_csv(os.path.join(self.__module_dir, "data/phecode_1.2/phecode_info.csv"))
         self.__exposure_disease = exposure_disease
@@ -54,7 +66,7 @@ class ThreeDimensionalDiseaseNetwork():
         # primary attributions
         self.__disease_trajectory = pd.concat([disease_trajectory_result, d0_d1])
         self.__trajectory_disease_pairs = [[row[source], row[target]] for _, row in self.__disease_trajectory.iterrows()]
-        self.__commorbidity_nodes = set(commorbidity_network_result[source].to_list() + commorbidity_network_result[target].to_list())
+        self.__commorbidity_nodes = set(comorbidity_network_result[source].to_list() + comorbidity_network_result[target].to_list())
         self.__trajectory_nodes = set(disease_trajectory_result[source].to_list() + disease_trajectory_result[target].to_list())
         
     @staticmethod
@@ -250,7 +262,7 @@ class ThreeDimensionalDiseaseNetwork():
         # create network class and add the edges
         Graph_position = nx.Graph()
         [Graph_position.add_edge(row[source],row[target],weight=row[weight]) 
-         for _, row in self.__commorbidity_network_result.iterrows()]
+         for _, row in self.__comorbidity_network_result.iterrows()]
         # random and repeated clustering the nodes
         result = []
         for i in range(iter_time):
@@ -378,10 +390,10 @@ class ThreeDimensionalDiseaseNetwork():
                      nodes_of_commorbidity_except_trajectory}
         # recording the times
         for i, value in enumerate(self.__trajectory_nodes):
-            for item in self.__commorbidity_network_result.loc[self.__commorbidity_network_result[source]==value][target]:
+            for item in self.__comorbidity_network_result.loc[self.__comorbidity_network_result[source]==value][target]:
                 if item in nodes_of_commorbidity_except_trajectory:
                     hash_dict[item][i] += 1
-            for item in self.__commorbidity_network_result.loc[self.__commorbidity_network_result[target]==value][source]:
+            for item in self.__comorbidity_network_result.loc[self.__comorbidity_network_result[target]==value][source]:
                 if item in nodes_of_commorbidity_except_trajectory:
                     hash_dict[item][i] += 1
         # the dimension number of nodes only in commorbidity network and connecting the trajectory nodes
@@ -401,9 +413,9 @@ class ThreeDimensionalDiseaseNetwork():
             other_nodes = [x for x in hash_dict.keys() if x not in commorbidity_dimension_dict]
             for node in other_nodes:
                 try:
-                    nodes_dimension = self.__except_dimension(list(self.__commorbidity_network_result.loc[self.__commorbidity_network_result[source]==node][target]), 
+                    nodes_dimension = self.__except_dimension(list(self.__comorbidity_network_result.loc[self.__comorbidity_network_result[source]==node][target]), 
                                                                  commorbidity_dimension_dict)
-                    nodes_dimension += self.__except_dimension(list(self.__commorbidity_network_result.loc[self.__commorbidity_network_result[target]==node][source]), 
+                    nodes_dimension += self.__except_dimension(list(self.__comorbidity_network_result.loc[self.__comorbidity_network_result[target]==node][source]), 
                                                                  commorbidity_dimension_dict)
                     dimension_number = stats.mode(nodes_dimension, keepdims=False)[0]
                     commorbidity_dimension_dict.update({node:dimension_number})
@@ -520,7 +532,7 @@ class ThreeDimensionalDiseaseNetwork():
                     line_width:float,
                     source:str='phecode_d1', 
                     target:str='phecode_d2') -> list:
-        """get the attribution of plot. This method plots the all trajectory(D1->D2), comorbidity(D1-D2), nodes(phecodes).
+        """get the attribution of plot. This method plots the all trajectory(D1->D2), comorbidity(D1-D2), and nodes(phecodes).
 
         Args:
             line_color (str): the color of line between each node(phecode)
@@ -580,18 +592,18 @@ class ThreeDimensionalDiseaseNetwork():
                     nonMain_line_color:str='silver', 
                     nonMain_line_width:float=1,
                     source:str='phecode_d1', 
-                    target:str='phecode_d2'):
-        """
+                    target:str='phecode_d2') -> list:
+        """get the attribution of plot. This method plots the all trajectory(D1->D2), comorbidity(D1-D2), nodes(phecodes), and highlight their difference.
 
         Args:
-            main_line_width (float): the width of 
-            nonMain_line_color (str, optional): _description_. Defaults to 'silver'.
-            nonMain_line_width (int, optional): _description_. Defaults to 1.
-            source (str, optional): _description_. Defaults to 'phecode_d1'.
-            target (str, optional): _description_. Defaults to 'phecode_d2'.
+            main_line_width (float): the width of line in the incluster nodes(phecodes).
+            nonMain_line_color (str, optional): the color of line in the outcluster nodes(phecodes). Defaults to 'silver'.
+            nonMain_line_width (int, optional): the width of line in the outcluster nodes(phecodes). Defaults to 1.
+            source (str, optional): the column name of D1. Defaults to 'phecode_d1'.
+            target (str, optional): the column name of D2. Defaults to 'phecode_d2'.
 
         Returns:
-            _type_: _description_
+            list: the attribution of plot
         """
         plot_data = []
         # plot nodes (incluster)
@@ -711,17 +723,17 @@ class ThreeDimensionalDiseaseNetwork():
         return plot_data
 
     def __compact_plot(self,main_line_width:float,
-                       source='phecode_d1',
-                       target='phecode_d2'):
-        """_summary_
+                       source:str='phecode_d1',
+                       target:str='phecode_d2') -> list:
+        """get the attribution of plot. This method plots the trajectory(D1->D2) of incluster nodes(phecodes), and incluster nodes(phecodes).
 
         Args:
-            main_line_width (float): _description_
-            source (str, optional): _description_. Defaults to 'phecode_d1'.
-            target (str, optional): _description_. Defaults to 'phecode_d2'.
+            main_line_width (float): the width of line in the incluster nodes(phecodes).
+            source (str, optional): the column name of D1. Defaults to 'phecode_d1'.
+            target (str, optional): the column name of D2. Defaults to 'phecode_d2'.
 
         Returns:
-            _type_: _description_
+            list: the attribution of plot
         """
         plot_data = []
         # plot nodes (incluster)
@@ -810,9 +822,27 @@ class ThreeDimensionalDiseaseNetwork():
                 layout_height:float=900,
                 font_style:str='Times New Roman',
                 font_size:float=15,
-                location_method='random'):
+                location_method:str='random'):
+        """plot the three-dimension comorbidity and trajectory network.
 
-        
+        Args:
+            max_radius (float): the maximum of radius in the sector.
+            min_radius (float): the minimum of radius in the sector.
+            plot_method (str): the method of plot, which is one of "full", "half", "compact".
+            line_color (str): the color of line in the nodes(phecodes).
+            line_width (float): the width of line in the nodes(phecodes).
+            layer_distance (float): the distance of two adjoining layers.
+            file_name (str): the name of file to save.
+            layout_width (float, optional): the width of layout in the figure. Defaults to 900.
+            layout_height (float, optional): the height of layout in the figure. Defaults to 900.
+            font_style (str, optional): the font style of layout in the figure. Defaults to 'Times New Roman'.
+            font_size (float, optional): the font size of layout in the figure. Defaults to 15.
+            location_method (str, optional): the method to calculate the three-dimension location of nodes(phecodes). Defaults to 'random'.
+
+        Raises:
+            KeyError: if the augrment plot_method does not be included in "full", "compact", and "half", it will raises KeyError.
+        """
+
         if not hasattr(self, "final_cluster"):
             self.cluster()
         if not hasattr(self, "dimension"):
@@ -880,9 +910,19 @@ class ThreeDimensionalDiseaseNetwork():
                                  source:str="phecode_d1",
                                  target:str="phecode_d2",
                                  location_method:str="random",
-                                 line_color:str="black"
+                                 line_color:str="black",
                                  ) -> None:
+        """plot the result of commorbidity. The method same to plot_3d just in the plane of x-y.
 
+        Args:
+            max_radius (float): the maximum of radius in the sector.
+            min_radius (float): the minimum of radius in the sector.
+            line_width (float, optional): the width of line in the nodes(phecodes). Defaults to 1.
+            source (str, optional): the column name of D1. Defaults to 'phecode_d1'.
+            target (str, optional): the column name of D2. Defaults to 'phecode_d2'.
+            location_method (str, optional): the method to calculate the three-dimension location of nodes(phecodes). Defaults to "random".
+            line_color (str, optional): the color of line in the nodes(phecodes). Defaults to "black".
+        """
         if not hasattr(self, "final_cluster"):
             self.cluster()
         if not hasattr(self, "dimension"):
@@ -895,7 +935,7 @@ class ThreeDimensionalDiseaseNetwork():
 
         fig = go.Figure()
 
-        for _, row in self.__commorbidity_network_result.iterrows():
+        for _, row in self.__comorbidity_network_result.iterrows():
             x_values = [self.location_dict[row[source]][0], self.location_dict[row[target]][0]]
             y_values = [self.location_dict[row[source]][1], self.location_dict[row[target]][1]]
             fig.add_trace(go.Scatter(x=x_values, 
@@ -940,7 +980,6 @@ class ThreeDimensionalDiseaseNetwork():
             plot_bgcolor='white',
             margin=dict(l=10, r=10, t=10, b=10)
         )
-
         fig.show()
 
     def incluster_trajectory_plot(self, distance:float, 
@@ -952,7 +991,22 @@ class ThreeDimensionalDiseaseNetwork():
                                   location_method:str="random",
                                   source:str="phecode_d1",
                                   target:str="phecode_d2") -> None:
-        
+        """plot the incluster trajectory of each cluster.
+
+        Args:
+            distance (float): the distance of each nodes(phecodes) in x-y plane.
+            layer_distance (float): the distance of two adjoining layers.
+            line_width (float): the width of line in the nodes(phecodes).
+            line_color (float): the color of line in the nodes(phecodes).
+            max_radius (float): the maximum of radius in the sector.
+            min_radius (float): the minimum of radius in the sector.
+            location_method (str, optional): the method to calculate the three-dimension location of nodes(phecodes). Defaults to "random".
+            source (str, optional): the column name of D1. Defaults to 'phecode_d1'.
+            target (str, optional): the column name of D2. Defaults to 'phecode_d2'.
+
+        Returns:
+            _type_: _description_
+        """
         if not hasattr(self, "final_cluster"):
             self.cluster()
         if not hasattr(self, "dimension"):
@@ -980,16 +1034,15 @@ class ThreeDimensionalDiseaseNetwork():
                 source_list = target_list
             cluster_nodes_dict[cluster_number] = cluster_nodes
 
-        def calculate_circle_positions_with_ids(radii, spacing):
-            """
-            计算圆心的 x 坐标，使得圆均匀分布在 y 轴两侧，并且相互之间相离，保持固定的外切距离。
+        def calculate_circle_positions_with_ids(radii:list, spacing:float) -> list:
+            """calculate the positions of nodes(phecodes).
 
-            参数:
-                radii (list of float): 圆的半径列表，按给定顺序排列。
-                spacing (float): 圆与圆之间的额外距离（即外切距离）。
+            Args:
+                radii (list of float): A list of radii of the circles, in the given order.
+                spacing (float): The additional distance between the circles (i.e., the outer tangent distance).
 
-            返回:
-                dict: {编号: x轴坐标}，编号从 1 开始，与输入顺序对应。
+            Returns:
+                dict: {number: x-coordinate}, where the numbering starts from 1 and corresponds to the input order.
             """
             circle_positions = {}
             position = 0
