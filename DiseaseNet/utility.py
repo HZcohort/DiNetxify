@@ -1113,7 +1113,11 @@ def find_best_alpha_and_vars(model, best_range, alpha_lst, co_vars):
         final_disease_vars = refined_vars_dict[final_best_alpha]
     return final_best_alpha, final_disease_vars
 
-def check_variance_vif(df:pd.DataFrame, covar_lst:list, disease_var_lst:list=None, pca_var_lst:list=None, group_col:str=None,
+def check_variance_vif(df:pd.DataFrame, 
+                       covar_lst:list, 
+                       disease_var_lst:list=None, 
+                       pca_var_lst:list=None, 
+                       group_col:str=None,
                        vif_cutoff:int=5) -> list:
     """
     Check within group variance and Variance inflation factor (VIF) for the all the covariates.

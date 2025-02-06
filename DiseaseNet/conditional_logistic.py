@@ -11,7 +11,7 @@ import numpy as np
 from statsmodels.discrete.discrete_model import Logit
 from statsmodels.discrete.conditional_models import ConditionalLogit,ConditionalResultsWrapper
 import time
-from .utility import write_log,find_best_alpha_and_vars,check_variance_within
+from .utility import write_log,find_best_alpha_and_vars,check_variance_vif
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -124,7 +124,7 @@ def logistic_model(d1:float,d2:float):
     N_d1_nod2 = len(phenotype_df_exposed_[(phenotype_df_exposed_[d2_col]==0) & (phenotype_df_exposed_[d1_col]==1)])
 
     #remove variables that could cause singular matrix error
-    final_disease_vars, del_var = check_variance_within(phenotype_df_exposed_, covariates_)
+    # final_disease_vars, del_var = check_variance_vif(phenotype_df_exposed_, covariates_)
     
     #result list
     result_lst = [d1,d2,f'{d1}-{d2}',N,n,f'{N_d1_withd2}/{N_d2}',f'{N_d1_nod2}/{N_nod2}']
@@ -135,9 +135,11 @@ def logistic_model(d1:float,d2:float):
     
     #simple method
     if method == 'CN':
+        final_covariates = check_variance_vif(phenotype_df_exposed_, covariates_)
+        del_var = [x for x in covariates_ if x not in final_covariates]
         try:
             model = ConditionalLogit(np.asarray(phenotype_df_exposed_[d2_col],dtype=int),
-                                     np.asarray(phenotype_df_exposed_[[d1_col]+covariates_],dtype=float),
+                                     np.asarray(phenotype_df_exposed_[[d1_col]+final_covariates],dtype=float),
                                      groups=phenotype_df_exposed_[mathcing_id_col].values)
             result = model.fit(disp=False, method='bfgs')
             result = MyConditionalResultsWrapper(result)
@@ -150,10 +152,13 @@ def logistic_model(d1:float,d2:float):
     
     #partial correlation method
     elif method == 'RPCN':
+        final_covariates, final_diseases_var = check_variance_vif(phenotype_df_exposed_, covariates_, all_diseases_var)
+        del_diseases_var = [x for x in all_diseases_var if x not in final_diseases_var]
+        del_covariates = [x for x in final_covariates if x not in covariates_]
         if auto_penalty:
             try:
                 #model
-                model_1_vars = [d1_col,constant_col]+all_diseases_var #only disease variables
+                model_1_vars = [d1_col,constant_col]+final_diseases_var #only disease variables
                 model = Logit(np.asarray(phenotype_df_exposed_[d2_col],dtype=int),
                               np.asarray(phenotype_df_exposed_[model_1_vars],dtype=float)) #use unconditional model for selcting disease variables
                 
@@ -172,17 +177,17 @@ def logistic_model(d1:float,d2:float):
                 final_disease_vars = [x for x in final_disease_vars if x != constant_col] #remove constant
                 #fit the final model
                 model_final = ConditionalLogit(np.asarray(phenotype_df_exposed_[d2_col],dtype=int),
-                                               np.asarray(phenotype_df_exposed_[final_disease_vars+covariates_],dtype=float),
+                                               np.asarray(phenotype_df_exposed_[final_disease_vars+final_covariates],dtype=float),
                                                groups=phenotype_df_exposed_[mathcing_id_col].values)
                 result_final = model_final.fit(disp=False, method='bfgs')
                 result_final = MyConditionalResultsWrapper(result_final) #add aic property
                 beta,se,p,aic = result_final.params[0], result_final.bse[0],result_final.pvalues[0],result_final.aic
                 z_value_dict = {var:z for var,z in zip(final_disease_vars+covariates_,result_final.tvalues)}
                 disease_z_value = {var:z_value_dict[var] for var in final_disease_vars[2::]} #z-value dictionary for other disease variables
-                result_lst += [f'{method}_auto',f'fitted and delete the variate: {del_var}',f'{final_disease_vars[2::]}',f'{disease_z_value}',final_best_alpha,beta,se,p,aic]
+                result_lst += [f'{method}_auto',f'fitted and delete the diseases variate: {del_diseases_var} and covariates: {del_covariates}',f'{final_disease_vars[2::]}',f'{disease_z_value}',final_best_alpha,beta,se,p,aic]
                 message += f'method={method}_auto (alpha={final_best_alpha}, number of other disease included as covariates: {len(final_disease_vars[2::])}); successfully fitted; '
             except Exception as e:
-                result_lst += [f'{method}_auto', str(e)+" delete the variate:"+str(del_var)]
+                result_lst += [f'{method}_auto', str(e)+" delete the diseases variate:"+str(del_diseases_var)+"and the covariates:"+str(del_covariates)]
                 message += f'method={method}_auto; error encountered: {e}; '
 
         else:
@@ -209,7 +214,6 @@ def logistic_model(d1:float,d2:float):
                 result_lst += [f'{method}_fixed_alpha', str(e)+" delete the variate:"+str(del_var)]
                 message += f'method={method}_fixed_alpha (alpha={alpha_single}); error encountered: {e}; '
 
-        
     elif method == 'PCN_PCA':
         from sklearn.decomposition import PCA
         try:
@@ -302,8 +306,8 @@ def logistic_model_wrapper(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,i
     return logistic_model(d1, d2)
 
 def init_worker(phenotype_df_exposed:pd.DataFrame,id_col,end_date_col,trajectory_eligible:dict,
-                   trajectory_temporal:dict,trajectory_eligible_withdate:dict,history_level:dict,covariates:list,
-                   all_diseases_lst:list,matching_var_dict:dict,matching_n:int,log_file:str,parameters:dict):
+                trajectory_temporal:dict,trajectory_eligible_withdate:dict,history_level:dict,covariates:list,
+                all_diseases_lst:list,matching_var_dict:dict,matching_n:int,log_file:str,parameters:dict):
     """
     This function sets up the necessary global variables for a worker process in a multiprocessing environment.
     It assigns the provided parameters to global variables that can be accessed by logistic_model function in the worker process.
