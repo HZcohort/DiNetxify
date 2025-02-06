@@ -1139,7 +1139,7 @@ def check_variance_vif(df:pd.DataFrame,
 
     #keep the order, make sure covar_lst is the last for VIF check
     all_vars = disease_var_lst if disease_var_lst is not None else [] + pca_var_lst if pca_var_lst is not None else [] + covar_lst
-    var_removed = []
+    var_removed = {}
     #return empty list if no variables are provided
     if len(all_vars) == 0:
         return []
@@ -1150,11 +1150,11 @@ def check_variance_vif(df:pd.DataFrame,
             group_means = df.groupby(group_col)[var].transform('mean')
             ss_within = ((df[var] - group_means) ** 2).sum()
             variance_within = ss_within / (len(df) - df[group_col].nunique())
-            if variance_within == 0: var_removed.append(var)
+            if variance_within == 0: var_removed[var] = 'within_group_variance==0'
     #if not provided, check the whole dataset variance
     else:
         for var in all_vars:
-            if df[var].var() == 0: var_removed.append(var)
+            if df[var].var() == 0: var_removed[var] = 'variance==0'
 
     #always check VIF
     all_vars = [x for x in all_vars if x not in var_removed] #remove the variables with 0 within group variance
@@ -1164,15 +1164,15 @@ def check_variance_vif(df:pd.DataFrame,
         vif = variance_inflation_factor(df[all_vars],index_)
         if vif >= vif_cutoff:
             all_vars.remove(var)
-            var_removed.append(var)
-    
+            var_removed[var] = f'VIF={vif}'
+   
     #check the removed variables
-    covar_removed = [x for x in var_removed if x in covar_lst]
-    disease_removed = [x for x in var_removed if x in disease_var_lst]
-    pca_removed = [x for x in var_removed if x in pca_var_lst]
+    covar_removed = {x:var_removed[x] for x in var_removed if x in covar_lst}
     if disease_var_lst is not None:
+        disease_removed = {x:var_removed[x] for x in var_removed if x in disease_var_lst}
         return covar_removed,disease_removed
     elif pca_var_lst is not None:
+        pca_removed = {x:var_removed[x] for x in var_removed if x in pca_var_lst}
         return covar_removed,pca_removed
     elif disease_var_lst is None and pca_var_lst is None:
         return covar_removed

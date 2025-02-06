@@ -264,15 +264,16 @@ class ThreeDimensionalDiseaseNetwork():
         return self.final_cluster
 
     def location_random(self, max_radius:float, 
-                        min_radius:float):
-        """_summary_
+                        min_radius:float) -> dict:
+        """get the three dimension location of nodes(phecodes), using the metod that nodes(phecodes) of 
+           one cluster be gathered in one sector in the x-y plane and the latter nodes(phecodes) locates the under layer.
 
         Args:
-            max_radius (float): _description_
-            min_radius (float): _description_
+            max_radius (float): the maximum of radius in the sector.
+            min_radius (float): the minimum of radius in the sector.
 
         Returns:
-            _type_: _description_
+            dict: {str:tuple} for example: {549.4:(1, 2, 3)}
         """
         if not hasattr(self, "final_cluster"):
             self.cluster()
@@ -311,16 +312,16 @@ class ThreeDimensionalDiseaseNetwork():
         self.location_dict = location_dict
         return self.location_dict
     
-    def trajectory(self, source='phecode_d1', 
-                   target='phecode_d2'):
-        """_summary_
+    def trajectory(self, source:str='phecode_d1', 
+                   target:str='phecode_d2') -> dict:
+        """get the layer number of nodes(phecodes) in the trajectory network (D1->D2).
 
         Args:
-            source (str, optional): _description_. Defaults to 'phecode_d1'.
-            target (str, optional): _description_. Defaults to 'phecode_d2'.
+            source (str, optional): the column name of D1. Defaults to 'phecode_d1'.
+            target (str, optional): the column name of D2. Defaults to 'phecode_d2'.
 
         Returns:
-            _type_: _description_
+            dict: {layer number:phecode list} for example: {1:[549.1, 574.2]}
         """
         if hasattr(self, "trajectory_dimension"):
             return self.trajectory_dimension
@@ -329,7 +330,7 @@ class ThreeDimensionalDiseaseNetwork():
         trajectory_df = self.__disease_trajectory.copy()
         while True:
             dimension_number += 1
-            # first layers of nodes connecting self.__original_disease
+            # first layers of nodes connecting self.__exposure_disease
             if len(temp_disease) == 0:
                 # nodes of this layer
                 temp_disease = [x for x in trajectory_df.loc[trajectory_df[source]==self.__exposure_disease][target]]
@@ -356,16 +357,16 @@ class ThreeDimensionalDiseaseNetwork():
         self.trajectory_dimension = trajectory_dimension
         return self.trajectory_dimension
     
-    def commorbidity(self, source='phecode_d1', 
-                     target='phecode_d2'):
-        """_summary_
+    def commorbidity(self, source:str='phecode_d1', 
+                     target:str='phecode_d2') -> dict:
+        """get the layer number of nodes(phecodes) in the comorbidity network (D1-D2).
 
         Args:
-            source (str, optional): _description_. Defaults to 'phecode_d1'.
-            target (str, optional): _description_. Defaults to 'phecode_d2'.
+            source (str, optional): the column name of D1. Defaults to 'phecode_d1'.
+            target (str, optional): the column name of D2. Defaults to 'phecode_d2'.
 
         Returns:
-            _type_: _description_
+            dict: {layer number:phecode list} for example: {1:[549.1, 574.2]}
         """
         if not hasattr(self, "trajectory_dimension"):
             self.trajectory()
@@ -424,11 +425,11 @@ class ThreeDimensionalDiseaseNetwork():
         self.commorbidity_dimension = commorbidity_dimension_dict
         return self.commorbidity_dimension
     
-    def _dimension(self):
-        """_summary_
+    def _dimension(self, layer_distance:float) -> dict:
+        """get the layer number of nodes(phecodes).
 
         Returns:
-            _type_: _description_
+            dict: {layer number:phecodes list} for example: {1:[549.1, 574.2]}
         """
         if not hasattr(self, "commorbidity_dimension"):
             self.commorbidity()
@@ -450,22 +451,23 @@ class ThreeDimensionalDiseaseNetwork():
                 all_nodes_dimension[dimension_number].remove(node)
         self.dimension = all_nodes_dimension
         print("There are total %i layers" % (len(self.dimension)))
-        self.end_height = int(input("input the height of the lowest layer:"))
-        self.height = np.linspace(self.__exposure_disease_location[-1]-20, self.end_height, len(self.dimension))
+        self.height = np.linspace(self.__exposure_disease_location[-1]-layer_distance, 
+                                  self.__exposure_disease_location[-1]-len(self.dimension+1)*(layer_distance), 
+                                  len(self.dimension))
         return self.dimension
 
-    def color(self, code='phecode',
-              cluster_name='category', 
-              describe='phenotype'):
-        """_summary_
+    def color(self, code:str='phecode',
+              cluster_name:str='category', 
+              describe:str='phenotype') -> dict:
+        """get the color of nodes(phecodes)
 
         Args:
-            code (str, optional): _description_. Defaults to 'phecode'.
-            cluster_name (str, optional): _description_. Defaults to 'category'.
-            describe (str, optional): _description_. Defaults to 'phenotype'.
+            code (str, optional): the column name of nodes(phecodes). Defaults to 'phecode'.
+            cluster_name (str, optional): the column name of cluster. Defaults to 'category'.
+            describe (str, optional): the the column name of description of phecodes. Defaults to 'phenotype'.
 
         Returns:
-            _type_: _description_
+            dict: {phecode:color} for example: {645.2:"#FF5733"}
         """
         code_system = dict(zip(self.__describe[code], self.__describe[cluster_name]))
         system_color = dict(zip(self.__system, self.__system_color))
@@ -477,14 +479,16 @@ class ThreeDimensionalDiseaseNetwork():
         self.__code_name = {cd:self.__split_name('%s (%.1f)' % (words, cd))
                             for cd, words in self.__describe[[code, describe]].values}
         self.code_name = {cd:self.__split_name('%s (%.1f)' % (words, cd))
-                            for cd, words in self.__describe[[code, describe]].values}
+                          for cd, words in self.__describe[[code, describe]].values}
         self.__clusterNumber_system = {}
         self.__clusterNumber_color = {}
+
         from collections import Counter
         def most_frequent_element(lst):
             counter = Counter(lst)
             most_common = counter.most_common(1)
             return most_common[0][0]
+        
         for cluster_number in set(self.final_cluster.values()):
             disease_list = []
             for key, value in self.final_cluster.items():
@@ -494,30 +498,49 @@ class ThreeDimensionalDiseaseNetwork():
             self.__clusterNumber_color[cluster_number] = self.__system_color[most_frequent_element(disease_list)]
         return self.color_map
 
-    def incluster_commorbidity(self, incluster:list[str]) -> list[str]:
-        for _, row in self.__commorbidity_network_result.iterrows():
-            if row["phecode_d1"] in incluster and \
-            self.final_cluster[row["phecode_d2"]]==self.final_cluster[row["phecode_d1"]]:
-                incluster.append(row["phecode_d2"])
-            if row["phecode_d2"] in incluster and \
-            self.final_cluster[row["phecode_d2"]]==self.final_cluster[row["phecode_d1"]]:
-                incluster.append(row["phecode_d1"])
-        return list(set(incluster))
+    # def incluster_commorbidity(self, incluster:list[str]) -> list[str]:
+    #     """
+
+    #     Args:
+    #         incluster (list[str]): _description_
+
+    #     Returns:
+    #         list[str]: _description_
+    #     """
+    #     for _, row in self.__commorbidity_network_result.iterrows():
+    #         if row["phecode_d1"] in incluster and \
+    #         self.final_cluster[row["phecode_d2"]]==self.final_cluster[row["phecode_d1"]]:
+    #             incluster.append(row["phecode_d2"])
+    #         if row["phecode_d2"] in incluster and \
+    #         self.final_cluster[row["phecode_d2"]]==self.final_cluster[row["phecode_d1"]]:
+    #             incluster.append(row["phecode_d1"])
+    #     return list(set(incluster))
 
     def __full_plot(self, line_color:str, 
                     line_width:float,
-                    source='phecode_d1', 
-                    target='phecode_d2'):
+                    source:str='phecode_d1', 
+                    target:str='phecode_d2') -> list:
+        """get the attribution of plot. This method plots the all trajectory(D1->D2), comorbidity(D1-D2), nodes(phecodes).
+
+        Args:
+            line_color (str): the color of line between each node(phecode)
+            line_width (float): the width of line between each node(phecode)
+            source (str, optional): the column name of D1. Defaults to 'phecode_d1'.
+            target (str, optional): the column name of D2. Defaults to 'phecode_d2'.
+
+        Returns:
+            list: the attribution of plot
+        """
         plot_data = []
         for system in self.__system:
             system_nodes = [x for x in self.__commorbidity_nodes if self.__code_system[x]==system]
             if system_nodes:
                 for node in system_nodes:
                     x_, y_, z_, colorscale_, light_dict, _, name, light_position = self.plotly_ball(list(self.location_dict[node]),
-                                                                                                        self.get_node_size(node)/13,
-                                                                                                        str(self.__code_name[node]),
-                                                                                                        'Disease',
-                                                                                                        self.__system_color[self.__code_system[node]])
+                                                                                                    self.get_node_size(node)/13,
+                                                                                                    str(self.__code_name[node]),
+                                                                                                    'Disease',
+                                                                                                    self.__system_color[self.__code_system[node]])
                     if node == system_nodes[0]:
                         data = go.Surface(x=x_, y=y_, z=z_, colorscale=colorscale_, showlegend=True,
                                           lighting=light_dict, hovertemplate=name, name='%s Disease' % (system.title()), showscale=False,
@@ -527,6 +550,7 @@ class ThreeDimensionalDiseaseNetwork():
                                           lighting=light_dict, hovertemplate=name, name='%s Disease' % (system.title()), showscale=False,
                                           legendgroup='ball', legendgrouptitle_text='Diseases',lightposition=light_position)
                     plot_data += [data]
+
         # plot edges
         graph = nx.DiGraph()
         if self.__exposure_disease == 9999:
@@ -553,10 +577,22 @@ class ThreeDimensionalDiseaseNetwork():
         return plot_data
     
     def __half_plot(self, main_line_width:float, 
-                    nonMain_line_color='silver', 
-                    nonMain_line_width=1,
-                    source='phecode_d1', 
-                    target='phecode_d2'):
+                    nonMain_line_color:str='silver', 
+                    nonMain_line_width:float=1,
+                    source:str='phecode_d1', 
+                    target:str='phecode_d2'):
+        """
+
+        Args:
+            main_line_width (float): the width of 
+            nonMain_line_color (str, optional): _description_. Defaults to 'silver'.
+            nonMain_line_width (int, optional): _description_. Defaults to 1.
+            source (str, optional): _description_. Defaults to 'phecode_d1'.
+            target (str, optional): _description_. Defaults to 'phecode_d2'.
+
+        Returns:
+            _type_: _description_
+        """
         plot_data = []
         # plot nodes (incluster)
         self.incluster_nodes = []
@@ -677,6 +713,16 @@ class ThreeDimensionalDiseaseNetwork():
     def __compact_plot(self,main_line_width:float,
                        source='phecode_d1',
                        target='phecode_d2'):
+        """_summary_
+
+        Args:
+            main_line_width (float): _description_
+            source (str, optional): _description_. Defaults to 'phecode_d1'.
+            target (str, optional): _description_. Defaults to 'phecode_d2'.
+
+        Returns:
+            _type_: _description_
+        """
         plot_data = []
         # plot nodes (incluster)
         self.incluster_nodes = []
@@ -757,18 +803,20 @@ class ThreeDimensionalDiseaseNetwork():
                 min_radius:float,
                 plot_method:str,
                 line_color:str, 
-                line_width:float, 
+                line_width:float,
+                layer_distance:float,
                 file_name:str,
                 layout_width:float=900,
                 layout_height:float=900,
                 font_style:str='Times New Roman',
                 font_size:float=15,
                 location_method='random'):
+
         
         if not hasattr(self, "final_cluster"):
             self.cluster()
         if not hasattr(self, "dimension"):
-            self._dimension()
+            self._dimension(layer_distance)
         if not hasattr(self, 'location_dict'):
             if location_method == 'random':
                 self.location_random(max_radius, min_radius)
@@ -778,16 +826,16 @@ class ThreeDimensionalDiseaseNetwork():
         # plot the origin disease
         if self.__exposure_disease != 9999:
             origin_data = go.Scatter3d(x=[self.__exposure_disease_location[0]],
-                                    y=[self.__exposure_disease_location[1]],
-                                    z=[self.__exposure_disease_location[2]],
-                                    mode='markers',
-                                    marker=dict(symbol='circle',size=self.__exposure_disease_size,color='black'),
-                                    text=['Depression'],
-                                    hoverinfo='text',
-                                    legendgroup='origin',
-                                    legendgrouptitle_text='Origin of Trajectories',
-                                    name='Depression',
-                                    showlegend=True)
+                                       y=[self.__exposure_disease_location[1]],
+                                       z=[self.__exposure_disease_location[2]],
+                                       mode='markers',
+                                       marker=dict(symbol='circle',size=self.__exposure_disease_size,color='black'),
+                                       text=['Depression'],
+                                       hoverinfo='text',
+                                       legendgroup='origin',
+                                       legendgrouptitle_text='Origin of Trajectories',
+                                       name='Depression',
+                                       showlegend=True)
             plot_data += [origin_data]
         # plot the nodes and edges
         if plot_method == 'full':
@@ -887,10 +935,10 @@ class ThreeDimensionalDiseaseNetwork():
                                                 line=dict(color=self.__system_color[self.__code_system[node]], width=1)))
         fig.update_layout(
             showlegend=False,
-            xaxis=dict(visible=False, scaleanchor="y"),  # 确保x、y比例一致
+            xaxis=dict(visible=False, scaleanchor="y"), 
             yaxis=dict(visible=False),
             plot_bgcolor='white',
-            margin=dict(l=10, r=10, t=10, b=10)  # 去除边距
+            margin=dict(l=10, r=10, t=10, b=10)
         )
 
         fig.show()
@@ -990,7 +1038,7 @@ class ThreeDimensionalDiseaseNetwork():
                 arrows=True,
                 arrowsize=20,
             )
-            # 关闭坐标轴
+            
             plt.title("dad")
             plt.axis("off")
             plt.show()
