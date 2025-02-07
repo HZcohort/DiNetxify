@@ -63,10 +63,10 @@ if __name__ == "__main__":
                         ["bmi", "income"])
     
     data.merge_medical_records("C:/Users/bovin/Desktop/inp.csv", 
-                            "ICD-10-WHO",
-                            {"Participant ID": "eid",
-                            "Diagnosis code": "icd10",
-                            "Date of diagnosis": "date_dignosed"})
+                               "ICD-10-WHO",
+                               {"Participant ID": "eid",
+                                "Diagnosis code": "icd10",
+                                "Date of diagnosis": "date_dignosed"})
     # 数据分析
     phewas_result = phewas(data, proportion_threshold=0.01, n_process=8)
     data.disease_pair(phewas_result)

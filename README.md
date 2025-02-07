@@ -239,6 +239,59 @@ trajectory_result = dnt.trajectory_multipletests(
 
 # Save the trajectory analysis results to a CSV file
 trajectory_result.to_csv('/your/project/path/dep_trajectory.csv')  # Path to save trajectory analysis results
+
+# Step 8: Result visualization (three-dimension visualization, comorbidity network visualization, significant trajectory visualization)
+# Create ThreeDimensionalDiseaseNetwork object
+result_network = dnt.visualization.ThreeDimensionalDiseaseNetwork(
+  comorbidity_network_result=comorbidity_result,       # DataFrame with comorbidity network results
+  disease_trajectory_result=trajectory_result,         # DataFrame with trajectory analysis results
+  phewas_result=phewas_result,                         # DataFrame with PheWAS results
+  exposure_disease=594.0,                              # Phecode of exposure. Default to 9999, means that it's a registry study
+  exposure_disease_location=(0,0,0),                   # Three-dimensional coordinate. Default to (0,0,0), it's a initial point to plot
+  exposure_disease_size=1,                             # Size of initial point (phecode of exposure) to plot. Default to 1
+  source="phecode_d1",                                 # Column name of D1 (D1->D2). Defaults to 'phecode_d1'
+  target="phecode_d2",                                 # Column name of D2 (D1->D2). Defaults to 'phecode_d2'
+)
+
+# three-dimension visualization
+result_network.plot_3d(
+  max_radius=45,                                       # Maximum of radius in one sector(cluster)
+  min_radius=15,                                       # Minimum of radius in one sector(cluster)
+  plot_method="full",                                  # Method of plot ("full", "half", "compact")
+  line_color="black",                                  # Color of lines connected with each node(phecode) in the "full" plot method 
+  line_width=2,                                        # Size of lines connected with each node(phecode)
+  layer_distance=20,                                   # Distance of two adjoining layers
+  file_name="/your/project/path/three_dimension_visualization.html"    # Path to save three-dimension visualization
+  layout_width=900,                                    # Width of layout in the figure. Defaults to 900
+  layout_height=900,                                   # Height of layout in the figure. Defaults to 900
+  font_style="Times New Roman",                        # Font style of layout in the figure. Defaults to "Times New Roman"
+  font_size=15,                                        # Font size of layout in the figure. Defaults to 15
+  location_method="random"                             # Method to calculate the three-dimension location of nodes(phecodes). Defaults to 'random'
+)
+
+# comorbidity network visualization
+result_network.comorbidity_network_plot(
+  max_radius=45,                                       # Maximum of radius in one sector(cluster)
+  min_radius=15,                                       # Minimum of radius in one sector(cluster)
+  line_width=1,                                        # Size of lines connected with each node(phecode). Defaults to 1
+  source="phecode_d1",                                 # Column name of D1 (D1->D2). Defaults to 'phecode_d1'
+  target="phecode_d2",                                 # Column name of D2 (D1->D2). Defaults to 'phecode_d2'
+  location_method="random",                            # Method to calculate the three-dimension location of nodes(phecodes). Defaults to 'random'
+  line_color="black"                                   # Color of lines connected with each node(phecode)
+)
+
+# significant trajectory visualization
+result_network.incluster_trajectory_plot(
+  distance=5,                                          # Distance of each nodes(phecodes) in x-y plane
+  layer_distance=5,                                    # Distance of two adjoining layers
+  line_width=1,                                        # Size of lines connected with each node(phecode)
+  line_color="black",                                  # Color of lines connected with each node(phecode)
+  max_radius=45,                                       # Maximum of radius in one sector(cluster)
+  min_radius=15,                                       # Minimum of radius in one sector(cluster)
+  location_method="random",                            # Method to calculate the three-dimension location of nodes(phecodes). Defaults to 'random'
+  source="phecode_d1",                                 # Column name of D1 (D1->D2). Defaults to 'phecode_d1'
+  target="phecode_d2"                                  # Column name of D2 (D1->D2). Defaults to 'phecode_d2'
+)
 ```
 
 ## API Reference

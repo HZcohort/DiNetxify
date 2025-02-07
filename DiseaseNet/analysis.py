@@ -1036,7 +1036,7 @@ def comorbidity_multipletests(df:pd.DataFrame, correction:str='bonferroni', cuto
 
 def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.DataFrame, binomial_test_result:pd.DataFrame, 
                        method:str='RPCN', matching_var_dict:dict={'sex':'exact'}, matching_n:int=2, covariates:list=None, 
-                       n_process:int=1, log_file:str=None, correction:str='bonferroni', cutoff:float=0.05, check_within_variance:bool=True, **kwargs) -> pd.DataFrame:
+                       n_process:int=1, log_file:str=None, correction:str='bonferroni', cutoff:float=0.05, **kwargs) -> pd.DataFrame:
     """
     Perform temporal comorbidity network (disease trajectory) analysis on disease pairs with significant comorbidity strength and temporal order, to identify pairs with confirmed temporal comorbidity associations.
     For each disease pair D1 → D2, a nested case-control dataset is constructed using incidence density sampling, treating D2 as the outcome and D1 as the exposure. 
@@ -1265,14 +1265,14 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
         for d1,d2 in trajectory_sig[[phecode_d1_col,phecode_d2_col]].values:
             result_all.append(logistic_model_wrapper(d1,d2,phenotype_df_exposed,id_col,end_date_col,trajectory_eligible,trajectory_temporal,
                                                     trajectory_eligible_withdate,history_level,covariates,all_diseases_lst,
-                                                    matching_var_dict,matching_n,log_file_final,parameter_dict,check_within_variance))
+                                                    matching_var_dict,matching_n,log_file_final,parameter_dict))
     elif n_process > 1:
         parameters_all = []
         for d1,d2 in trajectory_sig[[phecode_d1_col,phecode_d2_col]].values:
             parameters_all.append([d1,d2])
         with multiprocessing.get_context(start_mehtod).Pool(n_process, initializer=init_worker, initargs=(phenotype_df_exposed,id_col,end_date_col,trajectory_eligible,trajectory_temporal,
                                                                                                           trajectory_eligible_withdate,history_level,covariates,all_diseases_lst,
-                                                                                                          matching_var_dict,matching_n,log_file_final,parameter_dict,check_within_variance)) as p:
+                                                                                                          matching_var_dict,matching_n,log_file_final,parameter_dict)) as p:
             result_all = p.starmap(logistic_model, parameters_all)
 
     time_end = time.time()

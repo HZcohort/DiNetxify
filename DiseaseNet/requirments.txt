@@ -1,9 +1,0 @@
-pandas==
-datetime==
-numpy==
-lifeline==
-plotly==
-scipy==
-community==
-statsmodels==
-scikit-learn==

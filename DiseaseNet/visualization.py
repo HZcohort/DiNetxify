@@ -36,8 +36,8 @@ class ThreeDimensionalDiseaseNetwork(object):
             exposure_disease (float, optional): the exposure disease phecode in the cohort studies, if it equals to 9999 there is a registry study. Defaults to 9999.
             exposure_disease_location (tuple, optional): the location of exposure disease phecode in the cohort studies. Defaults to (0,0,0).
             exposure_disease_size (float, optional): the size of exposure disease phecode in the cohort studies. Defaults to 1.
-            source (str, optional): the D1 (from D1 to D2). Defaults to 'phecode_d1'.
-            target (str, optional): the D2 (from D1 to D2). Defaults to 'phecode_d2'.
+            source (str, optional): the column name of D1. Defaults to 'phecode_d1'.
+            target (str, optional): the column name of D2. Defaults to 'phecode_d2'.
         """
         # primary attributions
         self.__module_dir = os.path.dirname(__file__)
@@ -250,8 +250,8 @@ class ThreeDimensionalDiseaseNetwork(object):
 
         Args:
             iter_time (int, optional): the time of iteration. Defaults to 5000.
-            source (str, optional): the D1 (from D1 to D2). Defaults to 'phecode_d1'.
-            target (str, optional): the D2 (from D1 to D2). Defaults to 'phecode_d2'.
+            source (str, optional): the column name of D1. Defaults to 'phecode_d1'.
+            target (str, optional): the column name of D2. Defaults to 'phecode_d2'.
             weight (str, optional): the weight of the disease pair (D1 with D2). Defaults to 'comorbidity_beta'.
 
         Returns:
@@ -985,7 +985,7 @@ class ThreeDimensionalDiseaseNetwork(object):
     def incluster_trajectory_plot(self, distance:float, 
                                   layer_distance:float,
                                   line_width:float,
-                                  line_color:float,
+                                  line_color:str,
                                   max_radius:float,
                                   min_radius:float,
                                   location_method:str="random",
@@ -997,15 +997,12 @@ class ThreeDimensionalDiseaseNetwork(object):
             distance (float): the distance of each nodes(phecodes) in x-y plane.
             layer_distance (float): the distance of two adjoining layers.
             line_width (float): the width of line in the nodes(phecodes).
-            line_color (float): the color of line in the nodes(phecodes).
+            line_color (str): the color of line in the nodes(phecodes).
             max_radius (float): the maximum of radius in the sector.
             min_radius (float): the minimum of radius in the sector.
             location_method (str, optional): the method to calculate the three-dimension location of nodes(phecodes). Defaults to "random".
             source (str, optional): the column name of D1. Defaults to 'phecode_d1'.
             target (str, optional): the column name of D2. Defaults to 'phecode_d2'.
-
-        Returns:
-            _type_: _description_
         """
         if not hasattr(self, "final_cluster"):
             self.cluster()
