@@ -9,7 +9,7 @@ description = "DiseaseNetPy"
 readme = "README.md"
 requires-python = ">=3.7"
 dependencies = [
-    "python-louvain==0.16",
+    "python-louvain",
     "lifelines==0.30.0",
     "matplotlib==3.10.0",
     "networkx==3.4.2",
