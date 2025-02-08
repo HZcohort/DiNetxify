@@ -1,6 +1,6 @@
 [project]
 name = "DiseaseNetPy"
-version = "0.0.2"
+version = "0.0.3"
 authors = [
   { name="Can Hou", email="houcan@wchscu.cn" },
   { name="Haowen Liu", email="haowenliu81@gmail.com" },
@@ -9,7 +9,7 @@ description = "DiseaseNetPy"
 readme = "README.md"
 requires-python = ">=3.7"
 dependencies = [
-    "community==1.0.0b1",
+    "python-louvain==0.16",
     "lifelines==0.30.0",
     "matplotlib==3.10.0",
     "networkx==3.4.2",

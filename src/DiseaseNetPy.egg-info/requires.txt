@@ -1,4 +1,4 @@
-community==1.0.0b1
+python-louvain==0.16
 lifelines==0.30.0
 matplotlib==3.10.0
 networkx==3.4.2
