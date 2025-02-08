@@ -47,8 +47,8 @@ Created on Fri Jul 26 12:49:35 2024
 #                          "date_dignosed":date_dignosed},
 #                          columns=["eid", "icd10", "date_dignosed"]).to_csv("C:/Users/bovin/Desktop/inp.csv")
 
-from DiseaseNet.data_management import DiseaseNetworkData as dnd
-from DiseaseNet.analysis import phewas, comorbidity_strength, binomial_test, comorbidity_network, disease_trajectory
+from src.data_management import DiseaseNetworkData as dnd
+from src.analysis import phewas, comorbidity_strength, binomial_test, comorbidity_network, disease_trajectory
 # from DiseaseNet.visualization import ThreeDimensionalDiseaseNetwork as tddn
 # import pandas as pd
 
