@@ -1,6 +1,6 @@
 [project]
 name = "DiseaseNetPy"
-version = "0.0.3"
+version = "0.0.4"
 authors = [
   { name="Can Hou", email="houcan@wchscu.cn" },
   { name="Haowen Liu", email="haowenliu81@gmail.com" },
