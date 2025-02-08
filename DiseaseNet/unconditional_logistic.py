@@ -110,8 +110,9 @@ def logistic_model(d1:float,d2:float):
     
     #simple method
     if method == 'CN':
-        final_covariates = check_variance_vif(phenotype_df_exposed_, covariates_)
-        del_var = [x for x in covariates_ if x not in final_covariates]
+        del_var = check_variance_vif(phenotype_df_exposed_, covariates_)
+        del_var = list(del_var.keys())
+        final_covariates= [x for x in covariates_ if x not in del_var]
         try:
             model = Logit(np.asarray(phenotype_df_exposed_[d2_col], dtype=int),
                           np.asarray(phenotype_df_exposed_[[d1_col,constant_col]+final_covariates], dtype=float))
@@ -125,9 +126,10 @@ def logistic_model(d1:float,d2:float):
     
     #partial correlation method
     elif method == 'RPCN':
-        final_covariates, final_diseases_var = check_variance_vif(phenotype_df_exposed_, covariates_, all_diseases_var)
-        del_diseases_var = [x for x in all_diseases_var if x not in final_diseases_var]
-        del_covariates = [x for x in final_covariates if x not in covariates_]
+        del_covariates, del_diseases_var = check_variance_vif(phenotype_df_exposed_, covariates_, all_diseases_var)
+        del_covariates, del_diseases_var = list(del_covariates.keys()), list(del_diseases_var.keys())
+        final_diseases_var = [x for x in all_diseases_var if x not in del_diseases_var]
+        final_covariates = [x for x in covariates_ if x not in del_covariates]
         if auto_penalty:
             try:
                 #model
@@ -196,9 +198,10 @@ def logistic_model(d1:float,d2:float):
             variance_explained = sum(pca.explained_variance_ratio_)
             
             #fit model with PCA covariates
-            final_covariates, final_pca_var = check_variance_vif(disease_vars_transformed, covariates_, pca_var_lst=pca_cols)
-            del_covariates = [x for x in covariates_ if x not in final_covariates]
-            del_pca_var = [x for x in pca_cols if x not in final_pca_var]
+            del_covariates, del_pca_var = check_variance_vif(disease_vars_transformed, covariates_, pca_var_lst=pca_cols)
+            del_covariates, del_pca_var = list(del_covariates.keys()), list(del_pca_var.keys())
+            final_covariates = [x for x in covariates_ if x not in del_covariates]
+            final_pca_var = [x for x in pca_cols if x not in del_pca_var]
             model_final = Logit(np.asarray(phenotype_df_exposed_PCA[d2_col],dtype=int),
                                 np.asarray(phenotype_df_exposed_PCA[[d1_col,constant_col]+final_covariates+final_pca_var],dtype=float))
             result_final = model_final.fit(disp=False,method='bfgs')
