@@ -16,4 +16,14 @@ src/DiseaseNetPy.egg-info/SOURCES.txt
 src/DiseaseNetPy.egg-info/dependency_links.txt
 src/DiseaseNetPy.egg-info/requires.txt
 src/DiseaseNetPy.egg-info/top_level.txt
-src/data/dict_update.py
+src/DiseaseNetPy/data/dict_update.py
+src/DiseaseNetPy/data/phecode_1.2/ICD-10-CM.npy
+src/DiseaseNetPy/data/phecode_1.2/ICD-10-WHO.npy
+src/DiseaseNetPy/data/phecode_1.2/ICD-9-WHO.npy
+src/DiseaseNetPy/data/phecode_1.2/level1_info.npy
+src/DiseaseNetPy/data/phecode_1.2/level2_info.npy
+src/DiseaseNetPy/data/phecode_1.2/phecode_info.csv
+src/DiseaseNetPy/data/phecode_1.2/phecode_map_cm.csv
+src/DiseaseNetPy/data/phecode_1.2/phecode_map_v1_2_icd10_beta.csv
+src/DiseaseNetPy/data/phecode_1.2/phecode_map_who_icd10.csv
+src/DiseaseNetPy/data/phecode_1.2/phecode_map_who_icd9.csv
