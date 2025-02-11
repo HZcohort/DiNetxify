@@ -111,11 +111,11 @@ def logistic_model(d1:float,d2:float):
                           np.asarray(phenotype_df_exposed_[[d1_col,constant_col]+final_covariates], dtype=float))
             result = model.fit(disp=False, method='bfgs')
             beta,se,p,aic = result.params[0], result.bse[0],result.pvalues[0],result.aic
-            result_lst += [method,f'fitted and delete the variate: {del_var}',beta,se,p,aic]
+            result_lst += [method,f'fitted and delete the covariate(s): {del_var}',beta,se,p,aic]
             message += f'method={method}; successfully fitted; '
         except Exception as e:
             message += f'method={method}; error encountered: {e}; '
-            result_lst += [method,str(e)+" delete the covariate:"+str(del_var)]
+            result_lst += [method,str(e)]
     
     #partial correlation method
     elif method == 'RPCN':
@@ -151,7 +151,7 @@ def logistic_model(d1:float,d2:float):
                 result_lst += [f'{method}_auto',f'fitted and delete the diseases variable(s): {del_diseases_var} and covariate(s): {del_covariates}',f'{final_disease_vars[2::]}',f'{disease_z_value}',final_best_alpha,beta,se,p,aic]
                 message += f'method={method}_auto (alpha={final_best_alpha}, number of other disease included as covariates: {len(final_disease_vars[2::])}); successfully fitted; '
             except Exception as e:
-                result_lst += [f'{method}_auto', str(e)+" delete the diseases variate:"+str(del_diseases_var)+"and the covariates:"+str(del_covariates)]
+                result_lst += [f'{method}_auto', str(e)]
                 message += f'method={method}_auto; error encountered: {e}; '
 
         else:
@@ -174,7 +174,7 @@ def logistic_model(d1:float,d2:float):
                 result_lst += [f'{method}_fixed_alpha',f'fitted and delete the diseases variable(s): {del_diseases_var} and covariate(s): {del_covariates}',f'{final_disease_vars[2::]}',f'{disease_z_value}',alpha_single,beta,se,p,aic]
                 message += f'method={method}_fixed_alpha (alpha={alpha_single}, number of other disease included as covariates: {len(final_disease_vars[2::])}); successfully fitted; '
             except Exception as e:
-                result_lst += [f'{method}_fixed_alpha', str(e)+" delete the diseases variate:"+str(del_diseases_var)+"and the covariates:"+str(del_covariates)]
+                result_lst += [f'{method}_fixed_alpha', str(e)]
                 message += f'method={method}_fixed_alpha (alpha={alpha_single}); error encountered: {e}; '
 
     elif method == 'PCN_PCA':
@@ -204,7 +204,7 @@ def logistic_model(d1:float,d2:float):
             result_lst += [f'{method}_n_components={pca_number}',f'fitted and delete the pca variable(s): {del_pca_var} and covariate(s): {del_covariates}',f'{final_pca_var}',f'{pca_z_value}',variance_explained,beta,se,p,aic]
             message += f'method={method}_n_components={pca_number} (number of PC included as covariates: {len(final_pca_var)}, total variance explained by PC: {variance_explained:.3f}); successfully fitted; '
         except Exception as e:
-            result_lst += [f'{method}_n_components={pca_number}',str(e)+" delete the pca variate:"+str(del_pca_var)+"and the covariates:"+str(del_covariates)]
+            result_lst += [f'{method}_n_components={pca_number}',str(e)]
             message += f'method={method}_n_components={pca_number}; error encountered: {e}; '
     
     #print and return
