@@ -119,7 +119,7 @@ def logistic_model(d1:float,d2:float):
     
     #partial correlation method
     elif method == 'RPCN':
-        del_covariates, del_diseases_var = check_variance_vif(phenotype_df_exposed_, disease_var_lst=covariates_, all_diseases_var)
+        del_covariates, del_diseases_var = check_variance_vif(phenotype_df_exposed_, covariates_, disease_var_lst=all_diseases_var)
         del_covariates, del_diseases_var = list(del_covariates.keys()), list(del_diseases_var.keys())
         all_diseases_var = [x for x in all_diseases_var if x not in del_diseases_var]
         final_covariates = [x for x in covariates_ if x not in del_covariates]
