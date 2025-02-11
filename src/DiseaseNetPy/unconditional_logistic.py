@@ -119,9 +119,9 @@ def logistic_model(d1:float,d2:float):
     
     #partial correlation method
     elif method == 'RPCN':
-        del_covariates, del_diseases_var = check_variance_vif(phenotype_df_exposed_, covariates_, all_diseases_var)
+        del_covariates, del_diseases_var = check_variance_vif(phenotype_df_exposed_, disease_var_lst=covariates_, all_diseases_var)
         del_covariates, del_diseases_var = list(del_covariates.keys()), list(del_diseases_var.keys())
-        final_diseases_var = [x for x in all_diseases_var if x not in del_diseases_var]
+        all_diseases_var = [x for x in all_diseases_var if x not in del_diseases_var]
         final_covariates = [x for x in covariates_ if x not in del_covariates]
         if auto_penalty:
             try:
@@ -148,7 +148,7 @@ def logistic_model(d1:float,d2:float):
                 beta,se,p,aic = result_final.params[0],result_final.bse[0],result_final.pvalues[0],result_final.aic
                 z_value_dict = {var:z for var,z in zip(final_disease_vars+final_covariates,result_final.tvalues)}
                 disease_z_value = {var:z_value_dict[var] for var in final_disease_vars[2::]} #z-value dictionary for other disease variables
-                result_lst += [f'{method}_auto',f'fitted and delete the diseases variate: {del_diseases_var} and covariates: {del_covariates}',f'{final_disease_vars[2::]}',f'{disease_z_value}',final_best_alpha,beta,se,p,aic]
+                result_lst += [f'{method}_auto',f'fitted and delete the diseases variable(s): {del_diseases_var} and covariate(s): {del_covariates}',f'{final_disease_vars[2::]}',f'{disease_z_value}',final_best_alpha,beta,se,p,aic]
                 message += f'method={method}_auto (alpha={final_best_alpha}, number of other disease included as covariates: {len(final_disease_vars[2::])}); successfully fitted; '
             except Exception as e:
                 result_lst += [f'{method}_auto', str(e)+" delete the diseases variate:"+str(del_diseases_var)+"and the covariates:"+str(del_covariates)]
@@ -157,7 +157,7 @@ def logistic_model(d1:float,d2:float):
         else:
             try:
                 #fit the initial model to get the non-zero disease list
-                model_1_vars = [d1_col,constant_col]+final_diseases_var #only disease variables
+                model_1_vars = [d1_col,constant_col]+all_diseases_var #only disease variables
                 model = Logit(np.asarray(phenotype_df_exposed_[d2_col],dtype=int),
                               np.asarray(phenotype_df_exposed_[model_1_vars],dtype=float))
                 result = model.fit_regularized(method='l1', alpha=alpha_lst*alpha_single, disp=False)
@@ -171,7 +171,7 @@ def logistic_model(d1:float,d2:float):
                 beta,se,p,aic = result_final.params[0], result_final.bse[0],result_final.pvalues[0],result_final.aic
                 z_value_dict = {var:z for var,z in zip(final_disease_vars+del_covariates, result_final.tvalues)}
                 disease_z_value = {var:z_value_dict[var] for var in final_disease_vars[2::]} #z-value dictionary for other disease variables
-                result_lst += [f'{method}_fixed_alpha',f'fitted and delete the diseases variate: {del_diseases_var} and covariates: {del_covariates}',f'{final_disease_vars[2::]}',f'{disease_z_value}',alpha_single,beta,se,p,aic]
+                result_lst += [f'{method}_fixed_alpha',f'fitted and delete the diseases variable(s): {del_diseases_var} and covariate(s): {del_covariates}',f'{final_disease_vars[2::]}',f'{disease_z_value}',alpha_single,beta,se,p,aic]
                 message += f'method={method}_fixed_alpha (alpha={alpha_single}, number of other disease included as covariates: {len(final_disease_vars[2::])}); successfully fitted; '
             except Exception as e:
                 result_lst += [f'{method}_fixed_alpha', str(e)+" delete the diseases variate:"+str(del_diseases_var)+"and the covariates:"+str(del_covariates)]
@@ -201,7 +201,7 @@ def logistic_model(d1:float,d2:float):
             beta,se,p,aic = result_final.params[0], result_final.bse[0],result_final.pvalues[0],result_final.aic
             z_value_dict = {var:z for var,z in zip([d1_col,constant_col]+final_covariates+final_pca_var,result_final.tvalues)}
             pca_z_value = {var:z_value_dict[var] for var in final_pca_var} #z-value dictionary for other disease variables
-            result_lst += [f'{method}_n_components={pca_number}',f'fitted and delete the pca variate: {del_pca_var} and covariates: {del_covariates}',f'{final_pca_var}',f'{pca_z_value}',variance_explained,beta,se,p,aic]
+            result_lst += [f'{method}_n_components={pca_number}',f'fitted and delete the pca variable(s): {del_pca_var} and covariate(s): {del_covariates}',f'{final_pca_var}',f'{pca_z_value}',variance_explained,beta,se,p,aic]
             message += f'method={method}_n_components={pca_number} (number of PC included as covariates: {len(final_pca_var)}, total variance explained by PC: {variance_explained:.3f}); successfully fitted; '
         except Exception as e:
             result_lst += [f'{method}_n_components={pca_number}',str(e)+" delete the pca variate:"+str(del_pca_var)+"and the covariates:"+str(del_covariates)]
