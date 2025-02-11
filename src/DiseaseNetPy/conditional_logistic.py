@@ -153,14 +153,14 @@ def logistic_model(d1:float,d2:float):
     
     #partial correlation method
     elif method == 'RPCN':
-        del_covariates, del_diseases_var = check_variance_vif(phenotype_df_exposed_, covariates_, all_diseases_var, group_col=mathcing_id_col)
+        del_covariates, del_diseases_var = check_variance_vif(phenotype_df_exposed_, covariates_, disease_var_lst=all_diseases_var, group_col=mathcing_id_col)
         del_covariates, del_diseases_var = list(del_covariates.keys()), list(del_diseases_var.keys())
-        final_diseases_var = [x for x in all_diseases_var if x not in del_diseases_var]
+        all_diseases_var = [x for x in all_diseases_var if x not in del_diseases_var]
         final_covariates = [x for x in covariates_ if x not in del_covariates]
         if auto_penalty:
             try:
                 #model
-                model_1_vars = [d1_col,constant_col]+final_diseases_var #only disease variables
+                model_1_vars = [d1_col,constant_col]+all_diseases_var #only disease variables
                 model = Logit(np.asarray(phenotype_df_exposed_[d2_col],dtype=int),
                               np.asarray(phenotype_df_exposed_[model_1_vars],dtype=float)) #use unconditional model for selcting disease variables
                 
