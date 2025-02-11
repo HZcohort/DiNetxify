@@ -196,7 +196,7 @@ def cox_conditional(phecode:float):
     #     dataset_analysis[var] = dataset_analysis[var].astype(float)
     #     if dataset_analysis.groupby(by=matching_col)[var].var().mean() <= 0: #lowest var() allowed
     #         covariates_.remove(var)
-    del_var = check_variance_vif(dataset_analysis, covariates_)
+    del_var = check_variance_vif(dataset_analysis, covariates_, group_col=matching_col)
     del_var = list(del_var.keys())
     final_covariates= [x for x in covariates_ if x not in del_var]
     #error message

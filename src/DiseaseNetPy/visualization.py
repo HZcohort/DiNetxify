@@ -27,7 +27,7 @@ from typing import (
     Union,
 )
 
-type Df = pd.DataFrame
+Df = pd.DataFrame
 
 SYSTEM = [
     'circulatory system', 
@@ -54,13 +54,13 @@ class ThreeDimensionalDiseaseNetwork(object):
     def __init__(
         self, 
         comorbidity_network_result: Df, 
-        disease_trajectory_result:pd.DataFrame,
-        phewas_result:pd.DataFrame,
-        exposure_disease:float=9999,
-        exposure_disease_location:tuple=(0,0,0),
-        exposure_disease_size:float=1,
-        source:str='phecode_d1',
-        target:str='phecode_d2'
+        disease_trajectory_result: Df,
+        phewas_result: Df,
+        exposure_disease: Optional[float]=9999.0,
+        exposure_disease_location: Optional[Tuple[float]]=(0.0, 0.0, 0.0),
+        exposure_disease_size: Optional[float]=1.0,
+        source: Optional[str]='phecode_d1',
+        target: Optional[str]='phecode_d2'
     ):
         """initialize the peoperty of ThreeDimensionalDiseaseNetwork class.
 
@@ -195,19 +195,19 @@ class ThreeDimensionalDiseaseNetwork(object):
 
     def plotly_ball(
         self, 
-        center:tuple, 
-        r:float, 
-        name:str, 
-        label:str, 
-        color:str, 
-        light_dict=dict(
+        center: Tuple[float], 
+        r: Tuple[float], 
+        name: str, 
+        label: str, 
+        color: str, 
+        light_dict: Optional[Dict[float]]=dict(
             ambient=0.2,
             diffuse=0.8,
             specular=0.4,
             roughness=0.2,
             fresnel=2.0
         ),
-        light_position_dict=dict(
+        light_position_dict: Optional[Dict[float]]=dict(
             x=1.5,
             y=1.5,
             z=1.5
