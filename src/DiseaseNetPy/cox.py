@@ -10,7 +10,7 @@ import pandas as pd
 import numpy as np
 import time
 from .data_management import DiseaseNetworkData
-from .utility import write_log
+from .utility import write_log, check_variance_vif
 from statsmodels.duration.hazard_regression import PHReg
 import warnings
 warnings.filterwarnings('ignore')
@@ -192,31 +192,40 @@ def cox_conditional(phecode:float):
     dataset_analysis = dataset_analysis[dataset_analysis[matching_col].isin(match_id)]
     
     #check var of covariates, remove these with var()==0
-    for var in covariates_:
-        dataset_analysis[var] = dataset_analysis[var].astype(float)
-        if dataset_analysis.groupby(by=matching_col)[var].var().mean() <= 0: #lowest var() allowed
-            covariates_.remove(var)
-
+    # for var in covariates_:
+    #     dataset_analysis[var] = dataset_analysis[var].astype(float)
+    #     if dataset_analysis.groupby(by=matching_col)[var].var().mean() <= 0: #lowest var() allowed
+    #         covariates_.remove(var)
+    del_var = check_variance_vif(dataset_analysis, covariates_)
+    del_var = list(del_var.keys())
+    final_covariates= [x for x in covariates_ if x not in del_var]
     #error message
     e_stats = None
     e_lifelines = None
     error_message = None
 
     try:
-        model = PHReg(np.asarray(dataset_analysis[time_col],dtype=float),
-                    np.asarray(dataset_analysis[[exp_col]+covariates_],dtype=float),
-                    status=np.asarray(dataset_analysis[outcome_col],dtype=int), 
-                    strata=np.asarray(dataset_analysis[matching_col]))
+        model = PHReg(
+            np.asarray(dataset_analysis[time_col],dtype=float),
+            np.asarray(dataset_analysis[[exp_col]+final_covariates],dtype=float),
+            status=np.asarray(dataset_analysis[outcome_col],dtype=int), 
+            strata=np.asarray(dataset_analysis[matching_col])
+        )
         model_result = model.fit(method='bfgs',maxiter=300,disp=0)
         if pd.isna(model_result.params[0]) or pd.isna(model_result.bse[0]):
             e_stats = 'No converge for statsmodels Cox'
-            model = cph.fit(dataset_analysis[[time_col,outcome_col,exp_col,matching_col]+covariates_],
-                            fit_options=dict(step_size=0.2), duration_col=time_col, event_col=outcome_col,strata=[matching_col])
+            model = cph.fit(
+                dataset_analysis[[time_col,outcome_col,exp_col,matching_col]+final_covariates],
+                fit_options=dict(step_size=0.2), 
+                duration_col=time_col, 
+                event_col=outcome_col,
+                strata=[matching_col]
+            )
             result_temp = model.summary.loc[exp_col]
-            result += ['fitted_lifelines',str_exp,str_noexp]
+            result += [f'fitted_lifelines and delete the variate: {del_var}',str_exp,str_noexp]
             result += [x for x in result_temp[['coef','se(coef)','p']]]
         else:
-            result += ['fitted',str_exp,str_noexp]
+            result += [f'fitted and delete the variate: {del_var}',str_exp,str_noexp]
             result += [model_result.params[0],model_result.bse[0],model_result.pvalues[0]]
     except Exception as e:
         if e_stats:
@@ -224,10 +233,15 @@ def cox_conditional(phecode:float):
         else:
             e_stats = e
         try:
-            model = cph.fit(dataset_analysis[[time_col,outcome_col,exp_col,matching_col]+covariates_],
-                            fit_options=dict(step_size=0.2), duration_col=time_col, event_col=outcome_col,strata=[matching_col])
+            model = cph.fit(
+                dataset_analysis[[time_col,outcome_col,exp_col,matching_col]+final_covariates],
+                fit_options=dict(step_size=0.2), 
+                duration_col=time_col, 
+                event_col=outcome_col,
+                strata=[matching_col]
+            )
             result_temp = model.summary.loc[exp_col]
-            result += ['fitted_lifelines',str_exp,str_noexp]
+            result += [f'fitted_lifelines and delete the variate: {del_var}',str_exp,str_noexp]
             result += [x for x in result_temp[['coef','se(coef)','p']]]
         except Exception as e:
             if e_lifelines:
@@ -245,16 +259,17 @@ def cox_conditional(phecode:float):
     if error_message:
         write_log(log_file_,f'An error occurred during the Cox model fitting for phecode {phecode} (elapsed {time_spend:.2f}s)\n{error_message}\n')
     else:
-        write_log(log_file_,f'Cox model successfully fitted for phecode {phecode} (elapsed {time_spend:.2f}s)\n')
-            
+        write_log(log_file_,f'Cox model successfully fitted for phecode {phecode} (elapsed {time_spend:.2f}s)\n')  
     return result
 
-def cox_conditional_wrapper(phecode:str, 
-                            data:DiseaseNetworkData, 
-                            covariates:list, 
-                            n_threshold:int, 
-                            log_file:str, 
-                            lifelines_disable:bool):
+def cox_conditional_wrapper(
+    phecode:str, 
+    data:DiseaseNetworkData, 
+    covariates:list, 
+    n_threshold:int, 
+    log_file:str, 
+    lifelines_disable:bool
+) -> pd.DataFrame:
     """
     Wrapper for cox_conditional that assigns default values to global variables if needed.
 
@@ -472,10 +487,10 @@ def cox_unconditional(phecode:float):
     #exclude those with negative time
     dataset_analysis = dataset_analysis[dataset_analysis[time_col]>0]
     
-    #check var of covariates, remove these with var()==0
-    for var in covariates_:
-        if dataset_analysis[var].var() <= 0: #lowest var() allowed
-            covariates_.remove(var)
+    # check variance
+    del_var = check_variance_vif(dataset_analysis, covariates_)
+    del_var = list(del_var.keys())
+    final_covariates= [x for x in covariates_ if x not in del_var]
 
     #error message
     e_stats = None
@@ -483,19 +498,25 @@ def cox_unconditional(phecode:float):
     error_message = None
     
     try:
-        model = PHReg(np.asarray(dataset_analysis[time_col],dtype=float),
-                    np.asarray(dataset_analysis[[exp_col]+covariates_],dtype=float),
-                    status=np.asarray(dataset_analysis[outcome_col],dtype=int))
+        model = PHReg(
+            np.asarray(dataset_analysis[time_col],dtype=float),
+            np.asarray(dataset_analysis[[exp_col]+final_covariates],dtype=float),
+            status=np.asarray(dataset_analysis[outcome_col],dtype=int)
+        )
         model_result = model.fit(method='bfgs',maxiter=300,disp=0)
         if pd.isna(model_result.params[0]) or pd.isna(model_result.bse[0]):
             e_stats = 'No converge for statsmodels Cox'
-            model = cph.fit(dataset_analysis[[time_col,outcome_col,exp_col]+covariates_],
-                            fit_options=dict(step_size=0.2), duration_col=time_col, event_col=outcome_col)
+            model = cph.fit(
+                dataset_analysis[[time_col,outcome_col,exp_col]+final_covariates],
+                fit_options=dict(step_size=0.2), 
+                duration_col=time_col, 
+                event_col=outcome_col
+            )
             result_temp = model.summary.loc[exp_col]
-            result += ['fitted_lifelines',str_exp,str_noexp]
+            result += [f'fitted_lifelines and delete the variate: {del_var}',str_exp,str_noexp]
             result += [x for x in result_temp[['coef','se(coef)','p']]]
         else:
-            result += ['fitted',str_exp,str_noexp]
+            result += [f'fitted and delete the variate: {del_var}',str_exp,str_noexp]
             result += [model_result.params[0],model_result.bse[0],model_result.pvalues[0]]
     except Exception as e:
         if e_stats:
@@ -503,10 +524,14 @@ def cox_unconditional(phecode:float):
         else:
             e_stats = e
         try:
-            model = cph.fit(dataset_analysis[[time_col,outcome_col,exp_col]+covariates_],
-                            fit_options=dict(step_size=0.2), duration_col=time_col, event_col=outcome_col)
+            model = cph.fit(
+                dataset_analysis[[time_col,outcome_col,exp_col]+final_covariates],
+                fit_options=dict(step_size=0.2), 
+                duration_col=time_col, 
+                event_col=outcome_col
+            )
             result_temp = model.summary.loc[exp_col]
-            result += ['fitted_lifelines',str_exp,str_noexp]
+            result += [f'fitted_lifelines and delete the variate: {del_var}',str_exp,str_noexp]
             result += [x for x in result_temp[['coef','se(coef)','p']]]
         except Exception as e:
             if e_lifelines:
@@ -528,7 +553,14 @@ def cox_unconditional(phecode:float):
             
     return result
 
-def cox_unconditional_wrapper(phecode:str, data:DiseaseNetworkData, covariates:list, n_threshold:int, log_file:str, lifelines_disable:bool):
+def cox_unconditional_wrapper(
+    phecode:str, 
+    data:DiseaseNetworkData, 
+    covariates:list, 
+    n_threshold:int, 
+    log_file:str, 
+    lifelines_disable:bool
+) -> None:
     """
     Wrapper for cox_unconditional that assigns default values to global variables if needed.
 
@@ -567,7 +599,13 @@ def cox_unconditional_wrapper(phecode:str, data:DiseaseNetworkData, covariates:l
     # Call the original function
     return cox_unconditional(phecode)
 
-def init_worker(data:str,covariates:list,n_threshold:int,log_file:str,lifelines_disable:bool):
+def init_worker(
+    data:str,
+    covariates:list,
+    n_threshold:int,
+    log_file:str,
+    lifelines_disable:bool
+) -> None:
     """
     This function sets up the necessary global variables for a worker process in a multiprocessing environment.
     It assigns the provided parameters to global variables that can be accessed by cox_unconditional and cox_conditional function in the worker process.

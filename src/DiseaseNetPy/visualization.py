@@ -17,16 +17,51 @@ import pandas as pd
 import math
 import networkx as nx
 import os
+from typing import (
+    Type,
+    List,
+    Any,
+    Dict,
+    Optional,
+    Tuple,
+    Union,
+)
+
+type Df = pd.DataFrame
+
+SYSTEM = [
+    'circulatory system', 
+    'sense organs', 
+    'injuries & poisonings', 
+    'neurological',
+    'dermatologic', 
+    'digestive', 
+    'hematopoietic', 
+    'musculoskeletal', 
+    'endocrine/metabolic', 
+    'mental disorders', 
+    'infectious diseases',
+    'genitourinary',
+    'neoplasms',
+    'respiratory',
+    "symptoms",
+    "congenital anomalies",
+    "mental disorders",
+    "others"
+]
 
 class ThreeDimensionalDiseaseNetwork(object):
-    def __init__(self, comorbidity_network_result:pd.DataFrame, 
-                 disease_trajectory_result:pd.DataFrame,
-                 phewas_result:pd.DataFrame,
-                 exposure_disease:float=9999,
-                 exposure_disease_location:tuple=(0,0,0),
-                 exposure_disease_size:float=1,
-                 source:str='phecode_d1',
-                 target:str='phecode_d2'):
+    def __init__(
+        self, 
+        comorbidity_network_result: Df, 
+        disease_trajectory_result:pd.DataFrame,
+        phewas_result:pd.DataFrame,
+        exposure_disease:float=9999,
+        exposure_disease_location:tuple=(0,0,0),
+        exposure_disease_size:float=1,
+        source:str='phecode_d1',
+        target:str='phecode_d2'
+    ):
         """initialize the peoperty of ThreeDimensionalDiseaseNetwork class.
 
         Args:
@@ -47,11 +82,27 @@ class ThreeDimensionalDiseaseNetwork(object):
         self.__exposure_disease = exposure_disease
         self.__exposure_disease_size = exposure_disease_size
         self.__exposure_disease_location = exposure_disease_location
-        self.__system = ['circulatory system', 'sense organs', 'injuries & poisonings', 'neurological',
-                         'dermatologic', 'digestive', 'hematopoietic', 'musculoskeletal', 
-                         'endocrine/metabolic', 'mental disorders', 'infectious diseases', 
-                         'genitourinary', 'neoplasms', 'respiratory', "symptoms", "congenital anomalies", 
-                         "mental disorders", "others"]
+
+        self.__system = [
+            'circulatory system', 
+            'sense organs', 
+            'injuries & poisonings', 
+            'neurological',
+            'dermatologic', 
+            'digestive', 
+            'hematopoietic', 
+            'musculoskeletal', 
+            'endocrine/metabolic', 
+            'mental disorders', 
+            'infectious diseases', 
+            'genitourinary', 
+            'neoplasms', 
+            'respiratory', 
+            "symptoms", 
+            "congenital anomalies", 
+            "mental disorders", 
+            "others"
+        ]
         self.__system_color = ["#FF5733","#33FF57","#3357FF","#FFFF33","#FF33FF","#33FFFF","#C70039",
                                "#900C3F","#581845","#1ABC9C","#2ECC71","#3498DB","#9B59B6","#E74C3C",
                                "#F1C40F","#FF7F50","#FFD700", "#A52A2A"]
@@ -74,7 +125,7 @@ class ThreeDimensionalDiseaseNetwork(object):
         """line feed the name of disease.
 
         Args:
-            name (str): disease name.
+            name (str): Disease name.
 
         Returns:
             str: the disease name lined feed.
@@ -142,13 +193,26 @@ class ThreeDimensionalDiseaseNetwork(object):
         z += center[2]
         return (x, y, z)
 
-    def plotly_ball(self, center:tuple, 
-                    r:float, 
-                    name:str, 
-                    label:str, 
-                    color:str, 
-                    light_dict=dict(ambient=0.2,diffuse=0.8,specular=0.4,roughness=0.2,fresnel=2.0),
-                    light_position_dict=dict(x=1.5,y=1.5,z=1.5)):
+    def plotly_ball(
+        self, 
+        center:tuple, 
+        r:float, 
+        name:str, 
+        label:str, 
+        color:str, 
+        light_dict=dict(
+            ambient=0.2,
+            diffuse=0.8,
+            specular=0.4,
+            roughness=0.2,
+            fresnel=2.0
+        ),
+        light_position_dict=dict(
+            x=1.5,
+            y=1.5,
+            z=1.5
+        )
+    ):
         """get the atrribution of sphere to plot.
 
         Args:
@@ -157,7 +221,8 @@ class ThreeDimensionalDiseaseNetwork(object):
             name (str): the name of disease.
             label (str): the label of disease.
             color (str): the color of sphere to plot.
-            light_dict (dict, optional): the atrributions of light in the ployly module, more details in plotly. Defaults to dict(ambient=0.2, diffuse=0.8, specular=0.4, roughness=0.2, fresnel=2.0).
+            light_dict (dict, optional): the atrributions of light in the ployly module, more details in plotly. 
+                                         Defaults to dict(ambient=0.2, diffuse=0.8, specular=0.4, roughness=0.2, fresnel=2.0).
             light_position_dict (dict, optional): the location of the light. Defaults to dict(x=1.5, y=1.5, z=1.5).
 
         Returns:
@@ -165,7 +230,8 @@ class ThreeDimensionalDiseaseNetwork(object):
             y_ (iterable object): the cordinates in the y-axis.
             z_ (iterable object): the cordinates in the z-axis.
             colorscale_ (list[list]): the color of sphere
-            light_dict (dict{str:float}): the atrributions of light in the ployly module. Defaults to dict(ambient=0.2, diffuse=0.8, specular=0.4, roughness=0.2, fresnel=2.0).
+            light_dict (dict{str:float}): the atrributions of light in the ployly module. 
+                                          Defaults to dict(ambient=0.2, diffuse=0.8, specular=0.4, roughness=0.2, fresnel=2.0).
             label (str): the label of disease.
             name (str): the name of disease.
             light_position_dict (dict{str:float}): the location of the light. Defaults to dict(x=1.5, y=1.5, z=1.5).
@@ -175,11 +241,14 @@ class ThreeDimensionalDiseaseNetwork(object):
         return x, y, z, colorscale, light_dict, label, name, light_position_dict
 
 
-    def __calculate_location_random(self, node:float, 
-                                    _hash_dict:dict,
-                                    begin_angle=0.25,
-                                    end_angele=0.25,
-                                    _iter_time=10000):
+    def __calculate_location_random(
+            self, 
+            node:float, 
+            _hash_dict:dict,
+            begin_angle=0.25,
+            end_angele=0.25,
+            _iter_time=10000
+        ):
         """calculate the location of center point of sphere.
 
         Args:
@@ -242,10 +311,13 @@ class ThreeDimensionalDiseaseNetwork(object):
         size = np.sqrt(self.__phecode_number[node])
         return size
 
-    def cluster(self, iter_time:int=5000, 
-                source:str='phecode_d1',
-                target:str='phecode_d2',
-                weight:str='comorbidity_beta') -> dict:
+    def cluster(
+        self,
+        iter_time:int=5000,
+        source:str='phecode_d1',
+        target:str='phecode_d2',
+        weight:str='comorbidity_beta'
+    ) -> dict:
         """Use the louvain algorithm to cluster the disease acording to the relation of comorbidity network.
 
         Args:
@@ -275,8 +347,11 @@ class ThreeDimensionalDiseaseNetwork(object):
         self.maximum_class_number = max(self.final_cluster.values()) + 1
         return self.final_cluster
 
-    def location_random(self, max_radius:float, 
-                        min_radius:float) -> dict:
+    def location_random(
+        self, 
+        max_radius:float, 
+        min_radius:float
+    ) -> dict:
         """get the three dimension location of nodes(phecodes), using the metod that nodes(phecodes) of 
            one cluster be gathered in one sector in the x-y plane and the latter nodes(phecodes) locates the under layer.
 
@@ -324,8 +399,11 @@ class ThreeDimensionalDiseaseNetwork(object):
         self.location_dict = location_dict
         return self.location_dict
     
-    def trajectory(self, source:str='phecode_d1', 
-                   target:str='phecode_d2') -> dict:
+    def trajectory(
+        self,
+        source:str='phecode_d1', 
+        target:str='phecode_d2'
+    ) -> dict:
         """get the layer number of nodes(phecodes) in the trajectory network (D1->D2).
 
         Args:
@@ -369,8 +447,11 @@ class ThreeDimensionalDiseaseNetwork(object):
         self.trajectory_dimension = trajectory_dimension
         return self.trajectory_dimension
     
-    def commorbidity(self, source:str='phecode_d1', 
-                     target:str='phecode_d2') -> dict:
+    def commorbidity(
+        self, 
+        source:str='phecode_d1', 
+        target:str='phecode_d2'
+    ) -> dict:
         """get the layer number of nodes(phecodes) in the comorbidity network (D1-D2).
 
         Args:
@@ -468,9 +549,12 @@ class ThreeDimensionalDiseaseNetwork(object):
                                   len(self.dimension))
         return self.dimension
 
-    def color(self, code:str='phecode',
-              cluster_name:str='category', 
-              describe:str='phenotype') -> dict:
+    def color(
+        self,
+        code:str='phecode',
+        cluster_name:str='category', 
+        describe:str='phenotype'
+    ) -> dict:
         """get the color of nodes(phecodes)
 
         Args:
@@ -528,10 +612,13 @@ class ThreeDimensionalDiseaseNetwork(object):
     #             incluster.append(row["phecode_d1"])
     #     return list(set(incluster))
 
-    def __full_plot(self, line_color:str, 
-                    line_width:float,
-                    source:str='phecode_d1', 
-                    target:str='phecode_d2') -> list:
+    def __full_plot(
+        self, 
+        line_color:str, 
+        line_width:float,
+        source:str='phecode_d1', 
+        target:str='phecode_d2'
+    ) -> list:
         """get the attribution of plot. This method plots the all trajectory(D1->D2), comorbidity(D1-D2), and nodes(phecodes).
 
         Args:
@@ -575,24 +662,29 @@ class ThreeDimensionalDiseaseNetwork(object):
             edges_y += [self.location_dict[edge[0]][1], self.location_dict[edge[1]][1], None]
             edges_z += [self.location_dict[edge[0]][2], self.location_dict[edge[1]][2], None]
 
-        trace_edges = go.Scatter3d(x=edges_x,
-                                   y=edges_y,
-                                   z=edges_z,
-                                   line=dict(color=line_color,width=line_width),
-                                   mode='lines',
-                                   hoverinfo='none',
-                                   legendgroup='none',
-                                   legendgrouptitle_text='All Trajectories',
-                                   name='Trajectories',
-                                   showlegend=True)
+        trace_edges = go.Scatter3d(
+            x=edges_x,
+            y=edges_y,
+            z=edges_z,
+            line=dict(color=line_color,width=line_width),
+            mode='lines',
+            hoverinfo='none',
+            legendgroup='none',
+            legendgrouptitle_text='All Trajectories',
+            name='Trajectories',
+            showlegend=True
+        )
         plot_data += [trace_edges]
         return plot_data
     
-    def __half_plot(self, main_line_width:float, 
-                    nonMain_line_color:str='silver', 
-                    nonMain_line_width:float=1,
-                    source:str='phecode_d1', 
-                    target:str='phecode_d2') -> list:
+    def __half_plot(
+        self, 
+        main_line_width:float, 
+        nonMain_line_color:str='silver', 
+        nonMain_line_width:float=1,
+        source:str='phecode_d1', 
+        target:str='phecode_d2'
+    ) -> list:
         """get the attribution of plot. This method plots the all trajectory(D1->D2), comorbidity(D1-D2), nodes(phecodes), and highlight their difference.
 
         Args:
@@ -722,9 +814,12 @@ class ThreeDimensionalDiseaseNetwork(object):
         plot_data += [trace_edges]
         return plot_data
 
-    def __compact_plot(self,main_line_width:float,
-                       source:str='phecode_d1',
-                       target:str='phecode_d2') -> list:
+    def __compact_plot(
+        self,
+        main_line_width:float,
+        source:str='phecode_d1',
+        target:str='phecode_d2'
+    ) -> list:
         """get the attribution of plot. This method plots the trajectory(D1->D2) of incluster nodes(phecodes), and incluster nodes(phecodes).
 
         Args:
@@ -811,18 +906,21 @@ class ThreeDimensionalDiseaseNetwork(object):
             plot_data += [trace_edges]
         return plot_data
 
-    def plot_3d(self, max_radius:float, 
-                min_radius:float,
-                plot_method:str,
-                line_color:str, 
-                line_width:float,
-                layer_distance:float,
-                file_name:str,
-                layout_width:float=900,
-                layout_height:float=900,
-                font_style:str='Times New Roman',
-                font_size:float=15,
-                location_method:str='random'):
+    def plot_3d(
+        self, 
+        max_radius:float, 
+        min_radius:float,
+        plot_method:str,
+        line_color:str, 
+        line_width:float,
+        layer_distance:float,
+        file_name:str,
+        layout_width:float=900,
+        layout_height:float=900,
+        font_style:str='Times New Roman',
+        font_size:float=15,
+        location_method:str='random'
+    ) -> None:
         """plot the three-dimension comorbidity and trajectory network.
 
         Args:
@@ -855,17 +953,19 @@ class ThreeDimensionalDiseaseNetwork(object):
         plot_data = []
         # plot the origin disease
         if self.__exposure_disease != 9999:
-            origin_data = go.Scatter3d(x=[self.__exposure_disease_location[0]],
-                                       y=[self.__exposure_disease_location[1]],
-                                       z=[self.__exposure_disease_location[2]],
-                                       mode='markers',
-                                       marker=dict(symbol='circle',size=self.__exposure_disease_size,color='black'),
-                                       text=['Depression'],
-                                       hoverinfo='text',
-                                       legendgroup='origin',
-                                       legendgrouptitle_text='Origin of Trajectories',
-                                       name='Depression',
-                                       showlegend=True)
+            origin_data = go.Scatter3d(
+                x=[self.__exposure_disease_location[0]],
+                y=[self.__exposure_disease_location[1]],
+                z=[self.__exposure_disease_location[2]],
+                mode='markers',
+                marker=dict(symbol='circle',size=self.__exposure_disease_size,color='black'),
+                text=['Depression'],
+                hoverinfo='text',
+                legendgroup='origin',
+                legendgrouptitle_text='Origin of Trajectories',
+                name='Depression',
+                showlegend=True
+            )
             plot_data += [origin_data]
         # plot the nodes and edges
         if plot_method == 'full':
@@ -904,14 +1004,16 @@ class ThreeDimensionalDiseaseNetwork(object):
         # create the file of the figure
         py.plot(fig, filename=file_name)
 
-    def comorbidity_network_plot(self, max_radius:float,
-                                 min_radius:float,
-                                 line_width:float=1,
-                                 source:str="phecode_d1",
-                                 target:str="phecode_d2",
-                                 location_method:str="random",
-                                 line_color:str="black",
-                                 ) -> None:
+    def comorbidity_network_plot(
+        self, 
+        max_radius:float,
+        min_radius:float,
+        line_width:float=1,
+        source:str="phecode_d1",
+        target:str="phecode_d2",
+        location_method:str="random",
+        line_color:str="black",
+    ) -> None:
         """plot the result of commorbidity. The method same to plot_3d just in the plane of x-y.
 
         Args:
@@ -982,15 +1084,18 @@ class ThreeDimensionalDiseaseNetwork(object):
         )
         fig.show()
 
-    def incluster_trajectory_plot(self, distance:float, 
-                                  layer_distance:float,
-                                  line_width:float,
-                                  line_color:str,
-                                  max_radius:float,
-                                  min_radius:float,
-                                  location_method:str="random",
-                                  source:str="phecode_d1",
-                                  target:str="phecode_d2") -> None:
+    def incluster_trajectory_plot(
+        self, 
+        distance:float, 
+        layer_distance:float,
+        line_width:float,
+        line_color:str,
+        max_radius:float,
+        min_radius:float,
+        location_method:str="random",
+        source:str="phecode_d1",
+        target:str="phecode_d2"
+    ) -> None:
         """plot the incluster trajectory of each cluster.
 
         Args:

@@ -39,11 +39,13 @@ class DiseaseNetworkData:
     
     """
     
-    def __init__(self, 
-                 study_design:str='cohort', 
-                 phecode_level:int=1, 
-                 date_fmt:str='%Y-%m-%d', 
-                 phecode_version:str='1.2'):
+    def __init__(
+        self, 
+        study_design:str='cohort', 
+        phecode_level:int=1, 
+        date_fmt:str='%Y-%m-%d', 
+        phecode_version:str='1.2'
+    ):
         #fixed attributes
         #phenotype data
         self.__module_dir = os.path.dirname(__file__)
@@ -54,24 +56,26 @@ class DiseaseNetworkData:
         self.__index_date_col = 'index_date'
         self.__end_date_col = 'end_date'
         self.__mathcing_identifier_col = 'group'
-        self.__phenotype_col_dict = {'matched cohort':{'Participant ID':self.__id_col,
-                                                     'Exposure':self.__exposure_col,
-                                                     'Sex':self.__sex_col,
-                                                     'Index date': self.__index_date_col,
-                                                     'End date': self.__end_date_col,
-                                                     'Matching identifier':self.__mathcing_identifier_col},
-                                     'cohort':{'Participant ID':self.__id_col,
-                                               'Exposure':self.__index_date_col,
-                                               'Sex':self.__sex_col,
-                                               'Index date': self.__index_date_col,
-                                               'End date': self.__end_date_col},
-                                     'registry':{"Participant ID":self.__id_col,
-                                                 "Sex":self.__sex_col,
-                                                 "Index date":self.__index_date_col,
-                                                 "End date":self.__end_date_col}}
+        self.__phenotype_col_dict = {
+            'matched cohort':{'Participant ID':self.__id_col,
+                                'Exposure':self.__exposure_col,
+                                'Sex':self.__sex_col,
+                                'Index date': self.__index_date_col,
+                                'End date': self.__end_date_col,
+                                'Matching identifier':self.__mathcing_identifier_col},
+            'cohort':{'Participant ID':self.__id_col,
+                        'Exposure':self.__index_date_col,
+                        'Sex':self.__sex_col,
+                        'Index date': self.__index_date_col,
+                        'End date': self.__end_date_col},
+            'registry':{"Participant ID":self.__id_col,
+                        "Sex":self.__sex_col,
+                        "Index date":self.__index_date_col,
+                        "End date":self.__end_date_col}
+        }
         #medical records data
         self.__diagnosis_code_options = ['ICD-9-CM', 'ICD-9-WHO', 'ICD-10-CM', 'ICD-10-WHO']
-        self.__phecode_level_options = [1,2]
+        self.__phecode_level_options = [1, 2]
         self.__phecode_version_options = ['1.2']
         self.__medical_records_cols = ['Participant ID','Diagnosis code','Date of diagnosis']
         self.__medical_recods_info = {}
@@ -114,11 +118,13 @@ class DiseaseNetworkData:
         self.__varialbe_name_place_holder += [str(x) for x in self.phecode_info] #variables reserved for other diseases
         self.__varialbe_name_place_holder += ['follow_up',self.__exposure_col] #other reserved variables
     
-    def phenotype_data(self, 
-                       phenotype_data_path:str, 
-                       column_names:dict, 
-                       covariates:list, 
-                       force:bool=False):
+    def phenotype_data(
+        self, 
+        phenotype_data_path:str, 
+        column_names:dict, 
+        covariates:list, 
+        force:bool=False
+    ) -> None:
         """
         
         Merges phenotype and medical records data into the main data attribute.
@@ -289,13 +295,15 @@ class DiseaseNetworkData:
         if self.__phenotype_statistics['n_neg_follow_unexposed'] > 0 or self.__phenotype_statistics['n_neg_follow_exposed'] > 0:
             self.__warning_phenotype.append(f"Warning: {self.__phenotype_statistics['n_neg_follow_exposed']} exposed individuals and {self.__phenotype_statistics['n_neg_follow_unexposed']} unexposed individuals have negative or zero follow-up time.\nConsider removing them before merge.")
             print(self.__warning_phenotype[-1])
-        #----------
        
-    def merge_medical_records(self, medical_records_data_path:str, 
-                              diagnosis_code:str, 
-                              column_names:dict, 
-                              date_fmt:str=None, 
-                              chunksize:int=1000000):
+    def merge_medical_records(
+        self, 
+        medical_records_data_path:str, 
+        diagnosis_code:str, 
+        column_names:dict, 
+        date_fmt:str=None, 
+        chunksize:int=1000000
+    ) -> None:
         """
         Merge the loaded phenotype data with one or more medical records data.
         If you have multiple medical records data to merge (e.g., with different diagnosis code types), you can call this function multiple times.
@@ -395,14 +403,16 @@ class DiseaseNetworkData:
         #process the medical records data
         #----------
         self._phecode_dict = {id_:{} for id_ in self.phenotype_df[self.__id_col].values} #empty dict
-        result_tuple = medical_records_process(medical_records_data_path,
-                                               self._medical_recods_info['column_names'],
-                                               self._medical_recods_info['diagnosis_code'],
-                                               self._medical_recods_info['date_fmt'],
-                                               self._medical_recods_info['chunksize'],
-                                               self._medical_recods_info['sep'],
-                                               self._phecode_dict,
-                                               self._phecode_mapping)
+        result_tuple = medical_records_process(
+            medical_records_data_path,
+            self._medical_recods_info['column_names'],
+            self._medical_recods_info['diagnosis_code'],
+            self._medical_recods_info['date_fmt'],
+            self._medical_recods_info['chunksize'],
+            self._medical_recods_info['sep'],
+            self._phecode_dict,
+            self._phecode_mapping
+        )
         self._medical_recods_info['n_total_records'],self._medical_recods_info['n_total_missing'],self._medical_recods_info['n_total_trunc_4'],self._medical_recods_info['n_total_trunc_3'],self._medical_recods_info['n_total_no_mapping'],self._medical_recods_info['no_mapping_list'] = result_tuple
         #print some warning information for the current medical records dataset
         prop_missing = self._medical_recods_info['n_total_missing']/self._medical_recods_info['n_total_records']
@@ -438,7 +448,10 @@ class DiseaseNetworkData:
         self.__medical_recods_statistics['n_phecode_diagnosis_per_unexposed'] = np.mean([len(self.diagnosis[id_]) for id_ in unexposed_id])
         self.__medical_recods_statistics['n_phecode_history_per_unexposed'] = np.mean([len(self.history[id_]) for id_ in unexposed_id])
 
-    def get_attribute(self, attr_name:str):
+    def get_attribute(
+        self, 
+        attr_name:str
+    ) -> None:
         """
         Retrieves the value of a specified attribute, providing controlled access to the class's private and protected data.
         
@@ -475,7 +488,10 @@ class DiseaseNetworkData:
         else:
             raise ValueError(f"Attribute {attr_name} not found")
     
-    def modify_phecode_level(self, phecode_level:int):
+    def modify_phecode_level(
+        self, 
+        phecode_level:int
+    ) -> None:
         """
         Modify the phecode level setting.
         
@@ -511,10 +527,14 @@ class DiseaseNetworkData:
             print(f'Phecode level set to {self.phecode_level} now.')
     
     
-    def disease_pair(self, phewas_result:pd.DataFrame, 
-                     min_interval_days:int=0, 
-                     max_interval_days:int=np.inf, 
-                     force:bool=False, **kwargs):
+    def disease_pair(
+        self, 
+        phewas_result:pd.DataFrame, 
+        min_interval_days:int=0, 
+        max_interval_days:int=np.inf, 
+        force:bool=False, 
+        **kwargs
+    ) -> None:
         """
         This function reads PheWAS results from a DataFrame generated by the 'DiseaseNet.pheewas' method. 
         It filters for phecodes with significant associations and constructs all possible temporal (D1 → D2, where D2 is diagnosed after D1) and non-temporal disease pairs (D1 - D2) for each exposed individual, based on the identified significant phecodes.
@@ -597,17 +617,23 @@ class DiseaseNetworkData:
         exp_col = self.__phenotype_info['phenotype_col_dict']['Exposure']
         exposed_index = self.phenotype_df[self.phenotype_df[exp_col]==1].index
 
-        self.trajectory = d1d2_from_diagnosis_history(self.phenotype_df.loc[exposed_index],
-                                                      self.__phenotype_info['phenotype_col_dict']['Participant ID'],
-                                                      self.__phenotype_info['phenotype_col_dict']['Sex'],
-                                                      self.__significant_phecodes,
-                                                      self.history,
-                                                      self.diagnosis,
-                                                      self.phecode_info,
-                                                      min_interval_days,
-                                                      max_interval_days)
+        self.trajectory = d1d2_from_diagnosis_history(
+            self.phenotype_df.loc[exposed_index],
+            self.__phenotype_info['phenotype_col_dict']['Participant ID'],
+            self.__phenotype_info['phenotype_col_dict']['Sex'],
+            self.__significant_phecodes,
+            self.history,
+            self.diagnosis,
+            self.phecode_info,
+            min_interval_days,
+            max_interval_days
+        )
 
-    def load(self, file:str, force:bool=False):
+    def load(
+        self, 
+        file:str, 
+        force:bool=False
+    ) -> None:
         """
         Load data from a gzip-compressed pickle file and restore the attributes to this DiseaseNet.DiseaseNetworkData object.
         This method is intended for restoring data to an empty object. 
@@ -664,7 +690,10 @@ class DiseaseNetworkData:
 
         print("All attributes restored.")
 
-    def save(self, file:str):
+    def save(
+        self,
+        file:str
+    ) -> None:
         """
         Save the DiseaseNet.DiseaseNetworkData object's attributes to a gzip-compressed pickle file,
         which can be restored using the corresponding load method.
@@ -694,23 +723,25 @@ class DiseaseNetworkData:
                 print(f"Attribute '{attr}' is empty.") 
         
         # Create a dictionary to save the data
-        save_dict = {'study_design': self.study_design,
-                     'date_fmt': self.date_fmt,
-                     'phecode_level': self.phecode_level,
-                     'phecode_version': self.phecode_version,
-                     'phecode_info': self.phecode_info,
-                     'phenotype_df': self.phenotype_df,
-                     'diagnosis': self.diagnosis,
-                     'history': self.history,
-                     'trajectory': self.trajectory,
-                     '__warning_phenotype': self.__warning_phenotype,
-                     '__phenotype_statistics': self.__phenotype_statistics,
-                     '__phenotype_info': self.__phenotype_info,
-                     '__warning_medical_records': self.__warning_medical_records,
-                     '__medical_recods_statistics': self.__medical_recods_statistics,
-                     '__medical_recods_info': self.__medical_recods_info,
-                     '__module_dir':self.__module_dir,
-                     '__significant_phecodes':self.__significant_phecodes}
+        save_dict = {
+            'study_design': self.study_design,
+            'date_fmt': self.date_fmt,
+            'phecode_level': self.phecode_level,
+            'phecode_version': self.phecode_version,
+            'phecode_info': self.phecode_info,
+            'phenotype_df': self.phenotype_df,
+            'diagnosis': self.diagnosis,
+            'history': self.history,
+            'trajectory': self.trajectory,
+            '__warning_phenotype': self.__warning_phenotype,
+            '__phenotype_statistics': self.__phenotype_statistics,
+            '__phenotype_info': self.__phenotype_info,
+            '__warning_medical_records': self.__warning_medical_records,
+            '__medical_recods_statistics': self.__medical_recods_statistics,
+            '__medical_recods_info': self.__medical_recods_info,
+            '__module_dir':self.__module_dir,
+            '__significant_phecodes':self.__significant_phecodes
+        }
         
         # Add '.pkl.gz' extension if not present
         if not file.endswith('.pkl.gz'):

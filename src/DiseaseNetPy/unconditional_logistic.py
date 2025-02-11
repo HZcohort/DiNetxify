@@ -10,7 +10,7 @@ import numpy as np
 #from datetime import datetime
 from statsmodels.discrete.discrete_model import Logit
 import time
-from .utility import write_log,find_best_alpha_and_vars,check_variance_vif
+from .utility import write_log, find_best_alpha_and_vars, check_variance_vif
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -93,13 +93,6 @@ def logistic_model(d1:float,d2:float):
     N_d1 = len(phenotype_df_exposed_[phenotype_df_exposed_[d1_col]==1])
     N_d2_withd1 = len(phenotype_df_exposed_[(phenotype_df_exposed_[d2_col]==1) & (phenotype_df_exposed_[d1_col]==1)])
     N_d2_nod1 = len(phenotype_df_exposed_[(phenotype_df_exposed_[d2_col]==1) & (phenotype_df_exposed_[d1_col]==0)])
-    
-    #check var of covariates, remove these with var()==0
-    for var in covariates_:
-        phenotype_df_exposed_[var] = phenotype_df_exposed_[var].astype(float)
-        if phenotype_df_exposed_[var].var() <= 0: #lowest var() allowed
-            covariates_.remove(var)
-    # final_disease_vars, del_var = check_variance_within(phenotype_df_exposed_, covariates_)
 
     #result list
     result_lst = [d1,d2,f'{d1}-{d2}',N,n,f'{N_d2_withd1}/{N_d1}',f'{N_d2_nod1}/{n-N_d1}']
