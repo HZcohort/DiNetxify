@@ -188,9 +188,14 @@ def convert_column(dataframe, column:str):
         else:
             print(f"Warning: '{column}' is treated as a categorical variable, but there are {n_unique_vals} unique values.")
         if df[new_column].isna().any():
-            return pd.get_dummies(df[new_column], prefix=column, dummy_na=True, drop_first=True).astype('int'),'categorical'
+            dummies = pd.get_dummies(df[new_column], prefix=column, dummy_na=True).astype('int')
         else:
-            return pd.get_dummies(df[new_column], prefix=column, drop_first=True).astype('int'),'categorical'
+            dummies = pd.get_dummies(df[new_column], prefix=column).astype('int')
+        # Drop the column with the lowest variance
+        dummy_variances = dummies.var()
+        lowest_var_column = dummy_variances.idxmin()
+        dummies = dummies.drop(columns=lowest_var_column)
+        return dummies,'categorical'
 
 def phenotype_required_columns(dataframe,col_dict:dict,date_fmt:str,study_desgin:str):
     """
