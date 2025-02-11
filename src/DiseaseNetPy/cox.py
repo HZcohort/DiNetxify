@@ -222,10 +222,10 @@ def cox_conditional(phecode:float):
                 strata=[matching_col]
             )
             result_temp = model.summary.loc[exp_col]
-            result += [f'fitted_lifelines and delete the variate: {del_var}',str_exp,str_noexp]
+            result += [f'fitted_lifelines and delete the covariate(s): {del_var}',str_exp,str_noexp]
             result += [x for x in result_temp[['coef','se(coef)','p']]]
         else:
-            result += [f'fitted and delete the variate: {del_var}',str_exp,str_noexp]
+            result += [f'fitted and delete the covariate(s): {del_var}',str_exp,str_noexp]
             result += [model_result.params[0],model_result.bse[0],model_result.pvalues[0]]
     except Exception as e:
         if e_stats:
@@ -241,7 +241,7 @@ def cox_conditional(phecode:float):
                 strata=[matching_col]
             )
             result_temp = model.summary.loc[exp_col]
-            result += [f'fitted_lifelines and delete the variate: {del_var}',str_exp,str_noexp]
+            result += [f'fitted_lifelines and delete the covariate(s): {del_var}',str_exp,str_noexp]
             result += [x for x in result_temp[['coef','se(coef)','p']]]
         except Exception as e:
             if e_lifelines:
@@ -513,10 +513,10 @@ def cox_unconditional(phecode:float):
                 event_col=outcome_col
             )
             result_temp = model.summary.loc[exp_col]
-            result += [f'fitted_lifelines and delete the variate: {del_var}',str_exp,str_noexp]
+            result += [f'fitted_lifelines and delete the covariate(s): {del_var}',str_exp,str_noexp]
             result += [x for x in result_temp[['coef','se(coef)','p']]]
         else:
-            result += [f'fitted and delete the variate: {del_var}',str_exp,str_noexp]
+            result += [f'fitted and delete the covariate(s): {del_var}',str_exp,str_noexp]
             result += [model_result.params[0],model_result.bse[0],model_result.pvalues[0]]
     except Exception as e:
         if e_stats:
@@ -531,7 +531,7 @@ def cox_unconditional(phecode:float):
                 event_col=outcome_col
             )
             result_temp = model.summary.loc[exp_col]
-            result += [f'fitted_lifelines and delete the variate: {del_var}',str_exp,str_noexp]
+            result += [f'fitted_lifelines and delete the covariate(s): {del_var}',str_exp,str_noexp]
             result += [x for x in result_temp[['coef','se(coef)','p']]]
         except Exception as e:
             if e_lifelines:
