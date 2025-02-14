@@ -10,7 +10,7 @@ import pandas as pd
 import numpy as np
 import time
 from .data_management import DiseaseNetworkData
-from .utility import write_log, check_variance_vif
+from .utility import write_log, check_variance_vif, check_history_exclusion, time_first_diagnosis
 from statsmodels.duration.hazard_regression import PHReg
 import warnings
 warnings.filterwarnings('ignore')
@@ -73,7 +73,7 @@ def cox_conditional(phecode:float):
         sex_code = 0
     else:
         sex_code = None
-    exl_range = phecode_dict['phecode_exclude_range']
+    exl_list = phecode_dict['exclude_list']
     min_icd_num = data_.min_required_icd_codes
     
     #result list
@@ -112,27 +112,25 @@ def cox_conditional(phecode:float):
     else:
         dataset_analysis = data_.phenotype_df[covariates_+[id_col,index_date_col,end_date_col,exp_col,sex_col,matching_col]]
     
-    if pd.isna(exl_range):
+    if len(exl_list)==0: #no list of exlusion phecode
         dataset_analysis[exl_flag_col] = 0
     else:
-        exl_list = phecode_dict['exclude_list']
         #start check each individual eligibility
         exl_flag_lst = []
         for id_ in dataset_analysis[id_col].values:
-            history_ = history[id_]
-            n_phecode = sum([n_diagnosis[id_].get(d,0) for d in exl_list])
-            if len(set(history_).intersection(exl_list))>0:
-                exl_flag_lst.append(1)
-            else:
-                exl_flag_lst.append(0)
+            exl_flag_lst.append(check_history_exclusion(exl_list,history[id_],n_diagnosis[id_],min_icd_num))
         dataset_analysis[exl_flag_col] = exl_flag_lst
     
     #sex specific
     if sex_code is not None:
         dataset_analysis[exl_flag_col] = dataset_analysis.apply(lambda row: 1 if row[sex_col] != sex_code 
                                                                 else row[exl_flag_col],axis=1)
-    #exclude eligible individuals
-    dataset_analysis = dataset_analysis.loc[dataset_analysis[exl_flag_col]==0]
+
+    #for mathced cohort study, exclude eligible exposed along with their matched unexposed, and unexposed
+    group_id_exl = dataset_analysis[(dataset_analysis[exl_flag_col]==1) & 
+                                    (dataset_analysis[exp_col]==1)][matching_col].to_list()
+    dataset_analysis = dataset_analysis[(dataset_analysis[exl_flag_col]==0) & 
+                                        ~(dataset_analysis[match_id].isin(group_id_exl))]
     
     #check number
     if len(dataset_analysis) == 0:
@@ -156,11 +154,7 @@ def cox_conditional(phecode:float):
     #define diagnosis time and outcome
     outcome_time_lst = []
     for id_ in dataset_analysis[id_col].values:
-        diagnosis_ = diagnosis[id_]
-        try:
-            date = min([diagnosis_[x] for x in d_lst if x in diagnosis_])
-        except:
-            date = pd.NaT
+        date = time_first_diagnosis(diagnosis[id_],n_diagnosis[id_],min_icd_num)
         outcome_time_lst.append(date)
     dataset_analysis[outcome_time_col] = outcome_time_lst
     dataset_analysis[outcome_col] = dataset_analysis[outcome_time_col].apply(lambda x: 0 if pd.isna(x) else 1)
@@ -368,7 +362,8 @@ def cox_unconditional(phecode:float):
         sex_code = 0
     else:
         sex_code = None
-    exl_range = phecode_dict['phecode_exclude_range']
+    exl_list = phecode_dict['exclude_list']
+    min_icd_num = data_.min_required_icd_codes
     
     #result list
     result = [phecode,disease_name,system,sex_specific]
@@ -384,6 +379,7 @@ def cox_unconditional(phecode:float):
     #history and diagnosis dict
     history = data_.history
     diagnosis = data_.diagnosis
+    n_diagnosis = data_.n_diagnosis
     
     #default columns
     exl_flag_col = 'flag_exl'
@@ -404,18 +400,13 @@ def cox_unconditional(phecode:float):
     else:
         dataset_analysis = data_.phenotype_df[covariates_+[id_col,index_date_col,end_date_col,exp_col,sex_col]]
 
-    if pd.isna(exl_range):
+    if len(exl_list)==0: #no list of exlusion phecode
         dataset_analysis[exl_flag_col] = 0
     else:
-        exl_list = phecode_dict['exclude_list']
-        #start check
+        #start check each individual eligibility
         exl_flag_lst = []
         for id_ in dataset_analysis[id_col].values:
-            history_ = history[id_]
-            if len(set(history_).intersection(exl_list))>0:
-                exl_flag_lst.append(1)
-            else:
-                exl_flag_lst.append(0)
+            exl_flag_lst.append(check_history_exclusion(exl_list,history[id_],n_diagnosis[id_],min_icd_num))
         dataset_analysis[exl_flag_col] = exl_flag_lst
     
     #sex specific
@@ -447,11 +438,7 @@ def cox_unconditional(phecode:float):
     #define diagnosis time and outcome
     outcome_time_lst = []
     for id_ in dataset_analysis[id_col].values:
-        diagnosis_ = diagnosis[id_]
-        try:
-            date = min([diagnosis_[x] for x in d_lst if x in diagnosis_])
-        except:
-            date = pd.NaT
+        date = time_first_diagnosis(diagnosis[id_],n_diagnosis[id_],min_icd_num)
         outcome_time_lst.append(date)
     dataset_analysis[outcome_time_col] = outcome_time_lst
     dataset_analysis[outcome_col] = dataset_analysis[outcome_time_col].apply(lambda x: 0 if pd.isna(x) else 1)

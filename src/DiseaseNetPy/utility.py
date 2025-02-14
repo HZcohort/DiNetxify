@@ -667,6 +667,47 @@ def filter_phecodes(phecode_info, system_inc=None, system_exl=None, phecode_inc=
 
     return phecode_lst_all
 
+def check_history_exclusion(exl_lst,history_list,n_diagnosis_dict, threshold):
+    """
+    Given the nested exclusion list for a phecode, and the history diagnosis list 
+    as well as number of phecode occurence dictionary for a individual, return whether this individual is eligible (0) or not (1)
+
+    Parameters:
+        exl_lst: nested list of phecode for exlusion
+        history_list: dictionary (in the future version) or list of history phecode diagnosis for a individual
+        n_diagnosis_dict: dictionary recording the number of phecode occurence for a individual
+        threshold: min_required_icd_codes
+    
+    Returns:
+        eligible (0) or not (1)
+    """
+    for lst in exl_lst:
+        if len(set(history_list).intersection(set(lst)))>0 and sum([n_diagnosis_dict.get(d) for d in lst])>=threshold:
+            return 1
+        else:
+            continue
+    return 0
+
+def time_first_diagnosis(d_lst,diagnosis_dict,n_diagnosis_dict,threshold):
+    """
+    Given the list of leaf phecodes for a root phecode, and the diagnosis dictionary and number of phecode occurence dictionary for a individual, 
+    return the first date (or nan if no records or not eligible) of diagnosis for that root phecode
+
+    Parameters:
+        d_lst: list of leaf phecode for a root phecode
+        diagnosis_dict: diagnosis dictionary for a individual
+        n_diagnosis_dict: dictionary recording the number of phecode occurence for a individual
+        threshold: min_required_icd_codes
+    
+    Returns:
+        first diagnosis date or pd.NaT
+    """
+    if sum([n_diagnosis_dict.get(d,0) for d in d_lst])>=threshold:
+        return min([diagnosis_dict.get(x,pd.NaT) for x in d_lst])
+    else:
+        return pd.NaT
+
+
 def states_p_adjust(df,p_col,correction,cutoff,prefix_sig_col,prefix_padj_col):
     """
     Applies p-value adjustment for multiple comparisons and determines significance based on a cutoff.
@@ -1129,7 +1170,7 @@ def check_variance_vif(df:pd.DataFrame,
                        disease_var_lst:list=None, 
                        pca_var_lst:list=None, 
                        group_col:str=None,
-                       vif_cutoff:int=5) -> list:
+                       vif_cutoff:int=10) -> list:
     """
     Check within group variance and Variance inflation factor (VIF) for the all the covariates.
     Covariate with 0 within group variance will be removed.
