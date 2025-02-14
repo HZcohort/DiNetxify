@@ -127,10 +127,10 @@ def cox_conditional(phecode:float):
                                                                 else row[exl_flag_col],axis=1)
 
     #for mathced cohort study, exclude eligible exposed along with their matched unexposed, and unexposed
-    group_id_exl = dataset_analysis[(dataset_analysis[exl_flag_col]==1) & 
+    match_id_exl = dataset_analysis[(dataset_analysis[exl_flag_col]==1) & 
                                     (dataset_analysis[exp_col]==1)][matching_col].to_list()
     dataset_analysis = dataset_analysis[(dataset_analysis[exl_flag_col]==0) & 
-                                        ~(dataset_analysis[match_id].isin(group_id_exl))]
+                                        ~(dataset_analysis[matching_col].isin(match_id_exl))]
     
     #check number
     if len(dataset_analysis) == 0:
@@ -154,7 +154,7 @@ def cox_conditional(phecode:float):
     #define diagnosis time and outcome
     outcome_time_lst = []
     for id_ in dataset_analysis[id_col].values:
-        date = time_first_diagnosis(diagnosis[id_],n_diagnosis[id_],min_icd_num)
+        date = time_first_diagnosis(d_lst,diagnosis[id_],n_diagnosis[id_],min_icd_num)
         outcome_time_lst.append(date)
     dataset_analysis[outcome_time_col] = outcome_time_lst
     dataset_analysis[outcome_col] = dataset_analysis[outcome_time_col].apply(lambda x: 0 if pd.isna(x) else 1)
@@ -438,7 +438,7 @@ def cox_unconditional(phecode:float):
     #define diagnosis time and outcome
     outcome_time_lst = []
     for id_ in dataset_analysis[id_col].values:
-        date = time_first_diagnosis(diagnosis[id_],n_diagnosis[id_],min_icd_num)
+        date = time_first_diagnosis(d_lst,diagnosis[id_],n_diagnosis[id_],min_icd_num)
         outcome_time_lst.append(date)
     dataset_analysis[outcome_time_col] = outcome_time_lst
     dataset_analysis[outcome_col] = dataset_analysis[outcome_time_col].apply(lambda x: 0 if pd.isna(x) else 1)
