@@ -423,7 +423,7 @@ def diagnosis_history_update(diagnosis_dict:dict, n_diagnosis_dict:dict, history
     for patient_id in phecode_dict:
         for phecode,[date,n] in phecode_dict[patient_id].items():
             #first update the number of phecode occurence
-            n_diagnosis_dict[patient_id][phecode] = n_diagnosis_dict[patient_id].get(phecode,0) + 1
+            n_diagnosis_dict[patient_id][phecode] = n_diagnosis_dict[patient_id].get(phecode,0) + n
             #then update the diangosis and history dictionary
             if date > end_date_dict[patient_id]:
                 try:
