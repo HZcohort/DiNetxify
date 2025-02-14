@@ -74,6 +74,7 @@ def cox_conditional(phecode:float):
     else:
         sex_code = None
     exl_range = phecode_dict['phecode_exclude_range']
+    min_icd_num = data_.min_required_icd_codes
     
     #result list
     result = [phecode,disease_name,system,sex_specific]
@@ -90,6 +91,7 @@ def cox_conditional(phecode:float):
     #history and diagnosis dict
     history = data_.history
     diagnosis = data_.diagnosis
+    n_diagnosis = data_.n_diagnosis
     
     #default columns
     exl_flag_col = 'flag_exl'
@@ -118,6 +120,7 @@ def cox_conditional(phecode:float):
         exl_flag_lst = []
         for id_ in dataset_analysis[id_col].values:
             history_ = history[id_]
+            n_phecode = sum([n_diagnosis[id_].get(d,0) for d in exl_list])
             if len(set(history_).intersection(exl_list))>0:
                 exl_flag_lst.append(1)
             else:

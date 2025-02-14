@@ -349,7 +349,7 @@ def medical_records_process(medical_records:str,
         print(f'{n_total_read:,} records read ({n_total_records:,} included after filltering on participant ID), {n_total_missing:,} records with missing values excluded.')
         #drop records not in the list
         #sort and drop duplicates
-        chunk = chunk.sort_values(by=[date_col],ascending=True).drop_duplicates(subset=[eid_col,icd_col],keep='first')
+        chunk = chunk.sort_values(by=[date_col],ascending=True).drop_duplicates()
         #mapping
         new_phecode_lst = []
         for patient_id, icd, date in chunk[[eid_col,icd_col,date_col]].values:
@@ -377,10 +377,10 @@ def medical_records_process(medical_records:str,
         #update the all_phecode_dict with phecode
         for patient_id, phecode, new_date in new_phecode_lst:
             if phecode in all_phecode_dict[patient_id]:
-                if new_date < all_phecode_dict[patient_id][phecode]:
-                    all_phecode_dict[patient_id][phecode] = new_date
+                old_date,n = all_phecode_dict[patient_id][phecode]
+                all_phecode_dict[patient_id][phecode] = [min(old_date,new_date),n+1]
             else:
-                all_phecode_dict[patient_id][phecode] = new_date
+                all_phecode_dict[patient_id][phecode] = [new_date,1]
     #print final report
     print(f'Total: {n_total_records:,} diagnosis records processed, {n_total_missing:,} records with missing values were excluded.')
     print(f'{n_total_trunc_4:,} diagnosis records mapped to phecode after truncating to 4 digits.')
@@ -389,7 +389,7 @@ def medical_records_process(medical_records:str,
     return n_total_records,n_total_missing,n_total_trunc_4,n_total_trunc_3,n_total_no_mapping,no_mapping_list
     
 
-def diagnosis_history_update(diagnosis_dict:dict, history_dict:dict, start_date_dict:dict, end_date_dict:dict, phecode_dict:dict):
+def diagnosis_history_update(diagnosis_dict:dict, n_diagnosis_dict:dict, history_dict:dict, start_date_dict:dict, end_date_dict:dict, phecode_dict:dict):
     """
     Update the diagnosis and history dictionary (nested) using provided phecode dictionary.
 
@@ -397,7 +397,10 @@ def diagnosis_history_update(diagnosis_dict:dict, history_dict:dict, start_date_
     ----------
     diagnosis_dict : dict
         DiseaseNetworkData.diagnosis, a nested dictionary with participant ID being the key and a dictionary being the value, where phecode is the key and date of diagnosis is the value.
-        
+    
+    n_diagnosis_dict : dict
+        DiseaseNetworkData.n_diagnosis, a nested dictionary with participant ID being the key and a dictionary being the value, where phecode is the key and number of occurence is the value.
+
     history_dict : dict
         DiseaseNetworkData.history, a nested dictionary with participant ID being the key and a list of phecode being the value.
     
@@ -418,7 +421,10 @@ def diagnosis_history_update(diagnosis_dict:dict, history_dict:dict, start_date_
     """
     n_invalid = {}
     for patient_id in phecode_dict:
-        for phecode,date in phecode_dict[patient_id].items():
+        for phecode,[date,n] in phecode_dict[patient_id].items():
+            #first update the number of phecode occurence
+            n_diagnosis_dict[patient_id][phecode] = n_diagnosis_dict[patient_id].get(phecode,0) + 1
+            #then update the diangosis and history dictionary
             if date > end_date_dict[patient_id]:
                 try:
                     n_invalid[patient_id] += 1

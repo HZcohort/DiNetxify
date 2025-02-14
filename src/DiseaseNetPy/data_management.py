@@ -31,6 +31,11 @@ class DiseaseNetworkData:
         For larger studies, level 2 phecodes may enhance result interpretation. 
         For smaller studies, level 1 is recommended to maintain statistical power.
     
+    min_required_icd_codes : int, default=1
+        The minimum number of ICD codes mapping to a specific phecode required for the phecode to be considered valid.
+        For example, if set to 2, a single diagnosis record will not be sufficient to count as an occurrence.
+        Ensure that your medical records are complete (i.e., not limited to recording only the first occurrence) when using this parameter.
+    
     date_fmt : str, default='%Y-%m-%d'
         The format of the date fields in your phenotype and medical records data.
     
@@ -43,8 +48,9 @@ class DiseaseNetworkData:
         self, 
         study_design:str='cohort', 
         phecode_level:int=1, 
+        min_required_icd_codes:int=1,
         date_fmt:str='%Y-%m-%d', 
-        phecode_version:str='1.2'
+        phecode_version:str='1.2',
     ):
         #fixed attributes
         #phenotype data
@@ -94,18 +100,23 @@ class DiseaseNetworkData:
         #check phecode version
         if phecode_version not in self.__phecode_version_options:
             raise ValueError(f"Supported phecode version {self.__phecode_version_options}")
+        #check minimal require ICD code number
+        if not isinstance(min_required_icd_codes,int) or min_required_icd_codes<=0:
+            raise TypeError("The input 'min_required_icd_codes' must be a int number > 0.")
         
         #assign parameter attributes
         self.study_design = study_design
         self.date_fmt = date_fmt
         self.phecode_level = phecode_level
         self.phecode_version = phecode_version
+        self.min_required_icd_codes = min_required_icd_codes
         #load necessary phecode files
         self.__phecode_info_npyfile = os.path.join(self.__module_dir,f'data/phecode_{self.phecode_version}/level{self.phecode_level}_info.npy')
         self.phecode_info = np.load(self.__phecode_info_npyfile,allow_pickle=True).item()
         #reset key attributes
         self.phenotype_df = None
         self.diagnosis = None
+        self.n_diagnosis = None #new dictionary, recording the number of occurence of each phecode
         self.history = None
         self.trajectory = None
         self.__warning_phenotype = []
@@ -167,7 +178,7 @@ class DiseaseNetworkData:
         
         """
         if not force:
-            data_attrs = ['phenotype_df', 'diagnosis', 'history', 'trajectory']
+            data_attrs = ['phenotype_df', 'diagnosis', 'n_diagnosis', 'history', 'trajectory']
             for attr in data_attrs:
                 if getattr(self, attr) is not None:
                     raise ValueError(f"Attribute '{attr}' is not empty. Use force=True to overwrite existing data.")
@@ -176,6 +187,7 @@ class DiseaseNetworkData:
         #reset key dataset
         self.phenotype_df = None
         self.diagnosis = None
+        self.n_diagnosis = None
         self.history = None
         self.trajectory = None
         print('Phenotype and medical records data reset.')
@@ -363,6 +375,7 @@ class DiseaseNetworkData:
             self.__medical_recods_statistics = {}
             self._medical_recods_info = {}
             self.diagnosis = None
+            self.n_diagnosis = None
             self.history = None
             
         #check diagnosis code
@@ -426,9 +439,10 @@ class DiseaseNetworkData:
         #if not existing create new one
         if len(self.__medical_recods_info)==0:
             self.diagnosis = {id_:{} for id_ in self.phenotype_df[self.__id_col].values}
+            self.n_diagnosis = {id_:{} for id_ in self.phenotype_df[self.__id_col].values}
             self.history = {id_:[] for id_ in self.phenotype_df[self.__id_col].values}
-        #update new or exsiting diagnosis and history data
-        self._medical_recods_info['n_invalid'] = diagnosis_history_update(self.diagnosis,self.history,
+        #update new or exsiting diagnosis/diagnosis_n and history data
+        self._medical_recods_info['n_invalid'] = diagnosis_history_update(self.diagnosis,self.n_diagnosis,self.history,
                                                                           dict(self.phenotype_df[[self.__id_col,self.__index_date_col]].values),
                                                                           dict(self.phenotype_df[[self.__id_col,self.__end_date_col]].values),
                                                                           self._phecode_dict)
@@ -576,7 +590,7 @@ class DiseaseNetworkData:
                 if getattr(self, attr) is not None:
                     raise ValueError(f"Attribute '{attr}' is not empty. Use force=True to overwrite existing data.")
         
-        data_attrs = ['phenotype_df', 'diagnosis', 'history']
+        data_attrs = ['phenotype_df', 'diagnosis', 'n_diagnosis', 'history']
         for attr in data_attrs:
             if getattr(self, attr) is None:
                 raise ValueError(f"Attribute '{attr}' is empty.")
@@ -660,7 +674,7 @@ class DiseaseNetworkData:
         
         # Check for existing data if force is not True
         if not force:
-            data_attrs = ['phenotype_df', 'diagnosis', 'history', 'trajectory']
+            data_attrs = ['phenotype_df', 'diagnosis', 'n_diagnosis', 'history', 'trajectory']
             for attr in data_attrs:
                 if getattr(self, attr) is not None:
                     raise ValueError(f"Attribute '{attr}' is not empty. Use force=True to overwrite existing data.")
@@ -674,8 +688,8 @@ class DiseaseNetworkData:
         # Restore the pandas DataFrame attribute
         self.phenotype_df = data_dict.pop('phenotype_df')
         # Restore all simple attributes directly from data_dict
-        simple_attrs = ['study_design', 'date_fmt', 'phecode_level', 'phecode_version',
-                        'phecode_info', 'diagnosis', 'history', 'trajectory']
+        simple_attrs = ['study_design', 'date_fmt', 'phecode_level', 'phecode_version','min_required_icd_codes'
+                        'phecode_info', 'diagnosis', 'n_diagnosis', 'history', 'trajectory']
         for attr in simple_attrs:
             setattr(self, attr, data_dict.pop(attr, None))
         # Restore all private attributes from data_dict
@@ -728,9 +742,11 @@ class DiseaseNetworkData:
             'date_fmt': self.date_fmt,
             'phecode_level': self.phecode_level,
             'phecode_version': self.phecode_version,
+            'min_required_icd_codes': self.min_required_icd_codes,
             'phecode_info': self.phecode_info,
             'phenotype_df': self.phenotype_df,
             'diagnosis': self.diagnosis,
+            'n_diagnosis': self.n_diagnosis,
             'history': self.history,
             'trajectory': self.trajectory,
             '__warning_phenotype': self.__warning_phenotype,

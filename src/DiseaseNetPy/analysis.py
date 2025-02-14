@@ -124,7 +124,7 @@ def phewas(data:DiseaseNetworkData,
         raise TypeError("The input 'data' must be a DiseaseNetworkData object.")
     
     #attribute check
-    data_attrs = ['phenotype_df', 'diagnosis', 'history']
+    data_attrs = ['phenotype_df', 'diagnosis', 'n_diagnosis', 'history']
     for attr in data_attrs:
         if getattr(data, attr) is None:
             raise ValueError(f"Attribute '{attr}' is empty.")
@@ -861,7 +861,7 @@ def comorbidity_network(data:DiseaseNetworkData,
         raise TypeError("The input 'data' must be a DiseaseNetworkData object.")
     
     #attribute check
-    data_attrs = ['history','diagnosis','trajectory','phenotype_df']
+    data_attrs = ['history','diagnosis', 'n_diagnosis','trajectory','phenotype_df']
     for attr in data_attrs:
         if getattr(data, attr) is None:
             raise ValueError(f"Attribute '{attr}' is empty.")
@@ -1182,7 +1182,7 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
         raise TypeError("The input 'data' must be a DiseaseNetworkData object.")
     
     #attribute check
-    data_attrs = ['history','diagnosis','trajectory','phenotype_df']
+    data_attrs = ['history','diagnosis', 'n_diagnosis','trajectory','phenotype_df']
     for attr in data_attrs:
         if getattr(data, attr) is None:
             raise ValueError(f"Attribute '{attr}' is empty.")
