@@ -682,7 +682,7 @@ def check_history_exclusion(exl_lst,history_list,n_diagnosis_dict, threshold):
         eligible (0) or not (1)
     """
     for lst in exl_lst:
-        if len(set(history_list).intersection(set(lst)))>0 and sum([n_diagnosis_dict.get(d) for d in lst])>=threshold:
+        if len(set(history_list).intersection(set(lst)))>0 and sum([n_diagnosis_dict.get(d,0) for d in lst])>=threshold:
             return 1
         else:
             continue
