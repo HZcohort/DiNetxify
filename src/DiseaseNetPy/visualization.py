@@ -4,27 +4,29 @@ Created on Wed Jan 1 19:48:09 2025
 
 @author: Haowen Liu - Biomedical Big data center of West China Hospital, Sichuan University
 """
-
-import plotly.offline as py
-import plotly.graph_objects as go
 import community as community_louvain
+import plotly.graph_objects as go
 import matplotlib.pyplot as plt
-from scipy import stats
-import numpy as np
-import copy
-import random
-import pandas as pd
-import math
+import plotly.offline as py
+import matplotlib.cm as cm
 import networkx as nx
-import os
+import pandas as pd
+import numpy as np
+import random
+import math
+
+from collections import (
+    defaultdict,
+    deque,
+    Counter
+)
+
 from typing import (
-    Type,
-    List,
     Any,
+    List,
     Dict,
-    Optional,
     Tuple,
-    Union,
+    Optional,
 )
 
 Df = pd.DataFrame
@@ -51,84 +53,176 @@ SYSTEM = [
 ]
 
 class ThreeDimensionalDiseaseNetwork(object):
+    """
+    
+    """
     def __init__(
         self, 
-        comorbidity_network_result: Df, 
-        disease_trajectory_result: Df,
+        comorbidity_result: Df, 
+        trajectory_result: Df,
         phewas_result: Df,
-        exposure_disease: Optional[float]=9999.0,
-        exposure_disease_location: Optional[Tuple[float]]=(0.0, 0.0, 0.0),
-        exposure_disease_size: Optional[float]=1.0,
+        exposure: Optional[float]=None,
+        exposure_location: Optional[Tuple[float]]=None,
+        exposure_size: Optional[float]=None,
         source: Optional[str]='phecode_d1',
         target: Optional[str]='phecode_d2'
     ):
-        """initialize the peoperty of ThreeDimensionalDiseaseNetwork class.
+        """initialize the ThreeDimensionalDiseaseNetwork class.
 
         Args:
-            comorbidity_network_result (pd.DataFrame): the result of comorbidity network analysis.
-            disease_trajectory_result (pd.DataFrame): the result of trajectory network analysis.
-            phewas_result (pd.DataFrame): the result of PHEWAS analysis.
-            exposure_disease (float, optional): the exposure disease phecode in the cohort studies, if it equals to 9999 there is a registry study. Defaults to 9999.
-            exposure_disease_location (tuple, optional): the location of exposure disease phecode in the cohort studies. Defaults to (0,0,0).
-            exposure_disease_size (float, optional): the size of exposure disease phecode in the cohort studies. Defaults to 1.
-            source (str, optional): the column name of D1. Defaults to 'phecode_d1'.
-            target (str, optional): the column name of D2. Defaults to 'phecode_d2'.
+            comorbidity_result (Df): Result of comorbidity network analysis.
+            trajectory_result (Df): Result of trajectory network analysis.
+            phewas_result (Df): Result of PHEWAS analysis.
+            exposure (float, optional): Phecode of exposure in the cohort studies.
+                Defaults to None.
+
+            exposure_location (Tuple[float], optional): Three dimension location 
+                of exposure to plot. Defaults to None.
+
+            exposure_size (float, optional): Size of exposure. Defaults to None.
+            source (str, optional): Column name of D1. Defaults to 'phecode_d1'.
+            target (str, optional): Column name of D2. Defaults to 'phecode_d2'.
         """
-        # primary attributions
-        self.__module_dir = os.path.dirname(__file__)
-        self.__comorbidity_network_result = comorbidity_network_result
-        self.__phecode_number = dict(zip(phewas_result["phecode"], phewas_result["N_cases_exposed"]))
-        self.__describe = pd.read_csv(os.path.join(self.__module_dir, "data/phecode_1.2/phecode_info.csv"))
-        self.__exposure_disease = exposure_disease
-        self.__exposure_disease_size = exposure_disease_size
-        self.__exposure_disease_location = exposure_disease_location
+        self.__check_disease_pairs(
+            trajectory_result,
+            comorbidity_result,
+            source,
+            target
+        )
 
-        self.__system = [
-            'circulatory system', 
-            'sense organs', 
-            'injuries & poisonings', 
-            'neurological',
-            'dermatologic', 
-            'digestive', 
-            'hematopoietic', 
-            'musculoskeletal', 
-            'endocrine/metabolic', 
-            'mental disorders', 
-            'infectious diseases', 
-            'genitourinary', 
-            'neoplasms', 
-            'respiratory', 
-            "symptoms", 
-            "congenital anomalies", 
-            "mental disorders", 
-            "others"
-        ]
-        self.__system_color = ["#FF5733","#33FF57","#3357FF","#FFFF33","#FF33FF","#33FFFF","#C70039",
-                               "#900C3F","#581845","#1ABC9C","#2ECC71","#3498DB","#9B59B6","#E74C3C",
-                               "#F1C40F","#FF7F50","#FFD700", "#A52A2A"]
-        
-        # make sure the first layer of phecodes (exposure_disease->phecodes)
-        df = disease_trajectory_result.loc[~disease_trajectory_result['phecode_d1'].isin(disease_trajectory_result[target].values)]
-        df_lst = set(df[source].values)
-        d0_d1 = []
-        for d in df_lst: d0_d1.append([exposure_disease, d, '%f-%f' % (exposure_disease,d)])
-        d0_d1 = pd.DataFrame(d0_d1,columns=['phecode_d1', 'phecode_d2', 'name_disease_pair'])
+        if exposure:
+            trajectory_result = self.__sequence(
+                trajectory_result,
+                exposure,
+                source,
+                target
+            )
 
-        # primary attributions
-        self.__disease_trajectory = pd.concat([disease_trajectory_result, d0_d1])
-        self.__trajectory_disease_pairs = [[row[source], row[target]] for _, row in self.__disease_trajectory.iterrows()]
-        self.__commorbidity_nodes = set(comorbidity_network_result[source].to_list() + comorbidity_network_result[target].to_list())
-        self.__trajectory_nodes = set(disease_trajectory_result[source].to_list() + disease_trajectory_result[target].to_list())
+        self.__init_attrs(
+            comorbidity = comorbidity_result,
+            trajectory = trajectory_result,
+            phewas = phewas_result,
+            exposure = exposure,
+            exposure_location = exposure_location,
+            exposure_size = exposure_size,
+            source = source,
+            target = target,
+            describe = pd.read_csv(
+                "data/phecode_1.2/phecode_info.csv"
+            ),
+            trajectory_pairs = [
+                [
+                    row[source], 
+                    row[target]
+                ] for _, row in trajectory_result.iterrows()
+            ],
+            commorbidity_nodes = self.__get_nodes(
+                comorbidity_result,
+                source,
+                target
+            ),
+            trajectory_nodes = self.__get_nodes(
+                trajectory_result,
+                source,
+                target
+            ),
+            nodes_attrs = {},
+            network_attrs = {}
+        )
         
+        for node in self._commorbidity_nodes:
+            self._nodes_attrs.update({node:{}})
+
+        for node in self._trajectory_nodes:
+            if node in self._nodes_attrs:
+                continue
+            else:
+                self._nodes_attrs.update({node:{}})
+
+        self.__make_node_basic_attrs()
+
     @staticmethod
-    def __split_name(name:str) -> str:
+    def __check_disease_pairs(
+        tra_df: Df,
+        com_df: Df,
+        d1_str: str,
+        d2_str: str
+    ) -> None:
+        """_summary_
+
+        Args:
+            tra_df (Df): _description_
+            com_df (Df): _description_
+            d1_str (str): _description_
+            d2_str (str): _description_
+        """
+        tra_pairs_lst = [
+            [row[d1_str], row[d2_str]]
+            for row in tra_df.iterrows()
+        ]
+        com_pairs_lst = [
+            [row[d1_str], row[d2_str]]
+            for row in com_df.iterrows()
+        ]
+        for pair in tra_pairs_lst:
+            if pair not in com_pairs_lst:
+                Warning("Disease pair of trajectory network has \
+                    not been included comorbidity network")
+
+    @staticmethod
+    def __sequence(
+        df: Df,
+        exposure: float,
+        d1_str: str,
+        d2_str: str
+    ) -> Df:
+        """_summary_
+
+        Args:
+            df (Df): _description_
+            exposure (float): _description_
+            d1_str (str): _description_
+            d2_str (str): _description_
+
+        Returns:
+            Df: _description_
+        """
+        first_layer = set(df.loc[df[d1_str].isin(df[d2_str].values)].values)
+        d1_d2 = [[exposure, d, '%f-%f' % (exposure,d)] for d in first_layer]
+        d1_d2_df = pd.DataFrame(
+            d1_d2,
+            columns=[d1_str, d2_str, 'name_disease_pair']
+        )
+        trajectory_df = pd.concat([df, d1_d2_df])
+        return trajectory_df
+    
+    @staticmethod
+    def __get_nodes(
+        df: Df,
+        d1_str: str,
+        d2_str: str
+    ) -> set:
+        """_summary_
+
+        Args:
+            df (Df): _description_
+            d1_str (str): _description_
+            d2_str (str): _description_
+
+        Returns:
+            set: _description_
+        """
+        return set(df[d1_str].to_list() + df[d2_str].to_list())
+    
+    @staticmethod
+    def __split_name(name: str) -> str:
         """line feed the name of disease.
 
         Args:
             name (str): Disease name.
 
         Returns:
-            str: the disease name lined feed.
+            str: Disease name lined feed.
         """
         words = name.split(' ')
         total_number, new_word = 0, ''
@@ -143,37 +237,32 @@ class ThreeDimensionalDiseaseNetwork(object):
         return new_word.strip(' ')
 
     @staticmethod
-    def __get_dimension(dimension_dict:dict, node:float) -> float:
-        """get the dimension of the phecode.
+    def __generate_colors(
+        n :int, 
+        colormap :Optional[str]='viridis'
+    ) -> List[str]:
+        """_summary_
 
         Args:
-            dimension_dict (dict): {dimension:phecode}.
-            node (float): phecode.
+            n (int): _description_
+            colormap (Optional[str], optional): _description_. Defaults to 'viridis'.
 
         Returns:
-            float: the number of dimension.
+            List[str]: _description_
         """
-        for dimension_number, item in dimension_dict.items():
-            if node in item: return dimension_number
-            
-    @staticmethod
-    def __except_dimension(nodes:list, dimension_dict:dict) -> list:
-        """get the dimension of except phecodes.
-
-        Args:
-            nodes (list): phecodes.
-            dimension_dict (dict): {dimension:phecode}.
-
-        Returns:
-            list: the dimension of nodes.
-        """
-        nodes_dimension = []
-        for item in nodes: nodes_dimension.append(dimension_dict.get(item))
-        nodes_dimension = list(filter(None, nodes_dimension))
-        return nodes_dimension
+        cmap = cm.get_cmap(colormap, n)
+        colors = [cmap(i) for i in range(n)]
+        hex_colors = [
+            f'#{int(r*255):02x}{int(g*255):02x}{int(b*255):02x}' 
+            for r, g, b, _ in colors
+        ]
+        return hex_colors
 
     @staticmethod
-    def __ball_cordinate(center:tuple, r:float) -> tuple:
+    def __sphere_cordinate(
+        center: Tuple[float], 
+        r: float
+    ) -> Tuple[float]:
         """get the cordinate of sphere.
 
         Args:
@@ -192,13 +281,198 @@ class ThreeDimensionalDiseaseNetwork(object):
         y += center[1]
         z += center[2]
         return (x, y, z)
+    
+    @staticmethod
+    def __calculate_order(
+        source_lst :List[float], 
+        target_lst :List[float]
+    ) -> Dict[int]:
+        """_summary_
 
-    def plotly_ball(
+        Args:
+            source_lst (List[float]): _description_
+            target_lst (List[float]): _description_
+
+        Returns:
+            Dict[int]: _description_
+        """
+        adj = defaultdict(list)
+        in_degree = defaultdict(int)
+        nodes = set(source_lst) | set(target_lst)
+        
+        for u, v in zip(source_lst, target_lst):
+            adj[u].append(v)
+            in_degree[v] += 1
+        
+        distance = {node: 1 for node in nodes}
+        
+        queue = deque()
+        for node in nodes:
+            if in_degree[node] == 0:
+                queue.append(node)
+        
+        while queue:
+            u = queue.popleft()
+            for v in adj[u]:
+                if distance[u] + 1 > distance[v]:
+                    distance[v] = distance[u] + 1
+                in_degree[v] -= 1
+                if in_degree[v] == 0:
+                    queue.append(v)
+        return distance
+    
+    @staticmethod
+    def __most_frequent_element(lst: List[Any]) -> Any:
+        counter = Counter(lst)
+        most_common = counter.most_common(1)
+        return most_common[0][0]
+
+    @staticmethod
+    def __calculate_2d_positions(radii: List[float], spacing:float) -> Dict[float]:
+        """calculate the positions of nodes(phecodes).
+
+        Args:
+            radii (list of float): A list of radii of the circles, in the given order.
+            spacing (float): The additional distance between the circles (i.e., the outer tangent distance).
+
+        Returns:
+            dict: {number: x-coordinate}, where the numbering starts from 1 and corresponds to the input order.
+        """
+        circle_positions = {}
+        position = 0
+        for i, radius in enumerate(radii):
+            circle_id = i + 1
+            if i == 0:
+                circle_positions[circle_id] = position
+                position += 2 * radius + spacing  
+            else:
+                if i % 2 == 1:
+                    circle_positions[circle_id] = position  
+                else:
+                    circle_positions[circle_id] = -position  
+                position += 2 * radius + spacing 
+        return circle_positions
+
+    def __check_node_attrs(self, key: str) -> bool:
+        """_summary_
+
+        Args:
+            key (str): _description_
+
+        Returns:
+            bool: _description_
+        """
+        for _, attrs in self._nodes_attrs.items():
+            if key in attrs.keys():
+                is_exist = True
+            else:
+                is_exist = False
+        return is_exist
+
+    def __calculate_ratio(self, cluster_nodes: Dict[float]) -> Dict[float]:
+        for cluster, nodes in cluster_nodes.items():
+            size = [self._nodes_attrs[x]["size"] for x in nodes]
+            sum_size = sum(size)
+            cluster_nodes.update({cluster:sum_size})
+
+        total_size = sum(cluster_nodes.values())
+        for key, value in cluster_nodes.items():
+            cluster_nodes.update({key:value/total_size})
+        return cluster_nodes
+    
+    def __init_attrs(self, **kwargs) -> None:
+        """_summary_
+        """
+        for key, value in kwargs.items():
+            setattr(self, f"_{key}", value)
+    
+    def __update_node_attrs(self, **kwargs) -> None:
+        """_summary_
+        """
+        for key, value in kwargs.items():
+            for node, attr in value.items():
+                self._nodes_attrs[node].update({f"{key}":attr})
+
+    def __get_same_nodes(self, key_name:str) -> Dict[Any]:
+        """_summary_
+
+        Args:
+            key_name (str): _description_
+
+        Returns:
+            Dict[Any]: _description_
+        """
+        attrs = []
+        for attr in self._nodes_attrs.values():
+            attrs.append(attr[key_name])
+        
+        nodes = {x:[] for x in set(attrs)}
+        for attr in set(attrs):
+            for node, value in self._nodes_attrs.items():
+                if value[key_name] == attr:
+                    nodes[attr].append(node)
+        return nodes
+
+    def __get_edge_attrs(
+        self,
+        edge_dict: Dict[float],
+    ) -> Dict[List[float]]:
+        edge_attrs = {
+            0:[],
+            1:[],
+            2:[]
+        }
+        for source, target in edge_dict.items():
+            for i in range(3):
+                edge_attrs[i] += [
+                    self._nodes_attrs[source]["location"][i], 
+                    self._nodes_attrs[target]["location"][i], 
+                    None
+                ]
+        return edge_attrs
+
+    def __sig_nodes(self) -> List[List[float]]:
+        """_summary_
+
+        Returns:
+            List[List[float]]: _description_
+        """
+        pairs = self._trajectory[
+            [
+                self._source,
+                self._target
+            ]
+        ].values
+        pairs = dict(zip(pairs))
+
+        same_cluster_nodes = []
+        for source, target in pairs.items():
+            order = self._nodes_attrs[source]["order"]
+            source_cluster = self._nodes_attrs[source]["cluster"]
+            target_cluster = self._nodes_attrs[target]["cluster"]
+
+            if  order==1 and source_cluster==target_cluster:
+                temp_que = [source]
+                temp_node = target
+
+                while True:
+                    temp_que.append(temp_node)
+                    temp_node = pairs.get(temp_node, None)
+                    temp_node_cluster = self._nodes_attrs[temp_node]["cluster"]
+
+                    if temp_node is None:
+                        same_cluster_nodes.append(temp_que)
+                        break
+                    elif temp_node_cluster != target_cluster:
+                        break
+            else:
+                continue
+        return same_cluster_nodes
+
+    def __sphere_attrs(
         self, 
         center: Tuple[float], 
         r: Tuple[float], 
-        name: str, 
-        label: str, 
         color: str, 
         light_dict: Optional[Dict[float]]=dict(
             ambient=0.2,
@@ -216,9 +490,9 @@ class ThreeDimensionalDiseaseNetwork(object):
         """get the atrribution of sphere to plot.
 
         Args:
-            center (tuple): the location of centre point.
-            r (float): the radius of sphere.
-            name (str): the name of disease.
+            center (Tuple[float]): Three dimension location of centre point.
+            r (float): Radius of sphere.
+            name (str): Name of disease.
             label (str): the label of disease.
             color (str): the color of sphere to plot.
             light_dict (dict, optional): the atrributions of light in the ployly module, more details in plotly. 
@@ -226,9 +500,9 @@ class ThreeDimensionalDiseaseNetwork(object):
             light_position_dict (dict, optional): the location of the light. Defaults to dict(x=1.5, y=1.5, z=1.5).
 
         Returns:
-            x_ (iterable object): the cordinates in the x-axis.
-            y_ (iterable object): the cordinates in the y-axis.
-            z_ (iterable object): the cordinates in the z-axis.
+            x (iterable object): the cordinates in the x-axis.
+            y (iterable object): the cordinates in the y-axis.
+            z (iterable object): the cordinates in the z-axis.
             colorscale_ (list[list]): the color of sphere
             light_dict (dict{str:float}): the atrributions of light in the ployly module. 
                                           Defaults to dict(ambient=0.2, diffuse=0.8, specular=0.4, roughness=0.2, fresnel=2.0).
@@ -236,19 +510,18 @@ class ThreeDimensionalDiseaseNetwork(object):
             name (str): the name of disease.
             light_position_dict (dict{str:float}): the location of the light. Defaults to dict(x=1.5, y=1.5, z=1.5).
         """
-        x, y, z = self.__ball_cordinate(center, r)
+        x, y, z = self.__sphere_cordinate(center, r)
         colorscale = [[0.0, color], [0.5, color], [1.0, color]]
-        return x, y, z, colorscale, light_dict, label, name, light_position_dict
-
+        return x, y, z, colorscale, light_dict, light_position_dict
 
     def __calculate_location_random(
             self, 
-            node:float, 
-            _hash_dict:dict,
-            begin_angle=0.25,
-            end_angele=0.25,
-            _iter_time=10000
-        ):
+            max_radius :float,
+            min_radius :float,
+            redu_ratio :float,
+            cluster_ratio :Dict[float],
+            max_attempts :Optional[int]=10000
+        ) -> None:
         """calculate the location of center point of sphere.
 
         Args:
@@ -262,96 +535,144 @@ class ThreeDimensionalDiseaseNetwork(object):
             _location_dict (dict{float:{tuple}}): the dict of {phecodes:location(x,y,z)}.
             _hash_dict (dict{float:list}): the dict of {cluster:[phecodes in the cluster]}.
         """
-        # get the cluster number
-        cluster_number = self.final_cluster[node]
-        # get the dimension number
-        for dimension_number, nodes in self.dimension.items():
-            if node in nodes: break
-        # calculate the corbinate of sphere
-        if _hash_dict[cluster_number]:
-            iter_time, flag = 0, True
-            while flag:
-                radius = random.uniform(self.__min_radius, self.__max_radius)
-                angle = 2 * math.pi * (self.cumulative_nodes_percentage[self.final_cluster[node]+1]\
-                                       -self.cumulative_nodes_percentage[self.final_cluster[node]])\
-                                       * random.uniform(begin_angle, 1-end_angele)
-                loction = (radius * math.cos(2 * math.pi * self.cumulative_nodes_percentage[self.final_cluster[node]]+angle),
-                           radius * math.sin(2 * math.pi * self.cumulative_nodes_percentage[self.final_cluster[node]]+angle),
-                           self.height[dimension_number])
-                i, hash_list = 0, [x for x in _hash_dict[cluster_number].keys()]
-                while i < len(_hash_dict[cluster_number]):
-                    distance = math.sqrt((_hash_dict[cluster_number][hash_list[i]][0]-loction[0]) ** 2 +
-                                         (_hash_dict[cluster_number][hash_list[i]][1]-loction[1]) ** 2)
-                    length = math.pow(self.get_node_size(node) / 4 * 3 / math.pi, 1/3)
-                    length += math.pow(self.get_node_size(hash_list[i]) / 4 * 3 / math.pi, 1/3)
-                    i += 1
-                    if distance < length: break
-                iter_time += 1
-                if i == len(_hash_dict[cluster_number]) or iter_time == _iter_time: flag = False
-        else:
-            radius = random.uniform(self.__min_radius, self.__max_radius)
-            angle = 2*math.pi*(self.cumulative_nodes_percentage[self.final_cluster[node]+1]\
-                               -self.cumulative_nodes_percentage[self.final_cluster[node]])\
-                                *random.uniform(begin_angle, 1-end_angele)
-            loction = (radius*math.cos(2*math.pi*self.cumulative_nodes_percentage[self.final_cluster[node]]+angle),
-                       radius*math.sin(2*math.pi*self.cumulative_nodes_percentage[self.final_cluster[node]]+angle),
-                       self.height[dimension_number])
-        _location_dict = {node:loction}
-        return _location_dict, _hash_dict
+        if self._exposure_location is None:
+            self._exposure_location = (0, 0, 0)
 
-    def get_node_size(self, node:float) -> float:
-        """get the radius of sphere.
+        cluster_location = {x:{} for x in range(self._network_attrs["cluster number"])}
+        is_sep = True
+        for node, attrs in self._nodes_attrs.items():
+            order = attrs["order"]
+            cluster = attrs["cluster"]
+            max_ang = 2*math.pi*sum([cluster_ratio[i] for i in range(cluster+1)])
+            min_ang = max_ang - 2*math.pi*cluster_ratio[i]
+
+            for _ in range(max_attempts):
+                radius = random.uniform(min_radius, max_radius)
+                node_ang = random.uniform(
+                    min_ang * (1+redu_ratio),
+                    max_ang * (1-redu_ratio)
+                )
+                node_loc = (
+                    radius * math.cos(node_ang),
+                    radius * math.sin(node_ang),
+                    self._exposure_location[2] - order*self._network_attrs["order distance"]
+                )
+
+                for oth_node, loc in cluster_location[cluster].items():
+                    distance = math.sqrt(
+                        (loc[0]-node_loc[0])**2+
+                        (loc[1]-node_loc[1])**2
+                    )
+                    sum_length = sum(
+                        [
+                            math.pow(self._nodes_attrs[node]["size"] / 4 * 3 / math.pi, 1/3),
+                            math.pow(self._nodes_attrs[oth_node]["size"] / 4 * 3 / math.pi, 1/3)
+                        ]
+                    )
+                    if sum_length < distance:
+                        is_sep = False
+                        break
+            if is_sep:
+                cluster_location[cluster].update({node:node_loc})
+                self._nodes_attrs[node].update({"loction":node_loc})
+                break
+    
+    def __make_node_basic_attrs(
+        self,
+        scale_reduction: Optional[float]=0.1
+    ) -> None:
+        """_summary_
 
         Args:
-            node (float): phecode.
-
-        Returns:
-            float: the radius of sphere.
+            scale_reduction (Optional[float], optional): _description_. Defaults to 0.1.
         """
-        size = np.sqrt(self.__phecode_number[node])
-        return size
+        # disease name attrs
+        node_name = {
+            node:self.__split_name('%s (%.1f)' % (name, node)) 
+            for node, name in self._describe[["phecode", "phenotype"]].values
+        }
 
-    def cluster(
+        # disease system attrs
+        node_system = dict(
+            zip(
+                self._describe["phecode"], 
+                self._describe["category"]
+            )
+        )
+
+        # disease size attrs
+        node_size = dict(
+            zip(
+                self._phewas["phecode"], 
+                self._phewas["N_cases_exposed"]*scale_reduction
+            )
+        )
+
+        self.__update_node_attrs(
+            name = node_name,
+            system = node_system,
+            size = node_size
+        )
+
+        # disease color attrs
+        color = self.__generate_colors(len(SYSTEM))
+        sys_color = dict(
+            zip(
+                SYSTEM,
+                color
+            )
+        )
+        self._network_attrs.update({"system color":sys_color})
+        for _, attrs in self._nodes_attrs.items():
+            attrs.update({"color":sys_color[attrs["system"]]})
+
+    def __cluster(
         self,
-        iter_time:int=5000,
-        source:str='phecode_d1',
-        target:str='phecode_d2',
-        weight:str='comorbidity_beta'
-    ) -> dict:
+        max_attempts: Optional[int]=5000,
+        weight: Optional[str]='comorbidity_beta'
+    ) -> None:
         """Use the louvain algorithm to cluster the disease acording to the relation of comorbidity network.
 
         Args:
-            iter_time (int, optional): the time of iteration. Defaults to 5000.
-            source (str, optional): the column name of D1. Defaults to 'phecode_d1'.
-            target (str, optional): the column name of D2. Defaults to 'phecode_d2'.
+            max_attempts (int, optional): the time of iteration. Defaults to 5000.
             weight (str, optional): the weight of the disease pair (D1 with D2). Defaults to 'comorbidity_beta'.
-
-        Returns:
-            dict: {cluster:list[phecodes]}
         """
-        if hasattr(self, "final_cluster"):
-            return self.final_cluster
         # create network class and add the edges
         Graph_position = nx.Graph()
-        [Graph_position.add_edge(row[source],row[target],weight=row[weight]) 
-         for _, row in self.__comorbidity_network_result.iterrows()]
+        [
+            Graph_position.add_edge(
+                row[self._source],
+                row[self._target],
+                weight=row[weight]
+            ) 
+            for _, row in self._comorbidity_result.iterrows()
+        ]
+
         # random and repeated clustering the nodes
         result = []
-        for i in range(iter_time):
+        for i in range(max_attempts):
             partition = community_louvain.best_partition(Graph_position, random_state=i)
             result.append([i, community_louvain.modularity(partition, Graph_position)])
-        random_df = pd.DataFrame(result, columns=['rs', 'modularity']).sort_values(by='modularity')
-        best_rs = random_df.iloc[-1, 0]
-        # final result with the best score
-        self.final_cluster = community_louvain.best_partition(Graph_position, random_state=best_rs)
-        self.maximum_class_number = max(self.final_cluster.values()) + 1
-        return self.final_cluster
+        result_df = pd.DataFrame(
+            result, 
+            columns=['rs', 'modularity']).sort_values(by='modularity'
+        )
+        best_rs = result_df.iloc[-1, 0]
 
-    def location_random(
+        # final result with the best score
+        cluster_ans = community_louvain.best_partition(Graph_position, random_state=best_rs)
+        self.__update_node_attrs(
+            cluster = dict(cluster_ans)
+        )
+        self._network_attrs.update({"class number":max(cluster_ans.values()) + 1})
+
+    def __make_location_random(
         self, 
-        max_radius:float, 
-        min_radius:float
-    ) -> dict:
+        max_radius: float, 
+        min_radius: float,
+        distance: float,
+        angle: Optional[float]=10.0
+    ) -> None:
         """get the three dimension location of nodes(phecodes), using the metod that nodes(phecodes) of 
            one cluster be gathered in one sector in the x-y plane and the latter nodes(phecodes) locates the under layer.
 
@@ -362,328 +683,123 @@ class ThreeDimensionalDiseaseNetwork(object):
         Returns:
             dict: {str:tuple} for example: {549.4:(1, 2, 3)}
         """
-        if not hasattr(self, "final_cluster"):
-            self.cluster()
-        if not hasattr(self, "dimension"):
-            self._dimension()
-        self.__max_radius = max_radius
-        self.__min_radius = min_radius
-        # save the nodes size of each cluster and calculate the sum
-        location_dict, hash_dict = {}, {number:{} for number in range(self.maximum_class_number)}
-        inclass_nodes_size, sum_size = {number:[] for number in range(self.maximum_class_number)}, 0
-        # record nodes size of each cluster
-        for dimension_number in range(len(self.dimension)):
-            for node in self.dimension[dimension_number]:
-                node_size = self.get_node_size(node)
-                inclass_nodes_size[self.final_cluster[node]] += [node_size]
-                sum_size += node_size
-        # calculate the percentage of the sum of nodes size
-        nodes_percentage_size_incluster = []
-        for cluster_number in range(len(inclass_nodes_size)):
-            nodes_percentage_size_incluster.append(sum(inclass_nodes_size[cluster_number]) / sum_size)
-        # transform the percentage of the nodes size in one cluster
-        inintal_percentage = 0
-        the_last_one_cumulative_percentage = -1
-        cumulative_nodes_percentage = [inintal_percentage]
-        for percentage in nodes_percentage_size_incluster:
-            cumulative_percentage = cumulative_nodes_percentage[the_last_one_cumulative_percentage] + percentage
-            cumulative_nodes_percentage += [cumulative_percentage]
-        self.cumulative_nodes_percentage = cumulative_nodes_percentage
-        # calculate the 3D coordinate
-        for dimension_number in range(len(self.dimension)):
-            for node in self.dimension[dimension_number]:
-                one_dimension_location, hash_dict = self.__calculate_location_random(node, hash_dict)
-                location_dict.update(one_dimension_location)
-                hash_dict[self.final_cluster[node]].update(one_dimension_location)
-        location_dict.update({self.__exposure_disease:self.__exposure_disease_location})
-        self.location_dict = location_dict
-        return self.location_dict
+        same_cluster_nodes = self.__get_same_nodes("cluster")
+        cluster_ratio = self.__calculate_ratio(same_cluster_nodes)
+        self.__calculate_location_random(
+            max_radius,
+            min_radius,
+            angle,
+            distance,
+            cluster_ratio
+        )
     
-    def trajectory(
-        self,
-        source:str='phecode_d1', 
-        target:str='phecode_d2'
-    ) -> dict:
+    def __trajectory_order(self) -> None:
         """get the layer number of nodes(phecodes) in the trajectory network (D1->D2).
-
-        Args:
-            source (str, optional): the column name of D1. Defaults to 'phecode_d1'.
-            target (str, optional): the column name of D2. Defaults to 'phecode_d2'.
-
-        Returns:
-            dict: {layer number:phecode list} for example: {1:[549.1, 574.2]}
         """
-        if hasattr(self, "trajectory_dimension"):
-            return self.trajectory_dimension
-        # make sure the dimension of trajectory nodes
-        temp_disease, trajectory_dimension, dimension_number = [], {}, -1
-        trajectory_df = self.__disease_trajectory.copy()
-        while True:
-            dimension_number += 1
-            # first layers of nodes connecting self.__exposure_disease
-            if len(temp_disease) == 0:
-                # nodes of this layer
-                temp_disease = [x for x in trajectory_df.loc[trajectory_df[source]==self.__exposure_disease][target]]
-                # index of the edges in DataFrame
-                index = [x for x in trajectory_df.loc[trajectory_df[source]==self.__exposure_disease].index]
-                trajectory_df.drop(index)
-                # save in the dict
-                trajectory_dimension.update({dimension_number:temp_disease})
-            else:
-            # further layers
-                # nodes of this layer
-                trajectory_disease = [x for item in temp_disease for x in trajectory_df.loc[trajectory_df[source]==item][target]]
-                # break label
-                temp_disease = trajectory_disease.copy()
-                if len(temp_disease) == 0: break
-                # index of the edges in DataFrame
-                index = [x for item in temp_disease for x in trajectory_df.loc[trajectory_df[source]==item].index]
-                trajectory_df.drop(index)
-                # non-repeated nodes in this layer
-                trajectory_disease = list(set(trajectory_disease))
-                # save in the dict
-                trajectory_dimension.update({dimension_number:trajectory_disease})
-        # private attribute
-        self.trajectory_dimension = trajectory_dimension
-        return self.trajectory_dimension
-    
-    def commorbidity(
-        self, 
-        source:str='phecode_d1', 
-        target:str='phecode_d2'
-    ) -> dict:
+        node_order = self.__calculate_order(
+            self._trajectory[self._source].to_list(),
+            self._trajectory[self._source].to_list()
+        )
+
+        self.__update_node_attrs(
+            order = node_order
+        )
+
+        self._network_attrs.update(
+            {"order number":max(node_order.values())}
+        )
+
+    def __comorbidity_order(self) -> None:
         """get the layer number of nodes(phecodes) in the comorbidity network (D1-D2).
-
-        Args:
-            source (str, optional): the column name of D1. Defaults to 'phecode_d1'.
-            target (str, optional): the column name of D2. Defaults to 'phecode_d2'.
-
-        Returns:
-            dict: {layer number:phecode list} for example: {1:[549.1, 574.2]}
         """
-        if not hasattr(self, "trajectory_dimension"):
-            self.trajectory()
-        # nodes only exist the commorbidity network
-        nodes_of_commorbidity_except_trajectory = [x for x in self.__commorbidity_nodes
-                                                   if x not in self.__trajectory_nodes]
-        # hash_dict records the times of commorbidity nodes connecting nodes of trajectory network
-        hash_dict = {x:[0]*len(self.__trajectory_nodes) for x in 
-                     nodes_of_commorbidity_except_trajectory}
-        # recording the times
-        for i, value in enumerate(self.__trajectory_nodes):
-            for item in self.__comorbidity_network_result.loc[self.__comorbidity_network_result[source]==value][target]:
-                if item in nodes_of_commorbidity_except_trajectory:
-                    hash_dict[item][i] += 1
-            for item in self.__comorbidity_network_result.loc[self.__comorbidity_network_result[target]==value][source]:
-                if item in nodes_of_commorbidity_except_trajectory:
-                    hash_dict[item][i] += 1
-        # the dimension number of nodes only in commorbidity network and connecting the trajectory nodes
-        commorbidity_dimension_dict = {}
-        for node in nodes_of_commorbidity_except_trajectory:
-            indexs = np.flatnonzero(hash_dict[node])
-            try:
-                nodes_dimension = [self.__get_dimension(self.trajectory_dimension, 
-                                                      self.__trajectory_nodes[x]) for x in indexs]
-                if nodes_dimension:
-                    dimension_number = stats.mode(nodes_dimension, keepdims=False)[0]
-                    commorbidity_dimension_dict.update({node:dimension_number})
-                else: continue
-            except: continue
-        # the dimension number of nodes remain
-        while len(hash_dict) != len(commorbidity_dimension_dict):
-            other_nodes = [x for x in hash_dict.keys() if x not in commorbidity_dimension_dict]
-            for node in other_nodes:
-                try:
-                    nodes_dimension = self.__except_dimension(list(self.__comorbidity_network_result.loc[self.__comorbidity_network_result[source]==node][target]), 
-                                                                 commorbidity_dimension_dict)
-                    nodes_dimension += self.__except_dimension(list(self.__comorbidity_network_result.loc[self.__comorbidity_network_result[target]==node][source]), 
-                                                                 commorbidity_dimension_dict)
-                    dimension_number = stats.mode(nodes_dimension, keepdims=False)[0]
-                    commorbidity_dimension_dict.update({node:dimension_number})
-                except: continue
-        # make cluster:dimension dict
-        hash_dict = {n:[] for n in range(self.maximum_class_number)}
-        for key, value in commorbidity_dimension_dict.items():
-            if np.isnan(value): continue
-            hash_dict[self.final_cluster[key]].append(int(value))
-        for key, value in hash_dict.items():
-            dimension = stats.mode(value, keepdims=False)[0]
-            if np.isnan(dimension):
-                dimension = max(self.trajectory().keys())
-            hash_dict[key] = dimension
-        for phecode in commorbidity_dimension_dict.keys():
-            if np.isnan(commorbidity_dimension_dict[phecode]):
-                cluster_number = self.final_cluster[phecode]
-                commorbidity_dimension_dict.update({phecode:hash_dict[cluster_number]})
-        self.commorbidity_dimension = commorbidity_dimension_dict
-        return self.commorbidity_dimension
-    
-    def _dimension(self, layer_distance:float) -> dict:
-        """get the layer number of nodes(phecodes).
+        same_cluster_nodes = self.__get_same_nodes("cluster")
 
-        Returns:
-            dict: {layer number:phecodes list} for example: {1:[549.1, 574.2]}
-        """
-        if not hasattr(self, "commorbidity_dimension"):
-            self.commorbidity()
-        # all nodes dimension number dict
-        all_nodes_dimension = copy.deepcopy(self.trajectory_dimension)
-        for node, dimension_number in self.commorbidity_dimension.items():
-            if node not in all_nodes_dimension[dimension_number]:
-                all_nodes_dimension[dimension_number] += [node]
-        # remove the nodes of before layers
-        for dimension_number in range(len(all_nodes_dimension)):
-            nodes = all_nodes_dimension[dimension_number]
-            temp_nodes = []
-            for afterward_dimension in range(dimension_number+1, len(all_nodes_dimension)):
-                temp_nodes += all_nodes_dimension[afterward_dimension]
-            remove_nodes = []
-            for node in nodes:
-                if node in temp_nodes: remove_nodes.append(node)
-            for node in remove_nodes:
-                all_nodes_dimension[dimension_number].remove(node)
-        self.dimension = all_nodes_dimension
-        print("There are total %i layers" % (len(self.dimension)))
-        self.height = np.linspace(self.__exposure_disease_location[-1]-layer_distance, 
-                                  self.__exposure_disease_location[-1]-len(self.dimension+1)*(layer_distance), 
-                                  len(self.dimension))
-        return self.dimension
-
-    def color(
-        self,
-        code:str='phecode',
-        cluster_name:str='category', 
-        describe:str='phenotype'
-    ) -> dict:
-        """get the color of nodes(phecodes)
-
-        Args:
-            code (str, optional): the column name of nodes(phecodes). Defaults to 'phecode'.
-            cluster_name (str, optional): the column name of cluster. Defaults to 'category'.
-            describe (str, optional): the the column name of description of phecodes. Defaults to 'phenotype'.
-
-        Returns:
-            dict: {phecode:color} for example: {645.2:"#FF5733"}
-        """
-        code_system = dict(zip(self.__describe[code], self.__describe[cluster_name]))
-        system_color = dict(zip(self.__system, self.__system_color))
-        code_color = {node:system_color.get(code_system.get(node)) 
-                      for node in code_system.keys()}
-        self.color_map = code_color
-        self.__code_system = code_system
-        self.__system_color = system_color
-        self.__code_name = {cd:self.__split_name('%s (%.1f)' % (words, cd))
-                            for cd, words in self.__describe[[code, describe]].values}
-        self.code_name = {cd:self.__split_name('%s (%.1f)' % (words, cd))
-                          for cd, words in self.__describe[[code, describe]].values}
-        self.__clusterNumber_system = {}
-        self.__clusterNumber_color = {}
-
-        from collections import Counter
-        def most_frequent_element(lst):
-            counter = Counter(lst)
-            most_common = counter.most_common(1)
-            return most_common[0][0]
-        
-        for cluster_number in set(self.final_cluster.values()):
-            disease_list = []
-            for key, value in self.final_cluster.items():
-                if value == cluster_number:
-                    disease_list.append(self.__code_system[key])
-            self.__clusterNumber_system[cluster_number] = most_frequent_element(disease_list)
-            self.__clusterNumber_color[cluster_number] = self.__system_color[most_frequent_element(disease_list)]
-        return self.color_map
-
-    # def incluster_commorbidity(self, incluster:list[str]) -> list[str]:
-    #     """
-
-    #     Args:
-    #         incluster (list[str]): _description_
-
-    #     Returns:
-    #         list[str]: _description_
-    #     """
-    #     for _, row in self.__commorbidity_network_result.iterrows():
-    #         if row["phecode_d1"] in incluster and \
-    #         self.final_cluster[row["phecode_d2"]]==self.final_cluster[row["phecode_d1"]]:
-    #             incluster.append(row["phecode_d2"])
-    #         if row["phecode_d2"] in incluster and \
-    #         self.final_cluster[row["phecode_d2"]]==self.final_cluster[row["phecode_d1"]]:
-    #             incluster.append(row["phecode_d1"])
-    #     return list(set(incluster))
+        for node, attr in self._nodes_attrs.items():
+            if "order" not in attr.keys():
+                continue
+            else:
+                nodes = same_cluster_nodes[attr["cluster"]]
+                orders = [self._nodes_attrs[x].get("order", None) for x in nodes]
+                orders = list(filter(None, orders))
+                if orders:
+                    order = self.__most_frequent_element(orders)
+                else:
+                    order = self._network_attrs["order number"]
+                self._nodes_attrs[node].update({"order":order})
 
     def __full_plot(
         self, 
-        line_color:str, 
-        line_width:float,
-        source:str='phecode_d1', 
-        target:str='phecode_d2'
-    ) -> list:
+        line_color: str, 
+        line_width: float,
+    ) -> List[Any]:
         """get the attribution of plot. This method plots the all trajectory(D1->D2), comorbidity(D1-D2), and nodes(phecodes).
 
         Args:
             line_color (str): the color of line between each node(phecode)
             line_width (float): the width of line between each node(phecode)
-            source (str, optional): the column name of D1. Defaults to 'phecode_d1'.
-            target (str, optional): the column name of D2. Defaults to 'phecode_d2'.
 
         Returns:
             list: the attribution of plot
         """
-        plot_data = []
-        for system in self.__system:
-            system_nodes = [x for x in self.__commorbidity_nodes if self.__code_system[x]==system]
-            if system_nodes:
-                for node in system_nodes:
-                    x_, y_, z_, colorscale_, light_dict, _, name, light_position = self.plotly_ball(list(self.location_dict[node]),
-                                                                                                    self.get_node_size(node)/13,
-                                                                                                    str(self.__code_name[node]),
-                                                                                                    'Disease',
-                                                                                                    self.__system_color[self.__code_system[node]])
-                    if node == system_nodes[0]:
-                        data = go.Surface(x=x_, y=y_, z=z_, colorscale=colorscale_, showlegend=True,
-                                          lighting=light_dict, hovertemplate=name, name='%s Disease' % (system.title()), showscale=False,
-                                          legendgroup='ball', legendgrouptitle_text='Diseases',lightposition=light_position)
-                    else:
-                        data = go.Surface(x=x_, y=y_, z=z_, colorscale=colorscale_, showlegend=False,
-                                          lighting=light_dict, hovertemplate=name, name='%s Disease' % (system.title()), showscale=False,
-                                          legendgroup='ball', legendgrouptitle_text='Diseases',lightposition=light_position)
-                    plot_data += [data]
+        plot_data, is_showlegend = [], True
+        sys_nodes = self.__get_same_nodes("system")
+        for sys, nodes in sys_nodes.items:
+            for node in nodes:
+                plot_attrs = self.__sphere_attrs(
+                    self._nodes_attrs[node]["location"],
+                    self._nodes_attrs[node]["size"],
+                    self._nodes_attrs[node]["color"]
+                )
 
-        # plot edges
-        graph = nx.DiGraph()
-        if self.__exposure_disease == 9999:
-            [graph.add_edge(row[source], row[target]) for _, row in self.__disease_trajectory.iterrows() if row[source]!=9999]
-        else:
-            [graph.add_edge(row[source], row[target]) for _, row in self.__disease_trajectory.iterrows()]
-        edges_x, edges_y, edges_z = [], [], []
-        for edge in graph.edges():
-            edges_x += [self.location_dict[edge[0]][0], self.location_dict[edge[1]][0], None]
-            edges_y += [self.location_dict[edge[0]][1], self.location_dict[edge[1]][1], None]
-            edges_z += [self.location_dict[edge[0]][2], self.location_dict[edge[1]][2], None]
+                if node != nodes[0]:
+                    is_showlegend = False
+                
+                data = go.Surface(
+                    x=plot_attrs[0],
+                    y=plot_attrs[1],
+                    z=plot_attrs[2],
+                    colorscal=plot_attrs[3],
+                    showlegend=is_showlegend,
+                    lighting=plot_attrs[4],
+                    hovertemplate=self._nodes_attrs[node]["name"],
+                    name="%s Disease" % (sys.title()),
+                    showscale=False,
+                    legendgroup="sphere",
+                    legendgrouptitle_text="Disease",
+                    lightposition=plot_attrs[-1]
+                )
+                plot_data.append(data)
 
-        trace_edges = go.Scatter3d(
-            x=edges_x,
-            y=edges_y,
-            z=edges_z,
-            line=dict(color=line_color,width=line_width),
+        edges = dict(
+            zip(
+                self._trajectory[self._source],
+                self._trajectory[self._target]
+            )
+        )
+        edges_attrs = self.__get_edge_attrs(edges)
+
+        trace_data = go.Scatter3d(
+            x=edges_attrs[0],
+            y=edges_attrs[1],
+            z=edges_attrs[2],
+            line=dict(
+                color=line_color,
+                width=line_width
+            ),
             mode='lines',
-            hoverinfo='none',
-            legendgroup='none',
             legendgrouptitle_text='All Trajectories',
             name='Trajectories',
             showlegend=True
         )
-        plot_data += [trace_edges]
+        plot_data.append(trace_data)
         return plot_data
     
     def __half_plot(
         self, 
-        main_line_width:float, 
-        nonMain_line_color:str='silver', 
-        nonMain_line_width:float=1,
-        source:str='phecode_d1', 
-        target:str='phecode_d2'
+        sig_line_width: float, 
+        sig_line_color: Optional[str]="black",
+        no_sig_line_color: Optional[str]="silver", 
+        no_sig_line_width: Optional[float]=1.0,
     ) -> list:
         """get the attribution of plot. This method plots the all trajectory(D1->D2), comorbidity(D1-D2), nodes(phecodes), and highlight their difference.
 
@@ -691,235 +807,204 @@ class ThreeDimensionalDiseaseNetwork(object):
             main_line_width (float): the width of line in the incluster nodes(phecodes).
             nonMain_line_color (str, optional): the color of line in the outcluster nodes(phecodes). Defaults to 'silver'.
             nonMain_line_width (int, optional): the width of line in the outcluster nodes(phecodes). Defaults to 1.
-            source (str, optional): the column name of D1. Defaults to 'phecode_d1'.
-            target (str, optional): the column name of D2. Defaults to 'phecode_d2'.
 
         Returns:
             list: the attribution of plot
         """
-        plot_data = []
-        # plot nodes (incluster)
-        self.incluster_nodes = []
-        for cluster_number in set(self.final_cluster.values()):
-            cluster_nodes = []
-            source_list = [self.__exposure_disease]
-            while True:
-                begin_number_nodes = len(cluster_nodes)
-                target_list = []
-                for node in source_list:
-                    target_list += [x for x in self.__disease_trajectory[self.__disease_trajectory[source]\
-                                    ==node][target].values if self.final_cluster[x]==cluster_number]
-                cluster_nodes += target_list
-                cluster_nodes = list(set(cluster_nodes))
-                end_number_nodes = len(cluster_nodes)
-                if end_number_nodes == begin_number_nodes:
-                    break
-                source_list = target_list
-            self.incluster_nodes += cluster_nodes
+        plot_data, is_showlegend = [], True
+        sig_trajectory = self.__sig_nodes()
 
-        for system in self.__system:
-            system_nodes = [x for x in self.incluster_nodes if self.__code_system[x]==system]
-            if system_nodes:
-                for node in system_nodes:
-                    x_, y_, z_, colorscale_, light_dict, _, name, light_position = self.plotly_ball(list(self.location_dict[node]),
-                                                                                                        self.get_node_size(node)/13,
-                                                                                                        str(self.__code_name[node]),
-                                                                                                        'Disease',
-                                                                                                        self.__system_color[self.__code_system[node]])
-                    if node == system_nodes[0]:
-                        data = go.Surface(x=x_, y=y_, z=z_, colorscale=colorscale_, showlegend=True,
-                                          lighting=light_dict, hovertemplate=name, name='%s Disease' % (system.title()), showscale=False,
-                                          legendgroup='ball', legendgrouptitle_text='Diseases', lightposition=light_position)
-                    else:
-                        data = go.Surface(x=x_, y=y_, z=z_, colorscale=colorscale_, showlegend=False,
-                                          lighting=light_dict, hovertemplate=name, name='%s Disease' % (system.title()), showscale=False,
-                                          legendgroup='ball', legendgrouptitle_text='Diseases', lightposition=light_position)
-                    plot_data += [data]
-        # plot nodes (outcluster)
-        self.outcluster_nodes = [x for x in self.__commorbidity_nodes if x not in self.incluster_nodes]
-        for node in self.outcluster_nodes:
-            x_, y_, z_, colorscale_, light_dict, _, name, light_position = self.plotly_ball(list(self.location_dict[node]),
-                                                                                                self.get_node_size(node)/13,
-                                                                                                str(self.__code_name[node]),
-                                                                                                'Disease',
-                                                                                                'grey')
-            if node == self.outcluster_nodes[0]:
-                data = go.Surface(x=x_, y=y_, z=z_, colorscale=colorscale_, showlegend=True,
-                                  lighting=light_dict, hovertemplate=name, name='Outer disease', showscale=False,
-                                  legendgroup='ball', legendgrouptitle_text='Diseases', lightposition=light_position)
-            else:
-                data = go.Surface(x=x_, y=y_, z=z_, colorscale=colorscale_, showlegend=False,
-                                  lighting=light_dict, hovertemplate=name, name='Outer disease', showscale=False,
-                                  legendgroup='ball', legendgrouptitle_text='Diseases', lightposition=light_position)
-            plot_data += [data]
-        # plot edges (incluster)
-        incluster_trajectory = []
-        for system in set(self.final_cluster.values()):
-            graph = nx.DiGraph()
-            system_nodes = []
-            source_list = [self.__exposure_disease]
-            while True:
-                begin_number_nodes = len(system_nodes)
-                target_list = []
-                for node in source_list:
-                    template_target_list = [x for x in self.__disease_trajectory[self.__disease_trajectory[source]\
-                                            ==node][target].values if self.final_cluster[x]==system]
-                    target_list += template_target_list
-                    if template_target_list:
-                        [graph.add_edge(node, target) for target in template_target_list if node!=9999]
-                        [incluster_trajectory.append([node, target]) for target in template_target_list]
-                system_nodes += target_list
-                system_nodes = list(set(system_nodes))
-                end_number_nodes = len(system_nodes)
-                if end_number_nodes == begin_number_nodes: break
-                source_list = target_list
-            edges_color, edges_x, edges_y, edges_z = [], [], [], []
-            for edge in graph.edges():
-                edges_color.append(self.__clusterNumber_color[system])
-                edges_x += [self.location_dict[edge[0]][0], self.location_dict[edge[1]][0], None]
-                edges_y += [self.location_dict[edge[0]][1], self.location_dict[edge[1]][1], None]
-                edges_z += [self.location_dict[edge[0]][2], self.location_dict[edge[1]][2], None]
-            trace_edges = go.Scatter3d(x=edges_x,
-                                       y=edges_y, 
-                                       z=edges_z, 
-                                       line=dict(color=edges_color*3,width=main_line_width),
-                                       mode='lines',
-                                       hoverinfo='none',
-                                       legendgroup='1',
-                                       legendgrouptitle_text='All Trajectories',
-                                       name='Cluster %i Trajectories' % (system+1))
-            plot_data += [trace_edges]
-        # plot edges (outcluster)
-        graph = nx.DiGraph()
-        self.incluster_trajectory = []
-        for disease_pairs in incluster_trajectory:
-            if disease_pairs not in self.incluster_trajectory:
-                self.incluster_trajectory.append(disease_pairs)
-        [graph.add_edge(disease_pairs[0], disease_pairs[1]) for disease_pairs 
-         in self.__trajectory_disease_pairs if (disease_pairs not in incluster_trajectory) & (disease_pairs[0]!=9999)]
-        edges_x, edges_y, edges_z = [], [], []
-        for edge in graph.edges():
-            edges_x += [self.location_dict[edge[0]][0], self.location_dict[edge[1]][0], None]
-            edges_y += [self.location_dict[edge[0]][1], self.location_dict[edge[1]][1], None]
-            edges_z += [self.location_dict[edge[0]][2], self.location_dict[edge[1]][2], None]
-        trace_edges = go.Scatter3d(x=edges_x,
-                                   y=edges_y, 
-                                   z=edges_z, 
-                                   line=dict(color=nonMain_line_color,width=nonMain_line_width),
-                                   mode='lines',
-                                   hoverinfo='none',
-                                   legendgroup='1',
-                                   legendgrouptitle_text='All Trajectories',
-                                   name="Insignificant Trajectories")
-        plot_data += [trace_edges]
+        if sig_trajectory:
+            sig_nodes = [node for nodes in sig_trajectory for node in nodes]
+        else:
+            raise TypeError("There is no significant trajectory of network, please try other method of plot")
+
+        for sys in SYSTEM:
+            nodes = [x for x in sig_nodes if self._nodes_attrs[x]["system"]==sys]
+            for node in nodes:
+                plot_attrs = self.__sphere_attrs(
+                    self._nodes_attrs[node]["location"],
+                    self._nodes_attrs[node]["size"],
+                    self._nodes_attrs[node]["color"]
+                )
+
+                if node != nodes[0]:
+                    is_showlegend = False
+
+                data = go.Surface(
+                    x=plot_attrs[0],
+                    y=plot_attrs[1],
+                    z=plot_attrs[2],
+                    colorscal=plot_attrs[3],
+                    showlegend=is_showlegend,
+                    lighting=plot_attrs[4],
+                    hovertemplate=self._nodes_attrs[node]["name"],
+                    name="%s Disease" % (sys.title()),
+                    showscale=False,
+                    legendgroup="sphere",
+                    legendgrouptitle_text="Disease",
+                    lightposition=plot_attrs[-1]
+                )
+                plot_data.append(data)
+
+        no_sig_nodes = [x for x in self._nodes_attrs.keys() if x not in sig_nodes]
+        is_showlegend = True
+        for node in no_sig_nodes:
+            plot_attrs = self.__sphere_attrs(
+                self._nodes_attrs[node]["location"],
+                self._nodes_attrs[node]["size"],
+                "grey"
+            )
+
+            if node != no_sig_nodes[0]:
+                is_showlegend = False
+
+            data = go.Surface(
+                x=plot_attrs[0],
+                y=plot_attrs[1],
+                z=plot_attrs[2],
+                colorscal=plot_attrs[3],
+                showlegend=is_showlegend,
+                lighting=plot_attrs[4],
+                hovertemplate=self._nodes_attrs[node]["name"],
+                name="%s Disease" % (sys.title()),
+                showscale=False,
+                legendgroup="sphere",
+                legendgrouptitle_text="Disease",
+                lightposition=plot_attrs[-1]
+            )
+            plot_data.append(data)
+
+        sig_edges = {}
+        for nodes in sig_trajectory:
+            for i in range(len(nodes)):
+                sig_edges.update({nodes[i]:nodes[i+1]})
+        edges_attrs = self.__get_edge_attrs(sig_edges)
+
+        trace_data = go.Scatter3d(
+            x=edges_attrs[0],
+            y=edges_attrs[1],
+            z=edges_attrs[2],
+            line=dict(
+                color=sig_line_color,
+                width=sig_line_width
+            ),
+            mode='lines',
+            legendgroup='trajectories',
+            legendgrouptitle_text='All Trajectories',
+            name='Significant Trajectories',
+        )
+        plot_data.append(trace_data)
+
+        no_sig_edges = {}
+        pairs = self._comorbidity[[self._source, self._target]].value
+        for source, target in pairs:
+            if sig_edges.get(source, None)==target:
+                continue
+            no_sig_edges.update({source:target})
+        edges_attrs = self.__get_edge_attrs(no_sig_edges)
+
+        trace_data = go.Scatter3d(
+            x=edges_attrs[0],
+            y=edges_attrs[1],
+            z=edges_attrs[2],
+            line=dict(
+                color=no_sig_line_color,
+                width=no_sig_line_width
+            ),
+            mode='lines',
+            legendgroup='trajectories',
+            legendgrouptitle_text='All Trajectories',
+            name='Insignificant Trajectories',
+        )
+        plot_data.append(trace_data)
         return plot_data
 
     def __compact_plot(
         self,
-        main_line_width:float,
-        source:str='phecode_d1',
-        target:str='phecode_d2'
-    ) -> list:
+        sig_line_width: float, 
+        sig_line_color: Optional[str]="black",
+    ) -> List[Any]:
         """get the attribution of plot. This method plots the trajectory(D1->D2) of incluster nodes(phecodes), and incluster nodes(phecodes).
 
         Args:
-            main_line_width (float): the width of line in the incluster nodes(phecodes).
-            source (str, optional): the column name of D1. Defaults to 'phecode_d1'.
-            target (str, optional): the column name of D2. Defaults to 'phecode_d2'.
+            sig_line_width (float): Width of line in the incluster nodes(phecodes).
 
         Returns:
             list: the attribution of plot
         """
-        plot_data = []
-        # plot nodes (incluster)
-        self.incluster_nodes = []
-        for cluster_number in set(self.final_cluster.values()):
-            cluster_nodes = []
-            source_list = [self.__exposure_disease]
-            while True:
-                begin_number_nodes = len(cluster_nodes)
-                target_list = []
-                for node in source_list:
-                    target_list += [x for x in self.__disease_trajectory[self.__disease_trajectory[source]\
-                                    ==node][target].values if self.final_cluster[x]==cluster_number]
-                cluster_nodes += target_list
-                cluster_nodes = list(set(cluster_nodes))
-                end_number_nodes = len(cluster_nodes)
-                if end_number_nodes == begin_number_nodes: break
-                source_list = target_list
-            self.incluster_nodes += cluster_nodes
-        compact_node = []
-        for system in self.__system:
-            system_nodes = [x for x in self.incluster_nodes if self.__code_system[x]==system]
-            if system_nodes:
-                for node in system_nodes:
-                    compact_node.append(node)
-                    x_, y_, z_, colorscale_, light_dict, _, name, light_position = self.plotly_ball(list(self.location_dict[node]),
-                                                                                                        self.get_node_size(node)/13,
-                                                                                                        str(self.__code_name[node]),
-                                                                                                        'Disease',
-                                                                                                        self.__system_color[self.__code_system[node]])
-                    if node == system_nodes[0]:
-                        data = go.Surface(x=x_, y=y_, z=z_, colorscale=colorscale_, showlegend=True,
-                                    lighting=light_dict, hovertemplate=name, name='%s Disease' % (system.title()), showscale=False,
-                                    legendgroup='ball', legendgrouptitle_text='Diseases', lightposition=light_position)
-                    else:
-                        data = go.Surface(x=x_, y=y_, z=z_, colorscale=colorscale_, showlegend=False,
-                                          lighting=light_dict, hovertemplate=name, name='%s Disease' % (system.title()), showscale=False,
-                                          legendgroup='ball', legendgrouptitle_text='Diseases', lightposition=light_position)
-                    plot_data += [data]
-        self.compact_node = compact_node
-        # plot edges (incluster)
-        for system in set(self.final_cluster.values()):
-            graph = nx.DiGraph()
-            system_nodes = []
-            source_list = [self.__exposure_disease]
-            while True:
-                begin_number_nodes = len(system_nodes)
-                target_list = []
-                for node in source_list:
-                    template_target_list = [x for x in self.__disease_trajectory[self.__disease_trajectory[source]\
-                                            ==node][target].values if self.final_cluster[x]==system]
-                    target_list += template_target_list
-                    if template_target_list:
-                        [graph.add_edge(node, target) for target in template_target_list if node != 9999]
-                system_nodes += target_list
-                system_nodes = list(set(system_nodes))
-                end_number_nodes = len(system_nodes)
-                if end_number_nodes == begin_number_nodes:break
-                source_list = target_list
-            edges_color, edges_x, edges_y, edges_z = [], [], [], []
-            for edge in graph.edges():
-                edges_color.append(self.__clusterNumber_color[system])
-                edges_x += [self.location_dict[edge[0]][0], self.location_dict[edge[1]][0], None]
-                edges_y += [self.location_dict[edge[0]][1], self.location_dict[edge[1]][1], None]
-                edges_z += [self.location_dict[edge[0]][2], self.location_dict[edge[1]][2], None]
-            trace_edges = go.Scatter3d(x=edges_x,
-                                       y=edges_y, 
-                                       z=edges_z, 
-                                       line=dict(color=edges_color*3, width=main_line_width),
-                                       mode='lines',
-                                       hoverinfo='none',
-                                       legendgroup='1',
-                                       legendgrouptitle_text='All Trajectories',
-                                       name='Cluster %i Trajectory' % (system+1))
-            plot_data += [trace_edges]
+        plot_data = [] 
+        sig_trajectory = self.__sig_nodes()
+
+        if sig_trajectory:
+            sig_nodes = [node for nodes in sig_trajectory for node in nodes]
+        else:
+            raise TypeError("There is no significant trajectory of network, please try other method of plot")
+
+        for sys in SYSTEM:
+            nodes = [x for x in sig_nodes if self._nodes_attrs[x]["system"]==sys]
+            is_showlegend = True
+            for node in nodes:
+                plot_attrs = self.__sphere_attrs(
+                    self._nodes_attrs[node]["location"],
+                    self._nodes_attrs[node]["size"],
+                    self._nodes_attrs[node]["color"]
+                )
+
+                if node != nodes[0]:
+                    is_showlegend = False
+
+                data = go.Surface(
+                    x=plot_attrs[0],
+                    y=plot_attrs[1],
+                    z=plot_attrs[2],
+                    colorscal=plot_attrs[3],
+                    showlegend=is_showlegend,
+                    lighting=plot_attrs[4],
+                    hovertemplate=self._nodes_attrs[node]["name"],
+                    name="%s Disease" % (sys.title()),
+                    showscale=False,
+                    legendgroup="sphere",
+                    legendgrouptitle_text="Disease",
+                    lightposition=plot_attrs[-1]
+                )
+                plot_data.append(data)
+
+        sig_edges = {}
+        for nodes in sig_trajectory:
+            for i in range(len(nodes)):
+                sig_edges.update({nodes[i]:nodes[i+1]})
+        edges_attrs = self.__get_edge_attrs(sig_edges)
+
+        trace_data = go.Scatter3d(
+            x=edges_attrs[0],
+            y=edges_attrs[1],
+            z=edges_attrs[2],
+            line=dict(
+                color=sig_line_color,
+                width=sig_line_width
+            ),
+            mode='lines',
+            legendgroup='trajectories',
+            legendgrouptitle_text='All Trajectories',
+            name='Significant Trajectories',
+        )
+        plot_data.append(trace_data)
         return plot_data
 
-    def plot_3d(
+    def plot_threeDimension(
         self, 
-        max_radius:float, 
-        min_radius:float,
-        plot_method:str,
-        line_color:str, 
-        line_width:float,
-        layer_distance:float,
-        file_name:str,
-        layout_width:float=900,
-        layout_height:float=900,
-        font_style:str='Times New Roman',
-        font_size:float=15,
-        location_method:str='random'
+        path: str,
+        max_radius: float, 
+        min_radius: float,
+        plot_method: str,
+        line_color: str, 
+        line_width: float,
+        layer_distance: Optional[float]=20.0,
+        layout_width: Optional[float]=900.0,
+        layout_height: Optional[float]=900.0,
+        font_style: Optional[str]='Times New Roman',
+        font_size: Optional[float]=15.0,
     ) -> None:
         """plot the three-dimension comorbidity and trajectory network.
 
@@ -935,38 +1020,41 @@ class ThreeDimensionalDiseaseNetwork(object):
             layout_height (float, optional): the height of layout in the figure. Defaults to 900.
             font_style (str, optional): the font style of layout in the figure. Defaults to 'Times New Roman'.
             font_size (float, optional): the font size of layout in the figure. Defaults to 15.
-            location_method (str, optional): the method to calculate the three-dimension location of nodes(phecodes). Defaults to 'random'.
 
         Raises:
             KeyError: if the augrment plot_method does not be included in "full", "compact", and "half", it will raises KeyError.
         """
+        if not self.__check_node_attrs("cluster"):
+            self.__cluster()
+        if not self.__check_node_attrs("order"):
+            self.__trajectory_order()
+            self.__comorbidity_order()
+        if not self.__check_node_attrs("location"):
+            self.__make_location_random(
+                max_radius,
+                min_radius,
+                layer_distance,
+            )
 
-        if not hasattr(self, "final_cluster"):
-            self.cluster()
-        if not hasattr(self, "dimension"):
-            self._dimension(layer_distance)
-        if not hasattr(self, 'location_dict'):
-            if location_method == 'random':
-                self.location_random(max_radius, min_radius)
-        if not hasattr(self, "color_map"):
-            self.color()
         plot_data = []
-        # plot the origin disease
-        if self.__exposure_disease != 9999:
-            origin_data = go.Scatter3d(
-                x=[self.__exposure_disease_location[0]],
-                y=[self.__exposure_disease_location[1]],
-                z=[self.__exposure_disease_location[2]],
+
+        # plot exposure
+        if self._exposure:
+            exposure_data = go.Scatter3d(
+                x=[self._exposure_location[0]],
+                y=[self._exposure_location[1]],
+                z=[self._exposure_location[2]],
                 mode='markers',
-                marker=dict(symbol='circle',size=self.__exposure_disease_size,color='black'),
-                text=['Depression'],
-                hoverinfo='text',
-                legendgroup='origin',
+                marker=dict(
+                    symbol='circle',
+                    size=self._exposure_size,
+                    color='black'
+                ),
                 legendgrouptitle_text='Origin of Trajectories',
-                name='Depression',
                 showlegend=True
             )
-            plot_data += [origin_data]
+            plot_data += [exposure_data]
+
         # plot the nodes and edges
         if plot_method == 'full':
             plot_data += self.__full_plot(line_color, line_width)
@@ -975,44 +1063,57 @@ class ThreeDimensionalDiseaseNetwork(object):
         elif plot_method == 'half':
             plot_data += self.__half_plot(line_width)
         else:
-            raise KeyError("the plot_method is not exist")
+            raise KeyError(f"This {plot_method} is not exist in the method of plot")
+
         # axis
-        axis = dict(showbackground=False, 
-                    showline=False,
-                    zeroline = False,
-                    showgrid = False,
-                    showticklabels = False,
-                    title='')
+        axis = dict(
+            showbackground=False, 
+            showline=False,
+            zeroline = False,
+            showgrid = False,
+            showticklabels = False,
+            title=''
+        )
+
         # layout
-        layout = go.Layout(title=dict(text="", 
-                                      font=dict(size=30,family=font_style),
-                                      x=0.45),
-                            width=layout_width,
-                            height=layout_height,
-                            showlegend=True,
-                            scene=dict(xaxis=dict(axis),
-                                       yaxis=dict(axis),
-                                       zaxis=dict(axis)),
-                            margin=dict(t=100),
-                            hovermode='closest', 
-                            legend=dict(title=dict(text='Trace of clusters'),
-                            font=dict(family=font_style,size=font_size),
-                            itemclick=False), 
-                            font=dict(family=font_style))
+        layout = go.Layout(
+            title=dict(
+                text="", 
+                font=dict(size=30, family=font_style),
+                x=0.45
+            ),
+            width=layout_width,
+            height=layout_height,
+            showlegend=True,
+            scene=dict(
+                xaxis=dict(axis),
+                yaxis=dict(axis),
+                zaxis=dict(axis)
+            ),
+            margin=dict(t=100),
+            hovermode='closest', 
+            legend=dict(
+                title=dict(text='Trace of clusters'),
+                font=dict(family=font_style,size=font_size),
+                itemclick=False
+            ), 
+            font=dict(family=font_style)
+        )
+
         # plot the figure
         fig = go.Figure(data=plot_data, layout=layout)
+
         # create the file of the figure
-        py.plot(fig, filename=file_name)
+        py.plot(fig, filename=path)
 
     def comorbidity_network_plot(
         self, 
-        max_radius:float,
-        min_radius:float,
-        line_width:float=1,
-        source:str="phecode_d1",
-        target:str="phecode_d2",
-        location_method:str="random",
-        line_color:str="black",
+        path :str,
+        max_radius: float,
+        min_radius: float,
+        line_width: Optional[float]=1.0,
+        line_color: Optional[str]="black",
+        layer_distance: Optional[float]=20.0,
     ) -> None:
         """plot the result of commorbidity. The method same to plot_3d just in the plane of x-y.
 
@@ -1020,61 +1121,69 @@ class ThreeDimensionalDiseaseNetwork(object):
             max_radius (float): the maximum of radius in the sector.
             min_radius (float): the minimum of radius in the sector.
             line_width (float, optional): the width of line in the nodes(phecodes). Defaults to 1.
-            source (str, optional): the column name of D1. Defaults to 'phecode_d1'.
-            target (str, optional): the column name of D2. Defaults to 'phecode_d2'.
-            location_method (str, optional): the method to calculate the three-dimension location of nodes(phecodes). Defaults to "random".
             line_color (str, optional): the color of line in the nodes(phecodes). Defaults to "black".
         """
-        if not hasattr(self, "final_cluster"):
-            self.cluster()
-        if not hasattr(self, "dimension"):
-            self._dimension()
-        if not hasattr(self, 'location_dict'):
-            if location_method == 'random':
-                self.location_random(max_radius, min_radius)
-        if not hasattr(self, "color_map"):
-            self.color()
-
+        if not self.__check_node_attrs("cluster"):
+            self.__cluster()
+        if not self.__check_node_attrs("order"):
+            self.__trajectory_order()
+            self.__comorbidity_order()
+        if not self.__check_node_attrs("location"):
+            self.__make_location_random(
+                max_radius,
+                min_radius,
+                layer_distance,
+            )
+                
         fig = go.Figure()
+        pairs = self._comorbidity[[self._source, self._targets]].values()
 
-        for _, row in self.__comorbidity_network_result.iterrows():
-            x_values = [self.location_dict[row[source]][0], self.location_dict[row[target]][0]]
-            y_values = [self.location_dict[row[source]][1], self.location_dict[row[target]][1]]
-            fig.add_trace(go.Scatter(x=x_values, 
-                                     y=y_values, 
-                                     mode='lines', 
-                                     line=dict(color=line_color, width=line_width)))
+        for source, target in pairs:
+            x_values = [
+                self._nodes_attrs[source]["location"][0], 
+                self._nodes_attrs[target]["location"][0]
+            ]
+            y_values = [
+                self._nodes_attrs[source]["location"][1], 
+                self._nodes_attrs[target]["location"][1]
+            ]
+            fig.add_trace(
+                go.Scatter(
+                    x=x_values,
+                    y=y_values,
+                    mode='lines',
+                    line=dict(
+                        color=line_color,
+                        width=line_width
+                    )
+                )
+            )
 
-        for system in self.__system:
-            system_nodes = [x for x in self.__commorbidity_nodes if self.__code_system[x]==system]
-            if system_nodes:
-                for node in system_nodes:
-                    theta = np.linspace(0, 2*np.pi, 100)
-                    x_circle = self.location_dict[node][0] + self.get_node_size(node)/13 * np.cos(theta)
-                    y_circle = self.location_dict[node][1] + self.get_node_size(node)/13 * np.cos(theta)
+        for sys in SYSTEM:
+            nodes = [x for x in self._commorbidity_nodes if self._nodes_attrs[x]["system"]==sys]
+            is_showlegend = True
+            for node in nodes:
+                theta = np.linspace(0, 2*np.pi, 100)
+                x_circle = self._nodes_attrs[node]["location"][0] + self._nodes_attrs[node]["size"] * np.cos(theta)
+                y_circle = self._nodes_attrs[node]["location"][1] + self._nodes_attrs[node]["size"] * np.cos(theta)
 
-                    if node == system_nodes[0]:
-                        fig.add_trace(go.Scatter(x=x_circle, y=y_circle,
-                                                fill='toself',
-                                                fillcolor=self.__system_color[self.__code_system[node]],
-                                                showlegend=True,
-                                                hovertemplate=self.__code_name[node],
-                                                name='%s Disease' % (system.title()), 
-                                                showscale=False,
-                                                legendgroup='ball', 
-                                                legendgrouptitle_text='Diseases',
-                                                line=dict(color=self.__system_color[self.__code_system[node]], width=1)))
-                    else:
-                        fig.add_trace(go.Scatter(x=x_circle, y=y_circle,
-                                                fill='toself',
-                                                fillcolor=self.__system_color[self.__code_system[node]],
-                                                showlegend=False,
-                                                hovertemplate=self.__code_name[node],
-                                                name='%s Disease' % (system.title()), 
-                                                showscale=False,
-                                                legendgroup='ball', 
-                                                legendgrouptitle_text='Diseases',
-                                                line=dict(color=self.__system_color[self.__code_system[node]], width=1)))
+                if node != nodes[0]:
+                    is_showlegend = False
+
+                fig.add_trace(go.Scatter(
+                    x=x_circle, 
+                    y=y_circle,
+                    fill='toself',
+                    fillcolor=self._nodes_attrs[node]["color"],
+                    showlegend=is_showlegend,
+                    hovertemplate=self._nodes_attrs[node]["name"],
+                    name='%s Disease' % (sys.title()), 
+                    showscale=False,
+                    legendgroup='sphere', 
+                    legendgrouptitle_text='Diseases',
+                    line=dict(color=self._nodes_attrs[node]["color"], width=1)
+                ))
+
         fig.update_layout(
             showlegend=False,
             xaxis=dict(visible=False, scaleanchor="y"), 
@@ -1082,19 +1191,15 @@ class ThreeDimensionalDiseaseNetwork(object):
             plot_bgcolor='white',
             margin=dict(l=10, r=10, t=10, b=10)
         )
-        fig.show()
 
-    def incluster_trajectory_plot(
+        py.plot(fig, filename=path)
+
+    def significant_trajectory_plot(
         self, 
-        distance:float, 
-        layer_distance:float,
-        line_width:float,
-        line_color:str,
-        max_radius:float,
-        min_radius:float,
-        location_method:str="random",
-        source:str="phecode_d1",
-        target:str="phecode_d2"
+        path: str,
+        distance: float, 
+        layer_distance: float,
+        line_color: str,
     ) -> None:
         """plot the incluster trajectory of each cluster.
 
@@ -1103,97 +1208,57 @@ class ThreeDimensionalDiseaseNetwork(object):
             layer_distance (float): the distance of two adjoining layers.
             line_width (float): the width of line in the nodes(phecodes).
             line_color (str): the color of line in the nodes(phecodes).
-            max_radius (float): the maximum of radius in the sector.
-            min_radius (float): the minimum of radius in the sector.
-            location_method (str, optional): the method to calculate the three-dimension location of nodes(phecodes). Defaults to "random".
-            source (str, optional): the column name of D1. Defaults to 'phecode_d1'.
-            target (str, optional): the column name of D2. Defaults to 'phecode_d2'.
         """
-        if not hasattr(self, "final_cluster"):
-            self.cluster()
-        if not hasattr(self, "dimension"):
-            self._dimension()
-        if not hasattr(self, 'location_dict'):
-            if location_method == 'random':
-                self.location_random(max_radius, min_radius)
-        if not hasattr(self, "color_map"):
-            self.color()
-        # nodes incluster
-        cluster_nodes_dict = {}
-        for cluster_number in set(self.final_cluster.values()):
-            cluster_nodes = []
-            source_list = [self.__exposure_disease]
-            while True:
-                begin_number_nodes = len(cluster_nodes)
-                target_list = []
-                for node in source_list:
-                    target_list += [x for x in self.__disease_trajectory[self.__disease_trajectory[source]\
-                                    ==node][target].values if self.final_cluster[x]==cluster_number]
-                cluster_nodes += target_list
-                cluster_nodes = list(set(cluster_nodes))
-                end_number_nodes = len(cluster_nodes)
-                if end_number_nodes == begin_number_nodes: break
-                source_list = target_list
-            cluster_nodes_dict[cluster_number] = cluster_nodes
+        if not self.__check_node_attrs("cluster"):
+            self.__cluster()
+        if not self.__check_node_attrs("order"):
+            self.__trajectory_order()
+            self.__comorbidity_order()
 
-        def calculate_circle_positions_with_ids(radii:list, spacing:float) -> list:
-            """calculate the positions of nodes(phecodes).
+        sig_trajectory = self.__sig_nodes()
 
-            Args:
-                radii (list of float): A list of radii of the circles, in the given order.
-                spacing (float): The additional distance between the circles (i.e., the outer tangent distance).
-
-            Returns:
-                dict: {number: x-coordinate}, where the numbering starts from 1 and corresponds to the input order.
-            """
-            circle_positions = {}
-            position = 0
-            for i, radius in enumerate(radii):
-                circle_id = i + 1
-                if i == 0:
-                    circle_positions[circle_id] = position
-                    position += 2 * radius + spacing  
-                else:
-                    if i % 2 == 1:
-                        circle_positions[circle_id] = position  
-                    else:
-                        circle_positions[circle_id] = -position  
-                    position += 2 * radius + spacing 
-            return circle_positions
-
-        incluster_location = {}
-        for cluster_number, nodes_lst in cluster_nodes_dict.items():
-            temp_dimension = {x:[] for x in self.dimension.keys()}
-            for node in nodes_lst:
-                temp_dimension[self.commorbidity_dimension[node]].append(node)
-            for key, value in temp_dimension.items():
-                if value: x_value = calculate_circle_positions_with_ids([math.pow(self.get_node_size(x) / 4 * 3 / math.pi, 1/3) for x in value], distance)
-                for i, j in x_value.items():
-                    incluster_location[value[i-1]] = (j, self.__exposure_disease_location[1]-key*layer_distance)
-        
-        for cluster_number, node_lst in cluster_nodes_dict.items():
-            edges = [(x, y) for x,y in dict(self.__disease_trajectory[source], self.__disease_trajectory[target]).items() if x in node_lst and y in node_lst]
-            G = nx.DiGraph()
-            G.add_edges_from(edges)
-            pos = {x:incluster_location[x] for x in node_lst}
-            color_values = [self.__system_color[self.__code_system[n]] for n in G.nodes()]
-            size_values = [self.get_node_size[n] for n in G.nodes()]
-            label_values = {n: self.__code_name[n] for n in G.nodes()}
-            plt.figure(figsize=(8, 8))
+        for cluster in range(self._network_attrs["cluster number"]):
+            nodes = []
+            graph = nx.DiGraph()
+            postion = {}
+            
+            for sig_tra in sig_trajectory:
+                if self._nodes_attrs[sig_tra[0]]["cluster"] == cluster:
+                    edges = [(sig_tra[i], sig_tra[i+1]) for i in range(len(sig_tra)-1)]
+                    graph.add_edges_from(edges)
+                    nodes.extend(sig_tra)
+            
+            for order in range(self._network_attrs["order number"]):
+                same_order_nodes = [
+                    node for node in nodes if self._nodes_attrs[node]["order"]==order+1
+                ]
+                same_order_nodes_size = [
+                    self._nodes_attrs[node] for node in same_order_nodes
+                ]
+                x_axis = self.__calculate_2d_positions(same_order_nodes_size, distance)
+                for idx, x_axis_value in x_axis.items():
+                    postion.update({
+                        same_order_nodes[idx-1]:(x_axis_value, (order+1)*layer_distance)
+                    })
+            
+            color = [self._nodes_attrs[node]["color"] for node in graph.nodes()]
+            size = [self._nodes_attrs[node]["size"] for node in graph.nodes()]
+            label = {node: self._nodes_attrs[node]["name"] for node in graph.nodes()}
+            plt.figure(figsize=(16, 16))
             nx.draw_networkx(
-                G,
-                pos,
+                graph,
+                postion,
                 with_labels=True,
-                labels=label_values,
-                node_color=color_values,
-                node_size=size_values,
+                labels=label,
+                node_color=color,
+                node_size=size,
                 font_size=12, 
                 font_weight='bold',
                 edge_color=line_color,
                 arrows=True,
                 arrowsize=20,
             )
-            
-            plt.title("dad")
+
+            plt.title("")
             plt.axis("off")
-            plt.show()
+            plt.savefig(f"{path}_{cluster}.png")
