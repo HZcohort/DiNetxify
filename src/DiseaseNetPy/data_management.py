@@ -70,7 +70,7 @@ class DiseaseNetworkData:
                                 'End date': self.__end_date_col,
                                 'Matching identifier':self.__mathcing_identifier_col},
             'cohort':{'Participant ID':self.__id_col,
-                        'Exposure':self.__index_date_col,
+                        'Exposure':self.__exposure_col,
                         'Sex':self.__sex_col,
                         'Index date': self.__index_date_col,
                         'End date': self.__end_date_col},
