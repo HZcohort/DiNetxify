@@ -1252,7 +1252,7 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
     if invalid_disease:
         raise ValueError(f"The following phecode from the 'comorbidity_strength_result' are not in the list of PheWAS significant phecode: {invalid_disease}.")
     
-    #generate a new history dictionary
+    #generate a new history dictionary by merging the leaf code
     if data.phecode_level == 1:
         history_level = {id_:set([int(phecode)/1 for phecode in vals]) for id_,vals in history.items()}
     elif data.phecode_level == 2:

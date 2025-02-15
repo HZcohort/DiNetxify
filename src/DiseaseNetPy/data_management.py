@@ -85,6 +85,8 @@ class DiseaseNetworkData:
         self.__phecode_version_options = ['1.2']
         self.__medical_records_cols = ['Participant ID','Diagnosis code','Date of diagnosis']
         self.__medical_recods_info = {}
+        #default column value
+        self.__sex_value_dict = {'Female':1,'Male':0}
         
         #check study design
         if not study_design in self.__study_design_options:
@@ -628,6 +630,7 @@ class DiseaseNetworkData:
         if len(valid_phecodes) <= 10:
             print(f'Warning: only {len(valid_phecodes)} significant phecodes are found.')
         self.__significant_phecodes = valid_phecodes
+        #for this subgroup of people only
         exp_col = self.__phenotype_info['phenotype_col_dict']['Exposure']
         exposed_index = self.phenotype_df[self.phenotype_df[exp_col]==1].index
 
@@ -635,12 +638,14 @@ class DiseaseNetworkData:
             self.phenotype_df.loc[exposed_index],
             self.__phenotype_info['phenotype_col_dict']['Participant ID'],
             self.__phenotype_info['phenotype_col_dict']['Sex'],
+            self.__sex_value_dict,
             self.__significant_phecodes,
             self.history,
             self.diagnosis,
             self.phecode_info,
             min_interval_days,
-            max_interval_days
+            max_interval_days,
+            self.min_required_icd_codes
         )
 
     def load(
