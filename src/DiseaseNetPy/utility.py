@@ -22,6 +22,23 @@ def decimal_to_short(code:float) -> str:
     parts[0] = parts[0].zfill(3)
     return "".join(parts)
 
+def phecode_leaf_to_root(phecode_dict:dict):
+    """
+    Generate a new dictionary mapping all the leaf phecodes to its node phecode
+
+    Parameters:
+        phecode_dict : dict, dictionary of phecode information contained in the diseasenetwork data.
+
+    Returns:
+        mapping dictionary
+    """
+    new_dict = {}
+    for phecode in phecode_dict:
+        leaf_lst = phecode_dict[phecode]
+        for leaf in leaf_lst:
+            new_dict[leaf] = phecode
+    return new_dict
+
 def read_check_csv(path_file:str, 
                    cols_check:list, 
                    date_cols:list, 
@@ -838,8 +855,12 @@ def d1d2_from_diagnosis_history(df:pd.DataFrame, id_col:str, sex_col:str, sex_va
     eligible_withdate_dict = {}
     d1d2_temporl_pair_dict = {}
     d1d2_com_pair_dict = {}
+    history_level = {} #this is the newly generated history list that correspond to the specified phecode level (consider the occurence as well)
     
     from itertools import combinations
+
+    #generate a dictionary mapping leaf phecode to root phecode 
+    node_dict = phecode_leaf_to_root(phecode_info_dict)
     
     for id_,sex in df[[id_col,sex_col]].values:
         temp_deligible_list = []
@@ -849,6 +870,10 @@ def d1d2_from_diagnosis_history(df:pd.DataFrame, id_col:str, sex_col:str, sex_va
         diagnosis_ = diagnosis_dict[id_]
         n_diagnosis_ = n_diagnosis_dict[id_]
         history_ = history_dict[id_]
+        #generate a new history list correspond to the phecode level, consider the n. of occurence as well
+        history_node = set([node_dict[x] for x in history_])
+        history_node = [x for x in history_node if sum([n_diagnosis_[leaf] for leaf in phecode_info_dict[x]['leaf_list']])>=min_icd_num]
+        history_level[id_] = history_node
         #generate eligible disease dictionary
         for phecode in phecode_lst:
             leaf_lst = phecode_info_dict[phecode]['leaf_list']
@@ -888,7 +913,8 @@ def d1d2_from_diagnosis_history(df:pd.DataFrame, id_col:str, sex_col:str, sex_va
     trajectory_dict = {'eligible_disease':eligible_disease_dict,
                        'eligible_disease_withdate':eligible_withdate_dict,
                        'd1d2_temporal_pair':d1d2_temporl_pair_dict,
-                       'd1d2_com_pair':d1d2_com_pair_dict}
+                       'd1d2_com_pair':d1d2_com_pair_dict,
+                       'history_level':history_level}
     
     return trajectory_dict
 

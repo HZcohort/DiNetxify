@@ -11,7 +11,7 @@ import time
 import random
 from .data_management import DiseaseNetworkData
 from .utility import log_file_detect,filter_phecodes,threshold_check,n_process_check,correction_method_check,states_p_adjust
-from .utility import check_kwargs_com_tra,covariates_check,matching_var_check
+from .utility import check_kwargs_com_tra,covariates_check,matching_var_check,phecode_leaf_to_root
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -904,7 +904,7 @@ def comorbidity_network(data:DiseaseNetworkData,
     phecode_info = data.phecode_info
     trajectory_eligible = data.trajectory['eligible_disease']
     trajectory_eligible_withdate = data.trajectory['eligible_disease_withdate']
-    history = data.history
+    history_level = data.trajectory['history_level'] #extract the new history list
     phenotype_df = data.phenotype_df
     exp_col = data.get_attribute('phenotype_info')['phenotype_col_dict']['Exposure']
     id_col = data.get_attribute('phenotype_info')['phenotype_col_dict']['Participant ID']
@@ -921,12 +921,6 @@ def comorbidity_network(data:DiseaseNetworkData,
     invalid_disease = [x for x in all_diseases_lst if x not in phecode_sig]
     if invalid_disease:
         raise ValueError(f"The following phecode from the 'comorbidity_strength_result' are not in the list of PheWAS significant phecode: {invalid_disease}.")
-    
-    #generate a new history dictionary
-    if data.phecode_level == 1:
-        history_level = {id_:set([int(phecode)/1 for phecode in vals]) for id_,vals in history.items()}
-    elif data.phecode_level == 2:
-        history_level = {id_:set([int(phecode*10)/10 for phecode in vals]) for id_,vals in history.items()}
     
     time_start = time.time()
     #list of disease pair
@@ -1229,8 +1223,8 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
     
     trajectory_eligible = data.trajectory['eligible_disease']
     trajectory_temporal = data.trajectory['d1d2_temporal_pair']
+    history_level = data.trajectory['history_level'] #extract the new history list
     trajectory_eligible_withdate = data.trajectory['eligible_disease_withdate']
-    history = data.history
     phenotype_df = data.phenotype_df
     exp_col = data.get_attribute('phenotype_info')['phenotype_col_dict']['Exposure']
     id_col = data.get_attribute('phenotype_info')['phenotype_col_dict']['Participant ID']
@@ -1251,12 +1245,6 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
     invalid_disease = [x for x in all_diseases_lst if x not in phecode_sig]
     if invalid_disease:
         raise ValueError(f"The following phecode from the 'comorbidity_strength_result' are not in the list of PheWAS significant phecode: {invalid_disease}.")
-    
-    #generate a new history dictionary by merging the leaf code
-    if data.phecode_level == 1:
-        history_level = {id_:set([int(phecode)/1 for phecode in vals]) for id_,vals in history.items()}
-    elif data.phecode_level == 2:
-        history_level = {id_:set([int(phecode*10)/10 for phecode in vals]) for id_,vals in history.items()}
     
     time_start = time.time()
     #list of disease pair
