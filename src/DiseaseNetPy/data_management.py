@@ -642,6 +642,7 @@ class DiseaseNetworkData:
             self.__significant_phecodes,
             self.history,
             self.diagnosis,
+            self.n_diagnosis,
             self.phecode_info,
             min_interval_days,
             max_interval_days,
