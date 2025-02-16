@@ -861,6 +861,7 @@ def d1d2_from_diagnosis_history(df:pd.DataFrame, id_col:str, sex_col:str, sex_va
 
     #generate a dictionary mapping leaf phecode to root phecode 
     node_dict = phecode_leaf_to_root(phecode_info_dict)
+    phecode_set = set(phecode_info_dict.keys())
     
     for id_,sex in df[[id_col,sex_col]].values:
         temp_deligible_list = []
@@ -871,8 +872,8 @@ def d1d2_from_diagnosis_history(df:pd.DataFrame, id_col:str, sex_col:str, sex_va
         n_diagnosis_ = n_diagnosis_dict[id_]
         history_ = history_dict[id_]
         #generate a new history list correspond to the phecode level, consider the n. of occurence as well
-        history_node = set([node_dict[x] for x in history_])
-        history_node = [x for x in history_node if sum([n_diagnosis_[leaf] for leaf in phecode_info_dict[x]['leaf_list']])>=min_icd_num]
+        history_node = set([node_dict.get(x,x) for x in history_]).intersection(phecode_set)
+        history_node = [x for x in history_node if sum([n_diagnosis_.get(leaf,0) for leaf in phecode_info_dict[x]['leaf_list']])>=min_icd_num]
         history_level[id_] = history_node
         #generate eligible disease dictionary
         for phecode in phecode_lst:
