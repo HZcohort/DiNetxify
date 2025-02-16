@@ -15,7 +15,6 @@ from statsmodels.duration.hazard_regression import PHReg
 import warnings
 warnings.filterwarnings('ignore')
 
-
 def cox_conditional(phecode:float):
     """
     Perfoming Cox conditional analysis based on the provided DiseaseNetworkData object.

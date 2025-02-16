@@ -15,7 +15,6 @@ from .utility import medical_records_process, diagnosis_history_update, d1d2_fro
 import warnings
 warnings.filterwarnings('ignore')
 
-
 class DiseaseNetworkData:
     """
     A class for handling disease network data creation and operations, for use in DiseaseNet module.
@@ -63,21 +62,27 @@ class DiseaseNetworkData:
         self.__end_date_col = 'end_date'
         self.__mathcing_identifier_col = 'group'
         self.__phenotype_col_dict = {
-            'matched cohort':{'Participant ID':self.__id_col,
-                                'Exposure':self.__exposure_col,
-                                'Sex':self.__sex_col,
-                                'Index date': self.__index_date_col,
-                                'End date': self.__end_date_col,
-                                'Matching identifier':self.__mathcing_identifier_col},
-            'cohort':{'Participant ID':self.__id_col,
-                        'Exposure':self.__exposure_col,
-                        'Sex':self.__sex_col,
-                        'Index date': self.__index_date_col,
-                        'End date': self.__end_date_col},
-            'registry':{"Participant ID":self.__id_col,
-                        "Sex":self.__sex_col,
-                        "Index date":self.__index_date_col,
-                        "End date":self.__end_date_col}
+            'matched cohort':{
+                'Participant ID':self.__id_col,
+                'Exposure':self.__exposure_col,
+                'Sex':self.__sex_col,
+                'Index date': self.__index_date_col,
+                'End date': self.__end_date_col,
+                'Matching identifier':self.__mathcing_identifier_col
+            },
+            'cohort':{
+                'Participant ID':self.__id_col,
+                'Exposure':self.__exposure_col,
+                'Sex':self.__sex_col,
+                'Index date': self.__index_date_col,
+                'End date': self.__end_date_col
+            },
+            'registry':{
+                "Participant ID":self.__id_col,
+                "Sex":self.__sex_col,
+                "Index date":self.__index_date_col,
+                "End date":self.__end_date_col
+            }
         }
         #medical records data
         self.__diagnosis_code_options = ['ICD-9-CM', 'ICD-9-WHO', 'ICD-10-CM', 'ICD-10-WHO']

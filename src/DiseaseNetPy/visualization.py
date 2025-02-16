@@ -52,7 +52,7 @@ SYSTEM = [
     "others"
 ]
 
-class ThreeDimensionalDiseaseNetwork(object):
+class ThreeDimensionalNetwork(object):
     """
     
     """
@@ -992,7 +992,7 @@ class ThreeDimensionalDiseaseNetwork(object):
         plot_data.append(trace_data)
         return plot_data
 
-    def plot_threeDimension(
+    def threeDimension_plot(
         self, 
         path: str,
         max_radius: float, 
