@@ -22,6 +22,23 @@ def decimal_to_short(code:float) -> str:
     parts[0] = parts[0].zfill(3)
     return "".join(parts)
 
+def phecode_leaf_to_root(phecode_dict:dict):
+    """
+    Generate a new dictionary mapping all the leaf phecodes to its node phecode
+
+    Parameters:
+        phecode_dict : dict, dictionary of phecode information contained in the diseasenetwork data.
+
+    Returns:
+        mapping dictionary
+    """
+    new_dict = {}
+    for phecode in phecode_dict:
+        leaf_lst = phecode_dict[phecode]['leaf_list']
+        for leaf in leaf_lst:
+            new_dict[leaf] = phecode
+    return new_dict
+
 def read_check_csv(path_file:str, 
                    cols_check:list, 
                    date_cols:list, 
@@ -808,8 +825,9 @@ def get_exclison_lst(exl_range_str):
     
     return set(exl_list)
 
-def d1d2_from_diagnosis_history(df:pd.DataFrame, id_col:str, sex_col:str, phecode_lst:list, history_dict:dict, diagnosis_dict:dict,
-                                phecode_info_dict:dict, min_interval_days:int, max_interval_days:int) -> dict:
+def d1d2_from_diagnosis_history(df:pd.DataFrame, id_col:str, sex_col:str, sex_value_dict:dict, 
+                                phecode_lst:list, history_dict:dict, diagnosis_dict:dict, n_diagnosis_dict:dict,
+                                phecode_info_dict:dict, min_interval_days:int, max_interval_days:int, min_icd_num:int) -> dict:
     """
     Construct d1->d2 disease pairs for each individual from a list of significant phecodes.
     
@@ -818,25 +836,32 @@ def d1d2_from_diagnosis_history(df:pd.DataFrame, id_col:str, sex_col:str, phecod
         df : dataframe of phenotype data, contains at id and sex columns
         id_col : id column in the df
         sex_col : sex column in the df
+        sex_value_dict: dictionary for coding 'Female' and 'Male' in the phenotype data
         phecode_lst : list of significant phecodes
         history_dict : dictionary containing medical records history
         diagnosis_dict : dictionary containing diagnosis and date
+        n_diagnosis_dict : number of phecode occurence
         phecode_info_dict : phecode information
         min_interval_days : minimum interval required for d1-d2 disease pair construction
         max_interval_days : maximum interval allowed for d1-d2 disease pair construction
+        min_icd_num : The minimum number of ICD codes mapping to a specific phecode required for the phecode to be considered valid.
 
     Returns
     -------
         D1->D2 dictionary.
     
     """
-    sex_value_dict = {'Female':1,'Male':0}
     eligible_disease_dict = {}
     eligible_withdate_dict = {}
     d1d2_temporl_pair_dict = {}
     d1d2_com_pair_dict = {}
+    history_level = {} #this is the newly generated history list that correspond to the specified phecode level (consider the occurence as well)
     
     from itertools import combinations
+
+    #generate a dictionary mapping leaf phecode to root phecode 
+    node_dict = phecode_leaf_to_root(phecode_info_dict)
+    phecode_set = set(phecode_info_dict.keys())
     
     for id_,sex in df[[id_col,sex_col]].values:
         temp_deligible_list = []
@@ -844,26 +869,28 @@ def d1d2_from_diagnosis_history(df:pd.DataFrame, id_col:str, sex_col:str, phecod
         temp_dpair_com_lst = []
         temp_deligible_dict_withdate = {}
         diagnosis_ = diagnosis_dict[id_]
+        n_diagnosis_ = n_diagnosis_dict[id_]
         history_ = history_dict[id_]
+        #generate a new history list correspond to the phecode level, consider the n. of occurence as well
+        history_node = set([node_dict.get(x,x) for x in history_]).intersection(phecode_set)
+        history_node = [x for x in history_node if sum([n_diagnosis_.get(leaf,0) for leaf in phecode_info_dict[x]['leaf_list']])>=min_icd_num]
+        history_level[id_] = history_node
         #generate eligible disease dictionary
         for phecode in phecode_lst:
             leaf_lst = phecode_info_dict[phecode]['leaf_list']
             exl_lst = phecode_info_dict[phecode]['exclude_list']
             sex_specific = phecode_info_dict[phecode]['sex']
-            if len(exl_lst.intersection(set(history_)))==0 and (sex_specific=='Both' or sex_value_dict[sex_specific]==sex):
-                try:
-                    date = min([diagnosis_[x] for x in leaf_lst if x in diagnosis_])
+            if (check_history_exclusion(exl_lst,history_,n_diagnosis_,min_icd_num)==0) and (sex_specific=='Both' or sex_value_dict[sex_specific]==sex):
+                temp_deligible_list.append(phecode)
+                date = time_first_diagnosis(leaf_lst,diagnosis_,n_diagnosis_,min_icd_num)
+                if not pd.isna(date):
                     temp_deligible_dict_withdate[phecode] = date
-                    temp_deligible_list.append(phecode)
-                except:
-                    temp_deligible_list.append(phecode)
         #generate disease pair dictionary
         if len(temp_deligible_dict_withdate) <= 1:
             eligible_disease_dict[id_] = temp_deligible_list
             d1d2_temporl_pair_dict[id_] = temp_dpair_temporal_lst
             d1d2_com_pair_dict[id_] = temp_dpair_com_lst
             eligible_withdate_dict[id_] = temp_deligible_dict_withdate
-            
         else:
             for d1,d2 in combinations(temp_deligible_dict_withdate,2):
                 date1, date2 = temp_deligible_dict_withdate[d1], temp_deligible_dict_withdate[d2]
@@ -887,7 +914,8 @@ def d1d2_from_diagnosis_history(df:pd.DataFrame, id_col:str, sex_col:str, phecod
     trajectory_dict = {'eligible_disease':eligible_disease_dict,
                        'eligible_disease_withdate':eligible_withdate_dict,
                        'd1d2_temporal_pair':d1d2_temporl_pair_dict,
-                       'd1d2_com_pair':d1d2_com_pair_dict}
+                       'd1d2_com_pair':d1d2_com_pair_dict,
+                       'history_level':history_level}
     
     return trajectory_dict
 
