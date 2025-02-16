@@ -34,7 +34,7 @@ def phecode_leaf_to_root(phecode_dict:dict):
     """
     new_dict = {}
     for phecode in phecode_dict:
-        leaf_lst = phecode_dict[phecode]
+        leaf_lst = phecode_dict[phecode]['leaf_list']
         for leaf in leaf_lst:
             new_dict[leaf] = phecode
     return new_dict
