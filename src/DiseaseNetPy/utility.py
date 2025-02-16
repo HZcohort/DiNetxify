@@ -883,7 +883,7 @@ def d1d2_from_diagnosis_history(df:pd.DataFrame, id_col:str, sex_col:str, sex_va
             if (check_history_exclusion(exl_lst,history_,n_diagnosis_,min_icd_num)==0) and (sex_specific=='Both' or sex_value_dict[sex_specific]==sex):
                 temp_deligible_list.append(phecode)
                 date = time_first_diagnosis(leaf_lst,diagnosis_,n_diagnosis_,min_icd_num)
-                if date != pd.NaT:
+                if not pd.isna(date):
                     temp_deligible_dict_withdate[phecode] = date
         #generate disease pair dictionary
         if len(temp_deligible_dict_withdate) <= 1:
