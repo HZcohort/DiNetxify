@@ -720,7 +720,7 @@ def time_first_diagnosis(d_lst,diagnosis_dict,n_diagnosis_dict,threshold):
         first diagnosis date or pd.NaT
     """
     if sum([n_diagnosis_dict.get(d,0) for d in d_lst])>=threshold:
-        return min([diagnosis_dict.get(x,pd.NaT) for x in d_lst])
+        return np.min([diagnosis_dict.get(x,pd.NaT) for x in d_lst])
     else:
         return pd.NaT
 
