@@ -5,10 +5,10 @@ Created on Fri Jul 26 12:49:35 2024
 @author: hc
 """
 
-from DiseaseNetPy import DiseaseNetworkData as dnd
+import DiseaseNetPy as dnp
 
 if __name__ == "__main__":
-    data = dnd(study_design="registry")
+    data = dnp(study_design="registry")
     data.phenotype_data(
         "data/data.csv",
         {"Participant ID": "eid",
@@ -26,7 +26,7 @@ if __name__ == "__main__":
         "Date of diagnosis": "date_dignosed"}
     )
 
-    phewas_result = dnd.phewas(
+    phewas_result = dnp.phewas(
         data, 
         proportion_threshold=0.01, 
         n_process=8
@@ -34,32 +34,32 @@ if __name__ == "__main__":
 
     data.disease_pair(phewas_result)
 
-    comorbidity_strength_result = dnd.comorbidity_strength(
+    comorbidity_strength_result = dnp.comorbidity_strength(
         data, 
         proportion_threshold=0.01, 
         n_process=8
     )
 
-    binomial_test_result = dnd.binomial_test(
+    binomial_test_result = dnp.binomial_test(
         data, 
         comorbidity_strength_result
     )
 
-    comorbidity_network_result = dnd.comorbidity_network(
+    comorbidity_network_result = dnp.comorbidity_network(
         data, 
         comorbidity_strength_result, 
         binomial_test_result,
         n_process=8
     )
 
-    disease_trajectory_result = dnd.disease_trajectory(
+    disease_trajectory_result = dnp.disease_trajectory(
         data, 
         comorbidity_strength_result, 
         binomial_test_result,
         n_process=8
     )
 
-    my_network = dnd.ThreeDimensionalDiseaseNetwork(
+    my_network = dnp.ThreeDimensionalNetwork(
         phewas_result,
         comorbidity_network_result,
         disease_trajectory_result

@@ -286,7 +286,7 @@ class ThreeDimensionalNetwork(object):
     def __calculate_order(
         source_lst :List[float], 
         target_lst :List[float]
-    ) -> Dict[int]:
+    ) -> Dict[float, int]:
         """_summary_
 
         Args:
@@ -328,7 +328,7 @@ class ThreeDimensionalNetwork(object):
         return most_common[0][0]
 
     @staticmethod
-    def __calculate_2d_positions(radii: List[float], spacing:float) -> Dict[float]:
+    def __calculate_2d_positions(radii: List[float], spacing:float) -> Dict[int, float]:
         """calculate the positions of nodes(phecodes).
 
         Args:
@@ -369,7 +369,7 @@ class ThreeDimensionalNetwork(object):
                 is_exist = False
         return is_exist
 
-    def __calculate_ratio(self, cluster_nodes: Dict[float]) -> Dict[float]:
+    def __calculate_ratio(self, cluster_nodes: Dict[int, float]) -> Dict[int, float]:
         for cluster, nodes in cluster_nodes.items():
             size = [self._nodes_attrs[x]["size"] for x in nodes]
             sum_size = sum(size)
@@ -393,7 +393,7 @@ class ThreeDimensionalNetwork(object):
             for node, attr in value.items():
                 self._nodes_attrs[node].update({f"{key}":attr})
 
-    def __get_same_nodes(self, key_name:str) -> Dict[Any]:
+    def __get_same_nodes(self, key_name:str) -> Dict[Any, Any]:
         """_summary_
 
         Args:
@@ -415,7 +415,7 @@ class ThreeDimensionalNetwork(object):
 
     def __get_edge_attrs(
         self,
-        edge_dict: Dict[float],
+        edge_dict: Dict[float, float],
     ) -> Dict[List[float]]:
         edge_attrs = {
             0:[],
@@ -474,14 +474,14 @@ class ThreeDimensionalNetwork(object):
         center: Tuple[float], 
         r: Tuple[float], 
         color: str, 
-        light_dict: Optional[Dict[float]]=dict(
+        light_dict: Optional[Dict[str, float]]=dict(
             ambient=0.2,
             diffuse=0.8,
             specular=0.4,
             roughness=0.2,
             fresnel=2.0
         ),
-        light_position_dict: Optional[Dict[float]]=dict(
+        light_position_dict: Optional[Dict[str, float]]=dict(
             x=1.5,
             y=1.5,
             z=1.5
@@ -519,7 +519,7 @@ class ThreeDimensionalNetwork(object):
             max_radius :float,
             min_radius :float,
             redu_ratio :float,
-            cluster_ratio :Dict[float],
+            cluster_ratio :Dict[int, float],
             max_attempts :Optional[int]=10000
         ) -> None:
         """calculate the location of center point of sphere.

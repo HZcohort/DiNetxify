@@ -1200,7 +1200,7 @@ def check_variance_vif(df:pd.DataFrame,
                        disease_var_lst:list=None, 
                        pca_var_lst:list=None, 
                        group_col:str=None,
-                       vif_cutoff:int=10) -> list:
+                       vif_cutoff:int=200) -> list:
     """
     Check within group variance and Variance inflation factor (VIF) for the all the covariates.
     Covariate with 0 within group variance will be removed.
@@ -1260,3 +1260,61 @@ def check_variance_vif(df:pd.DataFrame,
         return covar_removed
     else:
         raise ValueError("Invalid input.")
+
+def check_variance_vif_single(df:pd.DataFrame, forcedin_var_lst:list,
+                              covar_lst:list, group_col:str=None,
+                              vif_cutoff:int=None) -> list:
+    """
+    Check within group variance and Variance inflation factor (VIF) for the all the covariates.
+    Covariate with 0 within group variance will be removed.
+    Covariate with VIF > 5 will be removed.
+
+    Args:
+        df (pd.DataFrame): dataframe for analysis
+        forcedin_var_lst (list): covariates should always be included, such as constant and exposure variable
+        covar_lst (list): phenotypic covariates
+        vif_cutoff (int): VIF cutoff value (int) or some prespecified settings
+
+    Returns:
+        list: a nested list of covariates to be removed.
+    """
+    from statsmodels.stats.outliers_influence import variance_inflation_factor
+    #prespecified vif value for some types
+    vif_dict = {'phenotypic_covar':500,'disease_covar':20,
+                'pca_covar':500}
+    vif_cutoff = vif_dict.get(vif_cutoff,vif_cutoff)
+
+    #keep the order, make sure covar_lst is the last for VIF check
+    var_removed = {}
+    #return empty list if no variables are provided
+    if len(covar_lst) == 0:
+        return []
+
+    #if group_col is provided, calculate the within group variance
+    if group_col is not None:
+        for var in covar_lst:
+            group_means = df.groupby(group_col)[var].transform('mean')
+            ss_within = ((df[var] - group_means) ** 2).sum()
+            variance_within = ss_within / (len(df) - df[group_col].nunique())
+            if variance_within == 0: var_removed[var] = 'within_group_variance==0'
+    #if not provided, check the whole dataset variance
+    else:
+        for var in covar_lst:
+            if df[var].var() == 0: var_removed[var] = 'variance==0'
+
+    #always check VIF
+    covar_lst = [x for x in covar_lst if x not in var_removed] #remove the variables with 0 within group variance
+    vars_all = covar_lst + forcedin_var_lst #remaining covariates plus forced-in variables
+    vars_all_set = vars_all.copy() #variables that remained unchanged during the VIF check loop
+    for var in vars_all_set:
+        #do not check forced-in variables
+        if var in forcedin_var_lst:
+            continue
+        index_ = vars_all.index(var)
+        vif = variance_inflation_factor(df[vars_all],index_)
+        if vif >= vif_cutoff:
+            vars_all.remove(var)
+            var_removed[var] = f'VIF={vif}'
+   
+    #return the dictionary of variables to be excluded
+    return var_removed

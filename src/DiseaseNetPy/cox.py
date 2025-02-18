@@ -10,10 +10,11 @@ import pandas as pd
 import numpy as np
 import time
 from .data_management import DiseaseNetworkData
-from .utility import write_log, check_variance_vif, check_history_exclusion, time_first_diagnosis
+from .utility import write_log, check_variance_vif_single, check_history_exclusion, time_first_diagnosis
 from statsmodels.duration.hazard_regression import PHReg
 import warnings
 warnings.filterwarnings('ignore')
+
 
 def cox_conditional(phecode:float):
     """
@@ -187,14 +188,12 @@ def cox_conditional(phecode:float):
     match_id = dataset_analysis[dataset_analysis[outcome_col]==1][matching_col].to_list()
     dataset_analysis = dataset_analysis[dataset_analysis[matching_col].isin(match_id)]
     
-    #check var of covariates, remove these with var()==0
-    # for var in covariates_:
-    #     dataset_analysis[var] = dataset_analysis[var].astype(float)
-    #     if dataset_analysis.groupby(by=matching_col)[var].var().mean() <= 0: #lowest var() allowed
-    #         covariates_.remove(var)
-    del_var = check_variance_vif(dataset_analysis, covariates_, group_col=matching_col)
-    del_var = list(del_var.keys())
-    final_covariates= [x for x in covariates_ if x not in del_var]
+    #check the covariates vif
+    del_covariates = check_variance_vif_single(dataset_analysis,
+                                               [exp_col],covariates_,
+                                               vif_cutoff='phenotypic_covar', group_col=matching_col)
+    final_covariates = [x for x in covariates_ if x not in del_covariates]
+    
     #error message
     e_stats = None
     e_lifelines = None
@@ -218,10 +217,10 @@ def cox_conditional(phecode:float):
                 strata=[matching_col]
             )
             result_temp = model.summary.loc[exp_col]
-            result += [f'fitted_lifelines and delete the covariate(s): {del_var}',str_exp,str_noexp]
+            result += [f'fitted_lifelines and delete the covariate(s): {del_covariates}',str_exp,str_noexp]
             result += [x for x in result_temp[['coef','se(coef)','p']]]
         else:
-            result += [f'fitted and delete the covariate(s): {del_var}',str_exp,str_noexp]
+            result += [f'fitted and delete the covariate(s): {del_covariates}',str_exp,str_noexp]
             result += [model_result.params[0],model_result.bse[0],model_result.pvalues[0]]
     except Exception as e:
         if e_stats:
@@ -237,7 +236,7 @@ def cox_conditional(phecode:float):
                 strata=[matching_col]
             )
             result_temp = model.summary.loc[exp_col]
-            result += [f'fitted_lifelines and delete the covariate(s): {del_var}',str_exp,str_noexp]
+            result += [f'fitted_lifelines and delete the covariate(s): {del_covariates}',str_exp,str_noexp]
             result += [x for x in result_temp[['coef','se(coef)','p']]]
         except Exception as e:
             if e_lifelines:
@@ -476,10 +475,11 @@ def cox_unconditional(phecode:float):
     #exclude those with negative time
     dataset_analysis = dataset_analysis[dataset_analysis[time_col]>0]
     
-    # check variance
-    del_var = check_variance_vif(dataset_analysis, covariates_)
-    del_var = list(del_var.keys())
-    final_covariates= [x for x in covariates_ if x not in del_var]
+    #check the covariates vif
+    del_covariates = check_variance_vif_single(dataset_analysis,
+                                               [exp_col],covariates_,
+                                               vif_cutoff='phenotypic_covar')
+    final_covariates = [x for x in covariates_ if x not in del_covariates]
 
     #error message
     e_stats = None
@@ -502,10 +502,10 @@ def cox_unconditional(phecode:float):
                 event_col=outcome_col
             )
             result_temp = model.summary.loc[exp_col]
-            result += [f'fitted_lifelines and delete the covariate(s): {del_var}',str_exp,str_noexp]
+            result += [f'fitted_lifelines and delete the covariate(s): {del_covariates}',str_exp,str_noexp]
             result += [x for x in result_temp[['coef','se(coef)','p']]]
         else:
-            result += [f'fitted and delete the covariate(s): {del_var}',str_exp,str_noexp]
+            result += [f'fitted and delete the covariate(s): {del_covariates}',str_exp,str_noexp]
             result += [model_result.params[0],model_result.bse[0],model_result.pvalues[0]]
     except Exception as e:
         if e_stats:
@@ -520,7 +520,7 @@ def cox_unconditional(phecode:float):
                 event_col=outcome_col
             )
             result_temp = model.summary.loc[exp_col]
-            result += [f'fitted_lifelines and delete the covariate(s): {del_var}',str_exp,str_noexp]
+            result += [f'fitted_lifelines and delete the covariate(s): {del_covariates}',str_exp,str_noexp]
             result += [x for x in result_temp[['coef','se(coef)','p']]]
         except Exception as e:
             if e_lifelines:

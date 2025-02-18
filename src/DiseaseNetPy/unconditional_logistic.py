@@ -7,10 +7,9 @@ Created on Sun Dec 15 02:13:51 2024
 
 import pandas as pd
 import numpy as np
-#from datetime import datetime
 from statsmodels.discrete.discrete_model import Logit
 import time
-from .utility import write_log, find_best_alpha_and_vars, check_variance_vif
+from .utility import write_log, find_best_alpha_and_vars, check_variance_vif_single
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -55,6 +54,7 @@ def logistic_model(d1:float,d2:float):
     d1_col = 'd1'
     d2_col = 'd2'
     constant_col = 'constant'
+    forcedin_vars = [d1_col,constant_col]
 
     #method and parameters
     method = parameters_['method']
@@ -70,29 +70,25 @@ def logistic_model(d1:float,d2:float):
     #filtering the dataframe first
     N = len(phenotype_df_exposed_)
     d1d2_eligible_lst = [id_ for id_,vals in trajectory_eligible_.items() if d1 in vals and d2 in vals]
-    phenotype_df_exposed_ = phenotype_df_exposed_[phenotype_df_exposed_[id_col_].isin(d1d2_eligible_lst)]
+    df_analysis = phenotype_df_exposed_[phenotype_df_exposed_[id_col_].isin(d1d2_eligible_lst)]
     
     #create other diseases variable
     if method in ['RPCN','PCN_PCA']:        
-        all_diseases_lst_ = [x for x in all_diseases_lst_ if x!=d1 and x!=d2]
+        diseases_lst_ = [x for x in all_diseases_lst_ if x!=d1 and x!=d2]
         all_diseases_var = []
-        for disease in all_diseases_lst_:
-            phenotype_df_exposed_[str(disease)] = phenotype_df_exposed_[id_col_].apply(lambda x: 1 if disease in history_level_[x] or disease in trajectory_eligible_withdate_[x] else 0)
+        for disease in diseases_lst_:
+            df_analysis[str(disease)] = df_analysis[id_col_].apply(lambda x: 1 if disease in history_level_[x] or disease in trajectory_eligible_withdate_[x] else 0)
             all_diseases_var.append(str(disease))
-        if method == 'RPCN' and auto_penalty:
-            alpha_lst = np.array([0]*(2) + [1]*len(all_diseases_var)) * scaling_factor #consider the scaling factor when using auto_penalty
-        else:
-            alpha_lst = np.array([0]*(2) + [1]*len(all_diseases_var))
     
     #d1 and d2 variable
-    phenotype_df_exposed_[d1_col] = phenotype_df_exposed_[id_col_].apply(lambda x: 1 if d1 in trajectory_eligible_withdate_[x] else 0)
-    phenotype_df_exposed_[d2_col] = phenotype_df_exposed_[id_col_].apply(lambda x: 1 if d2 in trajectory_eligible_withdate_[x] else 0)
-    phenotype_df_exposed_[constant_col] = 1
+    df_analysis[d1_col] = df_analysis[id_col_].apply(lambda x: 1 if d1 in trajectory_eligible_withdate_[x] else 0)
+    df_analysis[d2_col] = df_analysis[id_col_].apply(lambda x: 1 if d2 in trajectory_eligible_withdate_[x] else 0)
+    df_analysis[constant_col] = 1
     #statistics
-    n = len(phenotype_df_exposed_) #number of individuals in the sub-cohort
-    N_d1 = len(phenotype_df_exposed_[phenotype_df_exposed_[d1_col]==1])
-    N_d2_withd1 = len(phenotype_df_exposed_[(phenotype_df_exposed_[d2_col]==1) & (phenotype_df_exposed_[d1_col]==1)])
-    N_d2_nod1 = len(phenotype_df_exposed_[(phenotype_df_exposed_[d2_col]==1) & (phenotype_df_exposed_[d1_col]==0)])
+    n = len(df_analysis) #number of individuals in the sub-cohort
+    N_d1 = len(df_analysis[df_analysis[d1_col]==1])
+    N_d2_withd1 = len(df_analysis[(df_analysis[d2_col]==1) & (df_analysis[d1_col]==1)])
+    N_d2_nod1 = len(df_analysis[(df_analysis[d2_col]==1) & (df_analysis[d1_col]==0)])
 
     #result list
     result_lst = [d1,d2,f'{d1}-{d2}',N,n,f'{N_d2_withd1}/{N_d1}',f'{N_d2_nod1}/{n-N_d1}']
@@ -100,18 +96,25 @@ def logistic_model(d1:float,d2:float):
     #time and message
     time_start = time.time()
     message = f'{d1} and {d2}: '
+
+    #check phnotypic covariates (applied to all methods)
+    del_covariates = check_variance_vif_single(df_analysis,
+                                               forcedin_vars,covariates_,
+                                               vif_cutoff='phenotypic_covar')
+    final_covariates= [x for x in covariates_ if x not in del_covariates]
     
     #simple method
     if method == 'CN':
-        del_var = check_variance_vif(phenotype_df_exposed_, covariates_)
-        del_var = list(del_var.keys())
-        final_covariates= [x for x in covariates_ if x not in del_var]
         try:
-            model = Logit(np.asarray(phenotype_df_exposed_[d2_col], dtype=int),
-                          np.asarray(phenotype_df_exposed_[[d1_col,constant_col]+final_covariates], dtype=float))
-            result = model.fit(disp=False, method='bfgs')
-            beta,se,p,aic = result.params[0], result.bse[0],result.pvalues[0],result.aic
-            result_lst += [method,f'fitted and delete the covariate(s): {del_var}',beta,se,p,aic]
+            #list of final variables to be included
+            final_model_vars = forcedin_vars+final_covariates
+            model = Logit(np.asarray(df_analysis[d2_col], dtype=int),
+                          np.asarray(df_analysis[final_model_vars], dtype=float))
+            result_final = model.fit(disp=False, method='bfgs')
+            beta,se,p,aic = result_final.params[0], result_final.bse[0],result_final.pvalues[0],result_final.aic
+            zvalue_dict = {var:z for var,z in zip(final_model_vars,result_final.tvalues)}
+            result_lst += [method,f'fitted and delete the covariate(s): {del_covariates}',
+                            f'{final_model_vars}',f'{zvalue_dict}',beta,se,p,aic]
             message += f'method={method}; successfully fitted; '
         except Exception as e:
             message += f'method={method}; error encountered: {e}; '
@@ -119,37 +122,36 @@ def logistic_model(d1:float,d2:float):
     
     #partial correlation method
     elif method == 'RPCN':
-        del_covariates, del_diseases_var = check_variance_vif(phenotype_df_exposed_, covariates_, disease_var_lst=all_diseases_var)
-        del_covariates, del_diseases_var = list(del_covariates.keys()), list(del_diseases_var.keys())
+        #check disease variables
+        del_diseases_var = check_variance_vif_single(df_analysis,
+                                                     forcedin_vars,all_diseases_var,
+                                                     vif_cutoff='disease_covar')
         all_diseases_var = [x for x in all_diseases_var if x not in del_diseases_var]
-        final_covariates = [x for x in covariates_ if x not in del_covariates]
+        #generate alpha lst after removing these variables
+        alpha_lst = np.array([0]*len(forcedin_vars) + [1]*len(all_diseases_var))
+        #variables for first model for selecting disease variables
+        model_1_vars = forcedin_vars+all_diseases_var
+        #method 1
         if auto_penalty:
+            alpha_lst = alpha_lst * scaling_factor #scaling_factor only for auto_penalty
             try:
                 #model
-                model_1_vars = [d1_col,constant_col]+all_diseases_var #only disease variables
-                model = Logit(np.asarray(phenotype_df_exposed_[d2_col], dtype=int),
-                              np.asarray(phenotype_df_exposed_[model_1_vars], dtype=float))
-                # Initial alphas to check
-                """
-                aic_dict = {}
-                # Check AIC for initial alpha values
-                for alpha in alpha_initial:
-                    result = model.fit_regularized(method='l1', alpha=alpha_lst*alpha, disp=False)
-                    aic_dict[alpha] = result.aic
-                # Determine the range with the best AIC
-                best_range = determine_best_range(aic_dict)
-                """
-                #search within the defined range
-                final_best_alpha, final_disease_vars = find_best_alpha_and_vars(model,alpha_range,alpha_lst,model_1_vars)
+                model = Logit(np.asarray(df_analysis[d2_col], dtype=int),
+                              np.asarray(df_analysis[model_1_vars], dtype=float))
+                #search within the defined range, get the diseases variables that will be included plus forced-in variables
+                final_best_alpha, final_disease_forcedin_vars = find_best_alpha_and_vars(model,alpha_range,alpha_lst,model_1_vars)
+                final_disease_vars = [x for x in final_disease_forcedin_vars if x not in forcedin_vars]
                 #fit the final model
-                model_final = Logit(np.asarray(phenotype_df_exposed_[d2_col],dtype=int),
-                                    np.asarray(phenotype_df_exposed_[final_disease_vars+final_covariates],dtype=float))
+                final_model_vars = final_disease_forcedin_vars+final_covariates
+                model_final = Logit(np.asarray(df_analysis[d2_col],dtype=int),
+                                    np.asarray(df_analysis[final_model_vars],dtype=float))
                 result_final = model_final.fit(disp=False, method='bfgs')
                 beta,se,p,aic = result_final.params[0],result_final.bse[0],result_final.pvalues[0],result_final.aic
-                z_value_dict = {var:z for var,z in zip(final_disease_vars+final_covariates,result_final.tvalues)}
-                disease_z_value = {var:z_value_dict[var] for var in final_disease_vars[2::]} #z-value dictionary for other disease variables
-                result_lst += [f'{method}_auto',f'fitted and delete the diseases variable(s): {del_diseases_var} and covariate(s): {del_covariates}',f'{final_disease_vars[2::]}',f'{disease_z_value}',final_best_alpha,beta,se,p,aic]
-                message += f'method={method}_auto (alpha={final_best_alpha}, number of other disease included as covariates: {len(final_disease_vars[2::])}); successfully fitted; '
+                #get the z-value dictionary
+                zvalue_dict = {var:z for var,z in zip(final_model_vars,result_final.tvalues)}
+                result_lst += [f'{method}_auto',f'fitted and delete the diseases variable(s): {del_diseases_var} and covariate(s): {del_covariates}',
+                               f'{final_model_vars}',f'{zvalue_dict}',final_best_alpha,beta,se,p,aic]
+                message += f'method={method}_auto (alpha={final_best_alpha}, number of other disease included as covariates: {len(final_disease_vars)}); successfully fitted; '
             except Exception as e:
                 result_lst += [f'{method}_auto', str(e)]
                 message += f'method={method}_auto; error encountered: {e}; '
@@ -157,51 +159,57 @@ def logistic_model(d1:float,d2:float):
         else:
             try:
                 #fit the initial model to get the non-zero disease list
-                model_1_vars = [d1_col,constant_col]+all_diseases_var #only disease variables
-                model = Logit(np.asarray(phenotype_df_exposed_[d2_col],dtype=int),
-                              np.asarray(phenotype_df_exposed_[model_1_vars],dtype=float))
+                model = Logit(np.asarray(df_analysis[d2_col],dtype=int),
+                              np.asarray(df_analysis[model_1_vars],dtype=float))
                 result = model.fit_regularized(method='l1', alpha=alpha_lst*alpha_single, disp=False)
+                #get list of variables with none zero coef
                 non_zero_indices = np.nonzero(result.params != 0)[0]
-                final_disease_vars = [model_1_vars[i] for i in non_zero_indices]
-                
+                final_disease_forcedin_vars = [model_1_vars[i] for i in non_zero_indices]
+                final_disease_vars = [x for x in final_disease_forcedin_vars if x not in forcedin_vars]
                 #fit the final model
-                model_final = Logit(np.asarray(phenotype_df_exposed_[d2_col],dtype=int),
-                                       np.asarray(phenotype_df_exposed_[final_disease_vars+del_covariates]),dtype=float)
+                final_model_vars = final_disease_forcedin_vars+final_covariates
+                model_final = Logit(np.asarray(df_analysis[d2_col],dtype=int),
+                                    np.asarray(df_analysis[final_model_vars]),dtype=float)
                 result_final = model_final.fit(disp=False,method='bfgs')
                 beta,se,p,aic = result_final.params[0], result_final.bse[0],result_final.pvalues[0],result_final.aic
-                z_value_dict = {var:z for var,z in zip(final_disease_vars+del_covariates, result_final.tvalues)}
-                disease_z_value = {var:z_value_dict[var] for var in final_disease_vars[2::]} #z-value dictionary for other disease variables
-                result_lst += [f'{method}_fixed_alpha',f'fitted and delete the diseases variable(s): {del_diseases_var} and covariate(s): {del_covariates}',f'{final_disease_vars[2::]}',f'{disease_z_value}',alpha_single,beta,se,p,aic]
-                message += f'method={method}_fixed_alpha (alpha={alpha_single}, number of other disease included as covariates: {len(final_disease_vars[2::])}); successfully fitted; '
+                zvalue_dict = {var:z for var,z in zip(final_model_vars,result_final.tvalues)}
+                result_lst += [f'{method}_fixed_alpha',f'fitted and delete the diseases variable(s): {del_diseases_var} and covariate(s): {del_covariates}',
+                               f'{final_model_vars}',f'{zvalue_dict}',alpha_single,beta,se,p,aic]
+                message += f'method={method}_fixed_alpha (alpha={alpha_single}, number of other disease included as covariates: {len(final_disease_vars)}); successfully fitted; '
             except Exception as e:
                 result_lst += [f'{method}_fixed_alpha', str(e)]
                 message += f'method={method}_fixed_alpha (alpha={alpha_single}); error encountered: {e}; '
 
     elif method == 'PCN_PCA':
         from sklearn.decomposition import PCA
+        #check disease variables
+        del_diseases_var = check_variance_vif_single(df_analysis,
+                                                     forcedin_vars,all_diseases_var,
+                                                     vif_cutoff='disease_covar')
+        all_diseases_var = [x for x in all_diseases_var if x not in del_diseases_var]
         try:
             #generate PC from other diseases variables
             pca = PCA(n_components=pca_number)
-            disease_vars_transformed = pca.fit_transform(np.asarray(phenotype_df_exposed_[all_diseases_var],dtype=float))
-            pca_cols = [f'PCA_{i}' for i in range(disease_vars_transformed.shape[1])]
-            disease_vars_transformed = pd.DataFrame(disease_vars_transformed,columns=pca_cols)
-            disease_vars_transformed.index = phenotype_df_exposed_.index
-            phenotype_df_exposed_PCA = pd.concat([phenotype_df_exposed_[[d1_col,d2_col,constant_col]+covariates_],
-                                                  disease_vars_transformed],axis=1)
+            disease_vars_transformed = pca.fit_transform(np.asarray(df_analysis[all_diseases_var],dtype=float))
+            all_pca_vars = [f'PCA_{i}' for i in range(disease_vars_transformed.shape[1])]
+            disease_vars_transformed = pd.DataFrame(disease_vars_transformed,columns=all_pca_vars)
+            disease_vars_transformed.index = df_analysis.index
+            df_analysis = pd.concat([df_analysis,disease_vars_transformed],axis=1)
             variance_explained = sum(pca.explained_variance_ratio_)
-            
-            #fit model with PCA covariates
-            del_covariates, del_pca_var = check_variance_vif(disease_vars_transformed, covariates_, pca_var_lst=pca_cols)
-            del_covariates, del_pca_var = list(del_covariates.keys()), list(del_pca_var.keys())
-            final_covariates = [x for x in covariates_ if x not in del_covariates]
-            final_pca_var = [x for x in pca_cols if x not in del_pca_var]
-            model_final = Logit(np.asarray(phenotype_df_exposed_PCA[d2_col],dtype=int),
-                                np.asarray(phenotype_df_exposed_PCA[[d1_col,constant_col]+final_covariates+final_pca_var],dtype=float))
+            #check the VIF of PCA varoab;es
+            del_pca_var = check_variance_vif_single(df_analysis,
+                                                    forcedin_vars,all_pca_vars,
+                                                    vif_cutoff='pca_covar')
+            final_pca_var = [x for x in all_pca_vars if x not in del_pca_var]
+            #fit the final model
+            final_model_vars = forcedin_vars+final_pca_var+final_covariates
+            model_final = Logit(np.asarray(df_analysis[d2_col],dtype=int),
+                                np.asarray(df_analysis[final_model_vars],dtype=float))
             result_final = model_final.fit(disp=False,method='bfgs')
             beta,se,p,aic = result_final.params[0], result_final.bse[0],result_final.pvalues[0],result_final.aic
-            z_value_dict = {var:z for var,z in zip([d1_col,constant_col]+final_covariates+final_pca_var,result_final.tvalues)}
-            pca_z_value = {var:z_value_dict[var] for var in final_pca_var} #z-value dictionary for other disease variables
-            result_lst += [f'{method}_n_components={pca_number}',f'fitted and delete the pca variable(s): {del_pca_var} and covariate(s): {del_covariates}',f'{final_pca_var}',f'{pca_z_value}',variance_explained,beta,se,p,aic]
+            zvalue_dict = {var:z for var,z in zip(final_model_vars,result_final.tvalues)}
+            result_lst += [f'{method}_n_components={pca_number}',f'fitted and delete the PC variable(s): {del_pca_var} and covariate(s): {del_covariates}',
+                           f'{final_model_vars}',f'{zvalue_dict}',variance_explained,beta,se,p,aic]
             message += f'method={method}_n_components={pca_number} (number of PC included as covariates: {len(final_pca_var)}, total variance explained by PC: {variance_explained:.3f}); successfully fitted; '
         except Exception as e:
             result_lst += [f'{method}_n_components={pca_number}',str(e)]
@@ -214,32 +222,6 @@ def logistic_model(d1:float,d2:float):
     write_log(log_file_,message)
     return result_lst
 
-def determine_best_range(aic_dict):
-    """
-    Determines the best range of alpha values based on the AIC values.
-
-    Parameters:
-    ----------
-    aic_dict (dict): Dictionary where keys are alpha values and values are the corresponding AIC values.
-
-    Returns:
-    ----------
-    tuple: The range (start, end) of alpha values that likely contains the best alpha.
-    """
-    # Sort the dictionary by alpha values to ensure the order
-    sorted_aic = sorted(aic_dict.items())
-    alpha_values = [item[0] for item in sorted_aic]
-    aic_values = [item[1] for item in sorted_aic]
-    # Find the index of the minimum AIC value
-    min_aic_index = aic_values.index(min(aic_values))
-    # Determine the range based on the surrounding alpha values
-    if min_aic_index == 0:  # Best alpha is at the first value
-        return (alpha_values[0], alpha_values[1])
-    elif min_aic_index == len(aic_values) - 1:  # Best alpha is at the last value
-        return (alpha_values[-2], alpha_values[-1])
-    else:  # Best alpha is between two values
-        return (alpha_values[min_aic_index - 1], alpha_values[min_aic_index + 1])
-    
 def logistic_model_wrapper(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,id_col,trajectory_eligible:dict,
                             trajectory_eligible_withdate:dict,history_level:dict,covariates:list,
                             all_diseases_lst:list,log_file:str,parameters:dict):
