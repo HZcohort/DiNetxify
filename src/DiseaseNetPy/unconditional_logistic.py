@@ -172,6 +172,7 @@ def logistic_model(d1:float,d2:float):
                                     np.asarray(df_analysis[final_model_vars]),dtype=float)
                 result_final = model_final.fit(disp=False,method='bfgs')
                 beta,se,p,aic = result_final.params[0], result_final.bse[0],result_final.pvalues[0],result_final.aic
+                #get the z-value dictionary
                 zvalue_dict = {var:z for var,z in zip(final_model_vars,result_final.tvalues)}
                 result_lst += [f'{method}_fixed_alpha',f'fitted and delete the diseases variable(s): {del_diseases_var} and covariate(s): {del_covariates}',
                                f'{final_model_vars}',f'{zvalue_dict}',alpha_single,beta,se,p,aic]

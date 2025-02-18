@@ -68,7 +68,8 @@ def logistic_model(d1:float,d2:float):
     d2_col = 'd2'
     outcome_date_col = 'outcome_date'
     mathcing_id_col = 'group_matching_ids'
-    forcedin_vars = [d1_col]
+    constant_col = 'constant'
+    forcedin_vars = [d1_col, constant_col]
 
     #method and parameters
     enforce_time_interval = parameters_['enforce_time_interval']
@@ -95,7 +96,7 @@ def logistic_model(d1:float,d2:float):
                                      on=id_col_,how='left')
     df_analysis[d1_date_col] = df_analysis[id_col_].apply(lambda x: trajectory_eligible_withdate_[x].get(d1,pd.NaT))
     df_analysis[d1_col] = df_analysis.apply(lambda row: 1 if row[d1_date_col]<row[outcome_date_col] else 0, axis=1)
-    # df_analysis[constant_col] = 1 #not used in condtional model fitting
+    df_analysis[constant_col] = 1 #not used in condtional model fitting
     
     if enforce_time_interval==True:
         #for those with both d1 exposure and d2 outcome, further verify time interval requirement, as specified in disease pair construction
@@ -135,6 +136,8 @@ def logistic_model(d1:float,d2:float):
     #simple method
     if method == 'CN':
         try:
+            #remove constant variables before final model fitting
+            forcedin_vars = [x for x in forcedin_vars if x!=constant_col]
             final_model_vars = forcedin_vars+final_covariates
             model = ConditionalLogit(np.asarray(df_analysis[d2_col],dtype=int),
                                      np.asarray(df_analysis[final_model_vars],dtype=float),
@@ -167,20 +170,12 @@ def logistic_model(d1:float,d2:float):
                 # model
                 model = Logit(np.asarray(df_analysis[d2_col], dtype=int),
                               np.asarray(df_analysis[model_1_vars], dtype=float))
-                # Initial alphas to check
-                """
-                aic_dict = {}
-                # Check AIC for initial alpha values
-                for alpha in alpha_initial:
-                    result = model.fit_regularized(method='l1', alpha=alpha_lst*alpha, disp=False)
-                    aic_dict[alpha] = result.aic
-                # Determine the range with the best AIC
-                best_range = determine_best_range(aic_dict)
-                """
                 #search within the defined range
                 final_best_alpha, final_disease_forcedin_vars = find_best_alpha_and_vars(model,alpha_range,alpha_lst,model_1_vars)
-                final_disease_vars = [x for x in final_disease_forcedin_vars] #remove constant
+                final_disease_vars = [x for x in final_disease_forcedin_vars if x not in forcedin_vars]
                 #fit the final model
+                #remove constant variables before final model fitting
+                final_disease_forcedin_vars = [x for x in final_disease_forcedin_vars if x!=constant_col]
                 final_model_vars = final_disease_forcedin_vars+final_covariates
                 model_final = ConditionalLogit(np.asarray(df_analysis[d2_col],dtype=int),
                                                np.asarray(df_analysis[final_model_vars],dtype=float),
@@ -188,10 +183,11 @@ def logistic_model(d1:float,d2:float):
                 result_final = model_final.fit(disp=False, method='bfgs')
                 result_final = MyConditionalResultsWrapper(result_final) #add aic property
                 beta,se,p,aic = result_final.params[0], result_final.bse[0],result_final.pvalues[0],result_final.aic
+                #get the z-value dictionary
                 z_value_dict = {var:z for var,z in zip(final_model_vars,result_final.tvalues)}
-                disease_z_value = {var:z_value_dict[var] for var in final_model_vars[2::]} #z-value dictionary for other disease variables
-                result_lst += [f'{method}_auto',f'fitted and delete the diseases variable(s): {del_diseases_var} and covariate(s): {del_covariates}',f'{final_disease_vars[2::]}',f'{disease_z_value}',final_best_alpha,beta,se,p,aic]
-                message += f'method={method}_auto (alpha={final_best_alpha}, number of other disease included as covariates: {len(final_disease_vars[2::])}); successfully fitted; '
+                result_lst += [f'{method}_auto',f'fitted and delete the diseases variable(s): {del_diseases_var} and covariate(s): {del_covariates}',
+                               f'{final_model_vars}',f'{z_value_dict}',final_best_alpha,beta,se,p,aic]
+                message += f'method={method}_auto (alpha={final_best_alpha}, number of other disease included as covariates: {len(final_disease_vars)}); successfully fitted; '
             except Exception as e:
                 result_lst += [f'{method}_auto', str(e)]
                 message += f'method={method}_auto; error encountered: {e}; '
@@ -202,9 +198,13 @@ def logistic_model(d1:float,d2:float):
                 model = Logit(np.asarray(df_analysis[d2_col],dtype=int),
                               np.asarray(df_analysis[model_1_vars],dtype=float)) #use unconditional model for selcting disease variables
                 result = model.fit_regularized(method='l1', alpha=alpha_lst*alpha_single, disp=False)
+                #get list of variables with none zero coef
                 non_zero_indices = np.nonzero(result.params != 0)[0]
-                final_disease_vars = [model_1_vars[i] for i in non_zero_indices]
+                final_disease_forcedin_vars = [model_1_vars[i] for i in non_zero_indices]
+                final_disease_vars = [x for x in final_disease_forcedin_vars if x not in forcedin_vars]
                 #fit the final conditional model
+                #remove constant variables before final model fitting
+                final_disease_forcedin_vars = [x for x in final_disease_forcedin_vars if x!=constant_col]
                 final_model_vars = final_disease_forcedin_vars+final_covariates
                 model_final = ConditionalLogit(np.asarray(df_analysis[d2_col],dtype=int),
                                                np.asarray(df_analysis[final_model_vars],dtype=float),
@@ -212,10 +212,11 @@ def logistic_model(d1:float,d2:float):
                 result_final = model_final.fit(disp=False, method='bfgs')
                 result_final = MyConditionalResultsWrapper(result_final) #add aic property
                 beta,se,p,aic = result_final.params[0],result_final.bse[0],result_final.pvalues[0],result_final.aic
+                #get the z-value dictionary
                 z_value_dict = {var:z for var,z in zip(final_model_vars,result_final.tvalues)}
-                disease_z_value = {var:z_value_dict[var] for var in final_disease_vars[2::]} #z-value dictionary for other disease variables
-                result_lst += [f'{method}_auto',f'fitted and delete the diseases variable(s): {del_diseases_var} and covariate(s): {del_covariates}',f'{final_disease_vars[2::]}',f'{disease_z_value}',final_best_alpha,beta,se,p,aic]
-                message += f'method={method}_fixed_alpha (alpha={alpha_single}, number of other disease included as covariates: {len(final_disease_vars[2::])}); successfully fitted; '
+                result_lst += [f'{method}_auto',f'fitted and delete the diseases variable(s): {del_diseases_var} and covariate(s): {del_covariates}',
+                               f'{final_model_vars}',f'{zvalue_dict}',alpha_single,beta,se,p,aic]
+                message += f'method={method}_fixed_alpha (alpha={alpha_single}, number of other disease included as covariates: {len(final_disease_vars)}); successfully fitted; '
             except Exception as e:
                 result_lst += [f'{method}_auto', str(e)]
                 message += f'method={method}_fixed_alpha (alpha={alpha_single}); error encountered: {e}; '
@@ -234,16 +235,17 @@ def logistic_model(d1:float,d2:float):
             all_pca_vars = [f'PCA_{i}' for i in range(disease_vars_transformed.shape[1])]
             disease_vars_transformed = pd.DataFrame(disease_vars_transformed,columns=all_pca_vars)
             disease_vars_transformed.index = df_analysis.index
-            df_analysis = pd.concat([df_analysis,
-                                    disease_vars_transformed],axis=1)
+            df_analysis = pd.concat([df_analysis,disease_vars_transformed],axis=1)
             variance_explained = sum(pca.explained_variance_ratio_)
-            
             #fit model with PCA covariates
             del_pca_var = check_variance_vif_single(df_analysis,
                                                     forcedin_vars,all_pca_vars,
                                                     vif_cutoff='pca_covar',
                                                     group_col=mathcing_id_col)
             final_pca_var = [x for x in all_pca_vars if x not in del_pca_var]
+            #fit the final model
+            #remove constant variables before final model fitting
+            forcedin_vars = [x for x in forcedin_vars if x!=constant_col]
             final_model_vars = forcedin_vars+final_pca_var+final_covariates
             model_final = ConditionalLogit(np.asarray(df_analysis[d2_col],dtype=int),
                                            np.asarray(df_analysis[final_model_vars],dtype=float),
@@ -252,8 +254,8 @@ def logistic_model(d1:float,d2:float):
             result_final = MyConditionalResultsWrapper(result_final) #add aic property
             beta,se,p,aic = result_final.params[0], result_final.bse[0], result_final.pvalues[0], result_final.aic
             z_value_dict = {var:z for var,z in zip(final_model_vars,result_final.tvalues)}
-            pca_z_value = {var:z_value_dict[var] for var in final_pca_var} #z-value dictionary for other disease variables
-            result_lst += [f'{method}_n_components={pca_number}',f'fitted and delete the pca variable(s): {del_pca_var} and covariate(s): {del_covariates}',f'{final_pca_var}',f'{pca_z_value}',variance_explained,beta,se,p,aic]
+            result_lst += [f'{method}_n_components={pca_number}',f'fitted and delete the pca variable(s): {del_pca_var} and covariate(s): {del_covariates}',
+                           f'{final_model_vars}',f'{z_value_dict}',variance_explained,beta,se,p,aic]
             message += f'method={method}_n_components={pca_number} (number of PC included as covariates: {len(final_pca_var)}, total variance explained by PC: {variance_explained:.3f}); successfully fitted; '
         except Exception as e:
             result_lst += [f'{method}_n_components={pca_number}',str(e)]

@@ -947,8 +947,8 @@ def comorbidity_network(data:DiseaseNetworkData,
     df_columns_common = ['phecode_d1','phecode_d2','name_disease_pair','N_exposed','n_total','n_with_d2/n_with_d1','n_with_d2/n_without_d1',
                          'comorbidity_network_method','describe','co_vars_list','co_vars_zvalues']
     df_columns_dict = {'CN': df_columns_common+['comorbidity_beta','comorbidity_se','comorbidity_p','comorbidity_aic'],
-                       'RPCN': df_columns_common+['alpha','comorbidity_beta',
-                                                  'comorbidity_se','comorbidity_p','comorbidity_aic'],
+                       'RPCN': df_columns_common+['alpha',
+                                                  'comorbidity_beta','comorbidity_se','comorbidity_p','comorbidity_aic'],
                        'PCN_PCA': df_columns_common+['pc_sum_variance_explained',
                                                      'comorbidity_beta','comorbidity_se','comorbidity_p','comorbidity_aic']}
     df_columns = df_columns_dict[parameter_dict['method']]
@@ -1271,8 +1271,8 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
     df_columns_common = ['phecode_d1','phecode_d2','name_disease_pair','N_exposed','n_total','n_with_d2/n_with_d1','n_with_d2/n_without_d1',
                          'trajectory_method','describe','co_vars_list','co_vars_zvalues']
     df_columns_dict = {'CN': df_columns_common+['trajectory_beta','trajectory_se','trajectory_p','trajectory_aic'],
-                       'RPCN': df_columns_common+['alpha','trajectory_beta',
-                                                  'trajectory_se','trajectory_p','trajectory_aic'],
+                       'RPCN': df_columns_common+['alpha',
+                                                  'trajectory_beta','trajectory_se','trajectory_p','trajectory_aic'],
                        'PCN_PCA': df_columns_common+['pc_sum_variance_explained',
                                                      'trajectory_beta','trajectory_se','trajectory_p','trajectory_aic']}
     df_columns = df_columns_dict[parameter_dict['method']]

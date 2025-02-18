@@ -27,7 +27,7 @@ class DiseaseNetworkData:
     phecode_level : int
         The level of phecode to use for analysis, where level 1 (with a total of 585 medical conditions) corresponds to 3-digit ICD-10 codes and level 2 (a total of 1257 medical conditions) to 4-digit ICD-10 codes. 
         Level 2 phecodes offer a more granular analysis with potentially smaller sample sizes per disease category. 
-        For larger studies, level 2 phecodes may enhance result interpretation. 
+        For larger studies, level 2 phecodes may enhance result interpretation.
         For smaller studies, level 1 is recommended to maintain statistical power.
     
     min_required_icd_codes : int, default=1
