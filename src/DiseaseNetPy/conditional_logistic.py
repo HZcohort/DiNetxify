@@ -141,7 +141,7 @@ def logistic_model(d1:float,d2:float):
                                      groups=df_analysis[mathcing_id_col].values)
             result = model.fit(disp=False, method='bfgs')
             result_final = MyConditionalResultsWrapper(result)
-            beta,se,p,aic = result.params[0], result.bse[0],result.pvalues[0],result.aic
+            beta,se,p,aic = result_final.params[0], result_final.bse[0],result_final.pvalues[0],result_final.aic
             zvalue_dict = {var:z for var,z in zip(final_model_vars,result_final.tvalues)}
             result_lst += [method,f'fitted and delete the covariate(s): {del_covariates}',
                             f'{final_model_vars}',f'{zvalue_dict}',beta,se,p,aic]
