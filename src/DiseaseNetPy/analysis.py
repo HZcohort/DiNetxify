@@ -1212,7 +1212,7 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
     correction_method_check(correction,cutoff)
     
     #check log files
-    log_file_final,message = log_file_detect(log_file,'comorbidity_network_analysis')
+    log_file_final,message = log_file_detect(log_file,'disease_trajectory')
     print(message)
     
     #check **kwargs and get parameters
