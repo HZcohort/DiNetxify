@@ -7,7 +7,6 @@ Created on Tue Dec 17 14:56:02 2024
 
 import pandas as pd
 import numpy as np
-#from datetime import datetime
 from statsmodels.discrete.discrete_model import Logit
 from statsmodels.discrete.conditional_models import ConditionalLogit,ConditionalResultsWrapper
 import time
@@ -223,6 +222,7 @@ def logistic_model(d1:float,d2:float):
 
     elif method == 'PCN_PCA':
         from sklearn.decomposition import PCA
+        #check disease variables
         del_diseases_var = check_variance_vif_single(df_analysis,
                                                      forcedin_vars,all_diseases_var,
                                                      vif_cutoff='disease_covar',

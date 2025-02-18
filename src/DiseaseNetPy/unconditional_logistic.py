@@ -85,13 +85,14 @@ def logistic_model(d1:float,d2:float):
     df_analysis[d2_col] = df_analysis[id_col_].apply(lambda x: 1 if d2 in trajectory_eligible_withdate_[x] else 0)
     df_analysis[constant_col] = 1
     #statistics
-    n = len(df_analysis) #number of individuals in the sub-cohort
-    N_d1 = len(df_analysis[df_analysis[d1_col]==1])
-    N_d2_withd1 = len(df_analysis[(df_analysis[d2_col]==1) & (df_analysis[d1_col]==1)])
-    N_d2_nod1 = len(df_analysis[(df_analysis[d2_col]==1) & (df_analysis[d1_col]==0)])
+    n = len(df_analysis) #number of individuals in the matched case-control study
+    N_d2 = len(df_analysis[df_analysis[d2_col]==1])
+    N_nod2 = len(df_analysis[df_analysis[d2_col]==0])
+    N_d1_withd2 = len(df_analysis[(df_analysis[d2_col]==1) & (df_analysis[d1_col]==1)])
+    N_d1_nod2 = len(df_analysis[(df_analysis[d2_col]==0) & (df_analysis[d1_col]==1)])
 
     #result list
-    result_lst = [d1,d2,f'{d1}-{d2}',N,n,f'{N_d2_withd1}/{N_d1}',f'{N_d2_nod1}/{n-N_d1}']
+    result_lst = [d1,d2,f'{d1}-{d2}',N,n,f'{N_d1_withd2}/{N_d2}',f'{N_d1_nod2}/{N_nod2}']
     
     #time and message
     time_start = time.time()

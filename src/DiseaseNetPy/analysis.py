@@ -944,7 +944,7 @@ def comorbidity_network(data:DiseaseNetworkData,
     print(f'Comorbidity network analysis finished (elapsed {time_spent:.1f} mins)')
     
     #result column names based on different method
-    df_columns_common = ['phecode_d1','phecode_d2','name_disease_pair','N_exposed','n_total','n_with_d2/n_with_d1','n_with_d2/n_without_d1',
+    df_columns_common = ['phecode_d1','phecode_d2','name_disease_pair','N_exposed','n_total','n_exposed/n_cases','n_exposed/n_controls',
                          'comorbidity_network_method','describe','co_vars_list','co_vars_zvalues']
     df_columns_dict = {'CN': df_columns_common+['comorbidity_beta','comorbidity_se','comorbidity_p','comorbidity_aic'],
                        'RPCN': df_columns_common+['alpha',
@@ -1268,7 +1268,7 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
     print(f'Disease trajectory analysis finished (elapsed {time_spent:.1f} mins)')
     
     #result column names based on different method
-    df_columns_common = ['phecode_d1','phecode_d2','name_disease_pair','N_exposed','n_total','n_with_d2/n_with_d1','n_with_d2/n_without_d1',
+    df_columns_common = ['phecode_d1','phecode_d2','name_disease_pair','N_exposed','n_total','n_exposed/n_cases','n_exposed/n_controls',
                          'trajectory_method','describe','co_vars_list','co_vars_zvalues']
     df_columns_dict = {'CN': df_columns_common+['trajectory_beta','trajectory_se','trajectory_p','trajectory_aic'],
                        'RPCN': df_columns_common+['alpha',
