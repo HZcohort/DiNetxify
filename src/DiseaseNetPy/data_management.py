@@ -693,7 +693,7 @@ class DiseaseNetworkData:
         # Restore the pandas DataFrame attribute
         self.phenotype_df = data_dict.pop('phenotype_df')
         # Restore all simple attributes directly from data_dict
-        simple_attrs = ['study_design', 'date_fmt', 'phecode_level', 'phecode_version','min_required_icd_codes'
+        simple_attrs = ['study_design', 'date_fmt', 'phecode_level', 'phecode_version','min_required_icd_codes',
                         'phecode_info', 'diagnosis', 'n_diagnosis', 'history', 'trajectory']
         for attr in simple_attrs:
             setattr(self, attr, data_dict.pop(attr, None))
