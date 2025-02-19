@@ -14,6 +14,7 @@ import pandas as pd
 import numpy as np
 import random
 import math
+import os
 
 from collections import (
     defaultdict,
@@ -58,9 +59,9 @@ class ThreeDimensionalNetwork(object):
     """
     def __init__(
         self, 
+        phewas_result: Df,
         comorbidity_result: Df, 
         trajectory_result: Df,
-        phewas_result: Df,
         exposure: Optional[float]=None,
         exposure_location: Optional[Tuple[float]]=None,
         exposure_size: Optional[float]=None,
@@ -108,7 +109,11 @@ class ThreeDimensionalNetwork(object):
             source = source,
             target = target,
             describe = pd.read_csv(
-                "data/phecode_1.2/phecode_info.csv"
+                os.path.join(
+                    os.path.dirname(__file__),
+                    "data/phecode_1.2/phecode_info.csv"
+                )
+                
             ),
             trajectory_pairs = [
                 [
@@ -158,11 +163,11 @@ class ThreeDimensionalNetwork(object):
         """
         tra_pairs_lst = [
             [row[d1_str], row[d2_str]]
-            for row in tra_df.iterrows()
+            for _, row in tra_df.iterrows()
         ]
         com_pairs_lst = [
             [row[d1_str], row[d2_str]]
-            for row in com_df.iterrows()
+            for _, row in com_df.iterrows()
         ]
         for pair in tra_pairs_lst:
             if pair not in com_pairs_lst:
@@ -391,7 +396,10 @@ class ThreeDimensionalNetwork(object):
         """
         for key, value in kwargs.items():
             for node, attr in value.items():
-                self._nodes_attrs[node].update({f"{key}":attr})
+                if node in self._nodes_attrs.keys():
+                    self._nodes_attrs[node].update({f"{key}":attr})
+                else:
+                    continue
 
     def __get_same_nodes(self, key_name:str) -> Dict[Any, Any]:
         """_summary_
@@ -415,14 +423,16 @@ class ThreeDimensionalNetwork(object):
 
     def __get_edge_attrs(
         self,
-        edge_dict: Dict[float, float],
-    ) -> Dict[List[float]]:
+        edge_lst: List[tuple[str, float]],
+    ) -> Dict[str, List[float]]:
         edge_attrs = {
             0:[],
             1:[],
             2:[]
         }
-        for source, target in edge_dict.items():
+        for edge in edge_lst:
+            source = edge[0]
+            target = edge[1]
             for i in range(3):
                 edge_attrs[i] += [
                     self._nodes_attrs[source]["location"][i], 
@@ -519,6 +529,7 @@ class ThreeDimensionalNetwork(object):
             max_radius :float,
             min_radius :float,
             redu_ratio :float,
+            z_axis: float,
             cluster_ratio :Dict[int, float],
             max_attempts :Optional[int]=10000
         ) -> None:
@@ -539,12 +550,12 @@ class ThreeDimensionalNetwork(object):
             self._exposure_location = (0, 0, 0)
 
         cluster_location = {x:{} for x in range(self._network_attrs["cluster number"])}
-        is_sep = True
         for node, attrs in self._nodes_attrs.items():
+            is_sep = True
             order = attrs["order"]
             cluster = attrs["cluster"]
             max_ang = 2*math.pi*sum([cluster_ratio[i] for i in range(cluster+1)])
-            min_ang = max_ang - 2*math.pi*cluster_ratio[i]
+            min_ang = max_ang - 2*math.pi*cluster_ratio[cluster]
 
             for _ in range(max_attempts):
                 radius = random.uniform(min_radius, max_radius)
@@ -555,7 +566,7 @@ class ThreeDimensionalNetwork(object):
                 node_loc = (
                     radius * math.cos(node_ang),
                     radius * math.sin(node_ang),
-                    self._exposure_location[2] - order*self._network_attrs["order distance"]
+                    self._exposure_location[2] - order*z_axis
                 )
 
                 for oth_node, loc in cluster_location[cluster].items():
@@ -572,14 +583,18 @@ class ThreeDimensionalNetwork(object):
                     if sum_length < distance:
                         is_sep = False
                         break
-            if is_sep:
-                cluster_location[cluster].update({node:node_loc})
-                self._nodes_attrs[node].update({"loction":node_loc})
-                break
+
+                if is_sep:
+                    cluster_location[cluster].update({node:node_loc})
+                    self._nodes_attrs[node].update({"location":node_loc})
+                    break
+
+            cluster_location[cluster].update({node:node_loc})
+            self._nodes_attrs[node].update({"location":node_loc})
     
     def __make_node_basic_attrs(
         self,
-        scale_reduction: Optional[float]=0.1
+        scale_reduction: Optional[float]=0.002
     ) -> None:
         """_summary_
 
@@ -645,14 +660,24 @@ class ThreeDimensionalNetwork(object):
                 row[self._target],
                 weight=row[weight]
             ) 
-            for _, row in self._comorbidity_result.iterrows()
+            for _, row in self._comorbidity.iterrows()
         ]
 
         # random and repeated clustering the nodes
         result = []
         for i in range(max_attempts):
-            partition = community_louvain.best_partition(Graph_position, random_state=i)
-            result.append([i, community_louvain.modularity(partition, Graph_position)])
+            partition = community_louvain.best_partition(
+                Graph_position, 
+                random_state=i
+            )
+
+            result.append([
+                i, community_louvain.modularity(
+                    partition, 
+                    Graph_position
+                )
+            ])
+
         result_df = pd.DataFrame(
             result, 
             columns=['rs', 'modularity']).sort_values(by='modularity'
@@ -660,11 +685,18 @@ class ThreeDimensionalNetwork(object):
         best_rs = result_df.iloc[-1, 0]
 
         # final result with the best score
-        cluster_ans = community_louvain.best_partition(Graph_position, random_state=best_rs)
+        cluster_ans = community_louvain.best_partition(
+            Graph_position, 
+            random_state=best_rs
+        )
+
         self.__update_node_attrs(
             cluster = dict(cluster_ans)
         )
-        self._network_attrs.update({"class number":max(cluster_ans.values()) + 1})
+
+        self._network_attrs.update(
+            {"cluster number":max(cluster_ans.values()) + 1}
+        )
 
     def __make_location_random(
         self, 
@@ -698,7 +730,7 @@ class ThreeDimensionalNetwork(object):
         """
         node_order = self.__calculate_order(
             self._trajectory[self._source].to_list(),
-            self._trajectory[self._source].to_list()
+            self._trajectory[self._target].to_list()
         )
 
         self.__update_node_attrs(
@@ -727,6 +759,11 @@ class ThreeDimensionalNetwork(object):
                     order = self._network_attrs["order number"]
                 self._nodes_attrs[node].update({"order":order})
 
+        for node, attr in self._nodes_attrs.items():
+            if "order" not in attr.keys():
+                order = self._network_attrs["order number"]
+                self._nodes_attrs[node].update({"order":order})
+
     def __full_plot(
         self, 
         line_color: str, 
@@ -741,9 +778,10 @@ class ThreeDimensionalNetwork(object):
         Returns:
             list: the attribution of plot
         """
-        plot_data, is_showlegend = [], True
+        plot_data = [] 
         sys_nodes = self.__get_same_nodes("system")
-        for sys, nodes in sys_nodes.items:
+        for sys, nodes in sys_nodes.items():
+            is_showlegend = True
             for node in nodes:
                 plot_attrs = self.__sphere_attrs(
                     self._nodes_attrs[node]["location"],
@@ -758,7 +796,7 @@ class ThreeDimensionalNetwork(object):
                     x=plot_attrs[0],
                     y=plot_attrs[1],
                     z=plot_attrs[2],
-                    colorscal=plot_attrs[3],
+                    colorscale=plot_attrs[3],
                     showlegend=is_showlegend,
                     lighting=plot_attrs[4],
                     hovertemplate=self._nodes_attrs[node]["name"],
@@ -770,13 +808,20 @@ class ThreeDimensionalNetwork(object):
                 )
                 plot_data.append(data)
 
-        edges = dict(
-            zip(
-                self._trajectory[self._source],
-                self._trajectory[self._target]
-            )
+        tra_edges = zip(
+            self._trajectory[self._source],
+            self._trajectory[self._target]
         )
-        edges_attrs = self.__get_edge_attrs(edges)
+
+        com_edges = zip(
+            self._comorbidity[self._source],
+            self._comorbidity[self._target]
+        )
+
+        all_edges = list(tra_edges)
+        all_edges.extend(list(com_edges))
+
+        edges_attrs = self.__get_edge_attrs(all_edges)
 
         trace_data = go.Scatter3d(
             x=edges_attrs[0],
@@ -800,7 +845,7 @@ class ThreeDimensionalNetwork(object):
         sig_line_color: Optional[str]="black",
         no_sig_line_color: Optional[str]="silver", 
         no_sig_line_width: Optional[float]=1.0,
-    ) -> list:
+    ) -> List[Any]:
         """get the attribution of plot. This method plots the all trajectory(D1->D2), comorbidity(D1-D2), nodes(phecodes), and highlight their difference.
 
         Args:
@@ -822,6 +867,7 @@ class ThreeDimensionalNetwork(object):
         for sys in SYSTEM:
             nodes = [x for x in sig_nodes if self._nodes_attrs[x]["system"]==sys]
             for node in nodes:
+                print(node)
                 plot_attrs = self.__sphere_attrs(
                     self._nodes_attrs[node]["location"],
                     self._nodes_attrs[node]["size"],
