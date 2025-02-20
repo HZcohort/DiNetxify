@@ -86,17 +86,17 @@ if __name__ == "__main__":
     my_network = dnp.ThreeDimensionalNetwork(
         phewas,
         comorbidity,
-        trajectory
+        trajectory,
+        296.2,
+        (0,0,0),
+        3
     )
 
     my_network.threeDimension_plot(
         "/plot.html",
         45,
         15,
-        "full",
+        "compact",
         "black",
         1.0,
     )
-
-    print(my_network._nodes_attrs)
-    print(len(my_network._nodes_attrs.keys()))
