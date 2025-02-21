@@ -49,7 +49,6 @@ SYSTEM = [
     'respiratory',
     "symptoms",
     "congenital anomalies",
-    "mental disorders",
     "others"
 ]
 
@@ -70,7 +69,7 @@ COLOR = [
     "#E74C3C",
     "#F1C40F",
     "#FF7F50",
-    "#FFD700", 
+    "#FFD700",
     "#A52A2A"
 ]
 
@@ -1218,7 +1217,7 @@ class ThreeDimensionalNetwork(object):
         # layout
         layout = go.Layout(
             title=dict(
-                text="", 
+                text="Three Dimensional Network", 
                 font=dict(size=30, family=font_style),
                 x=0.45
             ),
@@ -1333,13 +1332,20 @@ class ThreeDimensionalNetwork(object):
                 ))
 
         fig.update_layout(
+            title=dict(
+                text="Comorbidity Network", 
+                font=dict(size=30, family=font_style),
+                x=0.45
+            ),
             showlegend=True,
             xaxis=dict(visible=False, scaleanchor="y"), 
             yaxis=dict(visible=False),
             plot_bgcolor='white',
             margin=dict(l=10, r=10, t=10, b=10),
             font=dict(family=font_style),
-            hovermode='closest'
+            hovermode='closest',
+            layout_width=900.0,
+            layout_height=900.0,
         )
 
         py.plot(fig, filename=path)

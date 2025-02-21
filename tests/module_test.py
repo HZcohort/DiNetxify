@@ -60,47 +60,49 @@ if __name__ == "__main__":
     #     n_process=8
     # )
     phewas = pd.read_csv(
-        "C:/Users/bovin/Desktop/data/phewas.csv"
+        "C:/Users/bovin/Desktop/phewas_summary_L1L2.csv"
     )
 
-    phewas = phewas.loc[
-        phewas["phewas_p_significance"]==True
-    ]
+    # phewas = phewas.loc[
+    #     phewas["phewas_p_significance"]==True
+    # ]
 
     comorbidity = pd.read_csv(
-        "C:/Users/bovin/Desktop/data/comorbidity.csv"
+        "C:/Users/bovin/Desktop/com_summary_0.01.csv"
     )
     
-    comorbidity = comorbidity.loc[
-        comorbidity["comorbidity_p_significance"]==True
-    ]
+    # comorbidity = comorbidity.loc[
+    #     comorbidity["comorbidity_p_significance"]==True
+    # ]
 
     trajectory = pd.read_csv(
-        "C:/Users/bovin/Desktop/data/trajectory.csv"
+        "C:/Users/bovin/Desktop/tra_summary_0.01.csv"
     )
     
-    trajectory = trajectory.loc[
-        trajectory["trajectory_p_significance"]==True
-    ]
+    # trajectory = trajectory.loc[
+    #     trajectory["trajectory_p_significance"]==True
+    # ]
 
     my_network = dnp.ThreeDimensionalNetwork(
         phewas,
         comorbidity,
         trajectory,
-        None,
-        None,
-        None,
-        0.002
+        296.2,
+        (0,0,0),
+        3,
+        0.002,
+        source="d1",
+        target="d2"
     )
 
-    my_network.threeDimension_plot(
-        "/compact_plot.html",
-        90,
-        5,
-        "compact",
-        "black",
-        1.0,
-    )
+    # my_network.threeDimension_plot(
+    #     "/compact_plot.html",
+    #     90,
+    #     5,
+    #     "compact",
+    #     "black",
+    #     1.0,
+    # )
 
     my_network.threeDimension_plot(
         "/full_plot.html",
@@ -109,24 +111,26 @@ if __name__ == "__main__":
         "full",
         "black",
         1.0,
+        0.3,
+        layer_distance=40
     )
 
-    my_network.threeDimension_plot(
-        "/half_plot.html",
-        90,
-        5,
-        "half",
-        "black",
-        1.0,
-    )
+    # my_network.threeDimension_plot(
+    #     "/half_plot.html",
+    #     90,
+    #     5,
+    #     "half",
+    #     "black",
+    #     1.0,
+    # )
 
-    my_network.comorbidity_network_plot(
-        "/comorbidity.png",
-        90,
-        5
-    )
+    # my_network.comorbidity_network_plot(
+    #     "/comorbidity.png",
+    #     90,
+    #     5
+    # )
 
-    my_network.significant_trajectory_plot(
-        "/sig_tra",
-        "black"
-    )
+    # my_network.significant_trajectory_plot(
+    #     "/sig_tra",
+    #     "black"
+    # )
