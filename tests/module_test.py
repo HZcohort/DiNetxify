@@ -87,16 +87,46 @@ if __name__ == "__main__":
         phewas,
         comorbidity,
         trajectory,
-        296.2,
-        (0,0,0),
-        3
+        None,
+        None,
+        None,
+        0.002
     )
 
     my_network.threeDimension_plot(
-        "/plot.html",
-        45,
-        15,
+        "/compact_plot.html",
+        90,
+        5,
         "compact",
         "black",
         1.0,
+    )
+
+    my_network.threeDimension_plot(
+        "/full_plot.html",
+        90,
+        5,
+        "full",
+        "black",
+        1.0,
+    )
+
+    my_network.threeDimension_plot(
+        "/half_plot.html",
+        90,
+        5,
+        "half",
+        "black",
+        1.0,
+    )
+
+    my_network.comorbidity_network_plot(
+        "/comorbidity.png",
+        90,
+        5
+    )
+
+    my_network.significant_trajectory_plot(
+        "/sig_tra",
+        "black"
     )

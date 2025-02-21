@@ -53,6 +53,27 @@ SYSTEM = [
     "others"
 ]
 
+COLOR = [
+    "#FF5733",
+    "#33FF57",
+    "#3357FF",
+    "#FFFF33",
+    "#FF33FF",
+    "#33FFFF",
+    "#C70039",
+    "#900C3F",
+    "#581845",
+    "#1ABC9C",
+    "#2ECC71",
+    "#3498DB",
+    "#9B59B6",
+    "#E74C3C",
+    "#F1C40F",
+    "#FF7F50",
+    "#FFD700", 
+    "#A52A2A"
+]
+
 class ThreeDimensionalNetwork(object):
     """
     
@@ -65,6 +86,7 @@ class ThreeDimensionalNetwork(object):
         exposure: Optional[float]=None,
         exposure_location: Optional[Tuple[float]]=None,
         exposure_size: Optional[float]=None,
+        size_reduction: float=0.1,
         source: Optional[str]='phecode_d1',
         target: Optional[str]='phecode_d2'
     ):
@@ -139,12 +161,10 @@ class ThreeDimensionalNetwork(object):
             self._nodes_attrs.update({node:{}})
 
         for node in self._trajectory_nodes:
-            if node in self._nodes_attrs:
-                continue
-            else:
+            if node not in self._nodes_attrs and node!=exposure:
                 self._nodes_attrs.update({node:{}})
 
-        self.__make_node_basic_attrs()
+        self.__make_node_basic_attrs(size_reduction)
 
     @staticmethod
     def __check_disease_pairs(
@@ -173,6 +193,7 @@ class ThreeDimensionalNetwork(object):
             if pair not in com_pairs_lst:
                 Warning("Disease pair of trajectory network has \
                     not been included comorbidity network")
+                break
 
     @staticmethod
     def __sequence(
@@ -192,7 +213,8 @@ class ThreeDimensionalNetwork(object):
         Returns:
             Df: _description_
         """
-        first_layer = set(df.loc[df[d1_str].isin(df[d2_str].values)].values)
+        df = df.loc[df[d1_str].isin(df[d2_str].values)]
+        first_layer = set(df[d1_str].values)
         d1_d2 = [[exposure, d, '%f-%f' % (exposure,d)] for d in first_layer]
         d1_d2_df = pd.DataFrame(
             d1_d2,
@@ -241,27 +263,27 @@ class ThreeDimensionalNetwork(object):
                 new_word += ' %s' % (word)
         return new_word.strip(' ')
 
-    @staticmethod
-    def __generate_colors(
-        n :int, 
-        colormap :Optional[str]='viridis'
-    ) -> List[str]:
-        """_summary_
+    # @staticmethod
+    # def __generate_colors(
+    #     n :int, 
+    #     colormap :Optional[str]='inferno'
+    # ) -> List[str]:
+    #     """_summary_
 
-        Args:
-            n (int): _description_
-            colormap (Optional[str], optional): _description_. Defaults to 'viridis'.
+    #     Args:
+    #         n (int): _description_
+    #         colormap (Optional[str], optional): _description_. Defaults to 'viridis'.
 
-        Returns:
-            List[str]: _description_
-        """
-        cmap = cm.get_cmap(colormap, n)
-        colors = [cmap(i) for i in range(n)]
-        hex_colors = [
-            f'#{int(r*255):02x}{int(g*255):02x}{int(b*255):02x}' 
-            for r, g, b, _ in colors
-        ]
-        return hex_colors
+    #     Returns:
+    #         List[str]: _description_
+    #     """
+    #     cmap = cm.get_cmap(colormap, n)
+    #     colors = [cmap(i) for i in range(n)]
+    #     hex_colors = [
+    #         f'#{int(r*255):02x}{int(g*255):02x}{int(b*255):02x}' 
+    #         for r, g, b, _ in colors
+    #     ]
+    #     return hex_colors
 
     @staticmethod
     def __sphere_cordinate(
@@ -332,31 +354,31 @@ class ThreeDimensionalNetwork(object):
         most_common = counter.most_common(1)
         return most_common[0][0]
 
-    @staticmethod
-    def __calculate_2d_positions(radii: List[float], spacing:float) -> Dict[int, float]:
-        """calculate the positions of nodes(phecodes).
+    # @staticmethod
+    # def __calculate_2d_positions(radii: List[float], spacing:float) -> Dict[int, float]:
+    #     """calculate the positions of nodes(phecodes).
 
-        Args:
-            radii (list of float): A list of radii of the circles, in the given order.
-            spacing (float): The additional distance between the circles (i.e., the outer tangent distance).
+    #     Args:
+    #         radii (list of float): A list of radii of the circles, in the given order.
+    #         spacing (float): The additional distance between the circles (i.e., the outer tangent distance).
 
-        Returns:
-            dict: {number: x-coordinate}, where the numbering starts from 1 and corresponds to the input order.
-        """
-        circle_positions = {}
-        position = 0
-        for i, radius in enumerate(radii):
-            circle_id = i + 1
-            if i == 0:
-                circle_positions[circle_id] = position
-                position += 2 * radius + spacing  
-            else:
-                if i % 2 == 1:
-                    circle_positions[circle_id] = position  
-                else:
-                    circle_positions[circle_id] = -position  
-                position += 2 * radius + spacing 
-        return circle_positions
+    #     Returns:
+    #         dict: {number: x-coordinate}, where the numbering starts from 1 and corresponds to the input order.
+    #     """
+    #     circle_positions = {}
+    #     position = 0
+    #     for i, radius in enumerate(radii):
+    #         circle_id = i + 1
+    #         if i == 0:
+    #             circle_positions[circle_id] = position
+    #             position += 2 * radius + spacing  
+    #         else:
+    #             if i % 2 == 1:
+    #                 circle_positions[circle_id] = position  
+    #             else:
+    #                 circle_positions[circle_id] = -position  
+    #             position += 2 * radius + spacing 
+    #     return circle_positions
 
     def __check_node_attrs(self, key: str) -> bool:
         """_summary_
@@ -398,8 +420,6 @@ class ThreeDimensionalNetwork(object):
             for node, attr in value.items():
                 if node in self._nodes_attrs.keys():
                     self._nodes_attrs[node].update({f"{key}":attr})
-                else:
-                    continue
 
     def __get_same_nodes(self, key_name:str) -> Dict[Any, Any]:
         """_summary_
@@ -433,10 +453,16 @@ class ThreeDimensionalNetwork(object):
         for edge in edge_lst:
             source = edge[0]
             target = edge[1]
+            if source == self._exposure:
+                source_loc = self._exposure_location
+            else:
+                source_loc = self._nodes_attrs[source]["location"]
+            target_loc = self._nodes_attrs[target]["location"]
+
             for i in range(3):
                 edge_attrs[i] += [
-                    self._nodes_attrs[source]["location"][i], 
-                    self._nodes_attrs[target]["location"][i], 
+                    source_loc[i], 
+                    target_loc[i], 
                     None
                 ]
         return edge_attrs
@@ -447,37 +473,70 @@ class ThreeDimensionalNetwork(object):
         Returns:
             List[List[float]]: _description_
         """
-        pairs = self._trajectory[
+
+        def get_all_longest_paths(G, start):
+            all_paths = []
+            def dfs(current_node, path):
+                if current_node in path:
+                    return
+                path.append(current_node)
+                if not G.out_edges(current_node):
+                    all_paths.append(path.copy())
+                else:
+                    for neighbor in G.successors(current_node):
+                        dfs(neighbor, path.copy())
+            
+            dfs(start, [])
+            return all_paths
+
+        directed_graph = nx.DiGraph()
+        tra_df = self._trajectory
+        
+        if self._exposure is None:
+            exposure = 0
+            tra_df = self.__sequence(
+                self._trajectory,
+                exposure,
+                self._source,
+                self._target
+            )
+        else:
+            exposure = self._exposure
+
+        pairs = tra_df[
             [
                 self._source,
                 self._target
             ]
         ].values
-        pairs = dict(zip(pairs))
 
-        same_cluster_nodes = []
-        for source, target in pairs.items():
-            order = self._nodes_attrs[source]["order"]
-            source_cluster = self._nodes_attrs[source]["cluster"]
-            target_cluster = self._nodes_attrs[target]["cluster"]
+        for source, target in pairs:
+            directed_graph.add_edge(
+                source,
+                target
+            )
 
-            if  order==1 and source_cluster==target_cluster:
-                temp_que = [source]
-                temp_node = target
+        all_paths = get_all_longest_paths(
+            directed_graph,
+            exposure
+        )
 
-                while True:
-                    temp_que.append(temp_node)
-                    temp_node = pairs.get(temp_node, None)
-                    temp_node_cluster = self._nodes_attrs[temp_node]["cluster"]
+        all_paths = [path[1::] for path in all_paths]
 
-                    if temp_node is None:
-                        same_cluster_nodes.append(temp_que)
-                        break
-                    elif temp_node_cluster != target_cluster:
-                        break
-            else:
-                continue
-        return same_cluster_nodes
+        if exposure==0:
+            cycles = nx.simple_cycles(directed_graph)
+            for cycle in cycles:
+                if self._nodes_attrs[cycle[0]]["order"]==1:
+                    all_paths.append(cycle)
+        
+        sig_paths = []
+        for path in all_paths:
+            cluster = [
+                self._nodes_attrs[node]["cluster"] for node in path
+            ]
+            if len(set(cluster))==1:
+                sig_paths.append(path)
+        return sig_paths
 
     def __sphere_attrs(
         self, 
@@ -594,7 +653,7 @@ class ThreeDimensionalNetwork(object):
     
     def __make_node_basic_attrs(
         self,
-        scale_reduction: Optional[float]=0.002
+        scale_reduction: float
     ) -> None:
         """_summary_
 
@@ -630,11 +689,10 @@ class ThreeDimensionalNetwork(object):
         )
 
         # disease color attrs
-        color = self.__generate_colors(len(SYSTEM))
         sys_color = dict(
             zip(
                 SYSTEM,
-                color
+                COLOR
             )
         )
         self._network_attrs.update({"system color":sys_color})
@@ -680,8 +738,8 @@ class ThreeDimensionalNetwork(object):
 
         result_df = pd.DataFrame(
             result, 
-            columns=['rs', 'modularity']).sort_values(by='modularity'
-        )
+            columns=['rs', 'modularity']
+        ).sort_values(by='modularity')
         best_rs = result_df.iloc[-1, 0]
 
         # final result with the best score
@@ -747,9 +805,7 @@ class ThreeDimensionalNetwork(object):
         same_cluster_nodes = self.__get_same_nodes("cluster")
 
         for node, attr in self._nodes_attrs.items():
-            if "order" not in attr.keys():
-                continue
-            else:
+            if "order" in attr.keys():
                 nodes = same_cluster_nodes[attr["cluster"]]
                 orders = [self._nodes_attrs[x].get("order", None) for x in nodes]
                 orders = list(filter(None, orders))
@@ -766,8 +822,8 @@ class ThreeDimensionalNetwork(object):
 
     def __full_plot(
         self, 
-        line_color: str, 
         line_width: float,
+        line_color: str, 
     ) -> List[Any]:
         """get the attribution of plot. This method plots the all trajectory(D1->D2), comorbidity(D1-D2), and nodes(phecodes).
 
@@ -834,7 +890,8 @@ class ThreeDimensionalNetwork(object):
             mode='lines',
             legendgrouptitle_text='All Trajectories',
             name='Trajectories',
-            showlegend=True
+            showlegend=True,
+            hoverinfo=None
         )
         plot_data.append(trace_data)
         return plot_data
@@ -842,7 +899,7 @@ class ThreeDimensionalNetwork(object):
     def __half_plot(
         self, 
         sig_line_width: float, 
-        sig_line_color: Optional[str]="black",
+        sig_line_color: str,
         no_sig_line_color: Optional[str]="silver", 
         no_sig_line_width: Optional[float]=1.0,
     ) -> List[Any]:
@@ -856,18 +913,29 @@ class ThreeDimensionalNetwork(object):
         Returns:
             list: the attribution of plot
         """
-        plot_data, is_showlegend = [], True
+        plot_data = []
         sig_trajectory = self.__sig_nodes()
 
         if sig_trajectory:
-            sig_nodes = [node for nodes in sig_trajectory for node in nodes]
+            sig_nodes = [
+                node for nodes in sig_trajectory for node in nodes 
+            ]
         else:
-            raise TypeError("There is no significant trajectory of network, please try other method of plot")
+            raise TypeError("There is no significant trajectory \
+                            of network, please try other method of plot")
+
+        if self._exposure:
+            sig_trajectory = [
+                [self._exposure]+path for path in sig_trajectory
+            ]
 
         for sys in SYSTEM:
-            nodes = [x for x in sig_nodes if self._nodes_attrs[x]["system"]==sys]
+            nodes = [
+                x for x in set(sig_nodes) 
+                if self._nodes_attrs[x]["system"]==sys
+            ]
+            is_showlegend = True
             for node in nodes:
-                print(node)
                 plot_attrs = self.__sphere_attrs(
                     self._nodes_attrs[node]["location"],
                     self._nodes_attrs[node]["size"],
@@ -881,7 +949,7 @@ class ThreeDimensionalNetwork(object):
                     x=plot_attrs[0],
                     y=plot_attrs[1],
                     z=plot_attrs[2],
-                    colorscal=plot_attrs[3],
+                    colorscale=plot_attrs[3],
                     showlegend=is_showlegend,
                     lighting=plot_attrs[4],
                     hovertemplate=self._nodes_attrs[node]["name"],
@@ -909,11 +977,11 @@ class ThreeDimensionalNetwork(object):
                 x=plot_attrs[0],
                 y=plot_attrs[1],
                 z=plot_attrs[2],
-                colorscal=plot_attrs[3],
+                colorscale=plot_attrs[3],
                 showlegend=is_showlegend,
                 lighting=plot_attrs[4],
                 hovertemplate=self._nodes_attrs[node]["name"],
-                name="%s Disease" % (sys.title()),
+                name="Diseases not in significant trajectories",
                 showscale=False,
                 legendgroup="sphere",
                 legendgrouptitle_text="Disease",
@@ -921,10 +989,10 @@ class ThreeDimensionalNetwork(object):
             )
             plot_data.append(data)
 
-        sig_edges = {}
+        sig_edges = []
         for nodes in sig_trajectory:
-            for i in range(len(nodes)):
-                sig_edges.update({nodes[i]:nodes[i+1]})
+            for i in range(len(nodes)-1):
+                sig_edges.append((nodes[i],nodes[i+1]))
         edges_attrs = self.__get_edge_attrs(sig_edges)
 
         trace_data = go.Scatter3d(
@@ -939,15 +1007,24 @@ class ThreeDimensionalNetwork(object):
             legendgroup='trajectories',
             legendgrouptitle_text='All Trajectories',
             name='Significant Trajectories',
+            hoverinfo=None
         )
+
         plot_data.append(trace_data)
 
-        no_sig_edges = {}
-        pairs = self._comorbidity[[self._source, self._target]].value
+        no_sig_edges = []
+        pairs = self._comorbidity[[self._source, self._target]].values
         for source, target in pairs:
-            if sig_edges.get(source, None)==target:
-                continue
-            no_sig_edges.update({source:target})
+            if (source, target) not in sig_edges:
+                no_sig_edges.append((source, target))
+
+        tra_df = self._trajectory
+
+        pairs = tra_df[[self._source, self._target]].values
+        for source, target in pairs:
+            if (source, target) not in sig_edges and (source, target) not in no_sig_edges:
+                no_sig_edges.append((source, target))
+            
         edges_attrs = self.__get_edge_attrs(no_sig_edges)
 
         trace_data = go.Scatter3d(
@@ -962,6 +1039,7 @@ class ThreeDimensionalNetwork(object):
             legendgroup='trajectories',
             legendgrouptitle_text='All Trajectories',
             name='Insignificant Trajectories',
+            hoverinfo=None
         )
         plot_data.append(trace_data)
         return plot_data
@@ -969,7 +1047,7 @@ class ThreeDimensionalNetwork(object):
     def __compact_plot(
         self,
         sig_line_width: float, 
-        sig_line_color: Optional[str]="black",
+        sig_line_color: str,
     ) -> List[Any]:
         """get the attribution of plot. This method plots the trajectory(D1->D2) of incluster nodes(phecodes), and incluster nodes(phecodes).
 
@@ -979,16 +1057,28 @@ class ThreeDimensionalNetwork(object):
         Returns:
             list: the attribution of plot
         """
-        plot_data = [] 
+        plot_data = []
         sig_trajectory = self.__sig_nodes()
 
         if sig_trajectory:
-            sig_nodes = [node for nodes in sig_trajectory for node in nodes]
+            sig_nodes = [
+                node for nodes in sig_trajectory for node in nodes 
+            ]
         else:
-            raise TypeError("There is no significant trajectory of network, please try other method of plot")
+            raise TypeError("There is no significant trajectory \
+                            of network, please try other method of plot")
+        
+        if self._exposure:
+            sig_trajectory = [
+                [self._exposure]+path for path in sig_trajectory
+            ]
 
         for sys in SYSTEM:
-            nodes = [x for x in sig_nodes if self._nodes_attrs[x]["system"]==sys]
+            nodes = [
+                x for x in set(sig_nodes) 
+                if self._nodes_attrs[x]["system"]==sys
+            ]
+
             is_showlegend = True
             for node in nodes:
                 plot_attrs = self.__sphere_attrs(
@@ -1004,7 +1094,7 @@ class ThreeDimensionalNetwork(object):
                     x=plot_attrs[0],
                     y=plot_attrs[1],
                     z=plot_attrs[2],
-                    colorscal=plot_attrs[3],
+                    colorscale=plot_attrs[3],
                     showlegend=is_showlegend,
                     lighting=plot_attrs[4],
                     hovertemplate=self._nodes_attrs[node]["name"],
@@ -1016,10 +1106,11 @@ class ThreeDimensionalNetwork(object):
                 )
                 plot_data.append(data)
 
-        sig_edges = {}
+        sig_edges = []
         for nodes in sig_trajectory:
-            for i in range(len(nodes)):
-                sig_edges.update({nodes[i]:nodes[i+1]})
+            for i in range(len(nodes)-1):
+                sig_edges.append((nodes[i],nodes[i+1]))
+
         edges_attrs = self.__get_edge_attrs(sig_edges)
 
         trace_data = go.Scatter3d(
@@ -1034,7 +1125,9 @@ class ThreeDimensionalNetwork(object):
             legendgroup='trajectories',
             legendgrouptitle_text='All Trajectories',
             name='Significant Trajectories',
+            hoverinfo=None
         )
+
         plot_data.append(trace_data)
         return plot_data
 
@@ -1096,6 +1189,7 @@ class ThreeDimensionalNetwork(object):
                     size=self._exposure_size,
                     color='black'
                 ),
+                name="Exposure disease",
                 legendgrouptitle_text='Origin of Trajectories',
                 showlegend=True
             )
@@ -1103,11 +1197,11 @@ class ThreeDimensionalNetwork(object):
 
         # plot the nodes and edges
         if plot_method == 'full':
-            plot_data += self.__full_plot(line_color, line_width)
+            plot_data += self.__full_plot(line_width, line_color)
         elif plot_method == 'compact':
-            plot_data += self.__compact_plot(line_width)
+            plot_data += self.__compact_plot(line_width, line_color)
         elif plot_method == 'half':
-            plot_data += self.__half_plot(line_width)
+            plot_data += self.__half_plot(line_width, line_color)
         else:
             raise KeyError(f"This {plot_method} is not exist in the method of plot")
 
@@ -1160,6 +1254,7 @@ class ThreeDimensionalNetwork(object):
         line_width: Optional[float]=1.0,
         line_color: Optional[str]="black",
         layer_distance: Optional[float]=20.0,
+        font_style: Optional[str]="Times New Roman"
     ) -> None:
         """plot the result of commorbidity. The method same to plot_3d just in the plane of x-y.
 
@@ -1182,7 +1277,7 @@ class ThreeDimensionalNetwork(object):
             )
                 
         fig = go.Figure()
-        pairs = self._comorbidity[[self._source, self._targets]].values()
+        pairs = self._comorbidity[[self._source, self._target]].values
 
         for source, target in pairs:
             x_values = [
@@ -1201,41 +1296,50 @@ class ThreeDimensionalNetwork(object):
                     line=dict(
                         color=line_color,
                         width=line_width
-                    )
+                    ),
+                    showlegend=False
                 )
             )
 
         for sys in SYSTEM:
-            nodes = [x for x in self._commorbidity_nodes if self._nodes_attrs[x]["system"]==sys]
+            nodes = [
+                x for x in self._commorbidity_nodes 
+                if self._nodes_attrs[x]["system"]==sys
+            ]
             is_showlegend = True
             for node in nodes:
-                theta = np.linspace(0, 2*np.pi, 100)
-                x_circle = self._nodes_attrs[node]["location"][0] + self._nodes_attrs[node]["size"] * np.cos(theta)
-                y_circle = self._nodes_attrs[node]["location"][1] + self._nodes_attrs[node]["size"] * np.cos(theta)
+                x_axis = self._nodes_attrs[node]["location"][0]
+                y_axis = self._nodes_attrs[node]["location"][1]
+                theta = np.linspace(0, 2 * np.pi, 100)
+                r = self._nodes_attrs[node]["size"]
+                x_axis_values = x_axis + r * np.cos(theta)
+                y_axis_values = y_axis + r * np.sin(theta)
 
                 if node != nodes[0]:
                     is_showlegend = False
 
                 fig.add_trace(go.Scatter(
-                    x=x_circle, 
-                    y=y_circle,
+                    x=x_axis_values, 
+                    y=y_axis_values,
                     fill='toself',
+                    mode="lines",
                     fillcolor=self._nodes_attrs[node]["color"],
                     showlegend=is_showlegend,
                     hovertemplate=self._nodes_attrs[node]["name"],
                     name='%s Disease' % (sys.title()), 
-                    showscale=False,
                     legendgroup='sphere', 
                     legendgrouptitle_text='Diseases',
                     line=dict(color=self._nodes_attrs[node]["color"], width=1)
                 ))
 
         fig.update_layout(
-            showlegend=False,
+            showlegend=True,
             xaxis=dict(visible=False, scaleanchor="y"), 
             yaxis=dict(visible=False),
             plot_bgcolor='white',
-            margin=dict(l=10, r=10, t=10, b=10)
+            margin=dict(l=10, r=10, t=10, b=10),
+            font=dict(family=font_style),
+            hovermode='closest'
         )
 
         py.plot(fig, filename=path)
@@ -1243,8 +1347,8 @@ class ThreeDimensionalNetwork(object):
     def significant_trajectory_plot(
         self, 
         path: str,
-        distance: float, 
-        layer_distance: float,
+        # distance: float, 
+        # layer_distance: float,
         line_color: str,
     ) -> None:
         """plot the incluster trajectory of each cluster.
@@ -1263,48 +1367,58 @@ class ThreeDimensionalNetwork(object):
 
         sig_trajectory = self.__sig_nodes()
 
+        if self._exposure:
+            sig_trajectory = [
+                [self._exposure]+path for path in sig_trajectory
+            ]
+
+        if not sig_trajectory:
+            raise TypeError("There is no significant trajectory\
+                            of network, please try other method of plot")
+        
         for cluster in range(self._network_attrs["cluster number"]):
             nodes = []
             graph = nx.DiGraph()
-            postion = {}
+            # postion = {}
             
             for sig_tra in sig_trajectory:
-                if self._nodes_attrs[sig_tra[0]]["cluster"] == cluster:
+                if self._nodes_attrs[sig_tra[1]]["cluster"] == cluster:
                     edges = [(sig_tra[i], sig_tra[i+1]) for i in range(len(sig_tra)-1)]
                     graph.add_edges_from(edges)
                     nodes.extend(sig_tra)
             
-            for order in range(self._network_attrs["order number"]):
-                same_order_nodes = [
-                    node for node in nodes if self._nodes_attrs[node]["order"]==order+1
-                ]
-                same_order_nodes_size = [
-                    self._nodes_attrs[node] for node in same_order_nodes
-                ]
-                x_axis = self.__calculate_2d_positions(same_order_nodes_size, distance)
-                for idx, x_axis_value in x_axis.items():
-                    postion.update({
-                        same_order_nodes[idx-1]:(x_axis_value, (order+1)*layer_distance)
-                    })
+            # for order in range(self._network_attrs["order number"]):
+            #     same_order_nodes = [
+            #         node for node in nodes if self._nodes_attrs[node]["order"]==order+1
+            #     ]
+            #     same_order_nodes_size = [
+            #         self._nodes_attrs[node] for node in same_order_nodes
+            #     ]
+            #     x_axis = self.__calculate_2d_positions(same_order_nodes_size, distance)
+            #     for idx, x_axis_value in x_axis.items():
+            #         postion.update({
+            #             same_order_nodes[idx-1]:(x_axis_value, (order+1)*layer_distance)
+            #         })
             
-            color = [self._nodes_attrs[node]["color"] for node in graph.nodes()]
-            size = [self._nodes_attrs[node]["size"] for node in graph.nodes()]
-            label = {node: self._nodes_attrs[node]["name"] for node in graph.nodes()}
-            plt.figure(figsize=(16, 16))
-            nx.draw_networkx(
-                graph,
-                postion,
-                with_labels=True,
-                labels=label,
-                node_color=color,
-                node_size=size,
-                font_size=12, 
-                font_weight='bold',
-                edge_color=line_color,
-                arrows=True,
-                arrowsize=20,
-            )
+            # color = [self._nodes_attrs[node]["color"] for node in graph.nodes()]
+            # size = [self._nodes_attrs[node]["size"] for node in graph.nodes()]
+            # label = {node: self._nodes_attrs[node]["name"] for node in graph.nodes()}
+            if nodes:
+                plt.figure(figsize=(16, 16))
+                nx.draw_networkx(
+                    graph,
+                    # postion,
+                    with_labels=True,
+                    # labels=label,
+                    # node_color=color,
+                    node_size=1000,
+                    font_size=12, 
+                    font_weight='bold',
+                    edge_color=line_color,
+                    arrows=True,
+                    arrowsize=10,
+                )
 
-            plt.title("")
-            plt.axis("off")
-            plt.savefig(f"{path}_{cluster}.png")
+                plt.title("")
+                plt.axis("off")
+                plt.savefig(f"{path}_cluster{cluster}.png")
