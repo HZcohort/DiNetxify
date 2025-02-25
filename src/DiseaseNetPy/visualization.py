@@ -745,9 +745,13 @@ class ThreeDimensionalNetwork(object):
     def __trajectory_order(self) -> None:
         """get the layer number of nodes(phecodes) in the trajectory network (D1->D2).
         """
+        tra_df = self._trajectory.loc[
+            self._trajectory[self._source]!=self._exposure
+        ]
+        
         node_order = self.__calculate_order(
-            self._trajectory[self._source].to_list(),
-            self._trajectory[self._target].to_list()
+            tra_df[self._source].to_list(),
+            tra_df[self._target].to_list()
         )
 
         self.__update_node_attrs(
