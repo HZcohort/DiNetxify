@@ -59,6 +59,7 @@ if __name__ == "__main__":
     #     binomial_test_result,
     #     n_process=8
     # )
+
     phewas = pd.read_csv(
         "C:/Users/bovin/Desktop/data/phewas.csv"
     )
@@ -86,17 +87,24 @@ if __name__ == "__main__":
     my_network = dnp.ThreeDimensionalNetwork(
         phewas,
         comorbidity,
-        trajectory
+        trajectory,
+        296.2,
+        (0,0,0),
+        3,
     )
+
+    # my_network.phewas_plot(
+    #     "/phewas_plot"
+    # )
+
+    # my_network.comorbidity_network_plot(
+    #     "/comorbidity_network_plot"
+    # )
+
+    # my_network.significant_trajectory_plot(
+    #     "D:/BaiduNetdiskDownload"
+    # )
 
     my_network.threeDimension_plot(
-        "/plot.html",
-        45,
-        15,
-        "full",
-        "black",
-        1.0,
+        "/threeDimension_plot"
     )
-
-    print(my_network._nodes_attrs)
-    print(len(my_network._nodes_attrs.keys()))
