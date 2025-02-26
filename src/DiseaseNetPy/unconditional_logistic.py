@@ -28,7 +28,7 @@ def logistic_model(d1:float,d2:float):
     phenotype_df_exposed : pd.DataFrame, phenotypic data for exposed individuals only.
     trajectory_eligible : dict, trajectory eligible disease dictionary.
     trajectory_eligible_withdate : dict, trajectory eligible disease (with date) dictionary.
-    history_level :dict, history dictionary, with phecode truncated to corresponding level
+    all_diagnosis_level : list, list of all diagnosed phecodes, with phecode truncated to corresponding level
     covariates : list, list of covariates to be included in the model.
     all_diseases_lst : list, list of other diseases to be included.
     log_file : str, Path and prefix for the log file
@@ -44,7 +44,7 @@ def logistic_model(d1:float,d2:float):
     global id_col_
     global trajectory_eligible_
     global trajectory_eligible_withdate_
-    global history_level_
+    global all_diagnosis_level_
     global covariates_
     global all_diseases_lst_
     global log_file_
@@ -77,7 +77,7 @@ def logistic_model(d1:float,d2:float):
         diseases_lst_ = [x for x in all_diseases_lst_ if x!=d1 and x!=d2]
         all_diseases_var = []
         for disease in diseases_lst_:
-            df_analysis[str(disease)] = df_analysis[id_col_].apply(lambda x: 1 if disease in history_level_[x] or disease in trajectory_eligible_withdate_[x] else 0)
+            df_analysis[str(disease)] = df_analysis[id_col_].apply(lambda x: 1 if disease in all_diagnosis_level_[x] or disease in trajectory_eligible_withdate_[x] else 0)
             all_diseases_var.append(str(disease))
     
     #d1 and d2 variable
@@ -225,7 +225,7 @@ def logistic_model(d1:float,d2:float):
     return result_lst
 
 def logistic_model_wrapper(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,id_col,trajectory_eligible:dict,
-                            trajectory_eligible_withdate:dict,history_level:dict,covariates:list,
+                            trajectory_eligible_withdate:dict,all_diagnosis_level:dict,covariates:list,
                             all_diseases_lst:list,log_file:str,parameters:dict):
     """
     Wrapper for logistic_model that assigns default values to global variables if needed.
@@ -237,7 +237,7 @@ def logistic_model_wrapper(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,i
     phenotype_df_exposed : pd.DataFrame, phenotypic data for exposed individuals only.
     trajectory_eligible : dict, trajectory eligible disease dictionary.
     trajectory_eligible_withdate : dict, trajectory eligible disease (with date) dictionary.
-    history_level :dict, history dictionary, with phecode truncated to corresponding level
+    all_diagnosis_level : list, list of all diagnosed phecodes, with phecode truncated to corresponding level
     covariates : list, list of covariates to be included in the model.
     all_diseases_lst : list, list of other diseases to be included.
     log_file : str, Path and prefix for the log file
@@ -253,7 +253,7 @@ def logistic_model_wrapper(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,i
     global id_col_
     global trajectory_eligible_
     global trajectory_eligible_withdate_
-    global history_level_
+    global all_diagnosis_level_
     global covariates_
     global all_diseases_lst_
     global log_file_
@@ -263,7 +263,7 @@ def logistic_model_wrapper(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,i
     id_col_ = id_col
     trajectory_eligible_ = trajectory_eligible
     trajectory_eligible_withdate_ = trajectory_eligible_withdate
-    history_level_ = history_level
+    all_diagnosis_level_ = all_diagnosis_level
     covariates_ = covariates
     all_diseases_lst_ = all_diseases_lst
     log_file_ = log_file
@@ -272,7 +272,7 @@ def logistic_model_wrapper(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,i
     return logistic_model(d1, d2)
 
 def init_worker(phenotype_df_exposed:pd.DataFrame,id_col,trajectory_eligible:dict,
-                trajectory_eligible_withdate:dict,history_level:dict,covariates:list,
+                trajectory_eligible_withdate:dict,all_diagnosis_level:dict,covariates:list,
                 all_diseases_lst:list,log_file:str,parameters:dict):
     """
     This function sets up the necessary global variables for a worker process in a multiprocessing environment.
@@ -283,7 +283,7 @@ def init_worker(phenotype_df_exposed:pd.DataFrame,id_col,trajectory_eligible:dic
     phenotype_df_exposed : pd.DataFrame, phenotypic data for exposed individuals only.
     trajectory_eligible : dict, trajectory eligible disease dictionary.
     trajectory_eligible_withdate : dict, trajectory eligible disease (with date) dictionary.
-    history_level :dict, history dictionary, with phecode truncated to corresponding level
+    all_diagnosis_level : list, list of all diagnosed phecodes, with phecode truncated to corresponding level
     covariates : list, list of covariates to be included in the model.
     all_diseases_lst : list, list of other diseases to be included.
     log_file : str, Path and prefix for the log file
@@ -299,7 +299,7 @@ def init_worker(phenotype_df_exposed:pd.DataFrame,id_col,trajectory_eligible:dic
     global id_col_
     global trajectory_eligible_
     global trajectory_eligible_withdate_
-    global history_level_
+    global all_diagnosis_level_
     global covariates_
     global all_diseases_lst_
     global log_file_
@@ -309,7 +309,7 @@ def init_worker(phenotype_df_exposed:pd.DataFrame,id_col,trajectory_eligible:dic
     id_col_ = id_col
     trajectory_eligible_ = trajectory_eligible
     trajectory_eligible_withdate_ = trajectory_eligible_withdate
-    history_level_ = history_level
+    all_diagnosis_level_ = all_diagnosis_level
     covariates_ = covariates
     all_diseases_lst_ = all_diseases_lst
     log_file_ = log_file
