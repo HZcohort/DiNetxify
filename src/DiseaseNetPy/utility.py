@@ -857,7 +857,7 @@ def d1d2_from_diagnosis_history(df:pd.DataFrame, id_col:str, sex_col:str, sex_va
     eligible_withdate_dict = {}
     d1d2_temporl_pair_dict = {}
     d1d2_com_pair_dict = {}
-    history_level = {} #this is the newly generated history list that correspond to the specified phecode level (consider the occurence as well)
+    all_diagnosis_level = {} #this is the newly generated list correspond to the specified phecode level (consider the occurence as well)
     
     from itertools import combinations
 
@@ -873,10 +873,10 @@ def d1d2_from_diagnosis_history(df:pd.DataFrame, id_col:str, sex_col:str, sex_va
         diagnosis_ = diagnosis_dict[id_]
         n_diagnosis_ = n_diagnosis_dict[id_]
         history_ = history_dict[id_]
-        #generate a new history list correspond to the phecode level, consider the n. of occurence as well
-        history_node = set([node_dict.get(x,x) for x in history_]).intersection(phecode_set)
-        history_node = [x for x in history_node if sum([n_diagnosis_.get(leaf,0) for leaf in phecode_info_dict[x]['leaf_list']])>=min_icd_num]
-        history_level[id_] = history_node
+        #generate a new all diagnosed phecode list correspond to the specified level, consider the n. of occurence as well
+        all_diag_ind = set([node_dict.get(x,x) for x in history_+list(diagnosis_.keys())]).intersection(phecode_set)
+        all_diag_ind = [x for x in all_diag_ind if sum([n_diagnosis_.get(leaf,0) for leaf in phecode_info_dict[x]['leaf_list']])>=min_icd_num]
+        all_diagnosis_level[id_] = all_diag_ind
         #generate eligible disease dictionary
         for phecode in phecode_lst:
             leaf_lst = phecode_info_dict[phecode]['leaf_list']
@@ -917,7 +917,7 @@ def d1d2_from_diagnosis_history(df:pd.DataFrame, id_col:str, sex_col:str, sex_va
                        'eligible_disease_withdate':eligible_withdate_dict,
                        'd1d2_temporal_pair':d1d2_temporl_pair_dict,
                        'd1d2_com_pair':d1d2_com_pair_dict,
-                       'history_level':history_level}
+                       'all_diagnosis_level':all_diagnosis_level}
     
     return trajectory_dict
 

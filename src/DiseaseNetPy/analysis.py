@@ -508,6 +508,7 @@ def comorbidity_strength_multipletests(df:pd.DataFrame, correction_phi:str='bonf
 
 def binomial_test(data:DiseaseNetworkData, 
                   comorbidity_strength_result:pd.DataFrame, 
+                  comorbidity_network_result: pd.DataFrame=None,
                   n_process:int=1, 
                   log_file:str=None, 
                   correction:str='bonferroni', 
@@ -523,6 +524,10 @@ def binomial_test(data:DiseaseNetworkData,
     
     comorbidity_strength_result : pd.DataFrame
         DataFrame containing comorbidity strength analysis results produced by the 'DiseaseNet.comorbidity_strength' function.
+    
+    comorbidity_network_result : pd.DataFrame, default=None
+        DataFrame containing comorbidity network analysis results produced by the 'DiseaseNet.comorbidity_network' function.
+        When provided, the binomial test is limited to disease pairs deemed significant in the comorbidity network analysis.
 
     n_process : int, default=1
         Multiprocessing is disabled for this analysis.
@@ -557,9 +562,9 @@ def binomial_test(data:DiseaseNetworkData,
     **kwargs
         Additional keyword argument to define the required columns in 'comorbidity_strength_result':
             phecode_d1_col : str, default='phecode_d1'
-                Name of the column in 'comorbidity_strength_result' that specifies the phecode identifiers for disease 1 of the disease pair.
+                Name of the column in 'comorbidity_strength_result' and 'comorbidity_network_result' that specifies the phecode identifiers for disease 1 of the disease pair.
             phecode_d2_col : str, default='phecode_d2'
-                Name of the column in 'comorbidity_strength_result' that specifies the phecode identifiers for disease 2 of the disease pair.
+                Name of the column in 'comorbidity_strength_result' and 'comorbidity_network_result' that specifies the phecode identifiers for disease 2 of the disease pair.
             n_nontemporal_col : str, default='n_d1d2_nontemporal'
                 Name of the column in 'comorbidity_strength_result' that specifies the number of individuals with non-temporal d1-d2 disease pair
             n_temporal_d1d2_col : str, default='n_d1d2_temporal'
@@ -568,8 +573,10 @@ def binomial_test(data:DiseaseNetworkData,
                 Name of the column in 'comorbidity_strength_result' that specifies the number of individuals with temporal d2->d1 disease pair.
             significance_phi_col : str, default='phi_p_significance'
                 Name of the column in 'comorbidity_strength_result' that indicates the significance of phi-correlation for each disease pair.
-            significance_RR_col : str, default='phi_p_significance'
+            significance_RR_col : str, default='RR_p_significance'
                 Name of the column in 'comorbidity_strength_result' that indicates the significance of RR for each disease pair.
+            significance_coef_col : str, default='comorbidity_p_significance'
+                Name of the column in 'comorbidity_network_result' that indicates the significance of comorbidity network analysis for each disease pair.
 
     Returns:
     ----------
@@ -593,18 +600,26 @@ def binomial_test(data:DiseaseNetworkData,
     if not isinstance(comorbidity_strength_result,pd.DataFrame):
         raise TypeError("The provided input 'comorbidity_strength_result' must be a pandas DataFrame.")
     
-    #check column existence
+    #check column existence for comorbidity strength result
     phecode_d1_col = kwargs.get('phecode_d1_col', 'phecode_d1')
     phecode_d2_col = kwargs.get('phecode_d2_col', 'phecode_d2')
     n_nontemporal_col = kwargs.get('n_nontemporal_col', 'n_d1d2_nontemporal')
     n_temporal_d1d2_col = kwargs.get('n_temporal_d1d2_col', 'n_d1d2_temporal')
     n_temporal_d2d1_col = kwargs.get('n_temporal_d2d1_col', 'n_d2d1_temporal')
-    significance_phi_col = kwargs.get('phi_p_significance', 'phi_p_significance')
-    significance_RR_col = kwargs.get('RR_p_significance', 'RR_p_significance')
+    significance_phi_col = kwargs.get('significance_phi_col', 'phi_p_significance')
+    significance_RR_col = kwargs.get('significance_coef_col', 'RR_p_significance')
     for col in [phecode_d1_col, phecode_d2_col, significance_phi_col, significance_RR_col, 
                 n_nontemporal_col, n_temporal_d1d2_col, n_temporal_d2d1_col]:
         if col not in comorbidity_strength_result.columns:
             raise ValueError(f"Column {col} not in 'comorbidity_strength_result' DataFrame.")
+    
+    #check comorbidity network result
+    if comorbidity_network_result is not None:
+        if not isinstance(comorbidity_network_result,pd.DataFrame):
+            raise TypeError("The provided input 'comorbidity_network_result' must be a pandas DataFrame.")
+        significance_coef_col = kwargs.get('significance_coef_col', 'comorbidity_p_significance')
+        if significance_coef_col not in comorbidity_network_result.columns:
+            raise ValueError(f"Column {significance_coef_col} not in 'comorbidity_network_result' DataFrame.")
 
     #check number of process
     n_process, start_mehtod = n_process_check(n_process,'binomial_test')
@@ -631,6 +646,22 @@ def binomial_test(data:DiseaseNetworkData,
     if len(comorbidity_sig) == 0:
         raise ValueError("No disease pair remained after filtering on significance of phi-correlation and RR.")
     
+    #filter disease pairs with significant comorbidity network analysis
+    if comorbidity_network_result is not None:
+        comorbidity_network_sig = comorbidity_network_result[comorbidity_network_result[significance_coef_col]==True]
+        if len(comorbidity_network_sig) == 0:
+            raise ValueError("No disease pair remained after filtering on results of comorbidity network analysis.")
+        else:
+            # filter disease pairs with significant comorbidity network analysis
+            set_comorbidity_sig = set(comorbidity_sig[[phecode_d1_col,phecode_d2_col]].apply(frozenset, axis=1))
+            set_comorbidity_network_sig = set(comorbidity_network_sig[[phecode_d1_col,phecode_d2_col]].apply(frozenset, axis=1))
+            # raise error if any disease pairs presented 'comorbidity_network_sig' are not in 'comorbidity_sig'
+            # and print out the disease pairs that are not in 'comorbidity_sig'
+            if not set_comorbidity_network_sig.issubset(set_comorbidity_sig):
+                diff = set_comorbidity_network_sig.difference(set_comorbidity_sig)
+                raise ValueError(f"Disease pairs {diff} in 'comorbidity_network_result' are not in 'comorbidity_strength_result'.")
+            comorbidity_sig = comorbidity_sig[comorbidity_sig[[phecode_d1_col,phecode_d2_col]].apply(frozenset, axis=1).isin(set_comorbidity_network_sig)]
+
     time_start = time.time()
     #list of disease pair
     result_all = []
@@ -904,7 +935,7 @@ def comorbidity_network(data:DiseaseNetworkData,
     phecode_info = data.phecode_info
     trajectory_eligible = data.trajectory['eligible_disease']
     trajectory_eligible_withdate = data.trajectory['eligible_disease_withdate']
-    history_level = data.trajectory['history_level'] #extract the new history list
+    all_diagnosis_level = data.trajectory['all_diagnosis_level'] #extract the new history list
     phenotype_df = data.phenotype_df
     exp_col = data.get_attribute('phenotype_info')['phenotype_col_dict']['Exposure']
     id_col = data.get_attribute('phenotype_info')['phenotype_col_dict']['Participant ID']
@@ -928,15 +959,13 @@ def comorbidity_network(data:DiseaseNetworkData,
     if n_process == 1:
         for d1,d2 in comorbidity_sig[[phecode_d1_col,phecode_d2_col]].values:
             result_all.append(logistic_model_wrapper(d1,d2,phenotype_df_exposed,id_col,trajectory_eligible,trajectory_eligible_withdate,
-                                                        history_level,covariates,all_diseases_lst,log_file_final,parameter_dict))
+                                                     all_diagnosis_level,covariates,all_diseases_lst,log_file_final,parameter_dict))
     elif n_process > 1:
         parameters_all = []
         for d1,d2 in comorbidity_sig[[phecode_d1_col,phecode_d2_col]].values:
-            # parameters_all.append([d1,d2,phenotype_df_exposed,id_col,trajectory_eligible,trajectory_eligible_withdate,
-            #                        history_level,covariates,all_diseases_lst,log_file_final,parameter_dict])
             parameters_all.append([d1,d2])
         with multiprocessing.get_context(start_mehtod).Pool(n_process, initializer=init_worker, initargs=(phenotype_df_exposed,id_col,trajectory_eligible,trajectory_eligible_withdate,
-                                                                                                            history_level,covariates,all_diseases_lst,log_file_final,parameter_dict)) as p:
+                                                                                                            all_diagnosis_level,covariates,all_diseases_lst,log_file_final,parameter_dict)) as p:
             result_all = p.starmap(logistic_model, parameters_all)
 
     time_end = time.time()
@@ -1223,7 +1252,7 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
     
     trajectory_eligible = data.trajectory['eligible_disease']
     trajectory_temporal = data.trajectory['d1d2_temporal_pair']
-    history_level = data.trajectory['history_level'] #extract the new history list
+    all_diagnosis_level = data.trajectory['all_diagnosis_level'] #extract the new history list
     trajectory_eligible_withdate = data.trajectory['eligible_disease_withdate']
     phenotype_df = data.phenotype_df
     exp_col = data.get_attribute('phenotype_info')['phenotype_col_dict']['Exposure']
@@ -1252,14 +1281,14 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
     if n_process == 1:
         for d1,d2 in trajectory_sig[[phecode_d1_col,phecode_d2_col]].values:
             result_all.append(logistic_model_wrapper(d1,d2,phenotype_df_exposed,id_col,end_date_col,trajectory_eligible,trajectory_temporal,
-                                                    trajectory_eligible_withdate,history_level,covariates,all_diseases_lst,
+                                                    trajectory_eligible_withdate,all_diagnosis_level,covariates,all_diseases_lst,
                                                     matching_var_dict,matching_n,log_file_final,parameter_dict))
     elif n_process > 1:
         parameters_all = []
         for d1,d2 in trajectory_sig[[phecode_d1_col,phecode_d2_col]].values:
             parameters_all.append([d1,d2])
         with multiprocessing.get_context(start_mehtod).Pool(n_process, initializer=init_worker, initargs=(phenotype_df_exposed,id_col,end_date_col,trajectory_eligible,trajectory_temporal,
-                                                                                                          trajectory_eligible_withdate,history_level,covariates,all_diseases_lst,
+                                                                                                          trajectory_eligible_withdate,all_diagnosis_level,covariates,all_diseases_lst,
                                                                                                           matching_var_dict,matching_n,log_file_final,parameter_dict)) as p:
             result_all = p.starmap(logistic_model, parameters_all)
 

@@ -32,7 +32,7 @@ def logistic_model(d1:float,d2:float):
     trajectory_eligible : dict, trajectory eligible disease dictionary.
     trajectory_temporal : dict, temporal disease pair dictionary
     trajectory_eligible_withdate : dict, trajectory eligible disease (with date) dictionary.
-    history_level :dict, history dictionary, with phecode truncated to corresponding level
+    all_diagnosis_level : list, list of all diagnosed phecodes, with phecode truncated to corresponding level
     covariates : list, list of covariates to be included in the model.
     all_diseases_lst : list, list of other diseases to be included.
     matching_var_dict : dict, matching variables and the criteria used for incidence density sampling.
@@ -52,7 +52,7 @@ def logistic_model(d1:float,d2:float):
     global trajectory_eligible_
     global trajectory_temporal_
     global trajectory_eligible_withdate_
-    global history_level_
+    global all_diagnosis_level_
     global covariates_
     global all_diseases_lst_
     global matching_var_dict_
@@ -109,7 +109,7 @@ def logistic_model(d1:float,d2:float):
         diseases_lst_ = [x for x in all_diseases_lst_ if x!=d1 and x!=d2]
         all_diseases_var = []
         for disease in diseases_lst_:
-            df_analysis[str(disease)] = df_analysis[id_col_].apply(lambda x: 1 if disease in history_level_[x] or disease in trajectory_eligible_withdate_[x] else 0)
+            df_analysis[str(disease)] = df_analysis[id_col_].apply(lambda x: 1 if disease in all_diagnosis_level_[x] or disease in trajectory_eligible_withdate_[x] else 0)
             all_diseases_var.append(str(disease))
 
     #statistics
@@ -269,7 +269,7 @@ def logistic_model(d1:float,d2:float):
     return result_lst
 
 def logistic_model_wrapper(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,id_col,end_date_col,trajectory_eligible:dict,
-                            trajectory_temporal:dict,trajectory_eligible_withdate:dict,history_level:dict,covariates:list,
+                            trajectory_temporal:dict,trajectory_eligible_withdate:dict,all_diagnosis_level:dict,covariates:list,
                             all_diseases_lst:list,matching_var_dict:dict,matching_n:int,log_file:str,parameters:dict):
     """
     Wrapper for logistic_model that assigns default values to global variables if needed.
@@ -281,7 +281,7 @@ def logistic_model_wrapper(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,i
     phenotype_df_exposed : pd.DataFrame, phenotypic data for exposed individuals only.
     trajectory_eligible : dict, trajectory eligible disease dictionary.
     trajectory_eligible_withdate : dict, trajectory eligible disease (with date) dictionary.
-    history_level :dict, history dictionary, with phecode truncated to corresponding level
+    all_diagnosis_level : list, list of all diagnosed phecodes, with phecode truncated to corresponding level
     covariates : list, list of covariates to be included in the model.
     all_diseases_lst : list, list of other diseases to be included.
     log_file : str, Path and prefix for the log file
@@ -299,7 +299,7 @@ def logistic_model_wrapper(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,i
     global trajectory_eligible_
     global trajectory_temporal_
     global trajectory_eligible_withdate_
-    global history_level_
+    global all_diagnosis_level_
     global covariates_
     global all_diseases_lst_
     global matching_var_dict_
@@ -314,7 +314,7 @@ def logistic_model_wrapper(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,i
     trajectory_eligible_ = trajectory_eligible
     trajectory_temporal_ = trajectory_temporal
     trajectory_eligible_withdate_ = trajectory_eligible_withdate
-    history_level_ = history_level
+    all_diagnosis_level_ = all_diagnosis_level
     covariates_ = covariates
     all_diseases_lst_ = all_diseases_lst
     matching_var_dict_ = matching_var_dict
@@ -325,7 +325,7 @@ def logistic_model_wrapper(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,i
     return logistic_model(d1, d2)
 
 def init_worker(phenotype_df_exposed:pd.DataFrame,id_col,end_date_col,trajectory_eligible:dict,
-                trajectory_temporal:dict,trajectory_eligible_withdate:dict,history_level:dict,covariates:list,
+                trajectory_temporal:dict,trajectory_eligible_withdate:dict,all_diagnosis_level:dict,covariates:list,
                 all_diseases_lst:list,matching_var_dict:dict,matching_n:int,log_file:str,parameters:dict):
     """
     This function sets up the necessary global variables for a worker process in a multiprocessing environment.
@@ -336,7 +336,7 @@ def init_worker(phenotype_df_exposed:pd.DataFrame,id_col,end_date_col,trajectory
     phenotype_df_exposed : pd.DataFrame, phenotypic data for exposed individuals only.
     trajectory_eligible : dict, trajectory eligible disease dictionary.
     trajectory_eligible_withdate : dict, trajectory eligible disease (with date) dictionary.
-    history_level :dict, history dictionary, with phecode truncated to corresponding level
+    all_diagnosis_level : list, list of all diagnosed phecodes, with phecode truncated to corresponding level
     covariates : list, list of covariates to be included in the model.
     all_diseases_lst : list, list of other diseases to be included.
     log_file : str, Path and prefix for the log file
@@ -354,7 +354,7 @@ def init_worker(phenotype_df_exposed:pd.DataFrame,id_col,end_date_col,trajectory
     global trajectory_eligible_
     global trajectory_temporal_
     global trajectory_eligible_withdate_
-    global history_level_
+    global all_diagnosis_level_
     global covariates_
     global all_diseases_lst_
     global matching_var_dict_
@@ -368,7 +368,7 @@ def init_worker(phenotype_df_exposed:pd.DataFrame,id_col,end_date_col,trajectory
     trajectory_eligible_ = trajectory_eligible
     trajectory_temporal_ = trajectory_temporal
     trajectory_eligible_withdate_ = trajectory_eligible_withdate
-    history_level_ = history_level
+    all_diagnosis_level_ = all_diagnosis_level
     covariates_ = covariates
     all_diseases_lst_ = all_diseases_lst
     matching_var_dict_ = matching_var_dict
