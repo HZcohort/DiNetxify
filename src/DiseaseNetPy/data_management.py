@@ -33,14 +33,15 @@ class DiseaseNetworkData:
     min_required_icd_codes : int, default=1
         The minimum number of ICD codes mapping to a specific phecode required for the phecode to be considered valid.
         For example, if set to 2, a single diagnosis record will not be sufficient to count as an occurrence.
-        Ensure that your medical records are complete (i.e., not limited to recording only the first occurrence) when using this parameter.
+        Ensure that your medical records are complete (i.e., not limited to only the first occurrence for each code) when using this parameter.
     
     date_fmt : str, default='%Y-%m-%d'
         The format of the date fields in your phenotype and medical records data.
     
     phecode_version : str, default='1.2'
-        The version of the phecode system used for converting diagnosis codes. Currently, only version 1.2 is supported.
-    
+        The version of the phecode system used for converting diagnosis codes. 
+        Version 1.2 is the offical version of the phecode system, with mapping files available for ICD-9-CM, ICD-9-WHO, ICD-10-CM, and ICD-10-WHO codes.
+        While option 1.3a is provided, its an unofficial version, and not recommended for general use.
     """
     
     def __init__(
@@ -81,7 +82,7 @@ class DiseaseNetworkData:
         #medical records data
         self.__diagnosis_code_options = ['ICD-9-CM', 'ICD-9-WHO', 'ICD-10-CM', 'ICD-10-WHO']
         self.__phecode_level_options = [1, 2]
-        self.__phecode_version_options = ['1.2']
+        self.__phecode_version_options = ['1.2','1.3a']
         self.__medical_records_cols = ['Participant ID','Diagnosis code','Date of diagnosis']
         self.__medical_recods_info = {}
         #default column value
