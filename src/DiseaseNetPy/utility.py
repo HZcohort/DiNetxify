@@ -922,7 +922,7 @@ def d1d2_from_diagnosis_history(df:pd.DataFrame, id_col:str, sex_col:str, sex_va
     return trajectory_dict
 
 
-def check_kwargs_com_tra(method:str,comorbidity_strength_cols:list,binomial_test_result_cols,**kwargs):
+def check_kwargs_com_tra(method:str,comorbidity_strength_cols:list,binomial_test_result_cols:list,**kwargs):
     """
     Check the **kwargs from comorbidity_network/disease_trajectory function
     
@@ -930,7 +930,7 @@ def check_kwargs_com_tra(method:str,comorbidity_strength_cols:list,binomial_test
     ----------
     method : str comorbidity_network/disease_trajectory analysis method
     comorbidity_strength_cols : list columns of comorbidity_strength_result dataframe
-    binomial_test_result_cols : TYPE columns of binomial_test_result dataframe
+    binomial_test_result_cols : list columns of binomial_test_result dataframe
     **kwargs : **kwargs from comorbidity_network/disease_trajectory function
 
     Returns
@@ -969,7 +969,10 @@ def check_kwargs_com_tra(method:str,comorbidity_strength_cols:list,binomial_test
         column_kwargs['significance_binomial_col']
     ]
     missing_columns_strength = [col for col in required_columns_strength if col not in comorbidity_strength_cols]
-    missing_columns_binomial = [col for col in required_columns_binomial if col not in binomial_test_result_cols]
+    if binomial_test_result_cols is None:
+        missing_columns_binomial = []
+    else:
+        missing_columns_binomial = [col for col in required_columns_binomial if col not in binomial_test_result_cols]
     if missing_columns_strength:
         raise ValueError(f"The following required columns are missing in 'comorbidity_strength_result': {missing_columns_strength}")
     if missing_columns_binomial:

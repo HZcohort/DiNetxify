@@ -759,7 +759,7 @@ def binomial_multipletests(df:pd.DataFrame, correction:str='bonferroni', cutoff:
 
 def comorbidity_network(data:DiseaseNetworkData,
                         comorbidity_strength_result:pd.DataFrame, 
-                        binomial_test_result:pd.DataFrame, 
+                        binomial_test_result:pd.DataFrame=None, 
                         method:str='RPCN', 
                         covariates:list=None, 
                         n_process:int=1, 
@@ -789,7 +789,7 @@ def comorbidity_network(data:DiseaseNetworkData,
     comorbidity_strength_result : pd.DataFrame
         DataFrame containing comorbidity strength analysis results produced by the 'DiseaseNet.comorbidity_strength' function.
     
-    binomial_test_result : pd.DataFrame
+    binomial_test_result : pd.DataFrame, default=None
         DataFrame containing binomial test analysis results produced by the 'DiseaseNet.binomial_test' function.
 
     method : str, default='RPCN'
@@ -900,10 +900,14 @@ def comorbidity_network(data:DiseaseNetworkData,
     #check comorbidity strength estimation result
     if not isinstance(comorbidity_strength_result,pd.DataFrame):
         raise TypeError("The provided input 'comorbidity_strength_result' must be a pandas DataFrame.")
+    comorbidity_strength_result_cols = comorbidity_strength_result.columns
     
     #check binomial test result
-    if not isinstance(binomial_test_result,pd.DataFrame):
-        raise TypeError("The provided input 'binomial_test_result' must be a pandas DataFrame.")
+    if binomial_test_result is not None:
+        if not isinstance(binomial_test_result,pd.DataFrame):
+            raise TypeError("The provided input 'binomial_test_result' must be a pandas DataFrame.")
+    binomial_test_result_cols = binomial_test_result.columns if binomial_test_result is not None else None
+
     
     # Allowed methods
     allowed_methods = {'RPCN', 'PCN_PCA', 'CN'}
@@ -929,7 +933,7 @@ def comorbidity_network(data:DiseaseNetworkData,
     print(message)
     
     #check **kwargs and get parameters
-    parameter_dict,phecode_d1_col,phecode_d2_col,significance_phi_col,significance_RR_col,significance_binomial_col = check_kwargs_com_tra(method,comorbidity_strength_result.columns,binomial_test_result.columns,**kwargs)
+    parameter_dict,phecode_d1_col,phecode_d2_col,significance_phi_col,significance_RR_col,significance_binomial_col = check_kwargs_com_tra(method,comorbidity_strength_result_cols,binomial_test_result_cols,**kwargs)
     
     #get necessary data for model fitting
     phecode_info = data.phecode_info
