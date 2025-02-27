@@ -287,7 +287,7 @@ def phenotype_required_columns(dataframe,col_dict:dict,date_fmt:str,study_desgin
         if all(isinstance(x, (int, np.integer, float, np.floating)) and x in {0, 1} for x in unique_vals):
             None
         else:
-            raise TypeError("The sex variable does not have 2 unique values")
+            raise TypeError("The 'Sex' variable must be coded as 1 (female) and 0 (male).")
     
     
 def medical_records_process(medical_records:str,
