@@ -101,10 +101,10 @@ if __name__ == "__main__":
     #     "/comorbidity_network_plot"
     # )
 
-    # my_network.significant_trajectory_plot(
-    #     "D:/BaiduNetdiskDownload"
-    # )
-
-    my_network.threeDimension_plot(
-        "/threeDimension_plot"
+    my_network.significant_trajectory_plot(
+        "D:/BaiduNetdiskDownload"
     )
+
+    # my_network.threeDimension_plot(
+    #     "/threeDimension_plot"
+    # )
