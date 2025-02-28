@@ -309,15 +309,57 @@ class DiseaseNetworkData:
         if self.__phenotype_statistics['n_neg_follow_unexposed'] > 0 or self.__phenotype_statistics['n_neg_follow_exposed'] > 0:
             self.__warning_phenotype.append(f"Warning: {self.__phenotype_statistics['n_neg_follow_exposed']} exposed individuals and {self.__phenotype_statistics['n_neg_follow_unexposed']} unexposed individuals have negative or zero follow-up time.\nConsider removing them before merge.")
             print(self.__warning_phenotype[-1])
-       
+    
+    def Table1(self, continuous_stat_mode:str='auto') -> pd.DataFrame:
+        """
+        Generate a simple Table 1 from the provided phenotpe data.
+
+        Parameters
+        ----------
+        continuous_stat_mode : str, default='auto'
+            Specifie the method for displaying statistics for continuous variables. It accepts three modes:
+                auto: Automatically determines the appropriate summary statistics based on the results of a normality test.
+                normal: Treats all continuous variables as normally distributed, displaying the mean and standard deviation.
+                nonnormal: Treats all continuous variables as non-normally distributed, displaying the median and interquartile range.
+        
+        Returns
+        -------
+        pd.DataFrame : Table 1 for the phenotype data.
+        """
+        from .utility_summary import desceibe_table
+        #attribute check
+        data_attrs = ['phenotype_df']
+        for attr in data_attrs:
+            if getattr(self, attr) is None:
+                raise ValueError(f"Attribute '{attr}' is empty.")
+        #generate the variable list
+        var_type_dict = self.__phenotype_info['phenotype_covariates_type']
+        #----------all continuous variables
+        continuous_vars = [var for var in var_type_dict if var_type_dict[var]=='continuous']
+        #get their converted names 
+        continuous_vars = [self.__phenotype_info['phenotype_covariates_converted'][var][0] for var in continuous_vars]
+        continuous_vars += ['follow_up'] #add generated follow_up variable
+        #----------all categorical variables
+        categorical_vars = [var for var in var_type_dict if var_type_dict[var]=='categorical' or var_type_dict[var]=='binary']
+        #call the table 1 function, make sure continuous variables are in the front, then categorical/binary variables
+        all_tab1_vars = continuous_vars + categorical_vars
+        all_tab1_vars_type = ['continuous' for _ in continuous_vars] + ['categorical' for _ in categorical_vars]
+        #consider the study desgin
+        if self.study_design == 'matched cohort' or self.study_design == 'cohort':
+            table1 = desceibe_table(self.phenotype_df,all_tab1_vars,all_tab1_vars_type,self.__exposure_col,
+                                    self.__sex_value_dict,continuous_stat_mode)
+        elif self.study_design == 'registry':
+            table1 = desceibe_table(self.phenotype_df,all_tab1_vars,all_tab1_vars_type,self.__exposure_col,
+                                    self.__sex_value_dict,continuous_stat_mode,group_var_value=[1])
+        return table1
+
     def merge_medical_records(
         self, 
         medical_records_data_path:str, 
         diagnosis_code:str, 
         column_names:dict, 
         date_fmt:str=None, 
-        chunksize:int=1000000
-    ) -> None:
+        chunksize:int=1000000) -> None:
         """
         Merge the loaded phenotype data with one or more medical records data.
         If you have multiple medical records data to merge (e.g., with different diagnosis code types), you can call this function multiple times.
@@ -408,6 +450,7 @@ class DiseaseNetworkData:
             raise ValueError(f"{value_notin} not specified in the column_names dictionary")
         #check columns and get seperator
         all_cols = list(column_names.values())
+
         date_cols = [column_names[x] for x in ['Date of diagnosis']]
         seperator = read_check_csv(medical_records_data_path,all_cols,date_cols,
                                    self._medical_recods_info['date_fmt'],return_df=False)
