@@ -327,11 +327,17 @@ class DiseaseNetworkData:
         pd.DataFrame : Table 1 for the phenotype data.
         """
         from .utility_summary import desceibe_table
+        
         #attribute check
         data_attrs = ['phenotype_df']
         for attr in data_attrs:
             if getattr(self, attr) is None:
                 raise ValueError(f"Attribute '{attr}' is empty.")
+        
+        #check continuous_stat_mode
+        if continuous_stat_mode not in ['auto','normal','nonnormal']:
+            raise ValueError("The input 'continuous_stat_mode' must be one of 'auto', 'normal', or 'nonnormal'.")
+        
         #generate the variable list
         var_type_dict = self.__phenotype_info['phenotype_covariates_type']
         #----------all continuous variables
