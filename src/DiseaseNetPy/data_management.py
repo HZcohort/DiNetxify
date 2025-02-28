@@ -253,7 +253,7 @@ class DiseaseNetworkData:
             phenotype_data_ = pd.merge(phenotype_data_,converted_df,left_index=True, right_index=True)
         #assign to attributes
         all_cols = list(self.__phenotype_info['phenotype_col_dict'].values()) + self.__phenotype_info['phenotype_covariates_list'] + self.__phenotype_info['phenotype_covariates_original']
-        self.phenotype_df = phenotype_data_[all_cols] #all other columns were not remained
+        self.phenotype_df = phenotype_data_[all_cols] #all other columns were not included
         del phenotype_data_#save memory
         #remove
         n_before_any_remove = len(self.phenotype_df)
@@ -685,10 +685,10 @@ class DiseaseNetworkData:
         self.__significant_phecodes = valid_phecodes
         #for this subgroup of people only
         exp_col = self.__phenotype_info['phenotype_col_dict']['Exposure']
-        exposed_index = self.phenotype_df[self.phenotype_df[exp_col]==1].index
+        exposed_df = self.phenotype_df[self.phenotype_df[exp_col]==1]
 
         self.trajectory = d1d2_from_diagnosis_history(
-            self.phenotype_df.loc[exposed_index],
+            exposed_df,
             self.__phenotype_info['phenotype_col_dict']['Participant ID'],
             self.__phenotype_info['phenotype_col_dict']['Sex'],
             self.__sex_value_dict,
