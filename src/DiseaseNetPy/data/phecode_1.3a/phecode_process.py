@@ -2,75 +2,16 @@
 """
 Created on Tue Jul 30 16:32:53 2024
 
-@author: Can Hou
+@author: Can Hou, Elizabeth Unnur Gisladottir
 """
-import timeit
-from datetime import datetime, timedelta
-import random
 
-
-date_fmt = '%Y-%m-%d'
-# Helper function to generate random dates
-def generate_random_date(start_year=2010, end_year=2023):
-    start_date = datetime(year=start_year, month=1, day=1)
-    end_date = datetime(year=end_year, month=12, day=31)
-    delta = end_date - start_date
-    random_days = random.randrange(delta.days)
-    return start_date + timedelta(days=random_days)
-
-# Setup a large dataset
-def setup_large_data(num_patients=20, max_diseases=8):
-    diseases = [f'F0{i}' for i in range(1, max_diseases + 1)]
-    
-    dict_inpatient = {}
-    dict_new = {}
-    
-    for patient_id in range(1, num_patients + 1):
-        num_diseases = random.randint(1, max_diseases)
-        dict_inpatient[patient_id] = {
-            random.choice(diseases): generate_random_date()
-            for _ in range(num_diseases)
-        }
-        
-        # Ensure some overlap and some new entries
-        dict_new[patient_id] = {
-            random.choice(diseases): generate_random_date()
-            for _ in range(num_diseases)
-        }
-
-    return dict_inpatient, dict_new
-
-# Initialize large datasets
-dict_inpatient, dict_new = setup_large_data()
-
-# Your list comprehension method
-def list_comprehension_approach():
-    default_time = datetime.strptime('2099-12-31', date_fmt)
-    _ = [
-        dict_inpatient[i].update({d:dict_new[i][d]})
-        for i in dict_new.keys()
-        for d in dict_new[i].keys()
-        if dict_new[i][d] < dict_inpatient[i].get(d, default_time)
-    ]
-
-# My explicit loop method
-def explicit_loop_approach():
-    for patient_id, diseases in dict_new.items():
-        if patient_id not in dict_inpatient:
-            dict_inpatient[patient_id] = {}
-        for disease, new_date in diseases.items():
-            if disease in dict_inpatient[patient_id]:
-                if new_date < dict_inpatient[patient_id][disease]:
-                    dict_inpatient[patient_id][disease] = new_date
-            else:
-                dict_inpatient[patient_id][disease] = new_date
-
-# Time both approaches
-time_list_comp = timeit.timeit(list_comprehension_approach, number=10)
-time_explicit_loop = timeit.timeit(explicit_loop_approach, number=10)
-
-print(f"List Comprehension Time: {time_list_comp:.6f}s")
-print(f"Explicit Loop Time: {time_explicit_loop:.6f}s")
+"""
+This is a test version of the phecode mapping and is not an official release. 
+It is not recommended for general research use. 
+The primary update is the addition of mappings for several ICD-9 and ICD-10 codes that appear to be specific to the Swedish inpatient/outpatient registers. 
+These new mappings are appended to the end of the corresponding CSV/EXCEL files.
+Two new .npy files were generated using these updated mapping files.
+"""
 
 # %%phecode data prepare
 import pandas as pd
