@@ -8,6 +8,7 @@ Created on Mon Jul 22 23:48:05 2024
 import pandas as pd
 import numpy as np
 import os
+import gc
 from datetime import datetime
 from .utility import convert_column, phenotype_required_columns, read_check_csv
 from .utility import medical_records_process, diagnosis_history_update, d1d2_from_diagnosis_history
@@ -352,11 +353,14 @@ class DiseaseNetworkData:
         all_tab1_vars_type = ['continuous' for _ in continuous_vars] + ['categorical' for _ in categorical_vars]
         #consider the study desgin
         if self.study_design == 'matched cohort' or self.study_design == 'cohort':
-            table1 = desceibe_table(self.phenotype_df,all_tab1_vars,all_tab1_vars_type,self.__exposure_col,
+            df_for_table1 = self.phenotype_df[all_tab1_vars+[self.__exposure_col]]
+            table1 = desceibe_table(df_for_table1,all_tab1_vars,all_tab1_vars_type,self.__exposure_col,
                                     self.__sex_value_dict,continuous_stat_mode)
         elif self.study_design == 'registry':
-            table1 = desceibe_table(self.phenotype_df,all_tab1_vars,all_tab1_vars_type,self.__exposure_col,
+            table1 = desceibe_table(df_for_table1,all_tab1_vars,all_tab1_vars_type,self.__exposure_col,
                                     self.__sex_value_dict,continuous_stat_mode,group_var_value=[1])
+        del df_for_table1
+        gc.collect()
         return table1
 
     def merge_medical_records(
