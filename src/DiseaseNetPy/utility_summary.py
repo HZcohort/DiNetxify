@@ -11,7 +11,7 @@ def categorical(df,var,group_var,group_var_value,table1):
     var_values = df[var].value_counts().index
     all_rows = []
     #a header row for the variable
-    all_rows.append([f'{var} (n (%))']+['']*len(group_var_value)+[''])
+    all_rows.append([f'{var} (n, %)']+['']*len(group_var_value)+[''])
     #a row for each value of the variable
     for value in var_values:
         row = [f'{var}={value}']
@@ -19,7 +19,7 @@ def categorical(df,var,group_var,group_var_value,table1):
             group_data = df[df[group_var]==group]
             numbers = group_data[df[var]==value].shape[0]
             percentage = numbers/group_data.shape[0]*100
-            row.append(f'{numbers} ({percentage:.2f}%)')
+            row.append(f'{numbers:,} ({percentage:.2f}%)')
         if value == var_values[-1]:
             if len(group_var_value) >= 2:
                 cont_table = pd.crosstab(df[var],df[group_var])
@@ -41,12 +41,11 @@ def continuous_normal(df,var,group_var,group_var_value,table1):
     """
     Function to generate the table rows for normally distributted continuous variables
     """
-    row_continous = [f'{var} (mean (SD))']
+    row_continous = [f'{var} (mean, SD)']
     for group in group_var_value:
         group_data = df[df[group_var]==group]
         #using f-string to format the number
         mean_sd = f'{group_data[var].mean():,.2f} ({group_data[var].std():,.2f})'
-        mean_sd = '%.2f (%.2f)' % (group_data[var].mean(),group_data[var].std())
         row_continous.append(mean_sd)
     if len(group_var_value) == 2:
         ttest = stats.ttest_ind(df[df[group_var]==group_var_value[0]][var],df[df[group_var]==group_var_value[1]][var])
@@ -60,7 +59,7 @@ def continuous_unnormal(df,var,group_var,group_var_value,table1):
     """
     Function to generate the table rows for unnormally distributted continuous variables
     """
-    row_continous = [f'{var} (median (IQR))']
+    row_continous = [f'{var} (median, IQR)']
     for group in group_var_value:
         group_data = df[df[group_var]==group]
         #using f-string to format the number
