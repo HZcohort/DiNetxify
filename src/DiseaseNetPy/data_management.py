@@ -85,7 +85,7 @@ class DiseaseNetworkData:
         self.__phecode_level_options = [1, 2]
         self.__phecode_version_options = ['1.2','1.3a']
         self.__medical_records_cols = ['Participant ID','Diagnosis code','Date of diagnosis']
-        self.__medical_recods_info = {}
+        self.__medical_records_info = {}
         #default column value
         self.__sex_value_dict = {'Female':1,'Male':0}
         
@@ -200,9 +200,9 @@ class DiseaseNetworkData:
         self.__phenotype_info = {}
         #attributes related to medical records data
         self.__warning_medical_records = []
-        self.__medical_recods_statistics = {}
-        self.__medical_recods_info = {}
-        self._medical_recods_info = {}
+        self.__medical_records_statistics = {}
+        self.__medical_records_info = {}
+        self._medical_records_info = {}
         #attributes of phewas information
         self.__significant_phecodes = None
 
@@ -419,15 +419,15 @@ class DiseaseNetworkData:
             if getattr(self, attr) is None:
                 raise ValueError(f"Attribute '{attr}' is empty.")
         
-        if len(self.__medical_recods_info) > 0:
-             print(f'{len(self.__medical_recods_info)} medical records data already merged, merging with a new one.')
-             self._medical_recods_info = {}
+        if len(self.__medical_records_info) > 0:
+             print(f'{len(self.__medical_records_info)} medical records data already merged, merging with a new one.')
+             self._medical_records_info = {}
         else:
             #reset
             self.__warning_medical_records = []
-            self.__medical_recods_info = {}
-            self.__medical_recods_statistics = {}
-            self._medical_recods_info = {}
+            self.__medical_records_info = {}
+            self.__medical_records_statistics = {}
+            self._medical_records_info = {}
             self.diagnosis = None
             self.n_diagnosis = None
             self.history = None
@@ -435,24 +435,24 @@ class DiseaseNetworkData:
         #check diagnosis code
         if diagnosis_code not in self.__diagnosis_code_options:
             raise ValueError(f"The diagnosis code {diagnosis_code} is not supported, try to map it to one of them: {self.__diagnosis_code_options}")
-        self._medical_recods_info['diagnosis_code'] = diagnosis_code
+        self._medical_records_info['diagnosis_code'] = diagnosis_code
         #mapping files
-        self._medical_recods_info['mapping_npyfile'] = os.path.join(self.__module_dir,'data/phecode_%s/%s.npy' % (self.phecode_version,self._medical_recods_info['diagnosis_code']))
-        self._phecode_mapping = np.load(self._medical_recods_info['mapping_npyfile'],allow_pickle=True).item()
+        self._medical_records_info['mapping_npyfile'] = os.path.join(self.__module_dir,'data/phecode_%s/%s.npy' % (self.phecode_version,self._medical_records_info['diagnosis_code']))
+        self._phecode_mapping = np.load(self._medical_records_info['mapping_npyfile'],allow_pickle=True).item()
         #check date format
         if date_fmt is None:
-            self._medical_recods_info['date_fmt'] = self.date_fmt #use defalut date format
+            self._medical_records_info['date_fmt'] = self.date_fmt #use defalut date format
         else:
             try:
                 datetime.strftime(datetime.now(),date_fmt)
-                self._medical_recods_info['date_fmt'] = date_fmt
+                self._medical_records_info['date_fmt'] = date_fmt
             except:
                 raise ValueError("The specified date format is invalid. Visit https://docs.python.org/3/library/datetime.html#strftime-and-strptime-behavior for details.")
         
         #for medical records data
         #----------
         #check input
-        if medical_records_data_path in self.__medical_recods_info:
+        if medical_records_data_path in self.__medical_records_info:
             raise ValueError(f"{medical_records_data_path} has already been merged.")
         #check whether the required columns are in the dictionary
         value_notin = [x for x in self.__medical_records_cols if x not in column_names.keys()]
@@ -463,59 +463,59 @@ class DiseaseNetworkData:
 
         date_cols = [column_names[x] for x in ['Date of diagnosis']]
         seperator = read_check_csv(medical_records_data_path,all_cols,date_cols,
-                                   self._medical_recods_info['date_fmt'],return_df=False)
-        self._medical_recods_info['sep'] = seperator
-        self._medical_recods_info['column_names'] = column_names
-        self._medical_recods_info['chunksize'] = chunksize
+                                   self._medical_records_info['date_fmt'],return_df=False)
+        self._medical_records_info['sep'] = seperator
+        self._medical_records_info['column_names'] = column_names
+        self._medical_records_info['chunksize'] = chunksize
         
         #process the medical records data
         #----------
         self._phecode_dict = {id_:{} for id_ in self.phenotype_df[self.__id_col].values} #empty dict
         result_tuple = medical_records_process(
             medical_records_data_path,
-            self._medical_recods_info['column_names'],
-            self._medical_recods_info['diagnosis_code'],
-            self._medical_recods_info['date_fmt'],
-            self._medical_recods_info['chunksize'],
-            self._medical_recods_info['sep'],
+            self._medical_records_info['column_names'],
+            self._medical_records_info['diagnosis_code'],
+            self._medical_records_info['date_fmt'],
+            self._medical_records_info['chunksize'],
+            self._medical_records_info['sep'],
             self._phecode_dict,
             self._phecode_mapping
         )
-        self._medical_recods_info['n_total_records'],self._medical_recods_info['n_total_missing'],self._medical_recods_info['n_total_trunc_4'],self._medical_recods_info['n_total_trunc_3'],self._medical_recods_info['n_total_no_mapping'],self._medical_recods_info['no_mapping_list'] = result_tuple
+        self._medical_records_info['n_total_records'],self._medical_records_info['n_total_missing'],self._medical_records_info['n_total_trunc_4'],self._medical_records_info['n_total_trunc_3'],self._medical_records_info['n_total_no_mapping'],self._medical_records_info['no_mapping_list'] = result_tuple
         #print some warning information for the current medical records dataset
-        prop_missing = self._medical_recods_info['n_total_missing']/self._medical_recods_info['n_total_records']
+        prop_missing = self._medical_records_info['n_total_missing']/self._medical_records_info['n_total_records']
         if prop_missing >= 0.001:
             self.__warning_medical_records.append(f"Warning: {prop_missing*100:.2f}% of diagnosis records have missing values for file {medical_records_data_path}.")
             print(self.__warning_medical_records[-1])
-        prop_nomapping = self._medical_recods_info['n_total_no_mapping']/self._medical_recods_info['n_total_records']
+        prop_nomapping = self._medical_records_info['n_total_no_mapping']/self._medical_records_info['n_total_records']
         if prop_nomapping >= 0.001:
-            self.__warning_medical_records.append(f"Warning: {prop_nomapping*100:.2f}% of {self._medical_recods_info['diagnosis_code']} codes were not mapped to phecodes for file {medical_records_data_path}.")
+            self.__warning_medical_records.append(f"Warning: {prop_nomapping*100:.2f}% of {self._medical_records_info['diagnosis_code']} codes were not mapped to phecodes for file {medical_records_data_path}.")
         
         #if not existing create new one
-        if len(self.__medical_recods_info)==0:
+        if len(self.__medical_records_info)==0:
             self.diagnosis = {id_:{} for id_ in self.phenotype_df[self.__id_col].values}
             self.n_diagnosis = {id_:{} for id_ in self.phenotype_df[self.__id_col].values}
             self.history = {id_:[] for id_ in self.phenotype_df[self.__id_col].values}
         #update new or exsiting diagnosis/diagnosis_n and history data
-        self._medical_recods_info['n_invalid'] = diagnosis_history_update(self.diagnosis,self.n_diagnosis,self.history,
+        self._medical_records_info['n_invalid'] = diagnosis_history_update(self.diagnosis,self.n_diagnosis,self.history,
                                                                           dict(self.phenotype_df[[self.__id_col,self.__index_date_col]].values),
                                                                           dict(self.phenotype_df[[self.__id_col,self.__end_date_col]].values),
                                                                           self._phecode_dict)
         del self._phecode_dict #save memory
-        self.__medical_recods_info[medical_records_data_path] = self._medical_recods_info
-        print(f"Phecode diagnosis records successfully merged ({sum(self._medical_recods_info['n_invalid'].values()):,} invalid records were not merged, typically with diagnosis date later than date of follow-up end)\n")
+        self.__medical_records_info[medical_records_data_path] = self._medical_records_info
+        print(f"Phecode diagnosis records successfully merged ({sum(self._medical_records_info['n_invalid'].values()):,} invalid records were not merged, typically with diagnosis date later than date of follow-up end)\n")
         
         #generate basic statistics
-        self.__medical_recods_statistics['n_merged_files'] = len(self.__medical_recods_info)
-        self.__medical_recods_statistics['n_merged_records'] = sum([self.__medical_recods_info[x]['n_total_records'] for x in self.__medical_recods_info])
-        self.__medical_recods_statistics['n_missing'] = sum([self.__medical_recods_info[x]['n_total_missing'] for x in self.__medical_recods_info])
+        self.__medical_records_statistics['n_merged_files'] = len(self.__medical_records_info)
+        self.__medical_records_statistics['n_merged_records'] = sum([self.__medical_records_info[x]['n_total_records'] for x in self.__medical_records_info])
+        self.__medical_records_statistics['n_missing'] = sum([self.__medical_records_info[x]['n_total_missing'] for x in self.__medical_records_info])
         #number of diagnosis and history
         exposed_id = self.phenotype_df[self.phenotype_df[self.__exposure_col]==1][self.__id_col].values
-        self.__medical_recods_statistics['n_phecode_diagnosis_per_exposed'] = np.mean([len(self.diagnosis[id_]) for id_ in exposed_id])
-        self.__medical_recods_statistics['n_phecode_history_per_exposed'] = np.mean([len(self.history[id_]) for id_ in exposed_id])
+        self.__medical_records_statistics['n_phecode_diagnosis_per_exposed'] = np.mean([len(self.diagnosis[id_]) for id_ in exposed_id])
+        self.__medical_records_statistics['n_phecode_history_per_exposed'] = np.mean([len(self.history[id_]) for id_ in exposed_id])
         unexposed_id = self.phenotype_df[self.phenotype_df[self.__exposure_col]==0][self.__id_col].values
-        self.__medical_recods_statistics['n_phecode_diagnosis_per_unexposed'] = np.mean([len(self.diagnosis[id_]) for id_ in unexposed_id])
-        self.__medical_recods_statistics['n_phecode_history_per_unexposed'] = np.mean([len(self.history[id_]) for id_ in unexposed_id])
+        self.__medical_records_statistics['n_phecode_diagnosis_per_unexposed'] = np.mean([len(self.diagnosis[id_]) for id_ in unexposed_id])
+        self.__medical_records_statistics['n_phecode_history_per_unexposed'] = np.mean([len(self.history[id_]) for id_ in unexposed_id])
 
     def get_attribute(
         self, 
@@ -544,8 +544,8 @@ class DiseaseNetworkData:
             'phenotype_statistics': self.__phenotype_statistics,
             'phenotype_info': self.__phenotype_info,
             'warning_medical_records': self.__warning_medical_records,
-            'medical_records_statistics': self.__medical_recods_statistics,
-            'medical_records_info': self.__medical_recods_info,
+            'medical_records_statistics': self.__medical_records_statistics,
+            'medical_records_info': self.__medical_records_info,
             'module_dir':self.__module_dir,
             'significant_phecodes':self.__significant_phecodes
         }
@@ -753,7 +753,7 @@ class DiseaseNetworkData:
             setattr(self, attr, data_dict.pop(attr, None))
         # Restore all private attributes from data_dict
         private_attrs = ['__warning_phenotype', '__phenotype_statistics', '__phenotype_info',
-                         '__warning_medical_records', '__medical_recods_statistics', '__medical_recods_info',
+                         '__warning_medical_records', '__medical_records_statistics', '__medical_records_info',
                          '__module_dir', '__significant_phecodes']
         for attr in private_attrs:
             setattr(self, f'_DiseaseNetworkData{attr}', data_dict.pop(attr, None))
@@ -812,8 +812,8 @@ class DiseaseNetworkData:
             '__phenotype_statistics': self.__phenotype_statistics,
             '__phenotype_info': self.__phenotype_info,
             '__warning_medical_records': self.__warning_medical_records,
-            '__medical_recods_statistics': self.__medical_recods_statistics,
-            '__medical_recods_info': self.__medical_recods_info,
+            '__medical_records_statistics': self.__medical_records_statistics,
+            '__medical_records_info': self.__medical_records_info,
             '__module_dir':self.__module_dir,
             '__significant_phecodes':self.__significant_phecodes
         }
@@ -838,11 +838,11 @@ class DiseaseNetworkData:
             if self.study_design == 'matched cohort':
                 self.__print_string += f"Average number of individuals in mathced group: {self.__phenotype_statistics['n_per_group']:.2f}\n"
             self.__print_string += f"Average follow-up years: {self.__phenotype_statistics['avg_follow_exposed']:.2f} (exposed) and {self.__phenotype_statistics['avg_follow_unexposed']:.2f} (unexposed)\n"
-        if len(self.__medical_recods_info) > 0:
+        if len(self.__medical_records_info) > 0:
             self.__print_string += '\nMerged Medical records\n'
-            self.__print_string += f"{self.__medical_recods_statistics['n_merged_files']} medical records data with {self.__medical_recods_statistics['n_merged_records']:,} diagnosis records were merged ({self.__medical_recods_statistics['n_missing']:,} with missing values).\n"
-            self.__print_string += f"Average number of disease diagnosis during follow-up: {self.__medical_recods_statistics['n_phecode_diagnosis_per_exposed']:.2f} (exposed) and {self.__medical_recods_statistics['n_phecode_diagnosis_per_unexposed']:.2f} (unexposed)\n"
-            self.__print_string += f"Average number of disease diagnosis before follow-up: {self.__medical_recods_statistics['n_phecode_history_per_exposed']:.2f} (exposed) and {self.__medical_recods_statistics['n_phecode_history_per_unexposed']:.2f} (unexposed)\n"
+            self.__print_string += f"{self.__medical_records_statistics['n_merged_files']} medical records data with {self.__medical_records_statistics['n_merged_records']:,} diagnosis records were merged ({self.__medical_records_statistics['n_missing']:,} with missing values).\n"
+            self.__print_string += f"Average number of disease diagnosis during follow-up: {self.__medical_records_statistics['n_phecode_diagnosis_per_exposed']:.2f} (exposed) and {self.__medical_records_statistics['n_phecode_diagnosis_per_unexposed']:.2f} (unexposed)\n"
+            self.__print_string += f"Average number of disease diagnosis before follow-up: {self.__medical_records_statistics['n_phecode_history_per_exposed']:.2f} (exposed) and {self.__medical_records_statistics['n_phecode_history_per_unexposed']:.2f} (unexposed)\n"
         if len(self.__warning_phenotype) > 0:
             self.__print_string += '\n'
             self.__print_string += '\n'.join(self.__warning_phenotype)
