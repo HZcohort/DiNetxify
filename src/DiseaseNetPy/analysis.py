@@ -1174,7 +1174,7 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
                 Name of the column in 'comorbidity_strength_result' and 'binomial_test_result' that specifies the phecode identifiers for disease 2 of the disease pair.
             significance_phi_col : str, default='phi_p_significance'
                 Name of the column in 'comorbidity_strength_result' that indicates the significance of phi-correlation for each disease pair.
-            significance_RR_col : str, default='phi_RR_significance'
+            significance_RR_col : str, default='RR_p_significance'
                 Name of the column in 'comorbidity_strength_result' that indicates the significance of RR for each disease pair.
             significance_binomial_col : str default='binomial_p_significance'
                 Name of the column in 'binomial_test_result' that indicates the significance of binomial test for each disease pair.

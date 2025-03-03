@@ -736,7 +736,7 @@ Conducts binomial tests for disease pairs with significant comorbidity strength 
     - `n_temporal_d1d2_col : str, default='n_d1d2_temporal'`
     - `n_temporal_d2d1_col : str, default='n_d2d1_temporal'`
     - `significance_phi_col : str, default='phi_p_significance'`
-    - `significance_RR_col : str, default='phi_RR_significance'`
+    - `significance_RR_col : str, default='RR_p_significance'`
 
 **Returns:**
 
@@ -832,7 +832,7 @@ Performs comorbidity network analysis on disease pairs with significant comorbid
     - `phecode_d1_col : str, default='phecode_d1'`
     - `phecode_d2_col : str, default='phecode_d2'`
     - `significance_phi_col : str, default='phi_p_significance'`
-    - `significance_RR_col : str, default='phi_RR_significance'`
+    - `significance_RR_col : str, default='RR_p_significance'`
     - `significance_binomial_col : str, default='binomial_p_significance'`
 
 **Returns:**
@@ -952,7 +952,7 @@ Performs temporal comorbidity network (disease trajectory) analysis to identify 
       - `phecode_d1_col : str, default='phecode_d1'`
       - `phecode_d2_col : str, default='phecode_d2'`
       - `significance_phi_col : str, default='phi_p_significance'`
-      - `significance_RR_col : str, default='phi_RR_significance'`
+      - `significance_RR_col : str, default='RR_p_significance'`
       - `significance_binomial_col : str, default='binomial_p_significance'`
     - Method-Specific Parameters:
       - RPCN:
