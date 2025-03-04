@@ -17,7 +17,7 @@ from .analysis import (
     disease_trajectory, 
     trajectory_multipletests
 )
-from .visualization import ThreeDimensionalNetwork
+# from .visualization import ThreeDimensionalNetwork
 
 __version__ = '0.0.11'
 

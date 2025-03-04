@@ -351,9 +351,9 @@ class DiseaseNetworkData:
         #call the table 1 function, make sure continuous variables are in the front, then categorical/binary variables
         all_tab1_vars = continuous_vars + categorical_vars
         all_tab1_vars_type = ['continuous' for _ in continuous_vars] + ['categorical' for _ in categorical_vars]
+        df_for_table1 = self.phenotype_df[all_tab1_vars+[self.__exposure_col]]
         #consider the study desgin
         if self.study_design == 'matched cohort' or self.study_design == 'cohort':
-            df_for_table1 = self.phenotype_df[all_tab1_vars+[self.__exposure_col]]
             table1 = desceibe_table(df_for_table1,all_tab1_vars,all_tab1_vars_type,self.__exposure_col,
                                     self.__sex_value_dict,continuous_stat_mode)
         elif self.study_design == 'exposed-only cohort':
