@@ -192,7 +192,7 @@ def phewas(data:DiseaseNetworkData,
     columns_selected = columns[0:max_columns]
     phewas_df = pd.DataFrame(result_all, columns=columns_selected)
     
-    if data.study_design == "registry":
+    if data.study_design == "exposed-only cohort":
         phewas_df["phewas_p_significance"] = phewas_df["N_cases_exposed"].apply(lambda x:True if x>=n_threshold else False)
         return phewas_df
 

@@ -945,7 +945,7 @@ result_network = dnt.visualization.ThreeDimensionalDiseaseNetwork(
   comorbidity_network_result=comorbidity_result,       # DataFrame with comorbidity network results
   disease_trajectory_result=trajectory_result,         # DataFrame with trajectory analysis results
   phewas_result=phewas_result,                         # DataFrame with PheWAS results
-  exposure_disease=594.0,                              # Phecode of exposure. Default to 9999, means that it's a registry study
+  exposure_disease=594.0,                              # Phecode of exposure. Default to 9999, means that it's a exposed-only cohort study
   exposure_disease_location=(0,0,0),                   # Three-dimensional coordinate. Default to (0,0,0), it's a initial point to plot
   exposure_disease_size=1,                             # Size of initial point (phecode of exposure) to plot. Default to 1
   source="phecode_d1",                                 # Column name of D1 (D1->D2). Defaults to 'phecode_d1'
@@ -1008,7 +1008,7 @@ A class for handling disease network data creation and operations, for use in th
 **Parameters:**
 
 - `study_design : str`
-  - Specify the type of study design, either `"cohort"`, `"matched cohort"`, or `"registry"`.
+  - Specify the type of study design, either `"cohort"`, `"matched cohort"`, or `"exposed-only cohort"`.
 - `phecode_level : int`
   - The level of phecode to use for analysis:
     - Level 1: Corresponds to 3-digit ICD-10 codes with a total of 585 medical conditions.

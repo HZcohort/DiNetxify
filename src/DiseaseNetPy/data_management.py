@@ -23,7 +23,7 @@ class DiseaseNetworkData:
     Parameters:
     ----------
     study_design : str
-        Specify the type of study design, either "cohort", "matched cohort", or "registry".
+        Specify the type of study design, either "cohort", "matched cohort", or "exposed-only cohort".
     
     phecode_level : int
         The level of phecode to use for analysis, where level 1 (with a total of 585 medical conditions) corresponds to 3-digit ICD-10 codes and level 2 (a total of 1257 medical conditions) to 4-digit ICD-10 codes. 
@@ -56,7 +56,7 @@ class DiseaseNetworkData:
         #fixed attributes
         #phenotype data
         self.__module_dir = os.path.dirname(__file__)
-        self.__study_design_options = ['matched cohort','cohort','registry']
+        self.__study_design_options = ['matched cohort','cohort','exposed-only cohort']
         self.__id_col = 'eid'
         self.__exposure_col = 'exposure'
         self.__sex_col = 'sex'
@@ -75,7 +75,7 @@ class DiseaseNetworkData:
                         'Sex':self.__sex_col,
                         'Index date': self.__index_date_col,
                         'End date': self.__end_date_col},
-            'registry':{"Participant ID":self.__id_col,
+            'exposed-only cohort':{"Participant ID":self.__id_col,
                         "Sex":self.__sex_col,
                         "Index date":self.__index_date_col,
                         "End date":self.__end_date_col}
@@ -268,9 +268,9 @@ class DiseaseNetworkData:
         if n_before_remove < n_before_any_remove:
             self.__warning_phenotype.append(f'Warning: {n_before_any_remove-n_before_remove} individuals removed due to missing values in covariates.')
             print(self.__warning_phenotype[-1])
-        if self.study_design == "registry":
+        if self.study_design == "exposed-only cohort":
             self.phenotype_df[self.__exposure_col] = 1
-            self.__phenotype_col_dict["registry"]["Exposure"] = self.__exposure_col #add exposure column for registry study
+            self.__phenotype_col_dict["exposed-only cohort"]["Exposure"] = self.__exposure_col #add exposure column for exposed-only cohort study
         #generate basic statistic for printing
         self.__phenotype_statistics['n_cohort'] = len(self.phenotype_df)
         self.__phenotype_statistics['n_exposed'] = len(self.phenotype_df[self.phenotype_df[self.__exposure_col]==1])
@@ -356,7 +356,7 @@ class DiseaseNetworkData:
             df_for_table1 = self.phenotype_df[all_tab1_vars+[self.__exposure_col]]
             table1 = desceibe_table(df_for_table1,all_tab1_vars,all_tab1_vars_type,self.__exposure_col,
                                     self.__sex_value_dict,continuous_stat_mode)
-        elif self.study_design == 'registry':
+        elif self.study_design == 'exposed-only cohort':
             table1 = desceibe_table(df_for_table1,all_tab1_vars,all_tab1_vars_type,self.__exposure_col,
                                     self.__sex_value_dict,continuous_stat_mode,group_var_value=[1])
         del df_for_table1

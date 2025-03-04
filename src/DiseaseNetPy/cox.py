@@ -420,7 +420,7 @@ def cox_unconditional(phecode:float):
         write_log(log_file_,f'No individuals remaining after filtering for phecode {phecode}\n')
         return result
 
-    if data_.study_design != "registry":
+    if data_.study_design != "exposed-only cohort":
     #check number
         number_exposed = len(dataset_analysis[dataset_analysis[exp_col]==1])
         number_unexposed = len(dataset_analysis[dataset_analysis[exp_col]==0])
@@ -454,20 +454,20 @@ def cox_unconditional(phecode:float):
     n_unexp = len(dataset_analysis.loc[(dataset_analysis[exp_col]==0) & (dataset_analysis[outcome_col]==1)])
     time_exp = dataset_analysis.groupby(by=exp_col)[time_col].sum().loc[1]/1000
     str_exp = '%i/%.2f (%.2f)' % (n_exp,time_exp,n_exp/time_exp)
-    if data_.study_design != "registry":
+    if data_.study_design != "exposed-only cohort":
         time_unexp = dataset_analysis.groupby(by=exp_col)[time_col].sum().loc[0]/1000
         str_noexp = '%i/%.2f (%.2f)' % (n_unexp,time_unexp,n_unexp/time_unexp)
     
     #return and save results if less than threshold
-    if length < n_threshold_ and data_.study_design != "registry":
+    if length < n_threshold_ and data_.study_design != "exposed-only cohort":
         result += [f'Less than threshold of {n_threshold_}',str_exp,str_noexp]
         write_log(log_file_, f'Number of cases {length} less than threshold {n_threshold_} for phecode {phecode}\n')
         return result
-    elif length < n_threshold_ and data_.study_design == "registry":
+    elif length < n_threshold_ and data_.study_design == "exposed-only cohort":
         result += [f'Less than threshold of {n_threshold_}',str_exp]
         write_log(log_file_, f'Number of cases {length} less than threshold {n_threshold_} for phecode {phecode}\n')
         return result
-    elif length >= n_threshold_ and data_.study_design == "registry":
+    elif length >= n_threshold_ and data_.study_design == "exposed-only cohort":
         result += [f"Larger than or equal to threshold of {n_threshold_}",str_exp]
         write_log(log_file_, f"Larger than or equal to threshold of {n_threshold_}")
         return result
