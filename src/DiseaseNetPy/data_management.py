@@ -184,6 +184,18 @@ class DiseaseNetworkData:
             This function modifies the object's main data attribute in-place.
         
         """
+        #input type check
+        if not isinstance(phenotype_data_path,str):
+            raise TypeError("The input 'phenotype_data_path' must be a string.")
+        if not isinstance(column_names,dict):
+            raise TypeError("The input 'column_names' must be a dictionary.")
+        if not isinstance(covariates,list):
+            raise TypeError("The input 'covariates' must be a list.")
+        if not isinstance(is_single_sex, bool):
+            raise TypeError("The input 'is_single_sex' must be a boolean.")
+        if not isinstance(force, bool):
+            raise TypeError("The input 'force' must be a boolean.")
+        
         if not force:
             data_attrs = ['phenotype_df', 'diagnosis', 'n_diagnosis', 'history', 'trajectory']
             for attr in data_attrs:
@@ -417,6 +429,18 @@ class DiseaseNetworkData:
             This function modifies the object's main data attribute in-place.
 
         """
+        #input type check
+        if not isinstance(medical_records_data_path,str):
+            raise TypeError("The input 'medical_records_data_path' must be a string.")
+        if not isinstance(diagnosis_code,str):
+            raise TypeError("The input 'diagnosis_code' must be a string.")
+        if not isinstance(column_names,dict):
+            raise TypeError("The input 'column_names' must be a dictionary.")
+        if not isinstance(date_fmt,(str,type(None))):
+            raise TypeError("The input 'date_fmt' must be a string.")
+        if not isinstance(chunksize,int):
+            raise TypeError("The input 'chunksize' must be an integer.")
+
         #attribute check
         data_attrs = ['phenotype_df']
         for attr in data_attrs:
@@ -541,6 +565,9 @@ class DiseaseNetworkData:
             to prevent accidental modification of the internal state.
 
         """
+        #input type check
+        if not isinstance(attr_name,str):
+            raise TypeError("The input 'attr_name' must be a string.")
 
         # Use a dictionary to map attribute names to their private counterparts
         private_attrs = {
@@ -643,6 +670,10 @@ class DiseaseNetworkData:
 
         """
         #attribute check
+        #check the force input type
+        if not isinstance(force,bool):
+            raise TypeError("The input 'force' must be a boolean.")
+        #check the force input
         if not force:
             data_attrs = ['trajectory']
             for attr in data_attrs:
@@ -735,6 +766,12 @@ class DiseaseNetworkData:
         import gzip
         import gc
         
+        #check the file input type
+        if not isinstance(file,str):
+            raise TypeError("The input 'file' must be a string.")
+        #check the force input type
+        if not isinstance(force,bool):
+            raise TypeError("The input 'force' must be a boolean.")
         # Check for existing data if force is not True
         if not force:
             data_attrs = ['phenotype_df', 'diagnosis', 'n_diagnosis', 'history', 'trajectory']
@@ -788,6 +825,9 @@ class DiseaseNetworkData:
         import pickle
         import gzip
 
+        if not isinstance(file,str):
+            raise TypeError("The input 'file' must be a string.")
+        
         #attribute check
         data_attrs = ['phenotype_df']
         for attr in data_attrs:
