@@ -297,7 +297,7 @@ def phenotype_required_columns(dataframe,col_dict:dict,date_fmt:str,study_desgin
         if all(isinstance(x, (int, np.integer, float, np.floating)) and x in {0, 1} for x in unique_vals):
             if single_sex == True:
                 sex_contained = [sex_value_dict_r[x] for x in unique_vals]
-                print(f"Warning: only {sex_contained} are included in the phenotypic data")
+                print(f"Warning: only {sex_contained} individuals are presented in the data")
             else:
                 None
         else:
