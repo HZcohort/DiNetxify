@@ -136,12 +136,13 @@ class DiseaseNetworkData:
         self, 
         phenotype_data_path:str, 
         column_names:dict, 
-        covariates:list, 
+        covariates:list,
+        is_single_sex:bool=False, 
         force:bool=False
     ) -> None:
         """
         
-        Merges phenotype and medical records data into the main data attribute.
+        Merges phenotype data into the main data attribute.
         
         Parameters:
         ----------
@@ -169,6 +170,9 @@ class DiseaseNetworkData:
             Provide an empty list if no additional covariates are included. 
             The function will automatically detect and convert variable types. 
             Individuals with missing values in continuous variables will be removed, while those missing in categorical variables will be categorized separately.
+        
+        is_single_sex : bool, default=False
+            Boolean flag indicating if the dataset contains only one sex (male or female).
         
         force : bool, default=False
             If True, the data will be loaded and existing attributes will be overwritten, even if they contain data. 
@@ -240,7 +244,7 @@ class DiseaseNetworkData:
         rename_dict = {column_names[k]:self.__phenotype_info['phenotype_col_dict'][k] for k in column_names.keys()}
         phenotype_data_.rename(columns=rename_dict,inplace=True)
         #check and convert, change inplace
-        phenotype_required_columns(phenotype_data_,self.__phenotype_info['phenotype_col_dict'],self.date_fmt,self.study_design)
+        phenotype_required_columns(phenotype_data_,self.__phenotype_info['phenotype_col_dict'],self.date_fmt,self.study_design,is_single_sex,self.__sex_value_dict)
         #convert covariates
         self.__phenotype_info['phenotype_covariates_converted'] = {}
         self.__phenotype_info['phenotype_covariates_list'] = []

@@ -215,7 +215,8 @@ def convert_column(dataframe, column:str):
         dummies = dummies.drop(columns=lowest_var_column)
         return dummies,'categorical'
 
-def phenotype_required_columns(dataframe,col_dict:dict,date_fmt:str,study_desgin:str):
+def phenotype_required_columns(dataframe,col_dict:dict,date_fmt:str,study_desgin:str, single_sex:bool, 
+                               sex_value_dict:dict):
     """
     
     This function processes required columns in the given phenotype dataframe. 
@@ -224,12 +225,16 @@ def phenotype_required_columns(dataframe,col_dict:dict,date_fmt:str,study_desgin
     ----------
     dataframe : pd.DataFrame
         A pandas DataFrame recording the phenoptype data.
-
     col_dict : dict
         A dictionary that maps the descriptions to their corresponding column names in the dataframe for the required columns.
-    
     date_fmt : str
         The format string for parsing dates in the date columns.
+    study_desgin : str
+        The study design of the analysis.
+    single_sex : bool
+        Indicating whether the study population is restricted to females or males.
+    sex_value_dict : dict
+        A dictionary that maps coding to specific sex.
 
     Returns
     -------
@@ -254,6 +259,8 @@ def phenotype_required_columns(dataframe,col_dict:dict,date_fmt:str,study_desgin
     index_date_col = col_dict['Index date']
     end_date_col = col_dict['End date']
     sex_col = col_dict['Sex']
+    #reverse the dictionary
+    sex_value_dict_r = {v:k for k,v in sex_value_dict.items()}
     
     try:
         dataframe[index_date_col] = dataframe[index_date_col].apply(lambda x: datetime.strptime(x,date_fmt))
@@ -282,11 +289,17 @@ def phenotype_required_columns(dataframe,col_dict:dict,date_fmt:str,study_desgin
     #prcess the sex column
     unique_vals = dataframe[sex_col].unique()
     n_unique_vals = len(unique_vals)
-    if n_unique_vals != 2:
+    if n_unique_vals != 2 and single_sex == False:
         raise ValueError('The sex variable does not have 2 unique values')
+    elif n_unique_vals != 1 and single_sex == True:
+        raise ValueError('single_sex is True but the sex variable does not have 1 unique value')
     else:
         if all(isinstance(x, (int, np.integer, float, np.floating)) and x in {0, 1} for x in unique_vals):
-            None
+            if single_sex == True:
+                sex_contained = [sex_value_dict_r[x] for x in unique_vals]
+                print(f"Warning: only {sex_contained} are included in the phenotypic data")
+            else:
+                None
         else:
             raise TypeError("The 'Sex' variable must be coded as 1 (female) and 0 (male).")
     
