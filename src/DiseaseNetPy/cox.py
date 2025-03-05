@@ -468,8 +468,8 @@ def cox_unconditional(phecode:float):
         write_log(log_file_, f'Number of cases {length} less than threshold {n_threshold_} for phecode {phecode}\n')
         return result
     elif length >= n_threshold_ and data_.study_design == "exposed-only cohort":
-        result += [f"Larger than or equal to threshold of {n_threshold_}",str_exp]
-        write_log(log_file_, f"Larger than or equal to threshold of {n_threshold_}")
+        result += [f"Larger than or equal to the threshold of {n_threshold_}",str_exp]
+        write_log(log_file_, f"Larger than or equal to the threshold of {n_threshold_}\n")
         return result
     
     #exclude those with negative time
