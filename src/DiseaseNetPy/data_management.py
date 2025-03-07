@@ -691,6 +691,7 @@ class DiseaseNetworkData:
         exp_col = self.__phenotype_info['phenotype_col_dict']['Exposure']
         exposed_df = self.phenotype_df[self.phenotype_df[exp_col]==1]
 
+        print("The disease_pair is in progress")
         self.trajectory = d1d2_from_diagnosis_history(
             exposed_df,
             self.__phenotype_info['phenotype_col_dict']['Participant ID'],
