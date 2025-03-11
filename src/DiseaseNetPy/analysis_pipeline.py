@@ -155,8 +155,8 @@ def disease_network_piepline(data:DiseaseNetworkData, n_process:int, n_threshold
     
     Returns
     -------
-    str
-        A string that indicates the completion of the pipeline.
+    dict
+        A dictionary containing the number of significant diseases/disease pairs identified in each step of the pipeline.
     """
     # --------check each parameter--------
     #data type check
