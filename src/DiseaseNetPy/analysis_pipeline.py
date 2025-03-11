@@ -220,8 +220,7 @@ def disease_network_piepline(data:DiseaseNetworkData, n_process:int, n_threshold
     #check correction
     correction_method_check(correction,cutoff)
 
-    # a dictionary to store the key results
-    results_dict = {}
+    # time used
     time_start = time.time()
 
     # --------run the pipeline--------
@@ -241,7 +240,6 @@ def disease_network_piepline(data:DiseaseNetworkData, n_process:int, n_threshold
     #number of significant phecodes, saved it to the results_dict
     n_sig_phecodes = len(phewas_result[phewas_result['phewas_p_significance']==True])
     print(f'Number of significant diseases identified in the PheWAS analysis: {n_sig_phecodes}.')
-    results_dict['n_sig_phecodes'] = n_sig_phecodes
     #generate intermediate data
     data.disease_pair(phewas_result=phewas_result,
                       min_interval_days=min_interval_days,
@@ -266,7 +264,6 @@ def disease_network_piepline(data:DiseaseNetworkData, n_process:int, n_threshold
     n_sig_com_strength = len(com_strength_result[(com_strength_result['RR_p_significance']==True) & 
                                                 (com_strength_result['phi_p_significance']==True)])
     print(f'Number of significant disease pairs identified in the comorbidity strength estimation: {n_sig_com_strength}.')
-    results_dict['n_sig_com_strength'] = n_sig_com_strength
     
     #mode v1
     if pipeline_mode == 'v1':
@@ -281,7 +278,6 @@ def disease_network_piepline(data:DiseaseNetworkData, n_process:int, n_threshold
         #number of temporal pairs
         n_temporal_pairs = len(binomial_result[binomial_result['binomial_p_significance']==True])
         print(f'Number of significant disease pairs identified in the binomial test: {n_temporal_pairs}.')
-        results_dict['n_temporal_pairs'] = n_temporal_pairs
         #run comorbidity network analysis
         com_network_log_file = os.path.join(output_dir,f'{project_prefix}_comorbidity_network.log')
         com_network_result_file = os.path.join(output_dir,f'{project_prefix}_comorbidity_network_result.csv')
@@ -293,7 +289,6 @@ def disease_network_piepline(data:DiseaseNetworkData, n_process:int, n_threshold
         #number of significant comorbidity network pairs
         n_sig_com_network = len(com_network_result[com_network_result['comorbidity_p_significance']==True])
         print(f'Number of significant disease pairs identified in the comorbidity network analysis: {n_sig_com_network}.')
-        results_dict['n_sig_com_network'] = n_sig_com_network
     elif pipeline_mode == 'v2':
         #run comorbidity network analysis
         com_network_log_file = os.path.join(output_dir,f'{project_prefix}_comorbidity_network.log')
@@ -306,7 +301,6 @@ def disease_network_piepline(data:DiseaseNetworkData, n_process:int, n_threshold
         #number of significant comorbidity network pairs
         n_sig_com_network = len(com_network_result[com_network_result['comorbidity_p_significance']==True])
         print(f'Number of significant disease pairs identified in the comorbidity network analysis: {n_sig_com_network}.')
-        results_dict['n_sig_com_network'] = n_sig_com_network
         #run binomial test
         binomial_log_file = os.path.join(output_dir,f'{project_prefix}_binomial.log')
         binomial_result_file = os.path.join(output_dir,f'{project_prefix}_binomial_result.csv')
@@ -319,7 +313,6 @@ def disease_network_piepline(data:DiseaseNetworkData, n_process:int, n_threshold
         #number of temporal pairs
         n_temporal_pairs = len(binomial_result[binomial_result['binomial_p_significance']==True])
         print(f'Number of significant disease pairs identified in the binomial test: {n_temporal_pairs}.')
-        results_dict['n_temporal_pairs'] = n_temporal_pairs
 
     #run disease trajectory analysis
     # first get the final covariates list for disease trajectory analysis, 
@@ -339,13 +332,13 @@ def disease_network_piepline(data:DiseaseNetworkData, n_process:int, n_threshold
     #number of significant disease trajectories
     n_sig_trajectory = len(trajectory_result[trajectory_result['trajectory_p_significance']==True])
     print(f'Number of significant disease pairs identified in the disease trajectory analysis: {n_sig_trajectory}.')
-    results_dict['n_sig_trajectory'] = n_sig_trajectory
 
     #calculate time used
     time_end = time.time()
     time_used = round((time_end-time_start)/60,2)
     print(f'The disease network analysis pipeline has been completed, total time: {time_used} mins.')
     
-    return results_dict
+    #return all the results df in order
+    return phewas_result,com_strength_result,com_network_result,binomial_result,trajectory_result
 
     
