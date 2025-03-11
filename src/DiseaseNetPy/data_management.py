@@ -301,10 +301,10 @@ class DiseaseNetworkData:
             #number of matched per
             self.__phenotype_statistics['n_per_group'] = self.phenotype_df.groupby(by=self.__mathcing_identifier_col)[self.__id_col].count().mean()
             if self.__phenotype_statistics['n_per_group'] < 2:
-                self.__warning_phenotype.append(f"Warning: The average number of individuals in mathced group is small ({self.__phenotype_statistics['n_per_group']:.2f})")
+                self.__warning_phenotype.append(f"Warning: The the average group size is small ({self.__phenotype_statistics['n_per_group']:.2f} individuals)")
                 print(self.__warning_phenotype[-1])
             elif self.__phenotype_statistics['n_per_group'] > 10:
-                self.__warning_phenotype.append(f"Warning: The average number of individuals in mathced group is large ({self.__phenotype_statistics['n_per_group']:.2f})")
+                self.__warning_phenotype.append(f"Warning: The the average group size is large ({self.__phenotype_statistics['n_per_group']:.2f} individuals)")
                 print(self.__warning_phenotype[-1])
             #no mathced group
             try:
@@ -881,7 +881,7 @@ class DiseaseNetworkData:
             self.__print_string += '\nPhentype data\n'
             self.__print_string += f"Total number of individuals: {self.__phenotype_statistics['n_cohort']:,} ({self.__phenotype_statistics['n_exposed']:,} exposed and {self.__phenotype_statistics['n_unexposed']:,} unexposed)\n"
             if self.study_design == 'matched cohort':
-                self.__print_string += f"Average number of individuals in mathced group: {self.__phenotype_statistics['n_per_group']:.2f}\n"
+                self.__print_string += f"The average group size is: {self.__phenotype_statistics['n_per_group']:.2f}\n"
             self.__print_string += f"Average follow-up years: {self.__phenotype_statistics['avg_follow_exposed']:.2f} (exposed) and {self.__phenotype_statistics['avg_follow_unexposed']:.2f} (unexposed)\n"
         if len(self.__medical_records_info) > 0:
             self.__print_string += '\nMerged Medical records\n'
