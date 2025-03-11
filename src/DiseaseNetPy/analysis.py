@@ -40,9 +40,9 @@ def phewas(data:DiseaseNetworkData,
     
     covariates : list, default=None
         List of phenotypic covariates to include in the model.
-        By default, includes 'sex' and all covariates specified in the 'DiseaseNet.DiseaseNetworkData.phenotype_data()' function.
+        By default, includes 'sex' and all covariates specified in the 'DiseaseNetPy.DiseaseNetworkData.phenotype_data()' function.
         If you want to include the required variable sex as covariate, always use 'sex' rather than its original column name. 
-        For other covariates you specified in the 'DiseaseNet.DiseaseNetworkData.phenotype_data()' function, use their original column name.
+        For other covariates you specified in the 'DiseaseNetPy.DiseaseNetworkData.phenotype_data()' function, use their original column name.
         For matched cohort study, including a matching variable as covariate could cause issue of Singular Matrix in model fitting.
     
     proportion_threshold : float
@@ -523,10 +523,10 @@ def binomial_test(data:DiseaseNetworkData,
         DiseaseNetworkData object.
     
     comorbidity_strength_result : pd.DataFrame
-        DataFrame containing comorbidity strength analysis results produced by the 'DiseaseNet.comorbidity_strength' function.
+        DataFrame containing comorbidity strength analysis results produced by the 'DiseaseNetPy.comorbidity_strength' function.
     
     comorbidity_network_result : pd.DataFrame, default=None
-        DataFrame containing comorbidity network analysis results produced by the 'DiseaseNet.comorbidity_network' function.
+        DataFrame containing comorbidity network analysis results produced by the 'DiseaseNetPy.comorbidity_network' function.
         When provided, the binomial test is limited to disease pairs deemed significant in the comorbidity network analysis.
 
     n_process : int, default=1
@@ -787,10 +787,10 @@ def comorbidity_network(data:DiseaseNetworkData,
         DESCRIPTION.
 
     comorbidity_strength_result : pd.DataFrame
-        DataFrame containing comorbidity strength analysis results produced by the 'DiseaseNet.comorbidity_strength' function.
+        DataFrame containing comorbidity strength analysis results produced by the 'DiseaseNetPy.comorbidity_strength' function.
     
     binomial_test_result : pd.DataFrame, default=None
-        DataFrame containing binomial test analysis results produced by the 'DiseaseNet.binomial_test' function.
+        DataFrame containing binomial test analysis results produced by the 'DiseaseNetPy.binomial_test' function.
 
     method : str, default='RPCN'
         Specifies the comorbidity network analysis method to use. Choices are:
@@ -818,9 +818,9 @@ def comorbidity_network(data:DiseaseNetworkData,
 
     covariates : list, default=None
         List of phenotypic covariates to include in the model.
-        By default, includes ['sex'] and all covariates specified in the 'DiseaseNet.DiseaseNetworkData.phenotype_data()' function.
+        By default, includes ['sex'] and all covariates specified in the 'DiseaseNetPy.DiseaseNetworkData.phenotype_data()' function.
         To include the required variable sex as a covariate, always use 'sex' instead of its original column name.
-        For other covariates specified in the 'DiseaseNet.DiseaseNetworkData.phenotype_data()' function, use their original column names.
+        For other covariates specified in the 'DiseaseNetPy.DiseaseNetworkData.phenotype_data()' function, use their original column names.
 
     n_process : int, default=1
         Specifies the number of parallel processes to use for the analysis.
@@ -1087,10 +1087,10 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
         DESCRIPTION.
 
     comorbidity_strength_result : pd.DataFrame
-        DataFrame containing comorbidity strength analysis results produced by the 'DiseaseNet.comorbidity_strength' function.
+        DataFrame containing comorbidity strength analysis results produced by the 'DiseaseNetPy.comorbidity_strength' function.
     
     binomial_test_result : pd.DataFrame
-        DataFrame containing binomial test analysis results produced by the 'DiseaseNet.binomial_test' function.
+        DataFrame containing binomial test analysis results produced by the 'DiseaseNetPy.binomial_test' function.
 
     method : str, default='RPCN'
         Specifies the comorbidity network analysis method to use. Choices are:
@@ -1121,18 +1121,18 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
         For categorical and binary variables, the matching criteria should always be 'exact'.
         For continuous variables, provide a scalar greater than 0 as the matching criterion, indicating the maximum allowed difference when matching.
         To include the required variable sex as a matching variable, always use 'sex' instead of its original column name.
-        For other covariates specified in the 'DiseaseNet.DiseaseNetworkData.phenotype_data()' function, use their original column names.
+        For other covariates specified in the 'DiseaseNetPy.DiseaseNetworkData.phenotype_data()' function, use their original column names.
     
     matching_n : int, default=2
         Specifies the maximum number of matched controls for each case.
     
     covariates : list, default=None
         List of phenotypic covariates to include in the model.
-        By default, includes all covariates specified in the 'DiseaseNet.DiseaseNetworkData.phenotype_data()' function.
+        By default, includes all covariates specified in the 'DiseaseNetPy.DiseaseNetworkData.phenotype_data()' function.
         Categorical and binary variables used for matching should not be included as covariates.
         Continuous variables used for matching can be included as covariates, but caution is advised.
         To include the required variable sex as a covariate, always use 'sex' instead of its original column name.
-        For other covariates specified in the 'DiseaseNet.DiseaseNetworkData.phenotype_data()' function, use their original column names.
+        For other covariates specified in the 'DiseaseNetPy.DiseaseNetworkData.phenotype_data()' function, use their original column names.
 
     n_process : int, default=1
         Specifies the number of parallel processes to use for the analysis.
@@ -1165,7 +1165,7 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
         Analysis option
             enforce_time_interval : bool, default=True
                 If set to True, applies the specified minimum and maximum time intervals when determining the D2 outcome among individuals diagnosed with D1. 
-                These time interval requirements should be defined using the DiseaseNet.DiseaseNetworkData.disease_pair() function.
+                These time interval requirements should be defined using the DiseaseNetPy.DiseaseNetworkData.disease_pair() function.
     
         Additional keyword argument to define the required columns in 'comorbidity_strength_result' and 'binomial_test_result':
             phecode_d1_col : str, default='phecode_d1'
