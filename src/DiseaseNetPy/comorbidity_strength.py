@@ -101,20 +101,23 @@ def com_phi_rr(args) -> list:
     global log_file_
 
     d1, d2, message = args
-    eligible_d_dict = trajectory_['eligible_disease']
+    ineligible_d_dict = trajectory_['eligible_disease']
     eligible_d_dict_withdate = trajectory_['eligible_disease_withdate']
     temporal_pair_dict = trajectory_['d1d2_temporal_pair']
     com_pair_dict = trajectory_['d1d2_com_pair']
+    disease_pair_index = trajectory_['disease_pair_index']
+    d1d2_index = disease_pair_index[f'{d1}_{d2}']
+    d2d1_index = disease_pair_index[f'{d2}_{d1}']
     
     #get number of individuals
-    N = len(eligible_d_dict) #total number of exposed individuals
-    n = sum([d1 in x and d2 in x for x in eligible_d_dict.values()]) #total number of sub-cohort
+    N = len(ineligible_d_dict) #total number of exposed individuals
+    n = sum([d1 not in x and d2 not in x for x in ineligible_d_dict.values()]) #total number of sub-cohort
     n_p1p2 = sum([d1 in x and d2 in x for x in eligible_d_dict_withdate.values()]) #number of individuals with both d1 and d2 diagnosis.
     p1 = sum([d1 in x for x in eligible_d_dict_withdate.values()]) #number of individuals with d1 diagnosis.
     p2 = sum([d2 in x for x in eligible_d_dict_withdate.values()]) #number of individuals with d2 diagnosis.
-    n_com = sum([{d1,d2} in x for x in com_pair_dict.values()]) #number of individuals with non-temporal d1-d2 disease pair
-    n_tra_d1_d2 = sum([(d1,d2) in x for x in temporal_pair_dict.values()]) #number of individuals with temporal d1->d2 disease pair
-    n_tra_d2_d1 = sum([(d2,d1) in x for x in temporal_pair_dict.values()]) #number of individuals with temporal d2->d1 disease pair
+    n_com = sum([d1d2_index in x or d2d1_index in x for x in com_pair_dict.values()]) #number of individuals with non-temporal d1-d2 disease pair
+    n_tra_d1_d2 = sum([d1d2_index in x for x in temporal_pair_dict.values()]) #number of individuals with temporal d1->d2 disease pair
+    n_tra_d2_d1 = sum([d2d1_index in x for x in temporal_pair_dict.values()]) #number of individuals with temporal d2->d1 disease pair
     c = sum([n_com,n_tra_d1_d2,n_tra_d2_d1]) #number of individuals with temporal/non-temporal d1 and d2 disease pair
     
     if message:
@@ -130,14 +133,12 @@ def com_phi_rr(args) -> list:
         return [d1,d2,f'{d1}-{d2}',N,n,n_p1p2,p1,p2,n_com,n_tra_d1_d2,n_tra_d2_d1,c,np.nan,phi,phi_theta,phi_p,rr,rr_theta,rr_p]
 
 
-def com_phi_rr_wrapper(
-    trajectory:dict,
-    d1:float,
-    d2:float,
-    message:str,
-    n_threshold:int,
-    log_file:str
-) -> list:
+def com_phi_rr_wrapper(trajectory:dict,
+                       d1:float,
+                       d2:float,
+                       message:str,
+                       n_threshold:int,
+                       log_file:str) -> list:
     """
     Wrapper for com_phi_rr that assigns default values to global variables if needed.
 
@@ -178,11 +179,9 @@ def com_phi_rr_wrapper(
     # call the original function
     return com_phi_rr((d1,d2,message))
 
-def init_worker(
-    trajectory:dict,
-    n_threshold:int,
-    log_file:str
-) -> None:
+def init_worker(trajectory:dict,
+                n_threshold:int,
+                log_file:str):
     """
     This function sets up the necessary global variables for a worker process in a multiprocessing environment.
     It assigns the provided parameters to global variables that can be accessed by com_phi_rr function in the worker process.

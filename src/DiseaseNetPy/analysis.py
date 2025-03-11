@@ -163,9 +163,6 @@ def phewas(data:DiseaseNetworkData,
     else:
         from .cox import cox_unconditional_wrapper,cox_conditional_wrapper #use wrapper function as main function
 
-    #random order
-    random.shuffle(phecode_lst_all)
-
     time_start = time.time()
     #list of phecode to run
     result_all = []
@@ -930,7 +927,7 @@ def comorbidity_network(data:DiseaseNetworkData,
     
     #get necessary data for model fitting
     phecode_info = data.phecode_info
-    trajectory_eligible = data.trajectory['eligible_disease']
+    trajectory_ineligible = data.trajectory['ineligible_disease']
     trajectory_eligible_withdate = data.trajectory['eligible_disease_withdate']
     all_diagnosis_level = data.trajectory['all_diagnosis_level'] #extract the new history list
     phenotype_df = data.phenotype_df
@@ -950,18 +947,23 @@ def comorbidity_network(data:DiseaseNetworkData,
     if invalid_disease:
         raise ValueError(f"The following phecode from the 'comorbidity_strength_result' are not in the list of PheWAS significant phecode: {invalid_disease}.")
     
+    #create other diseases variables
+    if parameter_dict['method'] in ['RPCN','PCN_PCA']:        
+        for disease in all_diseases_lst:
+            phenotype_df_exposed[str(disease)] = phenotype_df_exposed[id_col].apply(lambda x: 1 if disease in all_diagnosis_level[x] else 0)
+
     time_start = time.time()
     #list of disease pair
     result_all = []
     if n_process == 1:
         for d1,d2 in tqdm(comorbidity_sig[[phecode_d1_col,phecode_d2_col]].values):
-            result_all.append(logistic_model_wrapper(d1,d2,phenotype_df_exposed,id_col,trajectory_eligible,trajectory_eligible_withdate,
+            result_all.append(logistic_model_wrapper(d1,d2,phenotype_df_exposed,id_col,trajectory_ineligible,trajectory_eligible_withdate,
                                                      all_diagnosis_level,covariates,all_diseases_lst,log_file_final,parameter_dict))
     elif n_process > 1:
         parameters_all = []
         for d1,d2 in comorbidity_sig[[phecode_d1_col,phecode_d2_col]].values:
             parameters_all.append([d1,d2])
-        with multiprocessing.get_context(start_mehtod).Pool(n_process, initializer=init_worker, initargs=(phenotype_df_exposed,id_col,trajectory_eligible,trajectory_eligible_withdate,
+        with multiprocessing.get_context(start_mehtod).Pool(n_process, initializer=init_worker, initargs=(phenotype_df_exposed,id_col,trajectory_ineligible,trajectory_eligible_withdate,
                                                                                                             all_diagnosis_level,covariates,all_diseases_lst,log_file_final,parameter_dict)) as p:
             result_all = list(tqdm(p.imap(logistic_model, parameters_all), total=len(parameters_all)))
 
@@ -1247,9 +1249,10 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
     #get necessary data for model fitting
     phecode_info = data.phecode_info
     
-    trajectory_eligible = data.trajectory['eligible_disease']
+    trajectory_ineligible = data.trajectory['ineligible_disease']
     trajectory_temporal = data.trajectory['d1d2_temporal_pair']
     all_diagnosis_level = data.trajectory['all_diagnosis_level'] #extract the new history list
+    disease_pair_index = data.trajectory['disease_pair_index'] #extract the new disease pair index
     trajectory_eligible_withdate = data.trajectory['eligible_disease_withdate']
     phenotype_df = data.phenotype_df
     exp_col = data.get_attribute('phenotype_info')['phenotype_col_dict']['Exposure']
@@ -1272,20 +1275,25 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
     if invalid_disease:
         raise ValueError(f"The following phecode from the 'comorbidity_strength_result' are not in the list of PheWAS significant phecode: {invalid_disease}.")
     
+    #create other diseases variables
+    if parameter_dict['method'] in ['RPCN','PCN_PCA']:        
+        for disease in all_diseases_lst:
+            phenotype_df_exposed[str(disease)] = phenotype_df_exposed[id_col].apply(lambda x: 1 if disease in all_diagnosis_level[x] else 0)
+
     time_start = time.time()
     #list of disease pair
     result_all = []
     if n_process == 1:
         for d1,d2 in tqdm(trajectory_sig[[phecode_d1_col,phecode_d2_col]].values):
-            result_all.append(logistic_model_wrapper(d1,d2,phenotype_df_exposed,id_col,end_date_col,trajectory_eligible,trajectory_temporal,
+            result_all.append(logistic_model_wrapper(d1,d2,phenotype_df_exposed,id_col,end_date_col,trajectory_ineligible,trajectory_temporal,disease_pair_index,
                                                     trajectory_eligible_withdate,all_diagnosis_level,covariates,all_diseases_lst,
                                                     matching_var_dict,matching_n,log_file_final,parameter_dict))
     elif n_process > 1:
         parameters_all = []
         for d1,d2 in trajectory_sig[[phecode_d1_col,phecode_d2_col]].values:
             parameters_all.append([d1,d2])
-        with multiprocessing.get_context(start_mehtod).Pool(n_process, initializer=init_worker, initargs=(phenotype_df_exposed,id_col,end_date_col,trajectory_eligible,trajectory_temporal,
-                                                                                                          trajectory_eligible_withdate,all_diagnosis_level,covariates,all_diseases_lst,
+        with multiprocessing.get_context(start_mehtod).Pool(n_process, initializer=init_worker, initargs=(phenotype_df_exposed,id_col,end_date_col,trajectory_ineligible,trajectory_temporal,
+                                                                                                          disease_pair_index,trajectory_eligible_withdate,all_diagnosis_level,covariates,all_diseases_lst,
                                                                                                           matching_var_dict,matching_n,log_file_final,parameter_dict)) as p:
             result_all = list(p.imap(logistic_model, parameters_all), total=len(parameters_all))
 

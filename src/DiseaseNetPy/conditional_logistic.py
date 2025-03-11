@@ -29,7 +29,7 @@ def logistic_model(args):
     phenotype_df_exposed : pd.DataFrame, phenotypic data for exposed individuals only.
     id_col : str, id column
     end_date_col : str, date of end follow-up
-    trajectory_eligible : dict, trajectory eligible disease dictionary.
+    trajectory_ineligible : dict, trajectory ineligible disease dictionary.
     trajectory_temporal : dict, temporal disease pair dictionary
     trajectory_eligible_withdate : dict, trajectory eligible disease (with date) dictionary.
     all_diagnosis_level : list, list of all diagnosed phecodes, with phecode truncated to corresponding level
@@ -49,8 +49,9 @@ def logistic_model(args):
     global phenotype_df_exposed_
     global id_col_
     global end_date_col_
-    global trajectory_eligible_
+    global trajectory_ineligible_
     global trajectory_temporal_
+    global disease_pair_index_
     global trajectory_eligible_withdate_
     global all_diagnosis_level_
     global covariates_
@@ -85,34 +86,33 @@ def logistic_model(args):
     
     #filtering the dataframe first
     N = len(phenotype_df_exposed_)
-    d1d2_eligible_lst = [id_ for id_,vals in trajectory_eligible_.items() if d1 in vals and d2 in vals]
+    d1d2_eligible_lst = [id_ for id_,vals in trajectory_ineligible_.items() if d1 not in vals and d2 not in vals]
     df_analysis = phenotype_df_exposed_[phenotype_df_exposed_[id_col_].isin(d1d2_eligible_lst)]
+
+    #create other diseases variable (already generated in the main function)
+    if method in ['RPCN','PCN_PCA']:        
+        diseases_lst_ = [x for x in all_diseases_lst_ if x!=d1 and x!=d2]
+        all_diseases_var = [str(x) for x in diseases_lst_]
     
     #matching
     df_analysis[d2_date_col] = df_analysis[id_col_].apply(lambda x: trajectory_eligible_withdate_[x].get(d2,pd.NaT))
-    df_matched = matching_ids(df_analysis,matching_var_dict_,matching_n_,id_col_,d2_date_col,end_date_col_,
+    vars_for_matching = [id_col_]+list(matching_var_dict_.keys())+[d2_date_col,end_date_col_]
+    df_matched = matching_ids(df_analysis[vars_for_matching],matching_var_dict_,matching_n_,id_col_,d2_date_col,end_date_col_,
                               d2_col,outcome_date_col,mathcing_id_col)
-    df_analysis = pd.merge(df_matched,df_analysis[[id_col_]+covariates_+list(matching_var_dict_.keys())],
+    df_analysis = pd.merge(df_matched,df_analysis[[id_col_]+covariates_+all_diseases_var+list(matching_var_dict_.keys())],
                                      on=id_col_,how='left')
     df_analysis[d1_date_col] = df_analysis[id_col_].apply(lambda x: trajectory_eligible_withdate_[x].get(d1,pd.NaT))
     df_analysis[d1_col] = df_analysis.apply(lambda row: 1 if row[d1_date_col]<row[outcome_date_col] else 0, axis=1)
     df_analysis[constant_col] = 1 #not used in condtional model fitting
     
     if enforce_time_interval==True:
+        d1d2_index = disease_pair_index_[f'{d1}_{d2}']
         #for those with both d1 exposure and d2 outcome, further verify time interval requirement, as specified in disease pair construction
         d1_d2 = df_analysis[(df_analysis[d2_col]==1) & (df_analysis[d1_col]==1)]
-        d1_d2_eid = [x for x in d1_d2[id_col_].values if (d1,d2) not in trajectory_temporal_[x]]
+        d1_d2_eid = [x for x in d1_d2[id_col_].values if d1d2_index not in trajectory_temporal_[x]]
         d1_d2_index = d1_d2[d1_d2[id_col_].isin(d1_d2_eid)].index
         df_analysis.loc[d1_d2_index,d2_col] = 0 #invalid cases
-    
-    #create other diseases variable
-    if method in ['RPCN','PCN_PCA']:        
-        diseases_lst_ = [x for x in all_diseases_lst_ if x!=d1 and x!=d2]
-        all_diseases_var = []
-        for disease in diseases_lst_:
-            df_analysis[str(disease)] = df_analysis[id_col_].apply(lambda x: 1 if disease in all_diagnosis_level_[x] or disease in trajectory_eligible_withdate_[x] else 0)
-            all_diseases_var.append(str(disease))
-
+        
     #statistics
     n = len(df_analysis) #number of individuals in the matched case-control study
     N_d2 = len(df_analysis[df_analysis[d2_col]==1])
@@ -223,12 +223,6 @@ def logistic_model(args):
 
     elif method == 'PCN_PCA':
         from sklearn.decomposition import PCA
-        #check disease variables
-        del_diseases_var = check_variance_vif_single(df_analysis,
-                                                     forcedin_vars,all_diseases_var,
-                                                     vif_cutoff='disease_covar',
-                                                     group_col=mathcing_id_col)
-        all_diseases_var = [x for x in all_diseases_var if x not in del_diseases_var]
         try:
             #generate PC from other diseases variables
             pca = PCA(n_components=pca_number)
@@ -269,8 +263,8 @@ def logistic_model(args):
     write_log(log_file_,message)
     return result_lst
 
-def logistic_model_wrapper(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,id_col,end_date_col,trajectory_eligible:dict,
-                            trajectory_temporal:dict,trajectory_eligible_withdate:dict,all_diagnosis_level:dict,covariates:list,
+def logistic_model_wrapper(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,id_col,end_date_col,trajectory_ineligible:dict,
+                            trajectory_temporal:dict,disease_pair_index:dict,trajectory_eligible_withdate:dict,all_diagnosis_level:dict,covariates:list,
                             all_diseases_lst:list,matching_var_dict:dict,matching_n:int,log_file:str,parameters:dict):
     """
     Wrapper for logistic_model that assigns default values to global variables if needed.
@@ -280,7 +274,7 @@ def logistic_model_wrapper(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,i
     d1 : float, phecode 1.
     d2 : float, phecode 2.
     phenotype_df_exposed : pd.DataFrame, phenotypic data for exposed individuals only.
-    trajectory_eligible : dict, trajectory eligible disease dictionary.
+    trajectory_ineligible : dict, trajectory ineligible disease dictionary.
     trajectory_eligible_withdate : dict, trajectory eligible disease (with date) dictionary.
     all_diagnosis_level : list, list of all diagnosed phecodes, with phecode truncated to corresponding level
     covariates : list, list of covariates to be included in the model.
@@ -297,8 +291,9 @@ def logistic_model_wrapper(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,i
     global phenotype_df_exposed_
     global id_col_
     global end_date_col_
-    global trajectory_eligible_
+    global trajectory_ineligible_
     global trajectory_temporal_
+    global disease_pair_index_
     global trajectory_eligible_withdate_
     global all_diagnosis_level_
     global covariates_
@@ -312,8 +307,9 @@ def logistic_model_wrapper(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,i
     phenotype_df_exposed_ = phenotype_df_exposed
     id_col_ = id_col
     end_date_col_ = end_date_col
-    trajectory_eligible_ = trajectory_eligible
+    trajectory_ineligible_ = trajectory_ineligible
     trajectory_temporal_ = trajectory_temporal
+    disease_pair_index_ = disease_pair_index
     trajectory_eligible_withdate_ = trajectory_eligible_withdate
     all_diagnosis_level_ = all_diagnosis_level
     covariates_ = covariates
@@ -325,8 +321,8 @@ def logistic_model_wrapper(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,i
     # Call the original function
     return logistic_model((d1, d2))
 
-def init_worker(phenotype_df_exposed:pd.DataFrame,id_col,end_date_col,trajectory_eligible:dict,
-                trajectory_temporal:dict,trajectory_eligible_withdate:dict,all_diagnosis_level:dict,covariates:list,
+def init_worker(phenotype_df_exposed:pd.DataFrame,id_col,end_date_col,trajectory_ineligible:dict,
+                trajectory_temporal:dict,disease_pair_index:dict,trajectory_eligible_withdate:dict,all_diagnosis_level:dict,covariates:list,
                 all_diseases_lst:list,matching_var_dict:dict,matching_n:int,log_file:str,parameters:dict):
     """
     This function sets up the necessary global variables for a worker process in a multiprocessing environment.
@@ -335,7 +331,7 @@ def init_worker(phenotype_df_exposed:pd.DataFrame,id_col,end_date_col,trajectory
     Parameters:
     ----------
     phenotype_df_exposed : pd.DataFrame, phenotypic data for exposed individuals only.
-    trajectory_eligible : dict, trajectory eligible disease dictionary.
+    trajectory_ineligible : dict, trajectory ineligible disease dictionary.
     trajectory_eligible_withdate : dict, trajectory eligible disease (with date) dictionary.
     all_diagnosis_level : list, list of all diagnosed phecodes, with phecode truncated to corresponding level
     covariates : list, list of covariates to be included in the model.
@@ -352,8 +348,9 @@ def init_worker(phenotype_df_exposed:pd.DataFrame,id_col,end_date_col,trajectory
     global phenotype_df_exposed_
     global id_col_
     global end_date_col_
-    global trajectory_eligible_
+    global trajectory_ineligible_
     global trajectory_temporal_
+    global disease_pair_index_
     global trajectory_eligible_withdate_
     global all_diagnosis_level_
     global covariates_
@@ -366,8 +363,9 @@ def init_worker(phenotype_df_exposed:pd.DataFrame,id_col,end_date_col,trajectory
     phenotype_df_exposed_ = phenotype_df_exposed
     id_col_ = id_col
     end_date_col_ = end_date_col
-    trajectory_eligible_ = trajectory_eligible
+    trajectory_ineligible_ = trajectory_ineligible
     trajectory_temporal_ = trajectory_temporal
+    disease_pair_index_ = disease_pair_index
     trajectory_eligible_withdate_ = trajectory_eligible_withdate
     all_diagnosis_level_ = all_diagnosis_level
     covariates_ = covariates

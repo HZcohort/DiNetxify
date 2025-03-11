@@ -55,7 +55,7 @@ col_dict = {
     'Sex': 'sex',                           # Indicates sex (1 for female, 0 for male)
     'Index date': 'date_start',             # Start date of the study
     'End date': 'time_end',                 # End date of the study
-    'Matching identifier': 'match_2'        # Identifier for matching group
+    'Match ID': 'match_2'                   # Identifier for matching group
 }
 vars_lst = ['age', 'social', 'BMI', 'smoking', 'drinking']  # List of covariates to be used
 
@@ -347,7 +347,7 @@ Merges phenotype and medical records data into the main data attribute.
 
   - Expected Keys:
 
-    - `'Participant ID'`, `'Index date'`, `'End date'`, `'Exposure'` (for cohort and matched cohort study), `'Sex'`, and `'Matching identifier'` (for matched cohort study).
+    - `'Participant ID'`, `'Index date'`, `'End date'`, `'Exposure'` (for cohort and matched cohort study), `'Sex'`, and `'Match ID'` (for matched cohort study).
 
   - Example:
 
@@ -358,7 +358,7 @@ Merges phenotype and medical records data into the main data attribute.
         'Sex': 'sex',
         'Index date': 'index_date',
         'End date': 'final_date',
-        'Matching identifier': 'group'
+        'Match ID': 'group'
     }
     ```
 
