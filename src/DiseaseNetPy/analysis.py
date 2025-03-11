@@ -9,6 +9,7 @@ import pandas as pd
 import numpy as np
 import time
 import random
+from tqdm import tqdm
 from .data_management import DiseaseNetworkData
 from .utility import log_file_detect,filter_phecodes,threshold_check,n_process_check,correction_method_check,states_p_adjust
 from .utility import check_kwargs_com_tra,covariates_check,matching_var_check,phecode_leaf_to_root
@@ -120,7 +121,7 @@ def phewas(data:DiseaseNetworkData,
     """
     
     #data type check
-    if not isinstance(data,DiseaseNetworkData):
+    if not isinstance(data, DiseaseNetworkData):
         raise TypeError("The input 'data' must be a DiseaseNetworkData object.")
     
     #attribute check
@@ -169,7 +170,7 @@ def phewas(data:DiseaseNetworkData,
     #list of phecode to run
     result_all = []
     if n_process == 1:
-        for phecode in phecode_lst_all:
+        for phecode in tqdm(phecode_lst_all):
             if data.study_design == 'matched cohort':
                 result_all.append(cox_conditional_wrapper(phecode,data,covariates,n_threshold,log_file_final,lifelines_disable))
             else:
@@ -177,9 +178,9 @@ def phewas(data:DiseaseNetworkData,
     elif n_process > 1:
         with multiprocessing.get_context(start_mehtod).Pool(n_process, initializer=init_worker, initargs=(data,covariates,n_threshold,log_file_final,lifelines_disable)) as p:
             if data.study_design == 'matched cohort':
-                result_all = p.map(cox_conditional, phecode_lst_all)
+                result_all = list(tqdm(p.imap(cox_conditional, phecode_lst_all), total=len(phecode_lst_all)))
             else:
-                result_all = p.map(cox_unconditional, phecode_lst_all)
+                result_all = list(tqdm(p.imap(cox_unconditional, phecode_lst_all), total=len(phecode_lst_all)))
 
     time_end = time.time()
     time_spent = (time_end - time_start)/60
@@ -390,15 +391,15 @@ def comorbidity_strength(data:DiseaseNetworkData, proportion_threshold:float=Non
     #list of phecode
     result_all = []
     if n_process == 1:
-        for d1,d2,describe in d1d2_pair_lst:
+        for d1,d2,describe in tqdm(d1d2_pair_lst):
             result_all.append(com_phi_rr_wrapper(trajectory_dict,d1,d2,describe,n_threshold,log_file_final))
     elif n_process > 1:
         parameters_all = []
         for d1,d2,describe in d1d2_pair_lst:
             # parameters_all.append([trajectory_dict,d1,d2,describe,n_threshold,log_file_final])
-            parameters_all.append([d1,d2,describe])
+            parameters_all.append((d1,d2,describe))
         with multiprocessing.get_context(start_mehtod).Pool(n_process, initializer=init_worker, initargs=(trajectory_dict,n_threshold,log_file_final)) as p:
-            result_all = p.starmap(com_phi_rr, parameters_all)
+            result_all = list(tqdm(p.imap(com_phi_rr, parameters_all), total=len(d1d2_pair_lst)))
 
     time_end = time.time()
     time_spent = (time_end - time_start)/60
@@ -665,17 +666,10 @@ def binomial_test(data:DiseaseNetworkData,
     time_start = time.time()
     #list of disease pair
     result_all = []
-    for d1,d2,n_com,n_d1d2,n_d2d1 in comorbidity_sig[[phecode_d1_col,phecode_d2_col,n_nontemporal_col,
-                                                      n_temporal_d1d2_col,n_temporal_d2d1_col]].values:
+    for d1,d2,n_com,n_d1d2,n_d2d1 in tqdm(comorbidity_sig[[phecode_d1_col,phecode_d2_col,n_nontemporal_col,
+                                                      n_temporal_d1d2_col,n_temporal_d2d1_col]].values):
         result_all.append(binomial(d1,d2,n_com,n_d1d2,n_d2d1,enforce_temporal_order,log_file_final))
-    """
-        with multiprocessing.get_context(start_mehtod).Pool(n_process) as p:
-            parameters_all = []
-            for d1,d2,n_com,n_d1d2,n_d2d1 in comorbidity_sig[[phecode_d1_col,phecode_d2_col,n_nontemporal_col,
-                                                              n_temporal_d1d2_col,n_temporal_d2d1_col]].values:
-                parameters_all.append([d1,d2,n_com,n_d1d2,n_d2d1,enforce_temporal_order,log_file_final])
-            result_all = p.starmap(binomial, parameters_all)
-    """
+
     time_end = time.time()
     time_spent = (time_end - time_start)/60
     print(f'Binomial test finished (elapsed {time_spent:.1f} mins)')
@@ -898,7 +892,7 @@ def comorbidity_network(data:DiseaseNetworkData,
             raise ValueError(f"Attribute '{attr}' is empty.")
     
     #check comorbidity strength estimation result
-    if not isinstance(comorbidity_strength_result,pd.DataFrame):
+    if not isinstance(comorbidity_strength_result, pd.DataFrame):
         raise TypeError("The provided input 'comorbidity_strength_result' must be a pandas DataFrame.")
     comorbidity_strength_result_cols = comorbidity_strength_result.columns
     
@@ -908,7 +902,6 @@ def comorbidity_network(data:DiseaseNetworkData,
             raise TypeError("The provided input 'binomial_test_result' must be a pandas DataFrame.")
     binomial_test_result_cols = binomial_test_result.columns if binomial_test_result is not None else None
 
-    
     # Allowed methods
     allowed_methods = {'RPCN', 'PCN_PCA', 'CN'}
     if method not in allowed_methods:
@@ -961,7 +954,7 @@ def comorbidity_network(data:DiseaseNetworkData,
     #list of disease pair
     result_all = []
     if n_process == 1:
-        for d1,d2 in comorbidity_sig[[phecode_d1_col,phecode_d2_col]].values:
+        for d1,d2 in tqdm(comorbidity_sig[[phecode_d1_col,phecode_d2_col]].values):
             result_all.append(logistic_model_wrapper(d1,d2,phenotype_df_exposed,id_col,trajectory_eligible,trajectory_eligible_withdate,
                                                      all_diagnosis_level,covariates,all_diseases_lst,log_file_final,parameter_dict))
     elif n_process > 1:
@@ -970,7 +963,7 @@ def comorbidity_network(data:DiseaseNetworkData,
             parameters_all.append([d1,d2])
         with multiprocessing.get_context(start_mehtod).Pool(n_process, initializer=init_worker, initargs=(phenotype_df_exposed,id_col,trajectory_eligible,trajectory_eligible_withdate,
                                                                                                             all_diagnosis_level,covariates,all_diseases_lst,log_file_final,parameter_dict)) as p:
-            result_all = p.starmap(logistic_model, parameters_all)
+            result_all = list(tqdm(p.imap(logistic_model, parameters_all), total=len(parameters_all)))
 
     time_end = time.time()
     time_spent = (time_end - time_start)/60
@@ -1283,7 +1276,7 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
     #list of disease pair
     result_all = []
     if n_process == 1:
-        for d1,d2 in trajectory_sig[[phecode_d1_col,phecode_d2_col]].values:
+        for d1,d2 in tqdm(trajectory_sig[[phecode_d1_col,phecode_d2_col]].values):
             result_all.append(logistic_model_wrapper(d1,d2,phenotype_df_exposed,id_col,end_date_col,trajectory_eligible,trajectory_temporal,
                                                     trajectory_eligible_withdate,all_diagnosis_level,covariates,all_diseases_lst,
                                                     matching_var_dict,matching_n,log_file_final,parameter_dict))
@@ -1294,7 +1287,7 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
         with multiprocessing.get_context(start_mehtod).Pool(n_process, initializer=init_worker, initargs=(phenotype_df_exposed,id_col,end_date_col,trajectory_eligible,trajectory_temporal,
                                                                                                           trajectory_eligible_withdate,all_diagnosis_level,covariates,all_diseases_lst,
                                                                                                           matching_var_dict,matching_n,log_file_final,parameter_dict)) as p:
-            result_all = p.starmap(logistic_model, parameters_all)
+            result_all = list(p.imap(logistic_model, parameters_all), total=len(parameters_all))
 
     time_end = time.time()
     time_spent = (time_end - time_start)/60

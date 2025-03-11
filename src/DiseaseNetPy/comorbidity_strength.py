@@ -65,7 +65,7 @@ def com_phi(n:int,c:int,p1:int,p2:int):
     return phi,z_phi_theta,p_phi
     
 
-def com_phi_rr(d1:float,d2:float,message:str) -> list:
+def com_phi_rr(args) -> list:
     """
     Estimate comorbidity strength for a disease pair using phi-correlation and RR.
 
@@ -100,6 +100,7 @@ def com_phi_rr(d1:float,d2:float,message:str) -> list:
     global n_threshold_
     global log_file_
 
+    d1, d2, message = args
     eligible_d_dict = trajectory_['eligible_disease']
     eligible_d_dict_withdate = trajectory_['eligible_disease_withdate']
     temporal_pair_dict = trajectory_['d1d2_temporal_pair']
@@ -129,12 +130,14 @@ def com_phi_rr(d1:float,d2:float,message:str) -> list:
         return [d1,d2,f'{d1}-{d2}',N,n,n_p1p2,p1,p2,n_com,n_tra_d1_d2,n_tra_d2_d1,c,np.nan,phi,phi_theta,phi_p,rr,rr_theta,rr_p]
 
 
-def com_phi_rr_wrapper(trajectory:dict,
-                       d1:float,
-                       d2:float,
-                       message:str,
-                       n_threshold:int,
-                       log_file:str) -> list:
+def com_phi_rr_wrapper(
+    trajectory:dict,
+    d1:float,
+    d2:float,
+    message:str,
+    n_threshold:int,
+    log_file:str
+) -> list:
     """
     Wrapper for com_phi_rr that assigns default values to global variables if needed.
 
@@ -173,11 +176,13 @@ def com_phi_rr_wrapper(trajectory:dict,
     n_threshold_ = n_threshold
     log_file_ = log_file
     # call the original function
-    return com_phi_rr(d1,d2,message)
+    return com_phi_rr((d1,d2,message))
 
-def init_worker(trajectory:dict,
-                n_threshold:int,
-                log_file:str):
+def init_worker(
+    trajectory:dict,
+    n_threshold:int,
+    log_file:str
+) -> None:
     """
     This function sets up the necessary global variables for a worker process in a multiprocessing environment.
     It assigns the provided parameters to global variables that can be accessed by com_phi_rr function in the worker process.

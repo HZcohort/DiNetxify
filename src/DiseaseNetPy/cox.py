@@ -16,7 +16,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 
-def cox_conditional(phecode:float):
+def cox_conditional(phecode: float):
     """
     Perfoming Cox conditional analysis based on the provided DiseaseNetworkData object.
 
@@ -258,12 +258,12 @@ def cox_conditional(phecode:float):
     return result
 
 def cox_conditional_wrapper(
-    phecode:str, 
-    data:DiseaseNetworkData, 
-    covariates:list, 
-    n_threshold:int, 
-    log_file:str, 
-    lifelines_disable:bool
+    phecode: str, 
+    data: DiseaseNetworkData, 
+    covariates: list, 
+    n_threshold: int, 
+    log_file: str, 
+    lifelines_disable: bool
 ) -> pd.DataFrame:
     """
     Wrapper for cox_conditional that assigns default values to global variables if needed.

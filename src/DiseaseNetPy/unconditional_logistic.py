@@ -14,7 +14,7 @@ from .utility import write_log, find_best_alpha_and_vars, check_variance_vif_sin
 import warnings
 warnings.filterwarnings('ignore')
 
-def logistic_model(d1:float,d2:float):
+def logistic_model(args):
     """
     Fit a LR model to verify the comorbidity association between a disease pair.
 
@@ -50,6 +50,7 @@ def logistic_model(d1:float,d2:float):
     global log_file_
     global parameters_
 
+    d1, d2 = args
     #default columns
     d1_col = 'd1'
     d2_col = 'd2'
@@ -269,7 +270,7 @@ def logistic_model_wrapper(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,i
     log_file_ = log_file
     parameters_ = parameters
     # Call the original function
-    return logistic_model(d1, d2)
+    return logistic_model((d1, d2))
 
 def init_worker(phenotype_df_exposed:pd.DataFrame,id_col,trajectory_eligible:dict,
                 trajectory_eligible_withdate:dict,all_diagnosis_level:dict,covariates:list,

@@ -8,6 +8,7 @@ Created on Thu Jul 25 10:07:40 2024
 import pandas as pd
 import numpy as np
 from datetime import datetime
+from tqdm import tqdm
 
 def decimal_to_short(code:float) -> str:
     """
@@ -879,7 +880,7 @@ def d1d2_from_diagnosis_history(df:pd.DataFrame, id_col:str, sex_col:str, sex_va
     node_dict = phecode_leaf_to_root(phecode_info_dict)
     phecode_set = set(phecode_info_dict.keys())
     
-    for id_,sex in df[[id_col,sex_col]].values:
+    for id_,sex in tqdm(df[[id_col,sex_col]].values):
         temp_deligible_list = []
         temp_dpair_temporal_lst = []
         temp_dpair_com_lst = []
