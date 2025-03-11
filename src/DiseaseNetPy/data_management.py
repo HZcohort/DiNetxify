@@ -647,7 +647,7 @@ class DiseaseNetworkData:
             Minimum required time interval (in days) between diagnosis dates when constructing temporal D1 → D2 disease pair for each individual.
             Individuals with D1 and D2 diagnoses interval less than or equal to this value are considered to have non-temporal D1-D2 disease pair (without a clear sequence).
         
-        max_time_interval_days : int/float, default=np.inf
+        max_interval_days : int/float, default=np.inf
             Maximum allowed time interval (in days) between diagnosis dates when constructing temporal and non-temporal D1-D2 disease pair for each individual.
             Individuals with D1 and D2 diagnoses interval greater than this value are considered to have either temporal or non-temporal D1-D2 disease pair, although they were diagnosed with both D1 and D2.
 

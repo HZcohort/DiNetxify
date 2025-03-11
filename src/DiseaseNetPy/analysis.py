@@ -12,7 +12,7 @@ import random
 from tqdm import tqdm
 from .data_management import DiseaseNetworkData
 from .utility import log_file_detect,filter_phecodes,threshold_check,n_process_check,correction_method_check,states_p_adjust
-from .utility import check_kwargs_com_tra,covariates_check,matching_var_check,phecode_leaf_to_root
+from .utility import check_kwargs_com_tra,covariates_check,matching_var_check
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -83,18 +83,18 @@ def phewas(data:DiseaseNetworkData,
         List of phecode systems to include in the analysis. 
         system_inc and system_exl are mutually exclusive.
         List of eligible phecode systems: 
-        circulatory system; congenital anomalies; dermatologic; digestive; 
-        endocrine/metabolic; genitourinary; hematopoietic; infectious diseases; injuries & poisonings; 
-        mental disorders; musculoskeletal; neoplasms; neurological; pregnancy complications; 
+            circulatory system; congenital anomalies; dermatologic; digestive; 
+            endocrine/metabolic; genitourinary; hematopoietic; infectious diseases; injuries & poisonings; 
+            mental disorders; musculoskeletal; neoplasms; neurological; pregnancy complications; 
         respiratory; sense organs; symptoms; others.
     
     system_exl : list, default=None
         List of phecode systems to exclude from the analysis. 
         system_inc and system_exl are mutually exclusive.
         List of eligible phecode systems: 
-        circulatory system; congenital anomalies; dermatologic; digestive; 
-        endocrine/metabolic; genitourinary; hematopoietic; infectious diseases; injuries & poisonings; 
-        mental disorders; musculoskeletal; neoplasms; neurological; pregnancy complications; 
+            circulatory system; congenital anomalies; dermatologic; digestive; 
+            endocrine/metabolic; genitourinary; hematopoietic; infectious diseases; injuries & poisonings; 
+            mental disorders; musculoskeletal; neoplasms; neurological; pregnancy complications; 
         respiratory; sense organs; symptoms; others.
     
     phecode_inc : list, default=None
@@ -1227,6 +1227,10 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
     
     #check covariates
     covariates = covariates_check(covariates,data.get_attribute('phenotype_info'),matching_var_dict)
+
+    #check matching number
+    if not isinstance(matching_n,int) or matching_n<1:
+        raise ValueError("The input 'matching_n' must be a positive integer.")
     
     #check number of process
     n_process,start_mehtod = n_process_check(n_process,'trajectory')
