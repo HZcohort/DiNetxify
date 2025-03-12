@@ -222,7 +222,7 @@ def logistic_model(args):
                 message += f'method={method}_fixed_alpha (alpha={alpha_single}); error encountered: {e}; '
 
     elif method == 'PCN_PCA':
-        from sklearn.decomposition import PCA
+        from sklearn.decomposition import PCA # type: ignore
         try:
             #generate PC from other diseases variables
             pca = PCA(n_components=pca_number)
