@@ -11,6 +11,9 @@ from .utility import n_process_check,threshold_check,filter_phecodes,validate_me
 from .utility import correction_method_check
 import time
 
+import pandas as pd
+pd.DataFrame
+
 def disease_network_piepline(data:DiseaseNetworkData, n_process:int, n_threshold_phewas:int, n_threshold_comorbidity:int,
                              output_dir:str,project_prefix:str,
                              keep_positive_associations:bool=False,save_intermediate_data:bool=False,
@@ -251,7 +254,7 @@ def disease_network_piepline(data:DiseaseNetworkData, n_process:int, n_threshold
         data.save(data_intermediate_file)
     
     #run comorbidity strength estimation
-    comorbidity_log_file = os.path.join(output_dir,f'{project_prefix}_comorbidity.log')
+    comorbidity_log_file = os.path.join(output_dir,f'{project_prefix}_comorbidity_strength.log')
     com_strength_result_file = os.path.join(output_dir,f'{project_prefix}_comorbidity_strength_result.csv')
     com_strength_result = comorbidity_strength(data=data, n_threshold=n_threshold_comorbidity,n_process=n_process, 
                                                correction_phi=correction, correction_RR=correction,
