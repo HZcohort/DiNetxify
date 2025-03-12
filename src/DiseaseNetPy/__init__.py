@@ -17,6 +17,7 @@ from .analysis import (
     disease_trajectory, 
     trajectory_multipletests
 )
+from .analysis_pipeline import disease_network_piepline
 
 __version__ = '0.0.11'
 

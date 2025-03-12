@@ -12,7 +12,7 @@ import random
 from tqdm import tqdm
 from .data_management import DiseaseNetworkData
 from .utility import log_file_detect,filter_phecodes,threshold_check,n_process_check,correction_method_check,states_p_adjust
-from .utility import check_kwargs_com_tra,covariates_check,matching_var_check,phecode_leaf_to_root
+from .utility import check_kwargs_com_tra,covariates_check,matching_var_check
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -41,9 +41,9 @@ def phewas(data:DiseaseNetworkData,
     
     covariates : list, default=None
         List of phenotypic covariates to include in the model.
-        By default, includes 'sex' and all covariates specified in the 'DiseaseNet.DiseaseNetworkData.phenotype_data()' function.
+        By default, includes 'sex' and all covariates specified in the 'DiseaseNetPy.DiseaseNetworkData.phenotype_data()' function.
         If you want to include the required variable sex as covariate, always use 'sex' rather than its original column name. 
-        For other covariates you specified in the 'DiseaseNet.DiseaseNetworkData.phenotype_data()' function, use their original column name.
+        For other covariates you specified in the 'DiseaseNetPy.DiseaseNetworkData.phenotype_data()' function, use their original column name.
         For matched cohort study, including a matching variable as covariate could cause issue of Singular Matrix in model fitting.
     
     proportion_threshold : float
@@ -83,18 +83,18 @@ def phewas(data:DiseaseNetworkData,
         List of phecode systems to include in the analysis. 
         system_inc and system_exl are mutually exclusive.
         List of eligible phecode systems: 
-        circulatory system; congenital anomalies; dermatologic; digestive; 
-        endocrine/metabolic; genitourinary; hematopoietic; infectious diseases; injuries & poisonings; 
-        mental disorders; musculoskeletal; neoplasms; neurological; pregnancy complications; 
+            circulatory system; congenital anomalies; dermatologic; digestive; 
+            endocrine/metabolic; genitourinary; hematopoietic; infectious diseases; injuries & poisonings; 
+            mental disorders; musculoskeletal; neoplasms; neurological; pregnancy complications; 
         respiratory; sense organs; symptoms; others.
     
     system_exl : list, default=None
         List of phecode systems to exclude from the analysis. 
         system_inc and system_exl are mutually exclusive.
         List of eligible phecode systems: 
-        circulatory system; congenital anomalies; dermatologic; digestive; 
-        endocrine/metabolic; genitourinary; hematopoietic; infectious diseases; injuries & poisonings; 
-        mental disorders; musculoskeletal; neoplasms; neurological; pregnancy complications; 
+            circulatory system; congenital anomalies; dermatologic; digestive; 
+            endocrine/metabolic; genitourinary; hematopoietic; infectious diseases; injuries & poisonings; 
+            mental disorders; musculoskeletal; neoplasms; neurological; pregnancy complications; 
         respiratory; sense organs; symptoms; others.
     
     phecode_inc : list, default=None
@@ -162,9 +162,6 @@ def phewas(data:DiseaseNetworkData,
         from .cox import cox_conditional,cox_unconditional,init_worker #use original function as main function and init_worker to initialize global variables
     else:
         from .cox import cox_unconditional_wrapper,cox_conditional_wrapper #use wrapper function as main function
-
-    #random order
-    random.shuffle(phecode_lst_all)
 
     time_start = time.time()
     #list of phecode to run
@@ -524,10 +521,10 @@ def binomial_test(data:DiseaseNetworkData,
         DiseaseNetworkData object.
     
     comorbidity_strength_result : pd.DataFrame
-        DataFrame containing comorbidity strength analysis results produced by the 'DiseaseNet.comorbidity_strength' function.
+        DataFrame containing comorbidity strength analysis results produced by the 'DiseaseNetPy.comorbidity_strength' function.
     
     comorbidity_network_result : pd.DataFrame, default=None
-        DataFrame containing comorbidity network analysis results produced by the 'DiseaseNet.comorbidity_network' function.
+        DataFrame containing comorbidity network analysis results produced by the 'DiseaseNetPy.comorbidity_network' function.
         When provided, the binomial test is limited to disease pairs deemed significant in the comorbidity network analysis.
 
     n_process : int, default=1
@@ -781,10 +778,10 @@ def comorbidity_network(data:DiseaseNetworkData,
         DESCRIPTION.
 
     comorbidity_strength_result : pd.DataFrame
-        DataFrame containing comorbidity strength analysis results produced by the 'DiseaseNet.comorbidity_strength' function.
+        DataFrame containing comorbidity strength analysis results produced by the 'DiseaseNetPy.comorbidity_strength' function.
     
     binomial_test_result : pd.DataFrame, default=None
-        DataFrame containing binomial test analysis results produced by the 'DiseaseNet.binomial_test' function.
+        DataFrame containing binomial test analysis results produced by the 'DiseaseNetPy.binomial_test' function.
 
     method : str, default='RPCN'
         Specifies the comorbidity network analysis method to use. Choices are:
@@ -812,9 +809,9 @@ def comorbidity_network(data:DiseaseNetworkData,
 
     covariates : list, default=None
         List of phenotypic covariates to include in the model.
-        By default, includes ['sex'] and all covariates specified in the 'DiseaseNet.DiseaseNetworkData.phenotype_data()' function.
+        By default, includes ['sex'] and all covariates specified in the 'DiseaseNetPy.DiseaseNetworkData.phenotype_data()' function.
         To include the required variable sex as a covariate, always use 'sex' instead of its original column name.
-        For other covariates specified in the 'DiseaseNet.DiseaseNetworkData.phenotype_data()' function, use their original column names.
+        For other covariates specified in the 'DiseaseNetPy.DiseaseNetworkData.phenotype_data()' function, use their original column names.
 
     n_process : int, default=1
         Specifies the number of parallel processes to use for the analysis.
@@ -930,7 +927,7 @@ def comorbidity_network(data:DiseaseNetworkData,
     
     #get necessary data for model fitting
     phecode_info = data.phecode_info
-    trajectory_eligible = data.trajectory['eligible_disease']
+    trajectory_ineligible = data.trajectory['ineligible_disease']
     trajectory_eligible_withdate = data.trajectory['eligible_disease_withdate']
     all_diagnosis_level = data.trajectory['all_diagnosis_level'] #extract the new history list
     phenotype_df = data.phenotype_df
@@ -950,18 +947,23 @@ def comorbidity_network(data:DiseaseNetworkData,
     if invalid_disease:
         raise ValueError(f"The following phecode from the 'comorbidity_strength_result' are not in the list of PheWAS significant phecode: {invalid_disease}.")
     
+    #create other diseases variables
+    if parameter_dict['method'] in ['RPCN','PCN_PCA']:        
+        for disease in all_diseases_lst:
+            phenotype_df_exposed[str(disease)] = phenotype_df_exposed[id_col].apply(lambda x: 1 if disease in all_diagnosis_level[x] else 0)
+
     time_start = time.time()
     #list of disease pair
     result_all = []
     if n_process == 1:
         for d1,d2 in tqdm(comorbidity_sig[[phecode_d1_col,phecode_d2_col]].values):
-            result_all.append(logistic_model_wrapper(d1,d2,phenotype_df_exposed,id_col,trajectory_eligible,trajectory_eligible_withdate,
+            result_all.append(logistic_model_wrapper(d1,d2,phenotype_df_exposed,id_col,trajectory_ineligible,trajectory_eligible_withdate,
                                                      all_diagnosis_level,covariates,all_diseases_lst,log_file_final,parameter_dict))
     elif n_process > 1:
         parameters_all = []
         for d1,d2 in comorbidity_sig[[phecode_d1_col,phecode_d2_col]].values:
             parameters_all.append([d1,d2])
-        with multiprocessing.get_context(start_mehtod).Pool(n_process, initializer=init_worker, initargs=(phenotype_df_exposed,id_col,trajectory_eligible,trajectory_eligible_withdate,
+        with multiprocessing.get_context(start_mehtod).Pool(n_process, initializer=init_worker, initargs=(phenotype_df_exposed,id_col,trajectory_ineligible,trajectory_eligible_withdate,
                                                                                                             all_diagnosis_level,covariates,all_diseases_lst,log_file_final,parameter_dict)) as p:
             result_all = list(tqdm(p.imap(logistic_model, parameters_all), total=len(parameters_all)))
 
@@ -1080,10 +1082,10 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
         DESCRIPTION.
 
     comorbidity_strength_result : pd.DataFrame
-        DataFrame containing comorbidity strength analysis results produced by the 'DiseaseNet.comorbidity_strength' function.
+        DataFrame containing comorbidity strength analysis results produced by the 'DiseaseNetPy.comorbidity_strength' function.
     
     binomial_test_result : pd.DataFrame
-        DataFrame containing binomial test analysis results produced by the 'DiseaseNet.binomial_test' function.
+        DataFrame containing binomial test analysis results produced by the 'DiseaseNetPy.binomial_test' function.
 
     method : str, default='RPCN'
         Specifies the comorbidity network analysis method to use. Choices are:
@@ -1114,18 +1116,18 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
         For categorical and binary variables, the matching criteria should always be 'exact'.
         For continuous variables, provide a scalar greater than 0 as the matching criterion, indicating the maximum allowed difference when matching.
         To include the required variable sex as a matching variable, always use 'sex' instead of its original column name.
-        For other covariates specified in the 'DiseaseNet.DiseaseNetworkData.phenotype_data()' function, use their original column names.
+        For other covariates specified in the 'DiseaseNetPy.DiseaseNetworkData.phenotype_data()' function, use their original column names.
     
     matching_n : int, default=2
         Specifies the maximum number of matched controls for each case.
     
     covariates : list, default=None
         List of phenotypic covariates to include in the model.
-        By default, includes all covariates specified in the 'DiseaseNet.DiseaseNetworkData.phenotype_data()' function.
+        By default, includes all covariates specified in the 'DiseaseNetPy.DiseaseNetworkData.phenotype_data()' function.
         Categorical and binary variables used for matching should not be included as covariates.
         Continuous variables used for matching can be included as covariates, but caution is advised.
         To include the required variable sex as a covariate, always use 'sex' instead of its original column name.
-        For other covariates specified in the 'DiseaseNet.DiseaseNetworkData.phenotype_data()' function, use their original column names.
+        For other covariates specified in the 'DiseaseNetPy.DiseaseNetworkData.phenotype_data()' function, use their original column names.
 
     n_process : int, default=1
         Specifies the number of parallel processes to use for the analysis.
@@ -1158,7 +1160,7 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
         Analysis option
             enforce_time_interval : bool, default=True
                 If set to True, applies the specified minimum and maximum time intervals when determining the D2 outcome among individuals diagnosed with D1. 
-                These time interval requirements should be defined using the DiseaseNet.DiseaseNetworkData.disease_pair() function.
+                These time interval requirements should be defined using the DiseaseNetPy.DiseaseNetworkData.disease_pair() function.
     
         Additional keyword argument to define the required columns in 'comorbidity_strength_result' and 'binomial_test_result':
             phecode_d1_col : str, default='phecode_d1'
@@ -1225,6 +1227,10 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
     
     #check covariates
     covariates = covariates_check(covariates,data.get_attribute('phenotype_info'),matching_var_dict)
+
+    #check matching number
+    if not isinstance(matching_n,int) or matching_n<1:
+        raise ValueError("The input 'matching_n' must be a positive integer.")
     
     #check number of process
     n_process,start_mehtod = n_process_check(n_process,'trajectory')
@@ -1247,9 +1253,10 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
     #get necessary data for model fitting
     phecode_info = data.phecode_info
     
-    trajectory_eligible = data.trajectory['eligible_disease']
+    trajectory_ineligible = data.trajectory['ineligible_disease']
     trajectory_temporal = data.trajectory['d1d2_temporal_pair']
     all_diagnosis_level = data.trajectory['all_diagnosis_level'] #extract the new history list
+    disease_pair_index = data.trajectory['disease_pair_index'] #extract the new disease pair index
     trajectory_eligible_withdate = data.trajectory['eligible_disease_withdate']
     phenotype_df = data.phenotype_df
     exp_col = data.get_attribute('phenotype_info')['phenotype_col_dict']['Exposure']
@@ -1272,20 +1279,25 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
     if invalid_disease:
         raise ValueError(f"The following phecode from the 'comorbidity_strength_result' are not in the list of PheWAS significant phecode: {invalid_disease}.")
     
+    #create other diseases variables
+    if parameter_dict['method'] in ['RPCN','PCN_PCA']:        
+        for disease in all_diseases_lst:
+            phenotype_df_exposed[str(disease)] = phenotype_df_exposed[id_col].apply(lambda x: 1 if disease in all_diagnosis_level[x] else 0)
+
     time_start = time.time()
     #list of disease pair
     result_all = []
     if n_process == 1:
         for d1,d2 in tqdm(trajectory_sig[[phecode_d1_col,phecode_d2_col]].values):
-            result_all.append(logistic_model_wrapper(d1,d2,phenotype_df_exposed,id_col,end_date_col,trajectory_eligible,trajectory_temporal,
+            result_all.append(logistic_model_wrapper(d1,d2,phenotype_df_exposed,id_col,end_date_col,trajectory_ineligible,trajectory_temporal,disease_pair_index,
                                                     trajectory_eligible_withdate,all_diagnosis_level,covariates,all_diseases_lst,
                                                     matching_var_dict,matching_n,log_file_final,parameter_dict))
     elif n_process > 1:
         parameters_all = []
         for d1,d2 in trajectory_sig[[phecode_d1_col,phecode_d2_col]].values:
             parameters_all.append([d1,d2])
-        with multiprocessing.get_context(start_mehtod).Pool(n_process, initializer=init_worker, initargs=(phenotype_df_exposed,id_col,end_date_col,trajectory_eligible,trajectory_temporal,
-                                                                                                          trajectory_eligible_withdate,all_diagnosis_level,covariates,all_diseases_lst,
+        with multiprocessing.get_context(start_mehtod).Pool(n_process, initializer=init_worker, initargs=(phenotype_df_exposed,id_col,end_date_col,trajectory_ineligible,trajectory_temporal,
+                                                                                                          disease_pair_index,trajectory_eligible_withdate,all_diagnosis_level,covariates,all_diseases_lst,
                                                                                                           matching_var_dict,matching_n,log_file_final,parameter_dict)) as p:
             result_all = list(p.imap(logistic_model, parameters_all), total=len(parameters_all))
 

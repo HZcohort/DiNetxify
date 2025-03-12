@@ -843,7 +843,7 @@ def get_exclison_lst(exl_range_str):
     return set(exl_list)
 
 def d1d2_from_diagnosis_history(df:pd.DataFrame, id_col:str, sex_col:str, sex_value_dict:dict, 
-                                phecode_lst:list, history_dict:dict, diagnosis_dict:dict, n_diagnosis_dict:dict,
+                                phecode_lst:list, disease_pair_index:dict, history_dict:dict, diagnosis_dict:dict, n_diagnosis_dict:dict,
                                 phecode_info_dict:dict, min_interval_days:int, max_interval_days:int, min_icd_num:int) -> dict:
     """
     Construct d1->d2 disease pairs for each individual from a list of significant phecodes.
@@ -855,6 +855,7 @@ def d1d2_from_diagnosis_history(df:pd.DataFrame, id_col:str, sex_col:str, sex_va
         sex_col : sex column in the df
         sex_value_dict: dictionary for coding 'Female' and 'Male' in the phenotype data
         phecode_lst : list of significant phecodes
+        disease_pair_index : dictionary containing disease pair index
         history_dict : dictionary containing medical records history
         diagnosis_dict : dictionary containing diagnosis and date
         n_diagnosis_dict : number of phecode occurence
@@ -868,7 +869,7 @@ def d1d2_from_diagnosis_history(df:pd.DataFrame, id_col:str, sex_col:str, sex_va
         D1->D2 dictionary.
     
     """
-    eligible_disease_dict = {}
+    ineligible_disease_dict = {}
     eligible_withdate_dict = {}
     d1d2_temporl_pair_dict = {}
     d1d2_com_pair_dict = {}
@@ -881,7 +882,7 @@ def d1d2_from_diagnosis_history(df:pd.DataFrame, id_col:str, sex_col:str, sex_va
     phecode_set = set(phecode_info_dict.keys())
     
     for id_,sex in tqdm(df[[id_col,sex_col]].values):
-        temp_deligible_list = []
+        temp_dineligible_list = []
         temp_dpair_temporal_lst = []
         temp_dpair_com_lst = []
         temp_deligible_dict_withdate = {}
@@ -898,13 +899,14 @@ def d1d2_from_diagnosis_history(df:pd.DataFrame, id_col:str, sex_col:str, sex_va
             exl_lst = phecode_info_dict[phecode]['exclude_list']
             sex_specific = phecode_info_dict[phecode]['sex']
             if (check_history_exclusion(exl_lst,history_,n_diagnosis_,min_icd_num)==0) and (sex_specific=='Both' or sex_value_dict[sex_specific]==sex):
-                temp_deligible_list.append(phecode)
                 date = time_first_diagnosis(leaf_lst,diagnosis_,n_diagnosis_,min_icd_num)
                 if not pd.isna(date):
                     temp_deligible_dict_withdate[phecode] = date
+            else:
+                temp_dineligible_list.append(phecode)
         #generate disease pair dictionary
         if len(temp_deligible_dict_withdate) <= 1:
-            eligible_disease_dict[id_] = temp_deligible_list
+            ineligible_disease_dict[id_] = temp_dineligible_list
             d1d2_temporl_pair_dict[id_] = temp_dpair_temporal_lst
             d1d2_com_pair_dict[id_] = temp_dpair_com_lst
             eligible_withdate_dict[id_] = temp_deligible_dict_withdate
@@ -914,21 +916,22 @@ def d1d2_from_diagnosis_history(df:pd.DataFrame, id_col:str, sex_col:str, sex_va
                 if abs((date1 - date2).days) > max_interval_days:
                     continue
                 elif abs((date1 - date2).days) <= min_interval_days:
-                    temp_dpair_com_lst.append({d1,d2}) #order insensitive
+                    temp_dpair_com_lst.append(disease_pair_index[f'{d1}_{d2}']) #order insensitive
                     continue
                 else:
                     if date1 > date2:
-                        temp_dpair_temporal_lst.append((d2,d1))
+                        temp_dpair_temporal_lst.append(disease_pair_index[f'{d2}_{d1}'])
                     else:
-                        temp_dpair_temporal_lst.append((d1,d2))
+                        temp_dpair_temporal_lst.append(disease_pair_index[f'{d1}_{d2}'])
             #save for the individual
-            eligible_disease_dict[id_] = temp_deligible_list
+            ineligible_disease_dict[id_] = temp_dineligible_list
             d1d2_temporl_pair_dict[id_] = temp_dpair_temporal_lst
             d1d2_com_pair_dict[id_] = temp_dpair_com_lst
             eligible_withdate_dict[id_] = temp_deligible_dict_withdate
     
     #final dictionary
-    trajectory_dict = {'eligible_disease':eligible_disease_dict,
+    trajectory_dict = {'disease_pair_index' : disease_pair_index,
+                       'ineligible_disease':ineligible_disease_dict,
                        'eligible_disease_withdate':eligible_withdate_dict,
                        'd1d2_temporal_pair':d1d2_temporl_pair_dict,
                        'd1d2_com_pair':d1d2_com_pair_dict,
@@ -936,63 +939,19 @@ def d1d2_from_diagnosis_history(df:pd.DataFrame, id_col:str, sex_col:str, sex_va
     
     return trajectory_dict
 
-
-def check_kwargs_com_tra(method:str,comorbidity_strength_cols:list,binomial_test_result_cols:list,**kwargs):
+def validate_method_specific_kwargs(method:str, kwargs:dict):
     """
-    Check the **kwargs from comorbidity_network/disease_trajectory function
+    Validate method-specific kwargs for comorbidity_network/disease_trajectory function
     
     Parameters
     ----------
     method : str comorbidity_network/disease_trajectory analysis method
-    comorbidity_strength_cols : list columns of comorbidity_strength_result dataframe
-    binomial_test_result_cols : list columns of binomial_test_result dataframe
-    **kwargs : **kwargs from comorbidity_network/disease_trajectory function
-
+    kwargs : dict method-specific kwargs
+    
     Returns
     -------
-    List of required parameters
-
+    dict : parameter_dict containing validated method-specific parameters
     """
-    # Default keyword arguments
-    default_kwargs = {
-        'phecode_d1_col': 'phecode_d1',
-        'phecode_d2_col': 'phecode_d2',
-        'significance_phi_col': 'phi_p_significance',
-        'significance_RR_col': 'RR_p_significance',
-        'significance_binomial_col': 'binomial_p_significance'
-    }
-    # Update default_kwargs with user-provided kwargs
-    column_kwargs = {k: kwargs.pop(k, v) for k, v in default_kwargs.items()}
-    # check that no unexpected keyword arguments are present for column definitions
-    allowed_column_kwargs = set(default_kwargs.keys())
-    extra_column_kwargs = set(kwargs.keys()) - set([
-        'alpha', 'auto_penalty','alpha_range', 'n_PC', 'explained_variance' ,'enforce_time_interval', 'scaling_factor'])
-    invalid_column_kwargs = extra_column_kwargs - allowed_column_kwargs
-    if invalid_column_kwargs:
-        raise ValueError(f"Invalid keyword arguments: {invalid_column_kwargs}")
-    
-    # check that required columns exist in the DataFrames
-    required_columns_strength = [
-        column_kwargs['phecode_d1_col'],
-        column_kwargs['phecode_d2_col'],
-        column_kwargs['significance_phi_col'],
-        column_kwargs['significance_RR_col']
-    ]
-    required_columns_binomial = [
-        column_kwargs['phecode_d1_col'],
-        column_kwargs['phecode_d2_col'],
-        column_kwargs['significance_binomial_col']
-    ]
-    missing_columns_strength = [col for col in required_columns_strength if col not in comorbidity_strength_cols]
-    if binomial_test_result_cols is None:
-        missing_columns_binomial = []
-    else:
-        missing_columns_binomial = [col for col in required_columns_binomial if col not in binomial_test_result_cols]
-    if missing_columns_strength:
-        raise ValueError(f"The following required columns are missing in 'comorbidity_strength_result': {missing_columns_strength}")
-    if missing_columns_binomial:
-        raise ValueError(f"The following required columns are missing in 'binomial_test_result': {missing_columns_binomial}")
-        
     alpha = None
     auto_penalty = None
     scaling_factor = None
@@ -1067,6 +1026,67 @@ def check_kwargs_com_tra(method:str,comorbidity_strength_cols:list,binomial_test
             raise ValueError(f"No additional parameters are required for method '{method}'.")
         parameter_dict = {'method':'CN'}
     
+    return parameter_dict
+
+def check_kwargs_com_tra(method:str,comorbidity_strength_cols:list,binomial_test_result_cols:list,**kwargs):
+    """
+    Check the **kwargs from comorbidity_network/disease_trajectory function
+    
+    Parameters
+    ----------
+    method : str comorbidity_network/disease_trajectory analysis method
+    comorbidity_strength_cols : list columns of comorbidity_strength_result dataframe
+    binomial_test_result_cols : list columns of binomial_test_result dataframe
+    **kwargs : **kwargs from comorbidity_network/disease_trajectory function
+
+    Returns
+    -------
+    List of required parameters
+
+    """
+    # Default keyword arguments
+    default_kwargs = {
+        'phecode_d1_col': 'phecode_d1',
+        'phecode_d2_col': 'phecode_d2',
+        'significance_phi_col': 'phi_p_significance',
+        'significance_RR_col': 'RR_p_significance',
+        'significance_binomial_col': 'binomial_p_significance'
+    }
+    # Update default_kwargs with user-provided kwargs
+    column_kwargs = {k: kwargs.pop(k, v) for k, v in default_kwargs.items()}
+    # check that no unexpected keyword arguments are present for column definitions
+    allowed_column_kwargs = set(default_kwargs.keys())
+    extra_column_kwargs = set(kwargs.keys()) - set([
+        'alpha', 'auto_penalty','alpha_range', 'n_PC', 'explained_variance' ,'enforce_time_interval', 'scaling_factor'])
+    invalid_column_kwargs = extra_column_kwargs - allowed_column_kwargs
+    if invalid_column_kwargs:
+        raise ValueError(f"Invalid keyword arguments: {invalid_column_kwargs}")
+    
+    # check that required columns exist in the DataFrames
+    required_columns_strength = [
+        column_kwargs['phecode_d1_col'],
+        column_kwargs['phecode_d2_col'],
+        column_kwargs['significance_phi_col'],
+        column_kwargs['significance_RR_col']
+    ]
+    required_columns_binomial = [
+        column_kwargs['phecode_d1_col'],
+        column_kwargs['phecode_d2_col'],
+        column_kwargs['significance_binomial_col']
+    ]
+    missing_columns_strength = [col for col in required_columns_strength if col not in comorbidity_strength_cols]
+    if binomial_test_result_cols is None:
+        missing_columns_binomial = []
+    else:
+        missing_columns_binomial = [col for col in required_columns_binomial if col not in binomial_test_result_cols]
+    if missing_columns_strength:
+        raise ValueError(f"The following required columns are missing in 'comorbidity_strength_result': {missing_columns_strength}")
+    if missing_columns_binomial:
+        raise ValueError(f"The following required columns are missing in 'binomial_test_result': {missing_columns_binomial}")
+        
+    # Validate method-specific kwargs
+    parameter_dict = validate_method_specific_kwargs(method, kwargs)
+    
     #enforce parameter
     enforce_time_interval = kwargs.pop('enforce_time_interval', True)
     if not isinstance(enforce_time_interval, bool):
@@ -1113,7 +1133,8 @@ def matching_var_check(matching_var_dict:dict,phenotype_info:dict):
                 raise ValueError(f"Invalid matching criteria {val} for matching variable {var}.")
                 
 
-def covariates_check(covariates:list,phenotype_info:dict,matching_var_dict:dict=None):
+def covariates_check(covariates:list,phenotype_info:dict,matching_var_dict:dict=None,
+                     exclude:bool=False):
     """
     Check whether the given list of covariates is valid and return the transformed covariates name.
     If matching dictionary is given, also check whether there is any overlap with the matching variables.
@@ -1123,6 +1144,7 @@ def covariates_check(covariates:list,phenotype_info:dict,matching_var_dict:dict=
     covariates : list or None, list of covariates.
     matching_var_dict : dict or None, dictionary of matching variables and criteria used
     phenotype_info : dict, phenotype information from DiseaseNetwork data
+    exclude : bool, whether to exclude the covariates from the final list or raise an error.
 
     Returns
     -------
@@ -1152,7 +1174,10 @@ def covariates_check(covariates:list,phenotype_info:dict,matching_var_dict:dict=
     else:
         for var in matching_var_dict:
             if var in covariates and phenotype_info['phenotype_covariates_type'][var]=='categorical':
-                raise ValueError(f'Categorical covariate {var} has already been used for matching.')
+                if exclude == True:
+                    covariates_final.remove(var)
+                else:
+                    raise ValueError(f'Categorical covariate {var} has already been used for matching.')
         return covariates_final
 
 def find_best_alpha_and_vars(model, best_range, alpha_lst, co_vars):

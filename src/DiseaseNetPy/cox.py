@@ -86,7 +86,7 @@ def cox_conditional(phecode: float):
     sex_col = info_dict['phenotype_col_dict']['Sex']
     index_date_col = info_dict['phenotype_col_dict']['Index date']
     end_date_col = info_dict['phenotype_col_dict']['End date']
-    matching_col = info_dict['phenotype_col_dict']['Matching identifier']
+    matching_col = info_dict['phenotype_col_dict']['Match ID']
     
     #history and diagnosis dict
     history = data_.history
