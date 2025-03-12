@@ -93,7 +93,8 @@ def logistic_model(args):
     if method in ['RPCN','PCN_PCA']:        
         diseases_lst_ = [x for x in all_diseases_lst_ if x!=d1 and x!=d2]
         all_diseases_var = [str(x) for x in diseases_lst_]
-    
+    else:
+        all_diseases_var = []
     #matching
     df_analysis[d2_date_col] = df_analysis[id_col_].apply(lambda x: trajectory_eligible_withdate_[x].get(d2,pd.NaT))
     vars_for_matching = [id_col_]+list(matching_var_dict_.keys())+[d2_date_col,end_date_col_]

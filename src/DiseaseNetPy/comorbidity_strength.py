@@ -101,7 +101,7 @@ def com_phi_rr(args) -> list:
     global log_file_
 
     d1, d2, message = args
-    ineligible_d_dict = trajectory_['eligible_disease']
+    ineligible_d_dict = trajectory_['ineligible_disease']
     eligible_d_dict_withdate = trajectory_['eligible_disease_withdate']
     temporal_pair_dict = trajectory_['d1d2_temporal_pair']
     com_pair_dict = trajectory_['d1d2_com_pair']

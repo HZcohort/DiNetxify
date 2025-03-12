@@ -236,7 +236,7 @@ def disease_network_piepline(data:DiseaseNetworkData, n_process:int, n_threshold
         if data.study_design == "exposed-only cohort":
             pass
         else:
-            phewas_results = phewas_results[phewas_results['phewas_coef']>=0]
+            phewas_result = phewas_result[phewas_result['phewas_coef']>=0]
     #number of significant phecodes, saved it to the results_dict
     n_sig_phecodes = len(phewas_result[phewas_result['phewas_p_significance']==True])
     print(f'Number of significant diseases identified in the PheWAS analysis: {n_sig_phecodes}.')
