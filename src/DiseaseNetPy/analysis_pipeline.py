@@ -11,9 +11,6 @@ from .utility import n_process_check,threshold_check,filter_phecodes,validate_me
 from .utility import correction_method_check
 import time
 
-import pandas as pd
-pd.DataFrame
-
 def disease_network_piepline(data:DiseaseNetworkData, n_process:int, n_threshold_phewas:int, n_threshold_comorbidity:int,
                              output_dir:str,project_prefix:str,
                              keep_positive_associations:bool=False,save_intermediate_data:bool=False,
