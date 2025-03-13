@@ -168,7 +168,7 @@ def disease_network_piepline(data:DiseaseNetworkData, n_process:int, n_threshold
         if getattr(data, attr) is None:
             raise ValueError(f"Attribute '{attr}' is empty.")
     #n_process check
-    n_process,start_mehtod = n_process_check(n_process,'PheWAS')
+    n_process, _ = n_process_check(n_process,'PheWAS')
     #check threshold
     n_exposed = data.get_attribute('phenotype_statistics')['n_exposed']
     n_threshold_phewas = threshold_check(None,n_threshold_phewas,n_exposed)
@@ -190,16 +190,19 @@ def disease_network_piepline(data:DiseaseNetworkData, n_process:int, n_threshold
     if not isinstance(save_intermediate_data,bool):
         raise TypeError("The provided input 'save_intermediate_data' must be a bool.")
     #check system_exl
-    phecode_info = data.phecode_info
-    phecode_lst_all = filter_phecodes(phecode_info, None, system_exl, None, None)
-    print(f'A total of {len(phecode_lst_all)} phecodes included in the PheWAS analysis.')
+    # phecode_info = data.phecode_info
+    # phecode_lst_all = filter_phecodes(phecode_info, None, system_exl, None, None)
+    # print(f'A total of {len(phecode_lst_all)} phecodes included in the PheWAS analysis.')
     #pipeline_mode check
     if pipeline_mode not in ['v1','v2']:
         raise ValueError("Invalid pipeline_mode. Must be either 'v1' or 'v2'.")
     #method and kwargs check
-    parameter_dict = validate_method_specific_kwargs(method,**kwargs)
+    if kwargs:
+        parameter_dict = validate_method_specific_kwargs(method,**kwargs)
+    else:
+        parameter_dict = []
     #check covariates
-    covariates = covariates_check(covariates,data.get_attribute('phenotype_info'))
+    # covariates = covariates_check(covariates,data.get_attribute('phenotype_info'))
     #check matching_var_dict
     matching_var_check(matching_var_dict,data.get_attribute('phenotype_info'))
     #check matching_n
@@ -281,10 +284,17 @@ def disease_network_piepline(data:DiseaseNetworkData, n_process:int, n_threshold
         #run comorbidity network analysis
         com_network_log_file = os.path.join(output_dir,f'{project_prefix}_comorbidity_network.log')
         com_network_result_file = os.path.join(output_dir,f'{project_prefix}_comorbidity_network_result.csv')
-        com_network_result = comorbidity_network(data=data, comorbidity_strength_result=com_strength_result,
-                                                 n_process=n_process, method=method, 
-                                                 covariates=covariates, correction=correction, cutoff=cutoff,
-                                                 log_file=com_network_log_file, **parameter_dict)
+        if parameter_dict:
+            com_network_result = comorbidity_network(data=data, comorbidity_strength_result=com_strength_result,
+                                                    n_process=n_process, method=method, 
+                                                    covariates=covariates, correction=correction, cutoff=cutoff,
+                                                    log_file=com_network_log_file, **parameter_dict)
+        else:
+            com_network_result = comorbidity_network(data=data, comorbidity_strength_result=com_strength_result,
+                                                    n_process=n_process, method=method, 
+                                                    covariates=covariates, correction=correction, cutoff=cutoff,
+                                                    log_file=com_network_log_file)
+            
         com_network_result.to_csv(com_network_result_file,index=False)
         #number of significant comorbidity network pairs
         n_sig_com_network = len(com_network_result[com_network_result['comorbidity_p_significance']==True])
@@ -293,10 +303,16 @@ def disease_network_piepline(data:DiseaseNetworkData, n_process:int, n_threshold
         #run comorbidity network analysis
         com_network_log_file = os.path.join(output_dir,f'{project_prefix}_comorbidity_network.log')
         com_network_result_file = os.path.join(output_dir,f'{project_prefix}_comorbidity_network_result.csv')
-        com_network_result = comorbidity_network(data=data, comorbidity_strength_result=com_strength_result,
-                                                 n_process=n_process, method=method, 
-                                                 covariates=covariates, correction=correction, cutoff=cutoff,
-                                                 log_file=com_network_log_file, **parameter_dict)
+        if parameter_dict:
+            com_network_result = comorbidity_network(data=data, comorbidity_strength_result=com_strength_result,
+                                                    n_process=n_process, method=method, 
+                                                    covariates=covariates, correction=correction, cutoff=cutoff,
+                                                    log_file=com_network_log_file, **parameter_dict)
+        else:
+            com_network_result = comorbidity_network(data=data, comorbidity_strength_result=com_strength_result,
+                                                    n_process=n_process, method=method, 
+                                                    covariates=covariates, correction=correction, cutoff=cutoff,
+                                                    log_file=com_network_log_file)
         com_network_result.to_csv(com_network_result_file,index=False)
         #number of significant comorbidity network pairs
         n_sig_com_network = len(com_network_result[com_network_result['comorbidity_p_significance']==True])
@@ -321,13 +337,23 @@ def disease_network_piepline(data:DiseaseNetworkData, n_process:int, n_threshold
     #analysis
     trajectory_log_file = os.path.join(output_dir,f'{project_prefix}_trajectory.log')
     trajectory_result_file = os.path.join(output_dir,f'{project_prefix}_trajectory_result.csv')
-    trajectory_result = disease_trajectory(data=data, comorbidity_strength_result=com_strength_result,
-                                           binomial_test_result=binomial_result,
-                                           n_process=n_process, method=method, 
-                                           covariates=covariates_trajectory,
-                                           matching_var_dict=matching_var_dict, matching_n=matching_n,
-                                           correction=correction, cutoff=cutoff,
-                                           log_file=trajectory_log_file, **parameter_dict)
+    if parameter_dict:
+        trajectory_result = disease_trajectory(data=data, comorbidity_strength_result=com_strength_result,
+                                            binomial_test_result=binomial_result,
+                                            n_process=n_process, method=method, 
+                                            covariates=covariates_trajectory,
+                                            matching_var_dict=matching_var_dict, matching_n=matching_n,
+                                            correction=correction, cutoff=cutoff,
+                                            log_file=trajectory_log_file, **parameter_dict)
+    else:
+        trajectory_result = disease_trajectory(data=data, comorbidity_strength_result=com_strength_result,
+                                            binomial_test_result=binomial_result,
+                                            n_process=n_process, method=method, 
+                                            covariates=covariates_trajectory,
+                                            matching_var_dict=matching_var_dict, matching_n=matching_n,
+                                            correction=correction, cutoff=cutoff,
+                                            log_file=trajectory_log_file)
+        
     trajectory_result.to_csv(trajectory_result_file,index=False)
     #number of significant disease trajectories
     n_sig_trajectory = len(trajectory_result[trajectory_result['trajectory_p_significance']==True])
