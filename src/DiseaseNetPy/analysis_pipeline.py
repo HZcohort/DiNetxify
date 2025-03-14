@@ -333,7 +333,7 @@ def disease_network_piepline(data:DiseaseNetworkData, n_process:int, n_threshold
     #run disease trajectory analysis
     # first get the final covariates list for disease trajectory analysis, 
     # by exluding potential categorical variables used for matching
-    covariates_trajectory = covariates_check(covariates,data.get_attribute('phenotype_info'),matching_var_dict,exclude=True)
+    # covariates_trajectory = covariates_check(covariates,data.get_attribute('phenotype_info'),matching_var_dict,exclude=True)
     #analysis
     trajectory_log_file = os.path.join(output_dir,f'{project_prefix}_trajectory.log')
     trajectory_result_file = os.path.join(output_dir,f'{project_prefix}_trajectory_result.csv')
@@ -341,7 +341,7 @@ def disease_network_piepline(data:DiseaseNetworkData, n_process:int, n_threshold
         trajectory_result = disease_trajectory(data=data, comorbidity_strength_result=com_strength_result,
                                             binomial_test_result=binomial_result,
                                             n_process=n_process, method=method, 
-                                            covariates=covariates_trajectory,
+                                            covariates=covariates,
                                             matching_var_dict=matching_var_dict, matching_n=matching_n,
                                             correction=correction, cutoff=cutoff,
                                             log_file=trajectory_log_file, **parameter_dict)
@@ -349,7 +349,7 @@ def disease_network_piepline(data:DiseaseNetworkData, n_process:int, n_threshold
         trajectory_result = disease_trajectory(data=data, comorbidity_strength_result=com_strength_result,
                                             binomial_test_result=binomial_result,
                                             n_process=n_process, method=method, 
-                                            covariates=covariates_trajectory,
+                                            covariates=covariates,
                                             matching_var_dict=matching_var_dict, matching_n=matching_n,
                                             correction=correction, cutoff=cutoff,
                                             log_file=trajectory_log_file)
