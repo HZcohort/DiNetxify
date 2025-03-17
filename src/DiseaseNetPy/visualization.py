@@ -1351,6 +1351,7 @@ class ThreeDimensionalNetwork(object):
         col_se: Optional[str]="phewas_se",
         col_disease: Optional[str]="disease"
     ) -> None:
+        
         def random_effect(coef_lst,se_lst):
             if len(coef_lst)==1:
                 return [coef_lst[0], se_lst[0]]
