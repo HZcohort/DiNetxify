@@ -147,6 +147,8 @@ def logistic_model(args):
     
         df_analysis = pd.merge(df_matched_d1,phenotype_df_exposed_[[id_col_]+covariates_+all_diseases_var],
                                on=id_col_,how='left')
+        del df_matched_d1
+        gc.collect()
         df_analysis[d1_date_col] = df_analysis[id_col_].apply(lambda x: trajectory_eligible_withdate_[x].get(d1,pd.NaT))
         df_analysis[d1_col] = df_analysis.apply(lambda row: 1 if row[d1_date_col]<row[outcome_date_col] else 0, axis=1)
     
@@ -193,6 +195,8 @@ def logistic_model(args):
             except Exception as e:
                 message += f'method={method}; error encountered: {e}; '
                 result_lst += [method,str(e)]
+            del df_analysis
+            gc.collect()
         
         #partial correlation method
         elif method == 'RPCN':
@@ -261,6 +265,8 @@ def logistic_model(args):
                 except Exception as e:
                     result_lst += [f'{method}_auto', str(e)]
                     message += f'method={method}_fixed_alpha (alpha={alpha_single}); error encountered: {e}; '
+            del df_analysis
+            gc.collect()
 
         elif method == 'PCN_PCA':
             from sklearn.decomposition import PCA # type: ignore
@@ -275,6 +281,8 @@ def logistic_model(args):
                 disease_vars_transformed = pd.DataFrame(disease_vars_transformed,columns=all_pca_vars)
                 disease_vars_transformed.index = df_analysis.index
                 df_analysis = pd.concat([df_analysis,disease_vars_transformed],axis=1)
+                del disease_vars_transformed
+                gc.collect()
                 variance_explained = sum(pca.explained_variance_ratio_)
                 #fit model with PCA covariates
                 del_pca_var = check_variance_vif_single(df_analysis,
@@ -299,6 +307,8 @@ def logistic_model(args):
             except Exception as e:
                 result_lst += [f'{method}_n_components={pca_number}',str(e)]
                 message += f'method={method}_n_components={pca_number}; error encountered: {e}; '
+            del df_analysis
+            gc.collect()
         
         #print and return
         time_end = time.time()
