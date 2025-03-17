@@ -9,6 +9,7 @@ import pandas as pd
 import numpy as np
 from statsmodels.discrete.discrete_model import Logit
 import time
+import gc
 from .utility import write_log, find_best_alpha_and_vars, check_variance_vif_single
 
 import warnings
@@ -142,6 +143,8 @@ def logistic_model(args):
                 final_disease_vars = [x for x in final_disease_forcedin_vars if x not in forcedin_vars]
                 #fit the final model
                 final_model_vars = final_disease_forcedin_vars+final_covariates
+                #restrict the dataset to the final model variables
+                df_analysis = df_analysis[final_model_vars+[d2_col]]
                 model_final = Logit(np.asarray(df_analysis[d2_col],dtype=int),
                                     np.asarray(df_analysis[final_model_vars],dtype=float))
                 result_final = model_final.fit(disp=False, method='bfgs')
@@ -167,6 +170,8 @@ def logistic_model(args):
                 final_disease_vars = [x for x in final_disease_forcedin_vars if x not in forcedin_vars]
                 #fit the final model
                 final_model_vars = final_disease_forcedin_vars+final_covariates
+                #restrict the dataset to the final model variables
+                df_analysis = df_analysis[final_model_vars+[d2_col]]
                 model_final = Logit(np.asarray(df_analysis[d2_col],dtype=int),
                                     np.asarray(df_analysis[final_model_vars]),dtype=float)
                 result_final = model_final.fit(disp=False,method='bfgs')
@@ -186,10 +191,15 @@ def logistic_model(args):
             #generate PC from other diseases variables
             pca = PCA(n_components=pca_number)
             disease_vars_transformed = pca.fit_transform(np.asarray(df_analysis[all_diseases_var],dtype=int))
+            #delete the original disease variables
+            df_analysis = df_analysis.drop(all_diseases_var,axis=1)
             all_pca_vars = [f'PCA_{i}' for i in range(disease_vars_transformed.shape[1])]
             disease_vars_transformed = pd.DataFrame(disease_vars_transformed,columns=all_pca_vars)
             disease_vars_transformed.index = df_analysis.index
             df_analysis = pd.concat([df_analysis,disease_vars_transformed],axis=1)
+            #delete the disease_vars_transformed
+            del disease_vars_transformed
+            gc.collect()
             variance_explained = sum(pca.explained_variance_ratio_)
             #check the VIF of PCA variables
             del_pca_var = check_variance_vif_single(df_analysis,
