@@ -1057,8 +1057,9 @@ def comorbidity_multipletests(df:pd.DataFrame, correction:str='bonferroni', cuto
 
 
 def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.DataFrame, binomial_test_result:pd.DataFrame, 
-                       method:str='RPCN', matching_var_dict:dict={'sex':'exact'}, matching_n:int=2, covariates:list=None, 
-                       n_process:int=1, log_file:str=None, correction:str='bonferroni', cutoff:float=0.05, **kwargs) -> pd.DataFrame:
+                       method:str='RPCN', matching_var_dict:dict={'sex':'exact'}, matching_n:int=2, max_n_cases:int=np.inf,
+                       global_sampling: bool=False, covariates:list=None, n_process:int=1, log_file:str=None, 
+                       correction:str='bonferroni', cutoff:float=0.05, **kwargs) -> pd.DataFrame:
     """
     Perform temporal comorbidity network (disease trajectory) analysis on disease pairs with significant comorbidity strength and temporal order, to identify pairs with confirmed temporal comorbidity associations.
     For each disease pair D1 → D2, a nested case-control dataset is constructed using incidence density sampling, treating D2 as the outcome and D1 as the exposure. 
@@ -1120,6 +1121,15 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
     
     matching_n : int, default=2
         Specifies the maximum number of matched controls for each case.
+    
+    max_n_cases : int, default=np.inf
+        Specifies the maximum number of D2 cases to include in the analysis.
+        If the number of D2 cases exceeds this value, a random sample of cases will be selected.
+    
+    global_sampling : bool, default=False
+        Indicates whether to perform independent incidence density sampling for each D1→D2 pair (if False),
+        or to perform a single incidence density sampling for all Dx→D2 pairs with separate regression models for each D1→D2 pair (if True).
+        Global sampling is recommended when processing large datasets, though it might reduce result heterogeneity.
     
     covariates : list, default=None
         List of phenotypic covariates to include in the model.
@@ -1232,6 +1242,16 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
     if not isinstance(matching_n,int) or matching_n<1:
         raise ValueError("The input 'matching_n' must be a positive integer.")
     
+    #check max number of cases
+    if max_n_cases == np.inf:
+        pass
+    elif not isinstance(max_n_cases,int) or max_n_cases<1:
+        raise ValueError("The input 'max_n_cases' must be a positive integer.")
+    
+    #check global sampling
+    if not isinstance(global_sampling,bool):
+        raise TypeError("The input 'global_sampling' must be a boolean.")
+    
     #check number of process
     n_process,start_mehtod = n_process_check(n_process,'trajectory')
     if n_process>1:
@@ -1284,26 +1304,38 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
         for disease in all_diseases_lst:
             phenotype_df_exposed[str(disease)] = phenotype_df_exposed[id_col].apply(lambda x: 1 if disease in all_diagnosis_level[x] else 0)
 
+    #create list of disease pairs for loop
+    #if global sampling is True, the list of disease pairs will be based on the unique d2
+    #if global sampling is False, ignore the unique d2 and use all disease pairs
     time_start = time.time()
-    #list of disease pair
+    parameters_all = []
+    if global_sampling==True:
+        d2_lst = trajectory_sig[phecode_d2_col].unique()
+        for d2 in d2_lst:
+            d1_lst = trajectory_sig[trajectory_sig[phecode_d2_col]==d2][phecode_d1_col].to_list()
+            parameters_all.append([d1_lst,d2])
+    else:
+        for d1,d2 in trajectory_sig[[phecode_d1_col,phecode_d2_col]].values:
+            parameters_all.append([[d1],d2])
+
     result_all = []
     if n_process == 1:
-        for d1,d2 in tqdm(trajectory_sig[[phecode_d1_col,phecode_d2_col]].values):
-            result_all.append(logistic_model_wrapper(d1,d2,phenotype_df_exposed,id_col,end_date_col,trajectory_ineligible,trajectory_temporal,disease_pair_index,
+        for d1_lst,d2 in tqdm(parameters_all):
+            result_all.append(logistic_model_wrapper(d1_lst,d2,phenotype_df_exposed,id_col,end_date_col,trajectory_ineligible,trajectory_temporal,disease_pair_index,
                                                     trajectory_eligible_withdate,all_diagnosis_level,covariates,all_diseases_lst,
-                                                    matching_var_dict,matching_n,log_file_final,parameter_dict))
+                                                    matching_var_dict,matching_n,max_n_cases,log_file_final,parameter_dict))
     elif n_process > 1:
-        parameters_all = []
-        for d1,d2 in trajectory_sig[[phecode_d1_col,phecode_d2_col]].values:
-            parameters_all.append([d1,d2])
         with multiprocessing.get_context(start_mehtod).Pool(n_process, initializer=init_worker, initargs=(phenotype_df_exposed,id_col,end_date_col,trajectory_ineligible,trajectory_temporal,
                                                                                                           disease_pair_index,trajectory_eligible_withdate,all_diagnosis_level,covariates,all_diseases_lst,
-                                                                                                          matching_var_dict,matching_n,log_file_final,parameter_dict)) as p:
-            result_all = list(p.imap(logistic_model, parameters_all), total=len(parameters_all))
+                                                                                                          matching_var_dict,matching_n,max_n_cases,log_file_final,parameter_dict)) as p:
+            result_all = list(tqdm(p.imap(logistic_model, parameters_all), total=len(parameters_all)))
 
     time_end = time.time()
     time_spent = (time_end - time_start)/60
     print(f'Disease trajectory analysis finished (elapsed {time_spent:.1f} mins)')
+
+    #unpacked the result
+    result_all = [result for sublist in result_all for result in sublist]
     
     #result column names based on different method
     df_columns_common = ['phecode_d1','phecode_d2','name_disease_pair','N_exposed','n_total','n_exposed/n_cases','n_exposed/n_controls',
