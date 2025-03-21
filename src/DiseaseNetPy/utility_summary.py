@@ -67,7 +67,7 @@ def continuous_unnormal(df,var,group_var,group_var_value,table1):
         row_continous.append(median_iqr)
     if len(group_var_value) == 2:
         utest = stats.mannwhitneyu(df[df[group_var]==group_var_value[0]][var],df[df[group_var]==group_var_value[1]][var])
-        p_value = f'Mann–Whitney U test p-value={utest[1]:.3e}'
+        p_value = f'Mann-Whitney U test p-value={utest[1]:.3e}'
         row_continous.append(p_value)
     else:
         row_continous.append('NA')
