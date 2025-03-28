@@ -880,8 +880,9 @@ def d1d2_from_diagnosis_history(df:pd.DataFrame, id_col:str, sex_col:str, sex_va
     #generate a dictionary mapping leaf phecode to root phecode 
     node_dict = phecode_leaf_to_root(phecode_info_dict)
     phecode_set = set(phecode_info_dict.keys())
-    
-    for id_,sex in tqdm(df[[id_col,sex_col]].values):
+    import sys
+    disable_tqdm = not sys.stdout.isatty()
+    for id_,sex in tqdm(df[[id_col,sex_col]].values, disable=disable_tqdm):
         temp_dineligible_list = []
         temp_dpair_temporal_lst = []
         temp_dpair_com_lst = []

@@ -36,61 +36,62 @@ Df = pd.DataFrame
 
 SYSTEM = [
     'circulatory system', 
-    'sense organs', 
-    'injuries & poisonings', 
-    'neurological',
+    "congenital anomalies",
     'dermatologic', 
     'digestive', 
-    'hematopoietic', 
-    'musculoskeletal', 
     'endocrine/metabolic', 
-    'mental disorders', 
-    'infectious diseases',
     'genitourinary',
+    'hematopoietic', 
+    'infectious diseases',
+    'injuries & poisonings',
+    'mental disorders',
+    'musculoskeletal',
     'neoplasms',
+    'neurological',
+    "others",
+    "pregnancy complications",
     'respiratory',
+    'sense organs', 
     "symptoms",
-    "congenital anomalies",
-    "others"
 ]
 
 COLOR = [
-    "#FF5733",
-    "#33FF57",
-    "#3357FF",
-    "#FFFF33",
-    "#FF33FF",
-    "#33FFFF",
-    "#C70039",
-    "#900C3F",
-    "#581845",
-    "#1ABC9C",
-    "#2ECC71",
-    "#3498DB",
-    "#9B59B6",
-    "#E74C3C",
+    '#F46D5A',
+    '#5DA5DA',
+    '#5EBCD1',
+    '#C1D37F',
+    '#CE5A57',
+    '#A5C5D9',
+    '#F5B36D',
+    '#7FCDBB',
+    '#ED9A8D',
+    '#94B447',
+    '#8C564B',
+    '#E7CB94',
+    '#8C9EB2',
+    '#E0E0E0',
     "#F1C40F",
-    "#FF7F50",
-    "#FFD700",
+    '#9B59B6',
+    '#4ECDC4',
+    '#6A5ACD' 
 ]
 
 class ThreeDimensionalNetwork(object):
-    """
-    
-    """
     def __init__(
         self, 
         phewas_result: Df,
         comorbidity_result: Df, 
         trajectory_result: Df,
-        exposure: Optional[float]=None,
-        exposure_location: Optional[Tuple[float]]=None,
-        exposure_size: Optional[float]=None,
+        disease_system: Optional[List[str]] | None=None,
+        exposure: Optional[float] | None=None,
+        exposure_location: Optional[Tuple[float]] | None=None,
+        exposure_size: Optional[float] | None=None,
         source: Optional[str]='phecode_d1',
         target: Optional[str]='phecode_d2',
         phewas_phecode: Optional[str]='phecode',
         phewas_number: Optional[str]='N_cases_exposed',
-        col_disease_pair: Optional[str]='name_disease_pair'
+        col_disease_pair: Optional[str]='name_disease_pair',
+        **kwargs
     ):
         """initialize the ThreeDimensionalDiseaseNetwork class.
 
@@ -108,11 +109,56 @@ class ThreeDimensionalNetwork(object):
             source (str, optional): Column name of D1. Defaults to 'phecode_d1'.
             target (str, optional): Column name of D2. Defaults to 'phecode_d2'.
         """
+        SYSTEM = kwargs.get("SYSTEM", SYSTEM)
+        COLOR = kwargs.get("COLOR", COLOR)
+        if len(SYSTEM) > len(COLOR):
+            raise ValueError(
+                f"the length of SYSTEM is more than that of COLOR"
+            )
+        else:
+            COLOR = COLOR[0: len(SYSTEM)]
+        
+        if disease_system:
+            outside_system = [
+                sys for sys in disease_system
+                if sys not in SYSTEM
+            ]
+            SYSTEM = disease_system
+            if outside_system:
+                raise ValueError(
+                    f"The system of {outside_system} is not support"
+                )
+        system_color = dict(
+            zip(
+                SYSTEM,
+                COLOR
+            )
+        )
+        system_color = kwargs.get("system_color", system_color)
+
+        # check the inclusion relation between trajectory and comorbidity
         self.__check_disease_pairs(
             trajectory_result,
             comorbidity_result,
             source,
             target
+        )
+
+        # concat the trajectory and comorbidity in vertical level
+        df = trajectory_result.copy()
+        df.columns = comorbidity_result.columns
+
+        comorbidity_result = pd.concat(
+            [comorbidity_result, df],
+            axis=0,
+            ignore_index=True
+        )
+
+        comorbidity_result.drop_duplicates(
+            subset=[source, target],
+            inplace=True,
+            ignore_index=True,
+            keep="first"
         )
 
         if exposure:
@@ -149,17 +195,11 @@ class ThreeDimensionalNetwork(object):
                 source,
                 target
             ),
+            system_color = system_color,
             nodes_attrs = {},
             network_attrs = {}
         )
         
-        for node in self._commorbidity_nodes:
-            self._nodes_attrs.update({node:{}})
-
-        for node in self._trajectory_nodes:
-            if node not in self._nodes_attrs and node!=exposure:
-                self._nodes_attrs.update({node:{}})
-
         self.__make_node_basic_attrs(
             phewas_phecode,
             phewas_number
@@ -180,20 +220,22 @@ class ThreeDimensionalNetwork(object):
             d1_str (str): _description_
             d2_str (str): _description_
         """
-        tra_pairs_lst = [
+        tra_pairs = [
             [row[source], row[target]]
             for _, row in tra_df.iterrows()
         ]
 
-        com_pairs_lst = [
+        com_pairs = [
             [row[source], row[target]]
             for _, row in com_df.iterrows()
         ]
 
-        for pair in tra_pairs_lst:
-            if pair not in com_pairs_lst:
-                Warning("Disease pair of trajectory network has \
-                    not been included comorbidity network")
+        for pair in tra_pairs:
+            if pair not in com_pairs:
+                Warning(
+                    "Disease pairs of trajectory network has \
+                    not been included comorbidity network"
+                )
                 break
 
     @staticmethod
@@ -267,7 +309,7 @@ class ThreeDimensionalNetwork(object):
 
     @staticmethod
     def __sphere_cordinate(
-        center: Tuple[float], 
+        center: Tuple[float],
         r: float
     ) -> Tuple[float]:
         """get the cordinate of sphere.
@@ -350,7 +392,10 @@ class ThreeDimensionalNetwork(object):
                 is_exist = False
         return is_exist
 
-    def __calculate_ratio(self, cluster_nodes: Dict[int, float]) -> Dict[int, float]:
+    def __calculate_ratio(
+        self, 
+        cluster_nodes: Dict[int, float]
+    ) -> Dict[int, float]:
         for cluster, nodes in cluster_nodes.items():
             size = [self._nodes_attrs[x]["size"] for x in nodes]
             sum_size = sum(size)
@@ -452,7 +497,8 @@ class ThreeDimensionalNetwork(object):
                 self._trajectory,
                 exposure,
                 self._source,
-                self._target
+                self._target,
+                "name_disease_pair"
             )
         else:
             exposure = self._exposure
@@ -610,15 +656,13 @@ class ThreeDimensionalNetwork(object):
         phewas_phecode: str,
         phewas_number: str
     ) -> None:
-        """_summary_
 
-        Args:
-            scale_reduction (Optional[float], optional): _description_. Defaults to 0.1.
-        """
         # disease name attrs
         node_name = {
             node:self.__split_name('%s (%.1f)' % (name, node)) 
-            for node, name in self._describe[["phecode", "phenotype"]].values
+            for node, name in self._describe[
+                ["phecode", "phenotype"]
+            ].values
         }
 
         # disease system attrs
@@ -639,22 +683,19 @@ class ThreeDimensionalNetwork(object):
             )
         )
 
+        for node in self._commorbidity_nodes:
+            if node_system[node] in self._system_color.keys():
+                self._nodes_attrs.update({node:{}})
+
         self.__update_node_attrs(
             name = node_name,
             system = node_system,
             size = node_size
         )
 
-        # disease color attrs
-        sys_color = dict(
-            zip(
-                SYSTEM,
-                COLOR
-            )
-        )
-        self._network_attrs.update({"system color":sys_color})
+        self._network_attrs.update({"system color":self._system_color})
         for _, attrs in self._nodes_attrs.items():
-            attrs.update({"color":sys_color[attrs["system"]]})
+            attrs.update({"color":self._system_color[attrs["system"]]})
 
     def __cluster(
         self,
@@ -680,6 +721,14 @@ class ThreeDimensionalNetwork(object):
             for _, row in self._comorbidity.iterrows()
         ]
 
+        # [
+        #     Graph_position.add_edge(
+        #         row[self._source],
+        #         row[self._target],
+        #         weight=row["trajectory_beta"]
+        #     ) 
+        #     for _, row in self._trajectory.iterrows()
+        # ]
         # random and repeated clustering the nodes
         result = []
         for i in range(max_attempts):
@@ -730,7 +779,7 @@ class ThreeDimensionalNetwork(object):
             min_radius (float): the minimum of radius in the sector.
 
         Returns:
-            dict: {str:tuple} for example: {549.4:(1, 2, 3)}
+            dict: {str:tuple} for example: {"549.4":(1, 2, 3)}
         """
         same_cluster_nodes = self.__get_same_nodes("cluster")
         cluster_ratio = self.__calculate_ratio(same_cluster_nodes)

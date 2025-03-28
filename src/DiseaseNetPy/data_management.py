@@ -10,9 +10,13 @@ import numpy as np
 import os
 import gc
 from datetime import datetime
-from .utility import convert_column, phenotype_required_columns, read_check_csv
-from .utility import medical_records_process, diagnosis_history_update
-
+from .utility import (
+    convert_column,
+    phenotype_required_columns,
+    read_check_csv,
+    medical_records_process,
+    diagnosis_history_update
+)
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -47,11 +51,11 @@ class DiseaseNetworkData:
     
     def __init__(
         self, 
-        study_design:str='cohort', 
-        phecode_level:int=1, 
-        min_required_icd_codes:int=1,
-        date_fmt:str='%Y-%m-%d', 
-        phecode_version:str='1.2',
+        study_design: str='cohort', 
+        phecode_level: int=1, 
+        min_required_icd_codes: int=1,
+        date_fmt: str='%Y-%m-%d', 
+        phecode_version: str='1.2',
     ):
         #fixed attributes
         #phenotype data
@@ -64,21 +68,27 @@ class DiseaseNetworkData:
         self.__end_date_col = 'end_date'
         self.__mathcing_identifier_col = 'group'
         self.__phenotype_col_dict = {
-            'matched cohort':{'Participant ID':self.__id_col,
-                                'Exposure':self.__exposure_col,
-                                'Sex':self.__sex_col,
-                                'Index date': self.__index_date_col,
-                                'End date': self.__end_date_col,
-                                'Match ID':self.__mathcing_identifier_col},
-            'cohort':{'Participant ID':self.__id_col,
-                        'Exposure':self.__exposure_col,
-                        'Sex':self.__sex_col,
-                        'Index date': self.__index_date_col,
-                        'End date': self.__end_date_col},
-            'exposed-only cohort':{"Participant ID":self.__id_col,
-                        "Sex":self.__sex_col,
-                        "Index date":self.__index_date_col,
-                        "End date":self.__end_date_col}
+            'matched cohort':{
+                'Participant ID':self.__id_col,
+                'Exposure':self.__exposure_col,
+                'Sex':self.__sex_col,
+                'Index date': self.__index_date_col,
+                'End date': self.__end_date_col,
+                'Match ID':self.__mathcing_identifier_col
+            },
+            'cohort':{
+                'Participant ID':self.__id_col,
+                'Exposure':self.__exposure_col,
+                'Sex':self.__sex_col,
+                'Index date': self.__index_date_col,
+                'End date': self.__end_date_col
+            },
+            'exposed-only cohort':{
+                "Participant ID":self.__id_col,
+                "Sex":self.__sex_col,
+                "Index date":self.__index_date_col,
+                "End date":self.__end_date_col
+            }
         }
         #medical records data
         self.__diagnosis_code_options = ['ICD-9-CM', 'ICD-9-WHO', 'ICD-10-CM', 'ICD-10-WHO']
@@ -113,9 +123,17 @@ class DiseaseNetworkData:
         self.phecode_level = phecode_level
         self.phecode_version = phecode_version
         self.min_required_icd_codes = min_required_icd_codes
+
         #load necessary phecode files
-        self.__phecode_info_npyfile = os.path.join(self.__module_dir,f'data/phecode_{self.phecode_version}/level{self.phecode_level}_info.npy')
-        self.phecode_info = np.load(self.__phecode_info_npyfile,allow_pickle=True).item()
+        self.__phecode_info_npyfile = os.path.join(
+            self.__module_dir,
+            f'data/phecode_{self.phecode_version}/level{self.phecode_level}_info.npy'
+        )
+        self.phecode_info = np.load(
+            self.__phecode_info_npyfile,
+            allow_pickle=True
+        ).item()
+
         #reset key attributes
         self.phenotype_df = None
         self.diagnosis = None
@@ -134,11 +152,11 @@ class DiseaseNetworkData:
     
     def phenotype_data(
         self, 
-        phenotype_data_path:str, 
-        column_names:dict, 
-        covariates:list,
-        is_single_sex:bool=False, 
-        force:bool=False
+        phenotype_data_path: str, 
+        column_names: dict, 
+        covariates: list,
+        is_single_sex: bool=False, 
+        force: bool=False
     ) -> None:
         """
         
@@ -185,11 +203,11 @@ class DiseaseNetworkData:
         
         """
         #input type check
-        if not isinstance(phenotype_data_path,str):
+        if not isinstance(phenotype_data_path, str):
             raise TypeError("The input 'phenotype_data_path' must be a string.")
-        if not isinstance(column_names,dict):
+        if not isinstance(column_names, dict):
             raise TypeError("The input 'column_names' must be a dictionary.")
-        if not isinstance(covariates,list):
+        if not isinstance(covariates, list):
             raise TypeError("The input 'covariates' must be a list.")
         if not isinstance(is_single_sex, bool):
             raise TypeError("The input 'is_single_sex' must be a boolean.")
@@ -256,21 +274,30 @@ class DiseaseNetworkData:
         rename_dict = {column_names[k]:self.__phenotype_info['phenotype_col_dict'][k] for k in column_names.keys()}
         phenotype_data_.rename(columns=rename_dict,inplace=True)
         #check and convert, change inplace
-        phenotype_required_columns(phenotype_data_,self.__phenotype_info['phenotype_col_dict'],self.date_fmt,self.study_design,is_single_sex,self.__sex_value_dict)
+        phenotype_required_columns(
+            phenotype_data_,
+            self.__phenotype_info['phenotype_col_dict'],
+            self.date_fmt,
+            self.study_design,
+            is_single_sex,
+            self.__sex_value_dict
+        )
         #convert covariates
         self.__phenotype_info['phenotype_covariates_converted'] = {}
         self.__phenotype_info['phenotype_covariates_list'] = []
         self.__phenotype_info['phenotype_covariates_type'] = {self.__sex_col:'categorical'}
         for var in self.__phenotype_info['phenotype_covariates_original']:
-            converted_df,var_type = convert_column(phenotype_data_[[var]],var)
+            converted_df, var_type = convert_column(phenotype_data_[[var]], var)
             self.__phenotype_info['phenotype_covariates_converted'][var] = list(converted_df.columns)
             self.__phenotype_info['phenotype_covariates_list'] += list(converted_df.columns)
             self.__phenotype_info['phenotype_covariates_type'][var] = var_type
             phenotype_data_ = pd.merge(phenotype_data_,converted_df,left_index=True, right_index=True)
+
         #assign to attributes
         all_cols = list(self.__phenotype_info['phenotype_col_dict'].values()) + self.__phenotype_info['phenotype_covariates_list'] + self.__phenotype_info['phenotype_covariates_original']
         self.phenotype_df = phenotype_data_[all_cols] #all other columns were not included
         del phenotype_data_#save memory
+
         #remove
         n_before_any_remove = len(self.phenotype_df)
         n_before_remove = n_before_any_remove
@@ -327,7 +354,10 @@ class DiseaseNetworkData:
             self.__warning_phenotype.append(f"Warning: {self.__phenotype_statistics['n_neg_follow_exposed']} exposed individuals and {self.__phenotype_statistics['n_neg_follow_unexposed']} unexposed individuals have negative or zero follow-up time.\nConsider removing them before merge.")
             print(self.__warning_phenotype[-1])
     
-    def Table1(self, continuous_stat_mode:str='auto') -> pd.DataFrame:
+    def Table1(
+        self, 
+        continuous_stat_mode: str='auto'
+    ) -> pd.DataFrame:
         """
         Generate a simple Table 1 from the provided phenotpe data.
 
@@ -370,22 +400,36 @@ class DiseaseNetworkData:
         df_for_table1 = self.phenotype_df[all_tab1_vars+[self.__exposure_col]]
         #consider the study desgin
         if self.study_design == 'matched cohort' or self.study_design == 'cohort':
-            table1 = desceibe_table(df_for_table1,all_tab1_vars,all_tab1_vars_type,self.__exposure_col,
-                                    self.__sex_value_dict,continuous_stat_mode)
+            table1 = desceibe_table(
+                df_for_table1,
+                all_tab1_vars,
+                all_tab1_vars_type,
+                self.__exposure_col,
+                self.__sex_value_dict,
+                continuous_stat_mode
+            )
         elif self.study_design == 'exposed-only cohort':
-            table1 = desceibe_table(df_for_table1,all_tab1_vars,all_tab1_vars_type,self.__exposure_col,
-                                    self.__sex_value_dict,continuous_stat_mode,group_var_value=[1])
+            table1 = desceibe_table(
+                df_for_table1,
+                all_tab1_vars,
+                all_tab1_vars_type,
+                self.__exposure_col,
+                self.__sex_value_dict,
+                continuous_stat_mode,
+                group_var_value=[1]
+            )
         del df_for_table1
         gc.collect()
         return table1
 
     def merge_medical_records(
         self, 
-        medical_records_data_path:str, 
-        diagnosis_code:str, 
-        column_names:dict, 
-        date_fmt:str=None, 
-        chunksize:int=1000000) -> None:
+        medical_records_data_path: str, 
+        diagnosis_code: str, 
+        column_names: dict, 
+        date_fmt: str=None, 
+        chunksize: int=1000000
+    ) -> None:
         """
         Merge the loaded phenotype data with one or more medical records data.
         If you have multiple medical records data to merge (e.g., with different diagnosis code types), you can call this function multiple times.
@@ -432,13 +476,13 @@ class DiseaseNetworkData:
         #input type check
         if not isinstance(medical_records_data_path,str):
             raise TypeError("The input 'medical_records_data_path' must be a string.")
-        if not isinstance(diagnosis_code,str):
+        if not isinstance(diagnosis_code, str):
             raise TypeError("The input 'diagnosis_code' must be a string.")
-        if not isinstance(column_names,dict):
+        if not isinstance(column_names, dict):
             raise TypeError("The input 'column_names' must be a dictionary.")
-        if not isinstance(date_fmt,(str,type(None))):
+        if not isinstance(date_fmt,(str, type(None))):
             raise TypeError("The input 'date_fmt' must be a string.")
-        if not isinstance(chunksize,int):
+        if not isinstance(chunksize, int):
             raise TypeError("The input 'chunksize' must be an integer.")
 
         #attribute check
@@ -512,6 +556,7 @@ class DiseaseNetworkData:
         self._medical_records_info['n_total_records'],self._medical_records_info['n_total_missing'],self._medical_records_info['n_total_trunc_4'],self._medical_records_info['n_total_trunc_3'],self._medical_records_info['n_total_no_mapping'],self._medical_records_info['no_mapping_list'] = result_tuple
         #print some warning information for the current medical records dataset
         prop_missing = self._medical_records_info['n_total_missing']/self._medical_records_info['n_total_records']
+
         if prop_missing >= 0.001:
             self.__warning_medical_records.append(f"Warning: {prop_missing*100:.2f}% of diagnosis records have missing values for file {medical_records_data_path}.")
             print(self.__warning_medical_records[-1])
@@ -524,11 +569,17 @@ class DiseaseNetworkData:
             self.diagnosis = {id_:{} for id_ in self.phenotype_df[self.__id_col].values}
             self.n_diagnosis = {id_:{} for id_ in self.phenotype_df[self.__id_col].values}
             self.history = {id_:[] for id_ in self.phenotype_df[self.__id_col].values}
+
         #update new or exsiting diagnosis/diagnosis_n and history data
-        self._medical_records_info['n_invalid'] = diagnosis_history_update(self.diagnosis,self.n_diagnosis,self.history,
-                                                                          dict(self.phenotype_df[[self.__id_col,self.__index_date_col]].values),
-                                                                          dict(self.phenotype_df[[self.__id_col,self.__end_date_col]].values),
-                                                                          self._phecode_dict)
+        self._medical_records_info['n_invalid'] = diagnosis_history_update(
+            self.diagnosis,
+            self.n_diagnosis,
+            self.history,
+            dict(self.phenotype_df[[self.__id_col,self.__index_date_col]].values),
+            dict(self.phenotype_df[[self.__id_col,self.__end_date_col]].values),
+            self._phecode_dict
+        )
+
         del self._phecode_dict #save memory
         self.__medical_records_info[medical_records_data_path] = self._medical_records_info
         print(f"Phecode diagnosis records successfully merged ({sum(self._medical_records_info['n_invalid'].values()):,} invalid records were not merged, typically with diagnosis date later than date of follow-up end)\n")
@@ -537,6 +588,7 @@ class DiseaseNetworkData:
         self.__medical_records_statistics['n_merged_files'] = len(self.__medical_records_info)
         self.__medical_records_statistics['n_merged_records'] = sum([self.__medical_records_info[x]['n_total_records'] for x in self.__medical_records_info])
         self.__medical_records_statistics['n_missing'] = sum([self.__medical_records_info[x]['n_total_missing'] for x in self.__medical_records_info])
+
         #number of diagnosis and history
         exposed_id = self.phenotype_df[self.phenotype_df[self.__exposure_col]==1][self.__id_col].values
         self.__medical_records_statistics['n_phecode_diagnosis_per_exposed'] = np.mean([len(self.diagnosis[id_]) for id_ in exposed_id])
@@ -577,9 +629,10 @@ class DiseaseNetworkData:
             'warning_medical_records': self.__warning_medical_records,
             'medical_records_statistics': self.__medical_records_statistics,
             'medical_records_info': self.__medical_records_info,
-            'module_dir':self.__module_dir,
-            'significant_phecodes':self.__significant_phecodes
+            'module_dir': self.__module_dir,
+            'significant_phecodes': self.__significant_phecodes
         }
+
         if attr_name in private_attrs:
             value = private_attrs[attr_name]
             if isinstance(value, dict):
@@ -627,13 +680,15 @@ class DiseaseNetworkData:
             print(f'Phecode level set to {self.phecode_level} now.')
     
     
-    def disease_pair(self, 
-                     phewas_result:pd.DataFrame, 
-                     min_interval_days:int=0, 
-                     max_interval_days:int=np.inf, 
-                     force:bool=False,
-                     n_process:int=1,
-                     **kwargs) -> None:
+    def disease_pair(
+        self, 
+        phewas_result:pd.DataFrame, 
+        min_interval_days:int=0, 
+        max_interval_days:int=np.inf, 
+        force:bool=False,
+        n_process:int=1,
+        **kwargs
+    ) -> None:
         """
         This function reads PheWAS results from a DataFrame generated by the 'DiseaseNetPy.pheewas' method. 
         It filters for phecodes with significant associations and constructs all possible temporal (D1 → D2, where D2 is diagnosed after D1) and non-temporal disease pairs (D1 - D2) for each exposed individual, based on the identified significant phecodes.
@@ -824,20 +879,43 @@ class DiseaseNetworkData:
         # Restore the pandas DataFrame attribute
         self.phenotype_df = data_dict.pop('phenotype_df')
         # Restore all simple attributes directly from data_dict
-        simple_attrs = ['study_design', 'date_fmt', 'phecode_level', 'phecode_version','min_required_icd_codes',
-                        'phecode_info', 'diagnosis', 'n_diagnosis', 'history', 'trajectory']
+        simple_attrs = [
+            'study_design', 
+            'date_fmt', 
+            'phecode_level', 
+            'phecode_version',
+            'min_required_icd_codes',
+            'phecode_info', 
+            'diagnosis', 
+            'n_diagnosis', 
+            'history', 
+            'trajectory'
+        ]
         for attr in simple_attrs:
             setattr(self, attr, data_dict.pop(attr, None))
+
         # Restore all private attributes from data_dict
-        private_attrs = ['__warning_phenotype', '__phenotype_statistics', '__phenotype_info',
-                         '__warning_medical_records', '__medical_records_statistics', '__medical_records_info',
-                         '__module_dir', '__significant_phecodes']
+        private_attrs = [
+            '__warning_phenotype', 
+            '__phenotype_statistics', 
+            '__phenotype_info',
+            '__warning_medical_records', 
+            '__medical_records_statistics', 
+            '__medical_records_info',
+            '__module_dir', 
+            '__significant_phecodes'
+        ]
+
         for attr in private_attrs:
-            setattr(self, f'_DiseaseNetworkData{attr}', data_dict.pop(attr, None))
+            setattr(
+                self, 
+                f'_DiseaseNetworkData{attr}', 
+                data_dict.pop(attr, None)
+            )
+
         # Clear the remaining data_dict to free memory
         del data_dict
         gc.collect()
-
         print("All attributes restored.")
 
     def save(
@@ -995,7 +1073,7 @@ class DiseaseNetworkData:
     def load_npz(
         self, 
         file: str, 
-        force: bool = False
+        force: bool=False
     ) -> None:
         """
         Load data from a compressed NumPy .npz file and restore the attributes to this DiseaseNetPy.DiseaseNetworkData object.

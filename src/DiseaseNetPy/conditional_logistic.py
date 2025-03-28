@@ -168,10 +168,13 @@ def logistic_model(args):
         #result list
         result_lst = [d1,d2,f'{d1}-{d2}',N,n,f'{N_d1_withd2}/{N_d2}',f'{N_d1_nod2}/{N_nod2}']
         
-        del_covariates = check_variance_vif_single(df_analysis,
-                                                forcedin_vars,covariates_,
-                                                vif_cutoff=100,
-                                                group_col=mathcing_id_col)
+        del_covariates = check_variance_vif_single(
+            df_analysis,
+            forcedin_vars,
+            covariates_,
+            vif_cutoff=100,
+            group_col=mathcing_id_col
+        )
         final_covariates = [x for x in covariates_ if x not in del_covariates]
 
         #simple method

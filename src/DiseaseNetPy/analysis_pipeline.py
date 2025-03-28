@@ -11,14 +11,27 @@ from .utility import n_process_check,threshold_check,filter_phecodes,validate_me
 from .utility import correction_method_check
 import time
 
-def disease_network_piepline(data:DiseaseNetworkData, n_process:int, n_threshold_phewas:int, n_threshold_comorbidity:int,
-                             output_dir:str,project_prefix:str,
-                             keep_positive_associations:bool=False,save_intermediate_data:bool=False,
-                             system_exl:list=None, pipeline_mode:str='v1',method:str='RPCN',
-                             covariates:list=None,matching_var_dict:dict={'sex':'exact'},matching_n:str=2,
-                             min_interval_days:int=0,max_interval_days:int=np.inf,enforce_temporal_order:bool=False,
-                             correction:str='bonferroni',cutoff=0.05,
-                             **kwargs) -> str:
+def disease_network_pipeline(
+    data:DiseaseNetworkData, 
+    n_process:int, 
+    n_threshold_phewas:int, 
+    n_threshold_comorbidity:int,
+    output_dir:str,
+    project_prefix:str,
+    keep_positive_associations:bool=False,
+    save_intermediate_data:bool=False,
+    system_exl:list=None, 
+    pipeline_mode:str='v1',
+    method:str='RPCN',
+    covariates:list=None,
+    matching_var_dict:dict={'sex':'exact'},
+    matching_n:str=2,
+    min_interval_days:int=0,
+    max_interval_days:int=np.inf,
+    enforce_temporal_order:bool=False,
+    correction:str='bonferroni',
+    cutoff=0.05,
+    **kwargs) -> str:
     """
     This is a pipeline function to run the whole disease network analysis.
 

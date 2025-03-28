@@ -42,6 +42,82 @@ pip install lifelines #for phewas analysis with lifelines_disable set to False
 
 This guide walks you through a typical workflow using DiseaseNetPy for a matched cohort study design. The process involves data preparation, PheWAS analysis, comorbidity strength estimation, binomial testing, comorbidity network analysis, and trajectory analysis.
 
+```python
+import diseasenetpy as dnt
+# Step 1: Create DiseaseNetworkData object
+# Define required columns and other covariates columns
+col_dict = {
+    'Participant ID': 'new_index',          # Maps the participant identifier
+    'Exposure': 'outcome',                  # Defines exposure status (0 or 1)
+    'Sex': 'sex',                           # Indicates sex (1 for female, 0 for male)
+    'Index date': 'date_start',             # Start date of the study
+    'End date': 'time_end',                 # End date of the study
+    'Match ID': 'match_2'                   # Identifier for matching group
+}
+vars_lst = ['age', 'social', 'BMI', 'smoking', 'drinking']  # List of covariates to be used
+
+# Initialize the data object with study design and phecode level
+data = dnt.DiseaseNetworkData(
+    study_design='matched cohort',          # Type of study design
+    phecode_level=1,                        # Level of phecode (1 or 2)
+    date_fmt='%Y-%m-%d'                     # Date format in data files
+)
+
+# Load the phenotype CSV file into the data object
+data.phenotype_data(
+    phenotype_data_path='/your/project/path/phenotype.csv',  # Path to phenotype data
+    column_names=col_dict,                                   # Column mappings
+    covariates=vars_lst                                      # Covariates to include
+)
+
+# Merge with the first medical records file (CSV)
+data.merge_medical_records(
+    medical_records_data_path='/your/project/path/inp_1.csv',  # Path to first medical records file
+    diagnosis_code='ICD-10-WHO',                               # Diagnosis code type
+    column_names={
+        'Participant ID': 'eid',                               # Participant ID column in medical records
+        'Diagnosis code': 'diag_icd10',                        # Diagnosis code column
+        'Date of diagnosis': 'date'                            # Diagnosis date column
+    }
+)
+
+# Step 2: Use the pipeline disease network
+# Reminder:
+# When using multiprocessing, ensure that the code is enclosed within the following block.
+# This prevents entering a never ending loop of new process creation.
+if __name__ == "__main__":
+    dnt.disease_network_pipeline(
+      data=data,                               # DiseaseNetworkData object
+      n_process=2,                             # Number of parallel processes
+      n_threshold_phewas=100,                  # Minimum number of cases to include in phewas analysis
+      n_threshold_comorbidity=100,             # Minimum number of cases to include in comorbidity strength analysis
+      output_dir="/your/project/path"          # Path to save results
+      project_prefix="disease network"         # Prefix for naming output files and intermediate data
+      keep_positive_associations=False         # control hazard ratio (HR) > 1 in the Phewas analysis and positive correlations in the comorbidity strength estimation
+      save_intermediate_data=False             # control to save intermediate DiseaseNetworkData objects created by the `DiseaseNetPy.DiseaseNetworkData.disease_pair` function
+      system_exl=[
+        'symptoms', 
+        'others', 
+        'injuries & poisonings'
+      ],                                       # List of phecode systems to exclude from the analysis
+      pipeline_mode="v1",                      # Specifies the analysis order
+      method="RPCN",                           # The method to use for the comorbidity network and disease trajectory analysis
+      covariates=[
+        'BMI', 
+        'smoking', 
+        'drinking'
+      ],                                      # List of covariates to adjust for in the PheWAS, comorbidity network and disease trajectory analysis
+      matching_var_dict={
+        'sex':'exact'
+      },                                      # Specifies the matching variables and the criteria used for incidence density sampling
+      matching_n=2,                           # Specifies the maximum number of matched controls for each case
+      min_interval_days=0,                    # Minimum required time interval (in days) between diagnosis dates when constructing temporal D1 → D2 disease pair for each individual
+      max_interval_days=np.inf,               # Maximum allowed time interval (in days) between diagnosis dates when constructing temporal and non-temporal D1-D2 disease pair for each individual
+      enforce_temporal_order=False,           # control to exclude individuals with non-temporal D1-D2 pair when performing the binomial test
+      correction='bonferroni',                # Method for p-value correction from the statsmodels.stats.multitest.multipletests
+      cutoff=0.05                             # The significance threshold for adjusted p-values
+    )
+```
 ### Example: Matched Cohort Study Design
 
 ```python
@@ -93,6 +169,11 @@ data.merge_medical_records(
         'Diagnosis code': 'diag_icd10',                        # Diagnosis code column
         'Date of diagnosis': 'date'                            # Diagnosis date column
     }
+)
+
+# Describe the basic information fo phenotype data and medical data
+data.Table1(
+    continuous_stat_mode="auto"                # method to pre-processing continuous variable
 )
 
 # Save the data object for later use
@@ -261,7 +342,7 @@ result_network.plot_3d(
   line_color="black",                                  # Color of lines connected with each node(phecode) in the "full" plot method 
   line_width=2,                                        # Size of lines connected with each node(phecode)
   layer_distance=20,                                   # Distance of two adjoining layers
-  file_name="/your/project/path/three_dimension_visualization.html"    # Path to save three-dimension visualization
+  file_name="/your/project/path"                       # Path to save three-dimension visualization
   layout_width=900,                                    # Width of layout in the figure. Defaults to 900
   layout_height=900,                                   # Height of layout in the figure. Defaults to 900
   font_style="Times New Roman",                        # Font style of layout in the figure. Defaults to "Times New Roman"
