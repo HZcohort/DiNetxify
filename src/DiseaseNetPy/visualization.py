@@ -34,48 +34,6 @@ from typing import (
 
 Df = pd.DataFrame
 
-SYSTEM = [
-    'circulatory system', 
-    "congenital anomalies",
-    'dermatologic', 
-    'digestive', 
-    'endocrine/metabolic', 
-    'genitourinary',
-    'hematopoietic', 
-    'infectious diseases',
-    'injuries & poisonings',
-    'mental disorders',
-    'musculoskeletal',
-    'neoplasms',
-    'neurological',
-    "others",
-    "pregnancy complications",
-    'respiratory',
-    'sense organs', 
-    "symptoms",
-]
-
-COLOR = [
-    '#F46D5A',
-    '#5DA5DA',
-    '#5EBCD1',
-    '#C1D37F',
-    '#CE5A57',
-    '#A5C5D9',
-    '#F5B36D',
-    '#7FCDBB',
-    '#ED9A8D',
-    '#94B447',
-    '#8C564B',
-    '#E7CB94',
-    '#8C9EB2',
-    '#E0E0E0',
-    "#F1C40F",
-    '#9B59B6',
-    '#4ECDC4',
-    '#6A5ACD' 
-]
-
 class ThreeDimensionalNetwork(object):
     def __init__(
         self, 
@@ -90,7 +48,11 @@ class ThreeDimensionalNetwork(object):
         target: Optional[str]='phecode_d2',
         phewas_phecode: Optional[str]='phecode',
         phewas_number: Optional[str]='N_cases_exposed',
+        system_col: Optional[str]='system',
         col_disease_pair: Optional[str]='name_disease_pair',
+        filter_phewas_col: Optional[str]='phewas_p_significance',
+        filter_comorbidity_col: Optional[str]='comorbidity_p_significance',
+        filter_trajectory_col: Optional[str]='trajectory_p_significance',
         **kwargs
     ):
         """initialize the ThreeDimensionalDiseaseNetwork class.
@@ -109,6 +71,40 @@ class ThreeDimensionalNetwork(object):
             source (str, optional): Column name of D1. Defaults to 'phecode_d1'.
             target (str, optional): Column name of D2. Defaults to 'phecode_d2'.
         """
+        # filter the results
+        phewas_result, comorbidity_result, trajectory_result = self.__filter_significant(
+            phewas_result,
+            comorbidity_result,
+            trajectory_result,
+            filter_phewas_col,
+            filter_comorbidity_col,
+            filter_trajectory_col
+        )
+
+        COLOR = [
+            '#F46D5A',
+            '#5DA5DA',
+            '#5EBCD1',
+            '#C1D37F',
+            '#CE5A57',
+            '#A5C5D9',
+            '#F5B36D',
+            '#7FCDBB',
+            '#ED9A8D',
+            '#94B447',
+            '#8C564B',
+            '#E7CB94',
+            '#8C9EB2',
+            '#E0E0E0',
+            "#F1C40F",
+            '#9B59B6',
+            '#4ECDC4',
+            '#6A5ACD' 
+        ]
+
+        if system_col:
+            SYSTEM = list(phewas_result[system_col].unique())
+
         SYSTEM = kwargs.get("SYSTEM", SYSTEM)
         COLOR = kwargs.get("COLOR", COLOR)
         if len(SYSTEM) > len(COLOR):
@@ -419,7 +415,31 @@ class ThreeDimensionalNetwork(object):
             for node, attr in value.items():
                 if node in self._nodes_attrs.keys():
                     self._nodes_attrs[node].update({f"{key}":attr})
+    def __filter_significant(
+        self,
+        phewas_result,
+        comorbidity_result,
+        trajectory_result,
+        filter_phewas_col,
+        filter_comorbidity_col,
+        filter_trajectory_col
+    ) -> Df:
+        if filter_phewas_col:
+            phewas_result = phewas_result.loc[
+                phewas_result[filter_phewas_col] == True
+            ]
+        
+        if filter_comorbidity_col:
+            comorbidity_result = comorbidity_result.loc[
+                comorbidity_result[filter_comorbidity_col] == True
+            ]
 
+        if filter_trajectory_col:
+            trajectory_result = trajectory_result.loc[
+                trajectory_result[filter_trajectory_col] == True
+            ]
+        return phewas_result, comorbidity_result, trajectory_result
+    
     def __get_same_nodes(self, key_name:str) -> Dict[Any, Any]:
         """_summary_
 
@@ -1085,7 +1105,7 @@ class ThreeDimensionalNetwork(object):
                 )
             )
 
-        for sys in SYSTEM:
+        for sys in self._system_color.keys():
             nodes = [
                 x for x in self._commorbidity_nodes 
                 if self._nodes_attrs[x]["system"]==sys
@@ -1458,7 +1478,8 @@ class ThreeDimensionalNetwork(object):
             'neurological':'Neurological diseases',
             'endocrine/metabolic':'Endocrine/metabolic diseases', 
             'sense organs':'Diseases of the sense organs',
-            'injuries & poisonings': 'Injuries & poisonings'
+            'injuries & poisonings': 'Injuries & poisonings',
+            'congenital anomalies': 'Congenital anomalies diseases'
         }
         phe_df = self._phewas.loc[self._phewas[col_coef]>0]
         phe_df = phe_df.sort_values(by=col_disease)

@@ -197,9 +197,11 @@ def phewas(
                 )
             else:
                 result_all = list(
-                    tqdm(p.imap(cox_unconditional, phecode_lst_all), 
-                    total=len(phecode_lst_all)),
-                    disable=disable_tqdm
+                    tqdm(
+                        p.imap(cox_unconditional, phecode_lst_all), 
+                        total=len(phecode_lst_all),
+                        disable=disable_tqdm
+                    )
                 )
 
     time_end = time.time()

@@ -36,8 +36,6 @@ pip install lifelines #for phewas analysis with lifelines_disable set to False
 
 ```
 
-
-
 ## Quick Start
 
 This guide walks you through a typical workflow using DiseaseNetPy for a matched cohort study design. The process involves data preparation, PheWAS analysis, comorbidity strength estimation, binomial testing, comorbidity network analysis, and trajectory analysis.
@@ -119,6 +117,24 @@ if __name__ == "__main__":
     )
 ```
 ### Example: Matched Cohort Study Design
+In the test folder, we provide three comprehensive examples demonstrating different study designs to help users understand and implement their analyses effectively.
+And we show all results and figure of matched cohort study design.
+
+1. Example 1: Matched Cohort Study Design
+Key Features:
+    Exposure
+    Group ID
+    Matched cohort
+    Covariate adjustment using Cox proportional hazards models.
+
+2. Example 2: Cohort Study Design
+Key Features:
+    Exposure
+    Covariate adjustment using Cox proportional hazards models.
+
+3. Example 3: Exposed-only Cohort Design
+Key Features:
+    No exposure
 
 ```python
 import diseasenetpy as dnt
