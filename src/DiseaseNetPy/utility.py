@@ -359,7 +359,7 @@ def medical_records_process(
     n_total_records = 0
     n_total_trunc_4 = 0
     n_total_trunc_3 = 0
-    n_total_original = 0
+    n_total_no_trunc = 0
     n_total_no_mapping = 0
     no_mapping_list = {}
     
@@ -391,7 +391,7 @@ def medical_records_process(
             if icd in phecode_map:
                 for phecode in phecode_map[icd]:
                     new_phecode_lst.append([patient_id,phecode,date])
-                n_total_original += 1
+                n_total_no_trunc += 1
             #try trunction 
             elif icd[0:4] in phecode_map:
                 for phecode in phecode_map[icd[0:4]]:
@@ -419,7 +419,7 @@ def medical_records_process(
                 all_phecode_dict[patient_id][phecode] = [new_date,1]
     #print final report
     print(f'Total: {n_total_records:,} diagnosis records processed, {n_total_missing:,} records with missing values were excluded.')
-    print(f'{n_total_original:,} diagnosis records mapped to phecode originally.')
+    print(f'{n_total_no_trunc:,} diagnosis records mapped to phecode without truncating.')
     print(f'{n_total_trunc_4:,} diagnosis records mapped to phecode after truncating to 4 digits.')
     print(f'{n_total_trunc_3:,} diagnosis records mapped to phecode after truncating to 3 digits.')
     print(f'{n_total_no_mapping:,} diagnosis records not mapped to any phecode.')
