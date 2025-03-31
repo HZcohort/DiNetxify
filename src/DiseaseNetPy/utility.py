@@ -305,14 +305,16 @@ def phenotype_required_columns(dataframe,col_dict:dict,date_fmt:str,study_desgin
             raise TypeError("The 'Sex' variable must be coded as 1 (female) and 0 (male).")
     
     
-def medical_records_process(medical_records:str,
-                            col_dict:dict,
-                            code_type:str,
-                            date_fmt:str,
-                            chunk_n,
-                            seperator,
-                            all_phecode_dict:dict,
-                            phecode_map:dict):
+def medical_records_process(
+    medical_records:str,
+    col_dict:dict,
+    code_type:str,
+    date_fmt:str,
+    chunk_n,
+    seperator,
+    all_phecode_dict:dict,
+    phecode_map:dict
+):
     """
     Read the medical records dataframe (in chunks), mapped to phecode and update the provided nested dictionary.
 
@@ -357,6 +359,7 @@ def medical_records_process(medical_records:str,
     n_total_records = 0
     n_total_trunc_4 = 0
     n_total_trunc_3 = 0
+    n_total_original = 0
     n_total_no_mapping = 0
     no_mapping_list = {}
     
@@ -366,7 +369,7 @@ def medical_records_process(medical_records:str,
         len_before = len(chunk)
         chunk = chunk[chunk[eid_col].isin(all_phecode_dict)]
         len_valid = len(chunk)
-        chunk.dropna(how='any',inplace=True)
+        chunk.dropna(how='any', inplace=True)
         n_missing = len_valid - len(chunk)
         chunk[date_col] = chunk[date_col].apply(lambda x: datetime.strptime(x,date_fmt))
         if 'ICD-9' in code_type: 
@@ -388,6 +391,7 @@ def medical_records_process(medical_records:str,
             if icd in phecode_map:
                 for phecode in phecode_map[icd]:
                     new_phecode_lst.append([patient_id,phecode,date])
+                n_total_original += 1
             #try trunction 
             elif icd[0:4] in phecode_map:
                 for phecode in phecode_map[icd[0:4]]:
@@ -415,6 +419,7 @@ def medical_records_process(medical_records:str,
                 all_phecode_dict[patient_id][phecode] = [new_date,1]
     #print final report
     print(f'Total: {n_total_records:,} diagnosis records processed, {n_total_missing:,} records with missing values were excluded.')
+    print(f'{n_total_original:,} diagnosis records mapped to phecode originally.')
     print(f'{n_total_trunc_4:,} diagnosis records mapped to phecode after truncating to 4 digits.')
     print(f'{n_total_trunc_3:,} diagnosis records mapped to phecode after truncating to 3 digits.')
     print(f'{n_total_no_mapping:,} diagnosis records not mapped to any phecode.')
