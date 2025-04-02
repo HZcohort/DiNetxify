@@ -1438,13 +1438,13 @@ class ThreeDimensionalNetwork(object):
             w2 = 1/(np.square(se_lst)+tau2)
             u2 = (np.sum(w2*coef_lst))/(np.sum(w2))
             seu2 = np.sqrt(1/np.sum(w2))
-            return [u2,seu2]
+            return [u2, seu2]
 
         def sys_mean(df):
             sys_dict = {}
             sys_lst = set(df[col_system].values)
             for sys in sys_lst:
-                temp = df.loc[df[col_system]==sys].dropna(subset=[col_coef,col_se],how='any')
+                temp = df.loc[df[col_system]==sys].dropna(subset=[col_coef, col_se],how='any')
                 mean = random_effect(temp[col_coef].values,temp[col_se].values)[0]    
                 sys_dict[mean] = sys
             sys_dict_ = [sys_dict[i] for i in sorted([x for x in sys_dict.keys() if not pd.isna(x)])]

@@ -1,0 +1,428 @@
+,phecode,disease,system,sex,N_cases_exposed,describe,exposed_group,phewas_p_significance
+0,8.0,Intestinal infection,infectious diseases,Both,3602,Reached the threshold of 600,3602/594.93 (6.05),True
+1,10.0,Tuberculosis,infectious diseases,Both,1079,Reached the threshold of 600,1079/606.35 (1.78),True
+2,31.0,Diseases due to other mycobacteria,infectious diseases,Both,137,Less than the threshold of 600,137/611.69 (0.22),False
+3,38.0,Septicemia,infectious diseases,Both,744,Reached the threshold of 600,744/607.91 (1.22),True
+4,41.0,Bacterial infection NOS,infectious diseases,Both,3115,Reached the threshold of 600,3115/595.70 (5.23),True
+5,53.0,Herpes zoster,infectious diseases,Both,157,Less than the threshold of 600,157/611.63 (0.26),False
+6,54.0,Herpes simplex,infectious diseases,Both,248,Less than the threshold of 600,248/611.17 (0.41),False
+7,70.0,Viral hepatitis,infectious diseases,Both,1771,Reached the threshold of 600,1771/600.66 (2.95),True
+8,71.0,Human immunodeficiency virus [HIV] disease,infectious diseases,Both,314,Less than the threshold of 600,314/610.77 (0.51),False
+9,78.0,Viral warts & HPV,infectious diseases,Both,103,Less than the threshold of 600,103/611.91 (0.17),False
+10,79.0,Viral infection,infectious diseases,Both,1422,Reached the threshold of 600,1422/604.64 (2.35),True
+11,80.0,Postoperative infection,infectious diseases,Both,49,Less than the threshold of 600,49/621.38 (0.08),False
+12,81.0,Infection/inflammation of internal prosthetic device; implant; and graft,infectious diseases,Both,279,Less than the threshold of 600,279/619.73 (0.45),False
+13,90.0,Sexually transmitted infections (not HIV or hepatitis),infectious diseases,Both,1775,Reached the threshold of 600,1775/615.90 (2.88),True
+14,110.0,Dermatophytosis / Dermatomycosis,infectious diseases,Both,444,Less than the threshold of 600,444/620.86 (0.72),False
+15,112.0,Candidiasis,infectious diseases,Both,989,Reached the threshold of 600,989/617.92 (1.60),True
+16,117.0,Mycoses,infectious diseases,Both,526,Less than the threshold of 600,526/620.58 (0.85),False
+17,130.0,Spirochetal infection,infectious diseases,Both,342,Less than the threshold of 600,342/617.67 (0.55),False
+18,131.0,Protozoan infection,infectious diseases,Both,87,Less than the threshold of 600,87/619.17 (0.14),False
+19,132.0,"Infestation (lice, mites)",infectious diseases,Both,269,Less than the threshold of 600,269/618.22 (0.44),False
+20,133.0,Arthropod-borne diseases,infectious diseases,Both,439,Less than the threshold of 600,439/616.53 (0.71),False
+21,134.0,Helminthiases,infectious diseases,Both,464,Less than the threshold of 600,464/617.10 (0.75),False
+22,136.0,Other infectious and parasitic diseases,infectious diseases,Both,456,Less than the threshold of 600,456/617.33 (0.74),False
+23,145.0,Cancer of mouth,neoplasms,Both,3378,Reached the threshold of 600,3378/595.90 (5.67),True
+24,149.0,"Cancer of larynx, pharynx, nasal cavities",neoplasms,Both,1008,Reached the threshold of 600,1008/607.50 (1.66),True
+25,150.0,Cancer of esophagus,neoplasms,Both,373,Less than the threshold of 600,373/620.57 (0.60),False
+26,151.0,Cancer of stomach,neoplasms,Both,597,Less than the threshold of 600,597/619.57 (0.96),False
+27,153.0,Colorectal cancer,neoplasms,Both,2786,Reached the threshold of 600,2786/589.54 (4.73),True
+28,155.0,Cancer of liver and intrahepatic bile duct,neoplasms,Both,991,Reached the threshold of 600,991/618.36 (1.60),True
+29,157.0,Pancreatic cancer,neoplasms,Both,373,Less than the threshold of 600,373/620.59 (0.60),False
+30,158.0,Neoplasm of unspecified nature of digestive system,neoplasms,Both,366,Less than the threshold of 600,366/621.05 (0.59),False
+31,159.0,Malignant neoplasm of other and ill-defined sites within the digestive organs and peritoneum,neoplasms,Both,863,Reached the threshold of 600,863/618.45 (1.40),True
+32,164.0,Cancer of intrathoracic organs,neoplasms,Both,224,Less than the threshold of 600,224/605.18 (0.37),False
+33,165.0,Cancer within the respiratory system,neoplasms,Both,3931,Reached the threshold of 600,3931/581.88 (6.76),True
+34,170.0,Cancer of bone and connective tissue,neoplasms,Both,1651,Reached the threshold of 600,1651/608.48 (2.71),True
+35,172.0,Skin cancer,neoplasms,Both,2543,Reached the threshold of 600,2543/604.20 (4.21),True
+36,173.0,Neoplasm of uncertain behavior of skin,neoplasms,Both,40,Less than the threshold of 600,40/619.39 (0.06),False
+37,174.0,Breast cancer,neoplasms,Both,734,Reached the threshold of 600,734/603.59 (1.22),True
+38,175.0,Acquired absence of breast,neoplasms,Female,202,Less than the threshold of 600,202/303.35 (0.67),False
+39,180.0,Cervical cancer and dysplasia,neoplasms,Female,149,Less than the threshold of 600,149/309.09 (0.48),False
+40,182.0,Malignant neoplasm of uterus,neoplasms,Female,114,Less than the threshold of 600,114/309.23 (0.37),False
+41,184.0,Cancer of other female genital organs,neoplasms,Female,697,Reached the threshold of 600,697/305.26 (2.28),True
+42,185.0,Cancer of prostate,neoplasms,Male,82,Less than the threshold of 600,82/619.63 (0.13),False
+43,187.0,Cancer of other male genital organs,neoplasms,Male,2484,Reached the threshold of 600,2484/610.80 (4.07),True
+44,189.0,Cancer of urinary organs (incl. kidney and bladder),neoplasms,Both,1124,Reached the threshold of 600,1124/617.83 (1.82),True
+45,190.0,Cancer of eye,neoplasms,Both,269,Less than the threshold of 600,269/613.42 (0.44),False
+46,191.0,Manlignant and unknown neoplasms of brain and nervous system,neoplasms,Both,1859,Reached the threshold of 600,1859/601.45 (3.09),True
+47,193.0,Thyroid cancer,neoplasms,Both,215,Less than the threshold of 600,215/616.06 (0.35),False
+48,194.0,Cancer of other endocrine glands,neoplasms,Both,1480,Reached the threshold of 600,1480/607.10 (2.44),True
+49,195.0,"Cancer, suspected or other",neoplasms,Both,1823,Reached the threshold of 600,1823/597.47 (3.05),True
+50,196.0,Radiotherapy,neoplasms,Both,31,Less than the threshold of 600,31/609.29 (0.05),False
+51,197.0,Chemotherapy,neoplasms,Both,60,Less than the threshold of 600,60/609.13 (0.10),False
+52,198.0,Secondary malignant neoplasm,neoplasms,Both,2093,Reached the threshold of 600,2093/598.13 (3.50),True
+53,199.0,Neoplasm of uncertain behavior,neoplasms,Both,1117,Reached the threshold of 600,1117/603.08 (1.85),True
+54,200.0,Myeloproliferative disease,neoplasms,Both,1575,Reached the threshold of 600,1575/596.02 (2.64),True
+55,201.0,Hodgkin's disease,neoplasms,Both,281,Less than the threshold of 600,281/603.01 (0.47),False
+56,202.0,"Cancer of other lymphoid, histiocytic tissue",neoplasms,Both,1267,Reached the threshold of 600,1267/597.09 (2.12),True
+57,204.0,Leukemia,neoplasms,Both,1892,Reached the threshold of 600,1892/593.01 (3.19),True
+58,208.0,Benign neoplasm of colon,neoplasms,Both,428,Less than the threshold of 600,428/615.92 (0.69),False
+59,209.0,Neuroendocrine tumors,neoplasms,Both,0,Less than the threshold of 600,0/627.43 (0.00),False
+60,210.0,"Benign neoplasm of lip, oral cavity, and pharynx",neoplasms,Both,417,Less than the threshold of 600,417/611.10 (0.68),False
+61,211.0,Benign neoplasm of other parts of digestive system,neoplasms,Both,376,Less than the threshold of 600,376/604.37 (0.62),False
+62,212.0,Benign neoplasm of respiratory and intrathoracic organs,neoplasms,Both,497,Less than the threshold of 600,497/623.93 (0.80),False
+63,213.0,Benign neoplasm of bone and articular cartilage,neoplasms,Both,989,Reached the threshold of 600,989/620.26 (1.59),True
+64,214.0,Lipoma,neoplasms,Both,310,Less than the threshold of 600,310/621.75 (0.50),False
+65,215.0,Other benign neoplasm of connective and other soft tissue,neoplasms,Both,1341,Reached the threshold of 600,1341/616.99 (2.17),True
+66,216.0,Benign neoplasm of skin,neoplasms,Both,926,Reached the threshold of 600,926/619.70 (1.49),True
+67,217.0,Vascular hamartomas and non-neoplastic nevi,neoplasms,Both,200,Less than the threshold of 600,200/623.58 (0.32),False
+68,218.0,Benign neoplasm of uterus,neoplasms,Female,288,Less than the threshold of 600,288/304.88 (0.94),False
+69,220.0,Benign neoplasm of ovary,neoplasms,Female,20,Less than the threshold of 600,20/308.34 (0.06),False
+70,221.0,Benign neoplasm of other female genital organs,neoplasms,Female,551,Less than the threshold of 600,551/301.75 (1.83),False
+71,222.0,Benign neoplasm of male genital organs,neoplasms,Male,180,Less than the threshold of 600,180/619.90 (0.29),False
+72,223.0,Benign neoplasm of kidney and other urinary organs,neoplasms,Both,1801,Reached the threshold of 600,1801/614.40 (2.93),True
+73,224.0,Benign neoplasm of eye,neoplasms,Both,421,Less than the threshold of 600,421/612.29 (0.69),False
+74,225.0,Benign neoplasm of brain and other parts of nervous system,neoplasms,Both,531,Less than the threshold of 600,531/611.93 (0.87),False
+75,226.0,Benign neoplasm of thyroid glands,neoplasms,Both,42,Less than the threshold of 600,42/617.34 (0.07),False
+76,227.0,Benign neoplasm of other endocrine glands and related structures,neoplasms,Both,219,Less than the threshold of 600,219/616.39 (0.36),False
+77,228.0,"Hemangioma and lymphangioma, any site",neoplasms,Both,78,Less than the threshold of 600,78/626.75 (0.12),False
+78,229.0,Benign neoplasm of unspecified sites,neoplasms,Both,270,Less than the threshold of 600,270/625.49 (0.43),False
+79,230.0,Kaposi's sarcoma,neoplasms,Both,24,Less than the threshold of 600,24/627.15 (0.04),False
+80,240.0,Simple and unspecified goiter,endocrine/metabolic,Both,75,Less than the threshold of 600,75/613.16 (0.12),False
+81,241.0,Nontoxic nodular goiter,endocrine/metabolic,Both,264,Less than the threshold of 600,264/612.22 (0.43),False
+82,242.0,Thyrotoxicosis with or without goiter,endocrine/metabolic,Both,299,Less than the threshold of 600,299/611.64 (0.49),False
+83,244.0,Hypothyroidism,endocrine/metabolic,Both,2704,Reached the threshold of 600,2704/599.23 (4.51),True
+84,245.0,Thyroiditis,endocrine/metabolic,Both,260,Less than the threshold of 600,260/612.20 (0.42),False
+85,246.0,Other disorders of thyroid,endocrine/metabolic,Both,1310,Reached the threshold of 600,1310/608.66 (2.15),True
+86,249.0,Secondary diabetes mellitus,endocrine/metabolic,Both,0,Less than the threshold of 600,0/621.34 (0.00),False
+87,250.0,Diabetes mellitus,endocrine/metabolic,Both,1862,Reached the threshold of 600,1862/610.47 (3.05),True
+88,251.0,Other disorders of pancreatic internal secretion,endocrine/metabolic,Both,280,Less than the threshold of 600,280/603.84 (0.46),False
+89,252.0,Disorders of parathyroid gland,endocrine/metabolic,Both,567,Less than the threshold of 600,567/602.38 (0.94),False
+90,253.0,Disorders of the pituitary gland and its hypothalamic control,endocrine/metabolic,Both,1455,Reached the threshold of 600,1455/596.09 (2.44),True
+91,254.0,Diseases of thymus gland,endocrine/metabolic,Both,194,Less than the threshold of 600,194/604.48 (0.32),False
+92,255.0,Disorders of adrenal glands,endocrine/metabolic,Both,918,Reached the threshold of 600,918/600.44 (1.53),True
+93,256.0,Ovarian dysfunction,endocrine/metabolic,Female,144,Less than the threshold of 600,144/303.44 (0.47),False
+94,257.0,Testicular dysfunction,endocrine/metabolic,Male,104,Less than the threshold of 600,104/604.86 (0.17),False
+95,258.0,Iatrogenic endocrine disorders,endocrine/metabolic,Both,66,Less than the threshold of 600,66/605.14 (0.11),False
+96,259.0,Other endocrine disorders,endocrine/metabolic,Both,375,Less than the threshold of 600,375/603.47 (0.62),False
+97,260.0,Protein-calorie malnutrition,endocrine/metabolic,Both,792,Reached the threshold of 600,792/603.78 (1.31),True
+98,261.0,Vitamin deficiency,endocrine/metabolic,Both,2517,Reached the threshold of 600,2517/594.90 (4.23),True
+99,262.0,Mineral deficiency NEC,endocrine/metabolic,Both,846,Reached the threshold of 600,846/605.74 (1.40),True
+100,263.0,Other nutritional deficiency,endocrine/metabolic,Both,157,Less than the threshold of 600,157/608.44 (0.26),False
+101,264.0,Lack of normal physiological development,endocrine/metabolic,Both,111,Less than the threshold of 600,111/608.66 (0.18),False
+102,269.0,Proteinuria,endocrine/metabolic,Both,269,Less than the threshold of 600,269/608.23 (0.44),False
+103,270.0,Disorders of protein plasma/amino-acid transport and metabolism,endocrine/metabolic,Both,4791,Reached the threshold of 600,4791/583.47 (8.21),True
+104,271.0,Disorders of carbohydrate transport and metabolism,endocrine/metabolic,Both,512,Less than the threshold of 600,512/623.70 (0.82),False
+105,272.0,Disorders of lipoid metabolism,endocrine/metabolic,Both,1601,Reached the threshold of 600,1601/614.03 (2.61),True
+106,274.0,Gout and other crystal arthropathies,endocrine/metabolic,Both,284,Less than the threshold of 600,284/625.03 (0.45),False
+107,275.0,Disorders of mineral metabolism,endocrine/metabolic,Both,301,Less than the threshold of 600,301/624.59 (0.48),False
+108,276.0,"Disorders of fluid, electrolyte, and acid-base balance",endocrine/metabolic,Both,633,Reached the threshold of 600,633/621.05 (1.02),True
+109,277.0,Other disorders of metabolism,endocrine/metabolic,Both,1239,Reached the threshold of 600,1239/616.27 (2.01),True
+110,278.0,"Overweight, obesity and other hyperalimentation",endocrine/metabolic,Both,221,Less than the threshold of 600,221/625.58 (0.35),False
+111,279.0,Disorders involving the immune mechanism,endocrine/metabolic,Both,1181,Reached the threshold of 600,1181/617.37 (1.91),True
+112,280.0,Iron deficiency anemias,hematopoietic,Both,153,Less than the threshold of 600,153/611.13 (0.25),False
+113,281.0,Other deficiency anemia,hematopoietic,Both,821,Reached the threshold of 600,821/605.85 (1.36),True
+114,282.0,Hereditary hemolytic anemias,hematopoietic,Both,1001,Reached the threshold of 600,1001/605.88 (1.65),True
+115,283.0,Acquired hemolytic anemias,hematopoietic,Both,162,Less than the threshold of 600,162/611.06 (0.27),False
+116,284.0,Aplastic anemia,hematopoietic,Both,189,Less than the threshold of 600,189/610.98 (0.31),False
+117,285.0,Other anemias,hematopoietic,Both,504,Less than the threshold of 600,504/609.14 (0.83),False
+118,286.0,Coagulation defects,hematopoietic,Both,1485,Reached the threshold of 600,1485/611.76 (2.43),True
+119,287.0,Purpura and other hemorrhagic conditions,hematopoietic,Both,2367,Reached the threshold of 600,2367/610.67 (3.88),True
+120,288.0,Diseases of white blood cells,hematopoietic,Both,1020,Reached the threshold of 600,1020/603.78 (1.69),True
+121,289.0,Other diseases of blood and blood-forming organs,hematopoietic,Both,1615,Reached the threshold of 600,1615/600.10 (2.69),True
+122,290.0,Delirium dementia and amnestic and other cognitive disorders,mental disorders,Both,1820,Reached the threshold of 600,1820/595.59 (3.06),True
+123,291.0,Other specified nonpsychotic and/or transient mental disorders,mental disorders,Both,782,Reached the threshold of 600,782/602.21 (1.30),True
+124,292.0,Neurological disorders,mental disorders,Both,593,Less than the threshold of 600,593/603.23 (0.98),False
+125,293.0,Symptoms involving head and neck,mental disorders,Both,294,Less than the threshold of 600,294/625.42 (0.47),False
+126,295.0,Schizophrenia and other psychotic disorders,mental disorders,Both,1069,Reached the threshold of 600,1069/509.33 (2.10),True
+127,296.0,Mood disorders,mental disorders,Both,1343,Reached the threshold of 600,1343/507.77 (2.64),True
+128,297.0,Suicidal ideation or attempt,mental disorders,Both,5603,Reached the threshold of 600,5603/481.15 (11.65),True
+129,300.0,Anxiety disorders,mental disorders,Both,975,Reached the threshold of 600,975/510.02 (1.91),True
+130,301.0,Personality disorders,mental disorders,Both,784,Reached the threshold of 600,784/510.96 (1.53),True
+131,302.0,Sexual and gender identity disorders,mental disorders,Both,773,Reached the threshold of 600,773/511.17 (1.51),True
+132,303.0,Psychogenic and somatoform disorders,mental disorders,Both,538,Less than the threshold of 600,538/512.47 (1.05),False
+133,304.0,Adjustment reaction,mental disorders,Both,105,Less than the threshold of 600,105/515.11 (0.20),False
+134,306.0,Other mental disorder,mental disorders,Both,384,Less than the threshold of 600,384/513.38 (0.75),False
+135,312.0,Conduct disorders,mental disorders,Both,528,Less than the threshold of 600,528/620.06 (0.85),False
+136,313.0,Pervasive developmental disorders,mental disorders,Both,460,Less than the threshold of 600,460/620.52 (0.74),False
+137,315.0,Develomental delays and disorders,mental disorders,Both,629,Reached the threshold of 600,629/619.53 (1.02),True
+138,316.0,Substance addiction and disorders,mental disorders,Both,2081,Reached the threshold of 600,2081/591.15 (3.52),True
+139,317.0,Alcohol-related disorders,mental disorders,Both,1382,Reached the threshold of 600,1382/596.82 (2.32),True
+140,318.0,Tobacco use disorder,mental disorders,Both,283,Less than the threshold of 600,283/602.87 (0.47),False
+141,320.0,Meningitis,neurological,Both,1096,Reached the threshold of 600,1096/607.22 (1.80),True
+142,323.0,Encephalitis,neurological,Both,1735,Reached the threshold of 600,1735/602.19 (2.88),True
+143,324.0,Other CNS infection and poliomyelitis,neurological,Both,529,Less than the threshold of 600,529/609.34 (0.87),False
+144,325.0,Phlebitis and thrombophlebitis of intracranial venous sinuses,neurological,Both,52,Less than the threshold of 600,52/612.57 (0.08),False
+145,327.0,Sleep disorders,neurological,Both,2159,Reached the threshold of 600,2159/613.74 (3.52),True
+146,331.0,Other cerebral degenerations,neurological,Both,913,Reached the threshold of 600,913/567.98 (1.61),True
+147,332.0,Parkinson's disease,neurological,Both,25,Less than the threshold of 600,25/573.05 (0.04),False
+148,333.0,Extrapyramidal disease and abnormal movement disorders,neurological,Both,2924,Reached the threshold of 600,2924/555.45 (5.26),True
+149,334.0,Degenerative disease of the spinal cord,neurological,Both,1385,Reached the threshold of 600,1385/560.47 (2.47),True
+150,335.0,Multiple sclerosis,neurological,Both,28,Less than the threshold of 600,28/573.04 (0.05),False
+151,337.0,Disorders of the autonomic nervous system,neurological,Both,196,Less than the threshold of 600,196/572.12 (0.34),False
+152,338.0,Pain,neurological,Both,172,Less than the threshold of 600,172/626.32 (0.27),False
+153,339.0,Other headache syndromes,neurological,Both,314,Less than the threshold of 600,314/622.65 (0.50),False
+154,340.0,Migraine,neurological,Both,994,Reached the threshold of 600,994/619.37 (1.60),True
+155,341.0,Other demyelinating diseases of central nervous system,neurological,Both,146,Less than the threshold of 600,146/572.34 (0.26),False
+156,342.0,Hemiplegia,neurological,Both,104,Less than the threshold of 600,104/572.66 (0.18),False
+157,343.0,Infantile cerebral palsy,neurological,Both,158,Less than the threshold of 600,158/572.27 (0.28),False
+158,344.0,Other paralytic syndromes,neurological,Both,502,Less than the threshold of 600,502/570.42 (0.88),False
+159,345.0,"Epilepsy, recurrent seizures, convulsions",neurological,Both,1501,Reached the threshold of 600,1501/564.58 (2.66),True
+160,346.0,Abnormal findings on study of brain and/or nervous system,neurological,Both,220,Less than the threshold of 600,220/571.95 (0.38),False
+161,347.0,Cataplexy and narcolepsy,neurological,Both,29,Less than the threshold of 600,29/573.04 (0.05),False
+162,348.0,Other conditions of brain,neurological,Both,1733,Reached the threshold of 600,1733/560.07 (3.09),True
+163,349.0,Other and unspecified disorders of the nervous system,neurological,Both,485,Less than the threshold of 600,485/570.78 (0.85),False
+164,350.0,Abnormal movement,neurological,Both,2349,Reached the threshold of 600,2349/605.32 (3.88),True
+165,351.0,Other peripheral nerve disorders,neurological,Both,2436,Reached the threshold of 600,2436/597.13 (4.08),True
+166,352.0,Disorders of other cranial nerves,neurological,Both,2010,Reached the threshold of 600,2010/600.04 (3.35),True
+167,353.0,Nerve root and plexus disorders,neurological,Both,595,Less than the threshold of 600,595/606.99 (0.98),False
+168,355.0,Complex regional/central pain syndrome,neurological,Both,39,Less than the threshold of 600,39/610.69 (0.06),False
+169,356.0,Hereditary and idiopathic peripheral neuropathy,neurological,Both,221,Less than the threshold of 600,221/622.28 (0.36),False
+170,357.0,Inflammatory and toxic neuropathy,neurological,Both,638,Reached the threshold of 600,638/620.05 (1.03),True
+171,358.0,Myoneural disorders,neurological,Both,103,Less than the threshold of 600,103/623.00 (0.17),False
+172,359.0,Muscular dystrophies and other myopathies,neurological,Both,709,Reached the threshold of 600,709/619.92 (1.14),True
+173,360.0,Disorders of the globe,sense organs,Both,376,Less than the threshold of 600,376/599.16 (0.63),False
+174,361.0,Retinal detachments and defects,sense organs,Both,242,Less than the threshold of 600,242/600.09 (0.40),False
+175,362.0,Other retinal disorders,sense organs,Both,1611,Reached the threshold of 600,1611/591.01 (2.73),True
+176,363.0,"Chorioretinal inflammations, scars, and other disorders of choroid",sense organs,Both,298,Less than the threshold of 600,298/599.56 (0.50),False
+177,364.0,Corneal opacity and other disorders of cornea,sense organs,Both,2797,Reached the threshold of 600,2797/581.81 (4.81),True
+178,365.0,Glaucoma,sense organs,Both,788,Reached the threshold of 600,788/597.40 (1.32),True
+179,366.0,Cataract,sense organs,Both,3090,Reached the threshold of 600,3090/600.88 (5.14),True
+180,367.0,Disorders of refraction and accommodation; blindness and low vision,sense organs,Both,822,Reached the threshold of 600,822/619.84 (1.33),True
+181,368.0,Visual disturbances,sense organs,Both,1674,Reached the threshold of 600,1674/615.17 (2.72),True
+182,369.0,Infection of the eye,sense organs,Both,1090,Reached the threshold of 600,1090/605.82 (1.80),True
+183,370.0,Keratitis,sense organs,Both,1220,Reached the threshold of 600,1220/604.21 (2.02),True
+184,371.0,Inflammation of the eye,sense organs,Both,1226,Reached the threshold of 600,1226/603.55 (2.03),True
+185,372.0,Disorders of conjunctiva,sense organs,Both,329,Less than the threshold of 600,329/609.14 (0.54),False
+186,374.0,Other disorders of eyelids,sense organs,Both,512,Less than the threshold of 600,512/607.38 (0.84),False
+187,375.0,Disorders of lacrimal system,sense organs,Both,341,Less than the threshold of 600,341/607.83 (0.56),False
+188,376.0,Disorders of the orbit,sense organs,Both,206,Less than the threshold of 600,206/609.02 (0.34),False
+189,377.0,Disorders of optic nerve and visual pathways,sense organs,Both,315,Less than the threshold of 600,315/608.19 (0.52),False
+190,378.0,Strabismus and other disorders of binocular eye movements,sense organs,Both,896,Reached the threshold of 600,896/605.18 (1.48),True
+191,379.0,Other disorders of eye,sense organs,Both,1903,Reached the threshold of 600,1903/595.90 (3.19),True
+192,380.0,Disorders of external ear,sense organs,Both,1291,Reached the threshold of 600,1291/613.25 (2.11),True
+193,381.0,Otitis media and Eustachian tube disorders,sense organs,Both,1655,Reached the threshold of 600,1655/609.07 (2.72),True
+194,382.0,Otalgia,sense organs,Both,39,Less than the threshold of 600,39/617.81 (0.06),False
+195,383.0,Otosclerosis,sense organs,Both,868,Reached the threshold of 600,868/613.34 (1.42),True
+196,384.0,Other disorders of tympanic membrane,sense organs,Both,368,Less than the threshold of 600,368/615.99 (0.60),False
+197,385.0,Other disorders of middle ear and mastoid,sense organs,Both,673,Reached the threshold of 600,673/614.09 (1.10),True
+198,386.0,Vertiginous syndromes and other disorders of vestibular system,sense organs,Both,1533,Reached the threshold of 600,1533/615.18 (2.49),True
+199,388.0,Other disorders of ear,sense organs,Both,150,Less than the threshold of 600,150/604.82 (0.25),False
+200,389.0,Hearing loss,sense organs,Both,2765,Reached the threshold of 600,2765/587.66 (4.71),True
+201,394.0,Rheumatic disease of the heart valves,circulatory system,Both,1025,Reached the threshold of 600,1025/613.19 (1.67),True
+202,395.0,Heart valve disorders,circulatory system,Both,1483,Reached the threshold of 600,1483/611.69 (2.42),True
+203,396.0,Abnormal heart sounds,circulatory system,Both,442,Less than the threshold of 600,442/614.91 (0.72),False
+204,401.0,Hypertension,circulatory system,Both,1478,Reached the threshold of 600,1478/612.75 (2.41),True
+205,402.0,Elevated blood pressure reading without diagnosis of hypertension,circulatory system,Both,191,Less than the threshold of 600,191/620.64 (0.31),False
+206,411.0,Ischemic Heart Disease,circulatory system,Both,2337,Reached the threshold of 600,2337/596.15 (3.92),True
+207,414.0,Other forms of chronic heart disease,circulatory system,Both,1876,Reached the threshold of 600,1876/597.59 (3.14),True
+208,415.0,Pulmonary heart disease,circulatory system,Both,506,Less than the threshold of 600,506/622.80 (0.81),False
+209,416.0,Cardiomegaly,circulatory system,Both,31,Less than the threshold of 600,31/625.56 (0.05),False
+210,418.0,Nonspecific chest pain,circulatory system,Both,946,Reached the threshold of 600,946/618.17 (1.53),True
+211,420.0,Carditis,circulatory system,Both,1499,Reached the threshold of 600,1499/612.74 (2.45),True
+212,425.0,Cardiomyopathy,circulatory system,Both,422,Less than the threshold of 600,422/618.50 (0.68),False
+213,426.0,Cardiac conduction disorders,circulatory system,Both,1033,Reached the threshold of 600,1033/614.04 (1.68),True
+214,427.0,Cardiac dysrhythmias,circulatory system,Both,1437,Reached the threshold of 600,1437/612.33 (2.35),True
+215,428.0,Congestive heart failure; nonhypertensive,circulatory system,Both,412,Less than the threshold of 600,412/623.77 (0.66),False
+216,429.0,Ill-defined descriptions and complications of heart disease,circulatory system,Both,276,Less than the threshold of 600,276/624.01 (0.44),False
+217,430.0,Intracranial hemorrhage,circulatory system,Both,1114,Reached the threshold of 600,1114/596.51 (1.87),True
+218,433.0,Cerebrovascular disease,circulatory system,Both,5087,Reached the threshold of 600,5087/569.72 (8.93),True
+219,440.0,Atherosclerosis,circulatory system,Both,728,Reached the threshold of 600,728/609.01 (1.20),True
+220,441.0,Vascular insufficiency of intestine,circulatory system,Both,218,Less than the threshold of 600,218/611.69 (0.36),False
+221,442.0,Other aneurysm,circulatory system,Both,816,Reached the threshold of 600,816/608.27 (1.34),True
+222,443.0,Peripheral vascular disease,circulatory system,Both,297,Less than the threshold of 600,297/611.44 (0.49),False
+223,444.0,Arterial embolism and thrombosis,circulatory system,Both,518,Less than the threshold of 600,518/609.80 (0.85),False
+224,446.0,Polyarteritis nodosa and allied conditions,circulatory system,Both,683,Reached the threshold of 600,683/608.21 (1.12),True
+225,447.0,Other disorders of arteries and arterioles,circulatory system,Both,1528,Reached the threshold of 600,1528/605.76 (2.52),True
+226,448.0,Disease of capillaries,circulatory system,Both,173,Less than the threshold of 600,173/611.96 (0.28),False
+227,450.0,Noninfectious disorders of lymphatic channels,circulatory system,Both,250,Less than the threshold of 600,250/625.49 (0.40),False
+228,451.0,Phlebitis and thrombophlebitis,circulatory system,Both,218,Less than the threshold of 600,218/618.46 (0.35),False
+229,452.0,Other venous embolism and thrombosis,circulatory system,Both,494,Less than the threshold of 600,494/617.08 (0.80),False
+230,453.0,Chronic venous hypertension,circulatory system,Both,0,Less than the threshold of 600,0/619.71 (0.00),False
+231,454.0,Varicose veins,circulatory system,Both,1710,Reached the threshold of 600,1710/612.03 (2.79),True
+232,455.0,Hemorrhoids,circulatory system,Both,855,Reached the threshold of 600,855/614.70 (1.39),True
+233,456.0,Chronic venous insufficiency [CVI],circulatory system,Both,35,Less than the threshold of 600,35/619.49 (0.06),False
+234,457.0,"Encounter for long-term (current) use of anticoagulants, antithrombotics, aspirin",circulatory system,Both,0,Less than the threshold of 600,0/619.71 (0.00),False
+235,458.0,Hypotension,circulatory system,Both,271,Less than the threshold of 600,271/623.25 (0.43),False
+236,459.0,Other disorders of circulatory system,circulatory system,Both,396,Less than the threshold of 600,396/622.38 (0.64),False
+237,464.0,Acute sinusitis,respiratory,Both,558,Less than the threshold of 600,558/619.36 (0.90),False
+238,465.0,Acute upper respiratory infections of multiple or unspecified sites,respiratory,Both,462,Less than the threshold of 600,462/620.72 (0.74),False
+239,470.0,Septal Deviations/Turbinate Hypertrophy,respiratory,Both,97,Less than the threshold of 600,97/612.49 (0.16),False
+240,471.0,Nasal polyps,respiratory,Both,146,Less than the threshold of 600,146/612.20 (0.24),False
+241,472.0,Chronic pharyngitis and nasopharyngitis,respiratory,Both,347,Less than the threshold of 600,347/611.17 (0.57),False
+242,473.0,Diseases of the larynx and vocal cords,respiratory,Both,564,Less than the threshold of 600,564/609.80 (0.92),False
+243,474.0,Acute and chronic tonsillitis,respiratory,Both,1298,Reached the threshold of 600,1298/605.65 (2.14),True
+244,475.0,Chronic sinusitis,respiratory,Both,319,Less than the threshold of 600,319/610.88 (0.52),False
+245,476.0,Allergic rhinitis,respiratory,Both,577,Less than the threshold of 600,577/609.96 (0.95),False
+246,477.0,Epistaxis or throat hemorrhage,respiratory,Both,362,Less than the threshold of 600,362/611.39 (0.59),False
+247,478.0,Throat pain,respiratory,Both,32,Less than the threshold of 600,32/612.81 (0.05),False
+248,479.0,Other upper respiratory disease,respiratory,Both,510,Less than the threshold of 600,510/610.15 (0.84),False
+249,480.0,Pneumonia,respiratory,Both,5128,Reached the threshold of 600,5128/580.10 (8.84),True
+250,481.0,Influenza,respiratory,Both,479,Less than the threshold of 600,479/604.53 (0.79),False
+251,483.0,Acute bronchitis and bronchiolitis,respiratory,Both,190,Less than the threshold of 600,190/608.16 (0.31),False
+252,495.0,Asthma,respiratory,Both,482,Less than the threshold of 600,482/620.31 (0.78),False
+253,496.0,Chronic airway obstruction,respiratory,Both,1807,Reached the threshold of 600,1807/617.49 (2.93),True
+254,497.0,Bronchitis,respiratory,Both,50,Less than the threshold of 600,50/623.47 (0.08),False
+255,498.0,Acute bronchospasm,respiratory,Both,0,Less than the threshold of 600,0/623.71 (0.00),False
+256,499.0,Cystic fibrosis,respiratory,Both,82,Less than the threshold of 600,82/626.62 (0.13),False
+257,500.0,Lung disease due to external agents,respiratory,Both,1287,Reached the threshold of 600,1287/610.07 (2.11),True
+258,501.0,Pneumonitis due to inhalation of food or vomitus,respiratory,Both,561,Less than the threshold of 600,561/616.11 (0.91),False
+259,502.0,Postinflammatory pulmonary fibrosis,respiratory,Both,81,Less than the threshold of 600,81/617.84 (0.13),False
+260,503.0,Pulmonary congestion and hypostasis,respiratory,Both,215,Less than the threshold of 600,215/617.37 (0.35),False
+261,504.0,Other alveolar and parietoalveolar pneumonopathy,respiratory,Both,132,Less than the threshold of 600,132/617.49 (0.21),False
+262,505.0,Other pulmonary inflamation or edema,respiratory,Both,50,Less than the threshold of 600,50/617.95 (0.08),False
+263,506.0,Empyema and pneumothorax,respiratory,Both,340,Less than the threshold of 600,340/616.34 (0.55),False
+264,507.0,Pleurisy; pleural effusion,respiratory,Both,591,Less than the threshold of 600,591/615.01 (0.96),False
+265,508.0,Pulmonary collapse; interstitial and compensatory emphysema,respiratory,Both,99,Less than the threshold of 600,99/617.74 (0.16),False
+266,509.0,"Respiratory failure, insufficiency, arrest",respiratory,Both,429,Less than the threshold of 600,429/616.14 (0.70),False
+267,510.0,Other diseases of lung,respiratory,Both,363,Less than the threshold of 600,363/625.28 (0.58),False
+268,512.0,Other symptoms of respiratory system,respiratory,Both,189,Less than the threshold of 600,189/625.78 (0.30),False
+269,513.0,Respiratory abnormalities,respiratory,Both,509,Less than the threshold of 600,509/624.56 (0.81),False
+270,514.0,Abnormal findings examination of lungs,respiratory,Both,202,Less than the threshold of 600,202/626.28 (0.32),False
+271,516.0,Abnormal sputum,respiratory,Both,154,Less than the threshold of 600,154/626.30 (0.25),False
+272,519.0,"Other diseases of respiratory system, not elsewhere classified",respiratory,Both,406,Less than the threshold of 600,406/623.33 (0.65),False
+273,520.0,Disorders of tooth development,digestive,Both,455,Less than the threshold of 600,455/607.45 (0.75),False
+274,521.0,Diseases of hard tissues of teeth,digestive,Both,1008,Reached the threshold of 600,1008/604.34 (1.67),True
+275,522.0,Diseases of pulp and periapical tissues,digestive,Both,1180,Reached the threshold of 600,1180/604.37 (1.95),True
+276,523.0,Gingival and periodontal diseases,digestive,Both,1341,Reached the threshold of 600,1341/602.33 (2.23),True
+277,524.0,"Dentofacial anomalies, including malocclusion",digestive,Both,275,Less than the threshold of 600,275/608.32 (0.45),False
+278,525.0,Other diseases of the teeth and supporting structures,digestive,Both,271,Less than the threshold of 600,271/608.42 (0.45),False
+279,526.0,Diseases of the jaws,digestive,Both,1882,Reached the threshold of 600,1882/599.59 (3.14),True
+280,527.0,Diseases of the salivary glands,digestive,Both,731,Reached the threshold of 600,731/618.25 (1.18),True
+281,528.0,"Diseases of the oral soft tissues, excluding lesions specific for gingiva and tongue",digestive,Both,1680,Reached the threshold of 600,1680/612.82 (2.74),True
+282,529.0,Diseases and other conditions of the tongue,digestive,Both,414,Less than the threshold of 600,414/619.39 (0.67),False
+283,530.0,Diseases of esophagus,digestive,Both,877,Reached the threshold of 600,877/617.42 (1.42),True
+284,531.0,Peptic ulcer (excl. esophageal),digestive,Both,2406,Reached the threshold of 600,2406/606.33 (3.97),True
+285,532.0,Dysphagia,digestive,Both,29,Less than the threshold of 600,29/622.95 (0.05),False
+286,535.0,Gastritis and duodenitis,digestive,Both,413,Less than the threshold of 600,413/621.12 (0.66),False
+287,536.0,Disorders of function of stomach,digestive,Both,40,Less than the threshold of 600,40/623.25 (0.06),False
+288,537.0,Other disorders of stomach and duodenum,digestive,Both,847,Reached the threshold of 600,847/619.00 (1.37),True
+289,539.0,Bariatric surgery,digestive,Both,37,Less than the threshold of 600,37/627.20 (0.06),False
+290,540.0,Appendiceal conditions,digestive,Both,713,Reached the threshold of 600,713/620.99 (1.15),True
+291,550.0,Abdominal hernia,digestive,Both,2131,Reached the threshold of 600,2131/604.97 (3.52),True
+292,555.0,Inflammatory bowel disease and other gastroenteritis and colitis,digestive,Both,686,Reached the threshold of 600,686/611.08 (1.12),True
+293,556.0,Ulceration of the lower GI tract,digestive,Both,64,Less than the threshold of 600,64/614.85 (0.10),False
+294,557.0,Intestinal malabsorption (non-celiac),digestive,Both,1525,Reached the threshold of 600,1525/606.60 (2.51),True
+295,558.0,Noninfectious gastroenteritis,digestive,Both,38,Less than the threshold of 600,38/614.95 (0.06),False
+296,559.0,Ileostomy status,digestive,Both,88,Less than the threshold of 600,88/614.71 (0.14),False
+297,560.0,Intestinal obstruction without mention of hernia,digestive,Both,1341,Reached the threshold of 600,1341/607.66 (2.21),True
+298,561.0,Symptoms involving digestive system,digestive,Both,1312,Reached the threshold of 600,1312/608.02 (2.16),True
+299,562.0,Diverticulosis and diverticulitis,digestive,Both,463,Less than the threshold of 600,463/612.94 (0.76),False
+300,563.0,Constipation,digestive,Both,81,Less than the threshold of 600,81/614.71 (0.13),False
+301,564.0,Functional digestive disorders,digestive,Both,436,Less than the threshold of 600,436/612.84 (0.71),False
+302,565.0,Anal and rectal conditions,digestive,Both,880,Reached the threshold of 600,880/617.86 (1.42),True
+303,567.0,Peritonitis and retroperitoneal infections,digestive,Both,154,Less than the threshold of 600,154/621.62 (0.25),False
+304,568.0,Other disorders of peritoneum,digestive,Both,169,Less than the threshold of 600,169/621.66 (0.27),False
+305,569.0,Other disorders of intestine,digestive,Both,436,Less than the threshold of 600,436/620.14 (0.70),False
+306,571.0,Chronic liver disease and cirrhosis,digestive,Both,735,Reached the threshold of 600,735/615.78 (1.19),True
+307,572.0,Ascites (non malignant),digestive,Both,51,Less than the threshold of 600,51/619.87 (0.08),False
+308,573.0,Other disorders of liver,digestive,Both,2268,Reached the threshold of 600,2268/609.38 (3.72),True
+309,574.0,Cholelithiasis and cholecystitis,digestive,Both,489,Less than the threshold of 600,489/619.09 (0.79),False
+310,575.0,Other biliary tract disease,digestive,Both,953,Reached the threshold of 600,953/616.28 (1.55),True
+311,577.0,Diseases of pancreas,digestive,Both,561,Less than the threshold of 600,561/621.78 (0.90),False
+312,578.0,Gastrointestinal hemorrhage,digestive,Both,452,Less than the threshold of 600,452/621.78 (0.73),False
+313,579.0,Other symptoms involving abdomen and pelvis,digestive,Both,141,Less than the threshold of 600,141/623.81 (0.23),False
+314,580.0,Nephritis; nephrosis; renal sclerosis,genitourinary,Both,2384,Reached the threshold of 600,2384/595.88 (4.00),True
+315,585.0,Renal failure,genitourinary,Both,832,Reached the threshold of 600,832/605.92 (1.37),True
+316,586.0,Other disorders of the kidney and ureters,genitourinary,Both,796,Reached the threshold of 600,796/605.80 (1.31),True
+317,587.0,Kidney replaced by transpant,genitourinary,Both,33,Less than the threshold of 600,33/610.32 (0.05),False
+318,588.0,Disorders resulting from impaired renal function,genitourinary,Both,195,Less than the threshold of 600,195/609.54 (0.32),False
+319,589.0,Abnormal results of function study of kidney,genitourinary,Both,38,Less than the threshold of 600,38/610.23 (0.06),False
+320,590.0,Pyelonephritis,genitourinary,Both,513,Less than the threshold of 600,513/617.17 (0.83),False
+321,591.0,Urinary tract infection,genitourinary,Both,314,Less than the threshold of 600,314/618.18 (0.51),False
+322,592.0,Cystitis and urethritis,genitourinary,Both,1350,Reached the threshold of 600,1350/612.42 (2.20),True
+323,593.0,Hematuria,genitourinary,Both,147,Less than the threshold of 600,147/618.97 (0.24),False
+324,594.0,Urinary calculus,genitourinary,Both,370,Less than the threshold of 600,370/621.12 (0.60),False
+325,595.0,Hydronephrosis,genitourinary,Both,123,Less than the threshold of 600,123/622.66 (0.20),False
+326,596.0,Other disorders of bladder,genitourinary,Both,3225,Reached the threshold of 600,3225/593.21 (5.44),True
+327,597.0,Other disorders of urethra and urinary tract,genitourinary,Both,1746,Reached the threshold of 600,1746/599.76 (2.91),True
+328,598.0,Abnormal findings on examination of urine,genitourinary,Both,267,Less than the threshold of 600,267/625.23 (0.43),False
+329,599.0,Other symptoms/disorders or the urinary system,genitourinary,Both,3263,Reached the threshold of 600,3263/594.57 (5.49),True
+330,600.0,Hyperplasia of prostate,genitourinary,Male,33,Less than the threshold of 600,33/619.83 (0.05),False
+331,601.0,Inflammatory diseases of prostate,genitourinary,Male,872,Reached the threshold of 600,872/615.86 (1.42),True
+332,602.0,Other disorders of prostate,genitourinary,Male,195,Less than the threshold of 600,195/618.97 (0.32),False
+333,603.0,Other disorders of testis,genitourinary,Male,684,Reached the threshold of 600,684/613.21 (1.12),True
+334,604.0,Disorders of penis,genitourinary,Male,577,Less than the threshold of 600,577/614.23 (0.94),False
+335,605.0,Erectile dysfunction [ED],genitourinary,Male,263,Less than the threshold of 600,263/616.62 (0.43),False
+336,608.0,Other disorders of male genital organs,genitourinary,Male,168,Less than the threshold of 600,168/616.73 (0.27),False
+337,609.0,Male infertility and abnormal spermatozoa,genitourinary,Male,476,Less than the threshold of 600,476/615.40 (0.77),False
+338,610.0,Benign mammary dysplasias,genitourinary,Female,1252,Reached the threshold of 600,1252/300.66 (4.16),True
+339,611.0,Abnormal findings on mammogram or breast exam,genitourinary,Both,370,Less than the threshold of 600,370/609.01 (0.61),False
+340,612.0,"Breast conditions, congenital or relating to hormones",genitourinary,Both,328,Less than the threshold of 600,328/610.90 (0.54),False
+341,613.0,Other nonmalignant breast conditions,genitourinary,Both,387,Less than the threshold of 600,387/622.99 (0.62),False
+342,614.0,Inflammatory diseases of female pelvic organs,genitourinary,Female,687,Reached the threshold of 600,687/308.56 (2.23),True
+343,615.0,Endometriosis,genitourinary,Female,241,Less than the threshold of 600,241/311.27 (0.77),False
+344,617.0,"Disorders secondary to childbirth, surgery, trauma",genitourinary,Female,239,Less than the threshold of 600,239/313.00 (0.76),False
+345,618.0,Genital prolapse,genitourinary,Female,221,Less than the threshold of 600,221/313.21 (0.71),False
+346,619.0,Noninflammatory female genital disorders,genitourinary,Female,537,Less than the threshold of 600,537/310.31 (1.73),False
+347,620.0,Dysplasia of female genital organs,genitourinary,Female,208,Less than the threshold of 600,208/305.22 (0.68),False
+348,621.0,Endometrial hyperplasia,genitourinary,Female,1045,Reached the threshold of 600,1045/298.27 (3.50),True
+349,622.0,Polyp of female genital organs,genitourinary,Female,170,Less than the threshold of 600,170/305.42 (0.56),False
+350,623.0,Hypertrophy of female genital organs,genitourinary,Female,56,Less than the threshold of 600,56/306.11 (0.18),False
+351,624.0,Symptoms involving female genital tract,genitourinary,Female,241,Less than the threshold of 600,241/309.40 (0.78),False
+352,625.0,Pain and other symptoms associated with female genital organs,genitourinary,Female,135,Less than the threshold of 600,135/310.13 (0.44),False
+353,626.0,Disorders of menstruation and other abnormal bleeding from female genital tract,genitourinary,Female,2252,Reached the threshold of 600,2252/290.94 (7.74),True
+354,627.0,Menopausal and postmenopausal disorders,genitourinary,Female,2113,Reached the threshold of 600,2113/294.00 (7.19),True
+355,628.0,Ovarian cyst,genitourinary,Female,49,Less than the threshold of 600,49/304.06 (0.16),False
+356,681.0,Superficial cellulitis and abscess,dermatologic,Both,2185,Reached the threshold of 600,2185/601.17 (3.63),True
+357,686.0,Other local infections of skin and subcutaneous tissue,dermatologic,Both,1938,Reached the threshold of 600,1938/603.29 (3.21),True
+358,687.0,Symptoms affecting skin,dermatologic,Both,394,Less than the threshold of 600,394/624.22 (0.63),False
+359,689.0,Disorder of skin and subcutaneous tissue NOS,dermatologic,Both,277,Less than the threshold of 600,277/625.44 (0.44),False
+360,690.0,Erythematosquamous dermatosis,dermatologic,Both,135,Less than the threshold of 600,135/605.99 (0.22),False
+361,691.0,Congenital anomalies of skin,dermatologic,Both,601,Reached the threshold of 600,601/603.30 (1.00),True
+362,694.0,Dyschromia and Vitiligo,dermatologic,Both,469,Less than the threshold of 600,469/604.24 (0.78),False
+363,695.0,Erythematous conditions,dermatologic,Both,4305,Reached the threshold of 600,4305/582.77 (7.39),True
+364,696.0,Psoriasis and related disorders,dermatologic,Both,738,Reached the threshold of 600,738/597.18 (1.24),True
+365,697.0,Sarcoidosis,dermatologic,Both,563,Less than the threshold of 600,563/604.06 (0.93),False
+366,698.0,Pruritus and related conditions,dermatologic,Both,265,Less than the threshold of 600,265/625.05 (0.42),False
+367,700.0,Corns and callosities,dermatologic,Both,30,Less than the threshold of 600,30/622.46 (0.05),False
+368,701.0,Other hypertrophic and atrophic conditions of skin,dermatologic,Both,1066,Reached the threshold of 600,1066/616.66 (1.73),True
+369,702.0,Degenerative skin conditions and other dermatoses,dermatologic,Both,2770,Reached the threshold of 600,2770/601.36 (4.61),True
+370,703.0,"Diseases of nail, NOS",dermatologic,Both,477,Less than the threshold of 600,477/622.75 (0.77),False
+371,704.0,Diseases of hair and hair follicles,dermatologic,Both,487,Less than the threshold of 600,487/622.62 (0.78),False
+372,705.0,Disorders of sweat glands,dermatologic,Both,9912,Reached the threshold of 600,9912/518.59 (19.11),True
+373,706.0,Diseases of sebaceous glands,dermatologic,Both,567,Less than the threshold of 600,567/579.27 (0.98),False
+374,707.0,Chronic ulcer of skin,dermatologic,Both,3606,Reached the threshold of 600,3606/597.39 (6.04),True
+375,709.0,Diffuse diseases of connective tissue,dermatologic,Both,782,Reached the threshold of 600,782/600.72 (1.30),True
+376,710.0,"Osteomyelitis, periostitis, and other infections involving bone",musculoskeletal,Both,1195,Reached the threshold of 600,1195/606.14 (1.97),True
+377,711.0,Arthropathy associated with infections,musculoskeletal,Both,407,Less than the threshold of 600,407/609.35 (0.67),False
+378,712.0,Infective connective tissue disorders,musculoskeletal,Both,48,Less than the threshold of 600,48/611.17 (0.08),False
+379,713.0,Arthropathy associated with other disorders classified elsewhere,musculoskeletal,Both,176,Less than the threshold of 600,176/610.54 (0.29),False
+380,714.0,Rheumatoid arthritis and other inflammatory polyarthropathies,musculoskeletal,Both,1536,Reached the threshold of 600,1536/604.62 (2.54),True
+381,715.0,Other inflammatory spondylopathies,musculoskeletal,Both,767,Reached the threshold of 600,767/609.78 (1.26),True
+382,716.0,Other arthropathies,musculoskeletal,Both,1249,Reached the threshold of 600,1249/602.75 (2.07),True
+383,717.0,Polymyalgia Rheumatica,musculoskeletal,Both,53,Less than the threshold of 600,53/627.16 (0.08),False
+384,720.0,Spinal stenosis,musculoskeletal,Both,188,Less than the threshold of 600,188/613.80 (0.31),False
+385,721.0,Spondylosis and allied disorders,musculoskeletal,Both,940,Reached the threshold of 600,940/609.93 (1.54),True
+386,722.0,Intervertebral disc disorders,musculoskeletal,Both,3396,Reached the threshold of 600,3396/594.42 (5.71),True
+387,723.0,Other disorders of cervical region,musculoskeletal,Both,216,Less than the threshold of 600,216/613.63 (0.35),False
+388,724.0,Other and unspecified disorders of back,musculoskeletal,Both,444,Less than the threshold of 600,444/612.55 (0.72),False
+389,726.0,Peripheral enthesopathies and allied syndromes,musculoskeletal,Both,1554,Reached the threshold of 600,1554/597.76 (2.60),True
+390,727.0,"Other disorders of synovium, tendon, and bursa",musculoskeletal,Both,2306,Reached the threshold of 600,2306/590.46 (3.91),True
+391,728.0,"Disorders of muscle, ligament, and fascia",musculoskeletal,Both,1202,Reached the threshold of 600,1202/599.56 (2.00),True
+392,729.0,Other disorders of soft tissues,musculoskeletal,Both,804,Reached the threshold of 600,804/602.02 (1.34),True
+393,731.0,Osteitis deformans and osteopathies associated with other disorders classified elsewhere,musculoskeletal,Both,186,Less than the threshold of 600,186/576.12 (0.32),False
+394,732.0,Osteochondropathies,musculoskeletal,Both,2407,Reached the threshold of 600,2407/562.93 (4.28),True
+395,733.0,Other disorders of bone and cartilage,musculoskeletal,Both,1500,Reached the threshold of 600,1500/567.59 (2.64),True
+396,735.0,Acquired foot deformities,musculoskeletal,Both,2565,Reached the threshold of 600,2565/591.35 (4.34),True
+397,736.0,Other acquired deformities of limbs,musculoskeletal,Both,516,Less than the threshold of 600,516/601.84 (0.86),False
+398,737.0,Curvature of spine,musculoskeletal,Both,2823,Reached the threshold of 600,2823/586.59 (4.81),True
+399,738.0,Other acquired musculoskeletal deformity,musculoskeletal,Both,639,Reached the threshold of 600,639/600.50 (1.06),True
+400,739.0,Contracture of joint,musculoskeletal,Both,284,Less than the threshold of 600,284/603.18 (0.47),False
+401,740.0,Osteoarthrosis,musculoskeletal,Both,1742,Reached the threshold of 600,1742/613.97 (2.84),True
+402,741.0,Symptoms and disorders of the joints,musculoskeletal,Both,1284,Reached the threshold of 600,1284/612.25 (2.10),True
+403,742.0,"Derangement of joint, non-traumatic",musculoskeletal,Both,1366,Reached the threshold of 600,1366/612.22 (2.23),True
+404,743.0,"Osteoporosis, osteopenia and pathological fracture",musculoskeletal,Both,3423,Reached the threshold of 600,3423/602.31 (5.68),True
+405,745.0,Pain in joint,musculoskeletal,Both,33,Less than the threshold of 600,33/627.17 (0.05),False
+406,747.0,Cardiac and circulatory congenital anomalies,congenital anomalies,Both,2710,Reached the threshold of 600,2710/601.37 (4.51),True
+407,748.0,"Anomalies of respiratory system, congenital",congenital anomalies,Both,403,Less than the threshold of 600,403/617.63 (0.65),False
+408,749.0,Congenital anomalies of face and neck,congenital anomalies,Both,1699,Reached the threshold of 600,1699/610.73 (2.78),True
+409,750.0,Digestive congenital anomalies,congenital anomalies,Both,2890,Reached the threshold of 600,2890/587.43 (4.92),True
+410,751.0,Genitourinary congenital anomalies,congenital anomalies,Both,2414,Reached the threshold of 600,2414/589.94 (4.09),True
+411,752.0,Nervous system congenital anomalies,congenital anomalies,Both,4538,Reached the threshold of 600,4538/592.03 (7.67),True
+412,753.0,Congenital anomalies of the eye,congenital anomalies,Both,700,Reached the threshold of 600,700/611.79 (1.14),True
+413,754.0,Congenital musculoskeletal deformities of spine,congenital anomalies,Both,327,Less than the threshold of 600,327/610.96 (0.54),False
+414,755.0,Congenital anomalies of limbs,congenital anomalies,Both,4043,Reached the threshold of 600,4043/591.94 (6.83),True
+415,756.0,Other congenital musculoskeletal anomalies,congenital anomalies,Both,1367,Reached the threshold of 600,1367/604.22 (2.26),True
+416,757.0,Congenital anomalies of the integument,congenital anomalies,Both,83,Less than the threshold of 600,83/613.23 (0.14),False
+417,758.0,Chromosomal anomalies and genetic disorders,congenital anomalies,Both,552,Less than the threshold of 600,552/610.45 (0.90),False
+418,759.0,Other and unspecified congenital anomalies,congenital anomalies,Both,922,Reached the threshold of 600,922/607.51 (1.52),True
+419,792.0,Abnormal Papanicolaou smear of cervix and cervical HPV,genitourinary,Female,0,Less than the threshold of 600,0/309.87 (0.00),False
+420,796.0,Elevated prostate specific antigen [PSA],genitourinary,Male,0,Less than the threshold of 600,0/620.04 (0.00),False
+421,860.0,Bone marrow or stem cell transplant,neoplasms,Both,89,Less than the threshold of 600,89/626.80 (0.14),False
+422,931.0,Contact dermatitis and other eczema due to plants [except food],dermatologic,Both,43,Less than the threshold of 600,43/626.45 (0.07),False
+423,938.0,Dermatitis due to solar radiation,dermatologic,Both,722,Reached the threshold of 600,722/622.55 (1.16),True
+424,939.0,Atopic/contact dermatitis due to other or unspecified,dermatologic,Both,2258,Reached the threshold of 600,2258/611.63 (3.69),True
+425,947.0,Urticaria,dermatologic,Both,1098,Reached the threshold of 600,1098/620.70 (1.77),True
+426,980.0,Encounter for long-term (current) use of antibiotics,infectious diseases,Both,0,Less than the threshold of 600,0/627.43 (0.00),False

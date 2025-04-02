@@ -117,24 +117,16 @@ if __name__ == "__main__":
     )
 ```
 ### Example: Matched Cohort Study Design
-In the test folder, we provide three comprehensive examples demonstrating different study designs to help users understand and implement their analyses effectively.
-And we show all results and figure of matched cohort study design.
+In the test folder, we provide three comprehensive examples demonstrating different study designs to help users understand and implement their analyses effectively. Each example includes relevant code, output, and visualizations.
 
 1. Example 1: Matched Cohort Study Design
-Key Features:
-    Exposure
-    Group ID
-    Matched cohort
-    Covariate adjustment using Cox proportional hazards models.
+Key Features: Exposure, Group ID, Covariate adjustment using Cox proportional hazards models.
 
 2. Example 2: Cohort Study Design
-Key Features:
-    Exposure
-    Covariate adjustment using Cox proportional hazards models.
+Key Features: Exposure, Covariate adjustment using Cox proportional hazards models.
 
 3. Example 3: Exposed-only Cohort Design
-Key Features:
-    No exposure
+Key Features: No exposure
 
 ```python
 import diseasenetpy as dnt

@@ -1,0 +1,428 @@
+,phecode,disease,system,sex,N_cases_exposed,describe,exposed_group,unexposed_group,phewas_coef,phewas_se,phewas_p,phewas_p_significance,phewas_p_adjusted
+0,8.0,Intestinal infection,infectious diseases,Both,1058,fitted and delete the covariate(s): {},1058/93.56 (11.31),2406/482.27 (4.99),0.8389843247397943,0.03780641246982852,4.141109685595611e-109,True,1.192639589451536e-106
+1,10.0,Tuberculosis,infectious diseases,Both,372,fitted and delete the covariate(s): {},372/96.25 (3.86),670/482.28 (1.39),1.0276762590609958,0.06568133879285953,3.515722231634051e-55,True,1.0125280027106067e-52
+3,38.0,Septicemia,infectious diseases,Both,259,fitted and delete the covariate(s): {},259/96.81 (2.68),456/483.28 (0.94),1.0484048905018046,0.07893710274200808,2.963083603255941e-40,True,8.53368077737711e-38
+4,41.0,Bacterial infection NOS,infectious diseases,Both,1023,fitted and delete the covariate(s): {},1023/92.08 (11.11),1981/476.13 (4.16),0.992764544421883,0.03948151771558567,1.601039715317632e-139,True,4.610994380114781e-137
+7,70.0,Viral hepatitis,infectious diseases,Both,673,fitted and delete the covariate(s): {},673/92.52 (7.27),1035/477.40 (2.17),1.2254122075703064,0.050703071438145834,4.783200480857909e-129,True,1.3775617384870777e-126
+8,71.0,Human immunodeficiency virus [HIV] disease,infectious diseases,Both,112,fitted and delete the covariate(s): {},112/97.33 (1.15),194/482.44 (0.40),1.0680012350644623,0.12103221845400948,1.1033678206385688e-18,True,3.1776993234390784e-16
+10,79.0,Viral infection,infectious diseases,Both,467,fitted and delete the covariate(s): {},467/94.93 (4.92),895/478.97 (1.87),0.9759637309515201,0.058062902383422585,2.1063079543871077e-63,True,6.0661669086348705e-61
+13,90.0,Sexually transmitted infections (not HIV or hepatitis),infectious diseases,Both,462,fitted and delete the covariate(s): {},462/100.92 (4.58),1284/509.64 (2.52),0.6117205902586286,0.05498666889875647,9.492390776975285e-29,True,2.733808543768882e-26
+14,110.0,Dermatophytosis / Dermatomycosis,infectious diseases,Both,167,fitted and delete the covariate(s): {},167/101.90 (1.64),272/511.96 (0.53),1.129851566278461,0.09958797140409019,7.829194675891483e-30,True,2.254808066656747e-27
+15,112.0,Candidiasis,infectious diseases,Both,332,fitted and delete the covariate(s): {},332/100.89 (3.29),645/510.05 (1.26),0.9557450128019639,0.06837804379688667,2.1426954203738573e-44,True,6.170962810676709e-42
+16,117.0,Mycoses,infectious diseases,Both,167,fitted and delete the covariate(s): {},167/101.96 (1.64),356/511.61 (0.70),0.8610942334215719,0.09515148067282794,1.433357428187752e-19,True,4.128069393180726e-17
+17,130.0,Spirochetal infection,infectious diseases,Both,102,fitted and delete the covariate(s): {},102/101.17 (1.01),235/504.40 (0.47),0.7752757895916007,0.11960111081338513,9.040738439811825e-11,True,2.6037326706658056e-08
+19,132.0,"Infestation (lice, mites)",infectious diseases,Both,112,fitted and delete the covariate(s): {},112/101.15 (1.11),152/504.97 (0.30),1.3007462503418956,0.12653753022027756,8.715217800022756e-25,True,2.509982726406554e-22
+20,133.0,Arthropod-borne diseases,infectious diseases,Both,154,fitted and delete the covariate(s): {},154/100.67 (1.53),278/503.78 (0.55),1.057852182066689,0.10256545488066933,6.09610742064533e-25,True,1.755678937145855e-22
+21,134.0,Helminthiases,infectious diseases,Both,152,fitted and delete the covariate(s): {},152/100.94 (1.51),306/504.06 (0.61),0.9039939981184171,0.10072042495944523,2.826324484313085e-19,True,8.139814514821685e-17
+22,136.0,Other infectious and parasitic diseases,infectious diseases,Both,164,fitted and delete the covariate(s): {},164/100.93 (1.62),281/504.34 (0.56),1.0948180768933027,0.10005180967147413,7.217243666560983e-28,True,2.0785661759695633e-25
+23,145.0,Cancer of mouth,neoplasms,Both,981,fitted and delete the covariate(s): {},981/93.47 (10.50),2269/477.64 (4.75),0.8003300660350684,0.03903042021855538,1.9311704521365915e-93,True,5.561770902153384e-91
+24,149.0,"Cancer of larynx, pharynx, nasal cavities",neoplasms,Both,353,fitted and delete the covariate(s): {},353/96.77 (3.65),625/485.56 (1.29),1.0326476539751492,0.06743659280872069,6.273531633529082e-53,True,1.8067771104563754e-50
+25,150.0,Cancer of esophagus,neoplasms,Both,145,fitted and delete the covariate(s): {},145/101.33 (1.43),226/509.46 (0.44),1.1728994305056932,0.10809498441674996,1.9804044329523733e-27,True,5.703564766902835e-25
+26,151.0,Cancer of stomach,neoplasms,Both,203,fitted and delete the covariate(s): {},203/101.21 (2.01),382/508.64 (0.75),0.9856074459059923,0.08795844555280467,3.8372138976279434e-29,True,1.1051176025168477e-26
+27,153.0,Colorectal cancer,neoplasms,Both,779,fitted and delete the covariate(s): {},779/92.80 (8.39),1901/466.57 (4.07),0.7433613758445625,0.043369500482586545,7.44101690874382e-66,True,2.14301286971822e-63
+28,155.0,Cancer of liver and intrahepatic bile duct,neoplasms,Both,289,fitted and delete the covariate(s): {},289/100.93 (2.86),685/507.70 (1.35),0.7454096016914377,0.07094522239898735,8.034652608404751e-26,True,2.3139799512205686e-23
+29,157.0,Pancreatic cancer,neoplasms,Both,116,fitted and delete the covariate(s): {},116/101.63 (1.14),253/509.19 (0.50),0.8235496441866953,0.11308300916326282,3.272040389173848e-13,True,9.423476320820682e-11
+30,158.0,Neoplasm of unspecified nature of digestive system,neoplasms,Both,131,fitted and delete the covariate(s): {},131/101.67 (1.29),228/509.61 (0.45),1.0633457021443098,0.11124188854296103,1.1906025241794595e-21,True,3.428935269636843e-19
+31,159.0,Malignant neoplasm of other and ill-defined sites within the digestive organs and peritoneum,neoplasms,Both,305,fitted and delete the covariate(s): {},305/100.57 (3.03),547/508.14 (1.08),1.052540068879842,0.07264176771348875,1.412465788059431e-47,True,4.0679014696111614e-45
+33,165.0,Cancer within the respiratory system,neoplasms,Both,1190,fitted and delete the covariate(s): {},1190/89.39 (13.31),2550/460.17 (5.54),0.8866058423408956,0.03595685847031641,3.0587624485670656e-134,True,8.809235851873149e-132
+34,170.0,Cancer of bone and connective tissue,neoplasms,Both,517,fitted and delete the covariate(s): {},517/98.78 (5.23),1105/498.31 (2.22),0.8717787508135264,0.054253590081660606,4.236055639423494e-58,True,1.2199840241539663e-55
+35,172.0,Skin cancer,neoplasms,Both,940,fitted and delete the covariate(s): {},940/93.55 (10.05),1525/492.18 (3.10),1.1913875758941854,0.04259059235537909,3.46028505181386e-172,True,9.965620949223917e-170
+37,174.0,Breast cancer,neoplasms,Both,210,fitted and delete the covariate(s): {},210/96.11 (2.18),491/473.86 (1.04),0.7769297387054089,0.08372495994552286,1.7019991219482974e-20,True,4.901757471211096e-18
+41,184.0,Cancer of other female genital organs,neoplasms,Female,233,fitted and delete the covariate(s): {},233/48.66 (4.79),449/244.69 (1.83),0.9856650573204789,0.0822895571741916,4.633172799638595e-33,True,1.3343537662959153e-30
+43,187.0,Cancer of other male genital organs,neoplasms,Male,408,fitted and delete the covariate(s): {},408/48.48 (8.42),796/248.62 (3.20),0.987795658029225,0.062260557457635916,1.0981722907084075e-56,True,3.1627361972402136e-54
+44,189.0,Cancer of urinary organs (incl. kidney and bladder),neoplasms,Both,378,fitted and delete the covariate(s): {},378/101.00 (3.74),735/511.69 (1.44),0.9587877531766907,0.06416930506693178,1.7686075523564076e-50,True,5.093589750786454e-48
+45,190.0,Cancer of eye,neoplasms,Both,101,fitted and delete the covariate(s): {},101/99.84 (1.01),163/493.92 (0.33),1.141262273086675,0.1295213413077142,1.2361016164407347e-18,True,3.5599726553493158e-16
+46,191.0,Manlignant and unknown neoplasms of brain and nervous system,neoplasms,Both,607,fitted and delete the covariate(s): {},607/95.94 (6.33),1202/486.19 (2.47),0.934822782750798,0.05061535940216935,3.657828255758181e-76,True,1.0534545376583562e-73
+48,194.0,Cancer of other endocrine glands,neoplasms,Both,665,fitted and delete the covariate(s): {},665/92.94 (7.16),772/488.72 (1.58),1.5322798991895739,0.05446096198922762,3.6179367489608435e-174,True,1.0419657837007229e-171
+49,195.0,"Cancer, suspected or other",neoplasms,Both,639,fitted and delete the covariate(s): {},639/92.83 (6.88),1107/472.39 (2.34),1.0958447789719088,0.05077497191404054,2.629726893012132e-103,True,7.57361345187494e-101
+52,198.0,Secondary malignant neoplasm,neoplasms,Both,627,fitted and delete the covariate(s): {},627/93.82 (6.68),1377/472.06 (2.92),0.8303883907391741,0.04890934605280421,1.1925979967121432e-64,True,3.4346822305309725e-62
+53,199.0,Neoplasm of uncertain behavior,neoplasms,Both,408,fitted and delete the covariate(s): {},408/94.87 (4.30),656/475.79 (1.38),1.1657780807765314,0.06443594948868887,3.681700125416162e-73,True,1.0603296361198547e-70
+54,200.0,Myeloproliferative disease,neoplasms,Both,524,fitted and delete the covariate(s): {},524/94.52 (5.54),980/469.99 (2.09),0.9935084261486915,0.055137690457423234,1.3901987719533886e-72,True,4.003772463225759e-70
+55,201.0,Hodgkin's disease,neoplasms,Both,106,fitted and delete the covariate(s): {},106/96.87 (1.09),164/474.32 (0.35),1.1281992550287965,0.12537422152570865,2.2850157594025334e-19,True,6.580845387079296e-17
+56,202.0,"Cancer of other lymphoid, histiocytic tissue",neoplasms,Both,408,fitted and delete the covariate(s): {},408/94.93 (4.30),809/470.49 (1.72),0.9086594858237487,0.06152087121767218,2.289216620473694e-49,True,6.592943866964239e-47
+57,204.0,Leukemia,neoplasms,Both,628,fitted and delete the covariate(s): {},628/93.37 (6.73),1173/468.27 (2.50),1.0112784505611847,0.0504753944953374,2.7241383877707466e-89,True,7.84551855677975e-87
+58,208.0,Benign neoplasm of colon,neoplasms,Both,153,fitted and delete the covariate(s): {},153/100.50 (1.52),272/501.26 (0.54),1.054080187322023,0.10288500690930047,1.2433347296327388e-24,True,3.5808040213422877e-22
+60,210.0,"Benign neoplasm of lip, oral cavity, and pharynx",neoplasms,Both,146,fitted and delete the covariate(s): {},146/98.17 (1.49),255/487.68 (0.52),1.067136212886392,0.1058363650443955,6.5764217336916315e-24,True,1.8940094593031897e-21
+61,211.0,Benign neoplasm of other parts of digestive system,neoplasms,Both,132,fitted and delete the covariate(s): {},132/97.10 (1.36),225/476.57 (0.47),1.0530587345355686,0.11184465936753402,4.7142374891440194e-21,True,1.3577003968734775e-18
+62,212.0,Benign neoplasm of respiratory and intrathoracic organs,neoplasms,Both,189,fitted and delete the covariate(s): {},189/102.83 (1.84),307/518.50 (0.59),1.138650640160281,0.09407068318874785,1.0033926225357387e-33,True,2.8897707529029273e-31
+63,213.0,Benign neoplasm of bone and articular cartilage,neoplasms,Both,356,fitted and delete the covariate(s): {},356/101.22 (3.52),627/514.31 (1.22),1.0845378158588672,0.06744076499527069,3.448431813079566e-58,True,9.93148362166915e-56
+64,214.0,Lipoma,neoplasms,Both,105,fitted and delete the covariate(s): {},105/101.98 (1.03),201/510.94 (0.39),1.0018328268312617,0.12296694840419413,3.7253493572135434e-16,True,1.0729006148775005e-13
+65,215.0,Other benign neoplasm of connective and other soft tissue,neoplasms,Both,415,fitted and delete the covariate(s): {},415/100.16 (4.14),914/508.02 (1.80),0.8320435313472854,0.060046714604686934,1.1603594091881389e-43,True,3.34183509846184e-41
+66,216.0,Benign neoplasm of skin,neoplasms,Both,308,fitted and delete the covariate(s): {},308/101.42 (3.04),611/512.61 (1.19),0.9452544197617173,0.07078247940421337,1.1172033213664604e-40,True,3.217545565535406e-38
+68,218.0,Benign neoplasm of uterus,neoplasms,Female,112,fitted and delete the covariate(s): {},112/48.08 (2.33),159/239.16 (0.66),1.2418254873032344,0.12555766235136848,4.5782962054739667e-23,True,1.3185493071765023e-20
+70,221.0,Benign neoplasm of other female genital organs,neoplasms,Female,302,fitted and delete the covariate(s): {},302/46.34 (6.52),227/235.61 (0.96),1.952255486710921,0.09149238389694325,5.051124697165587e-101,True,1.454723912783689e-98
+72,223.0,Benign neoplasm of kidney and other urinary organs,neoplasms,Both,464,fitted and delete the covariate(s): {},464/100.02 (4.64),1326/509.71 (2.60),0.5870985608111872,0.05453027218519384,4.9563959042205695e-27,True,1.427442020415524e-24
+73,224.0,Benign neoplasm of eye,neoplasms,Both,128,fitted and delete the covariate(s): {},128/99.63 (1.28),274/493.12 (0.56),0.8475368444139446,0.10832260485240218,5.109283093026815e-15,True,1.4714735307917226e-12
+74,225.0,Benign neoplasm of brain and other parts of nervous system,neoplasms,Both,199,fitted and delete the covariate(s): {},199/99.18 (2.01),322/493.11 (0.65),1.1201342275422734,0.0915668262456163,2.072212065591818e-34,True,5.967970748904436e-32
+82,242.0,Thyrotoxicosis with or without goiter,endocrine/metabolic,Both,107,fitted and delete the covariate(s): {},107/99.67 (1.07),187/492.76 (0.38),1.060651564841261,0.12281250217977394,5.8038297413904e-18,True,1.6715029655204353e-15
+83,244.0,Hypothyroidism,endocrine/metabolic,Both,673,fitted and delete the covariate(s): {},673/96.50 (6.97),1926/483.89 (3.98),0.5718729408040782,0.04550977858698482,3.2500798435579184e-36,True,9.360229949446805e-34
+85,246.0,Other disorders of thyroid,endocrine/metabolic,Both,323,fitted and delete the covariate(s): {},323/99.15 (3.26),947/490.43 (1.93),0.5083412716712543,0.0650578278808505,5.5540488194607384e-15,True,1.5995660600046927e-12
+87,250.0,Diabetes mellitus,endocrine/metabolic,Both,613,fitted and delete the covariate(s): {},613/98.29 (6.24),1223/502.52 (2.43),0.9586435682978283,0.05043919870583667,1.5234016148961466e-80,True,4.387396650900902e-78
+89,252.0,Disorders of parathyroid gland,endocrine/metabolic,Both,150,fitted and delete the covariate(s): {},150/97.38 (1.54),392/475.83 (0.82),0.6297815041342691,0.09749284782121088,1.0486130666798732e-10,True,3.020005632038035e-08
+90,253.0,Disorders of the pituitary gland and its hypothalamic control,endocrine/metabolic,Both,383,fitted and delete the covariate(s): {},383/95.51 (4.01),1005/471.62 (2.13),0.6355507456736672,0.060738649153773375,1.2681081397840824e-25,True,3.652151442578157e-23
+92,255.0,Disorders of adrenal glands,endocrine/metabolic,Both,302,fitted and delete the covariate(s): {},302/96.36 (3.13),582/474.93 (1.23),0.9489724462419471,0.07202982555315261,1.2268934867260053e-39,True,3.5334532417708954e-37
+96,259.0,Other endocrine disorders,endocrine/metabolic,Both,126,fitted and delete the covariate(s): {},126/97.49 (1.29),235/476.76 (0.49),0.9659302857138653,0.11224069837417959,7.573167314073335e-18,True,2.1810721864531206e-15
+97,260.0,Protein-calorie malnutrition,endocrine/metabolic,Both,250,fitted and delete the covariate(s): {},250/96.73 (2.58),515/479.40 (1.07),0.8906488008994567,0.07790233355358685,2.8641518651909487e-30,True,8.248757371749933e-28
+98,261.0,Vitamin deficiency,endocrine/metabolic,Both,775,fitted and delete the covariate(s): {},775/93.86 (8.26),1641/473.73 (3.46),0.8777252642901793,0.04439235633788072,5.188746004282834e-87,True,1.4943588492334563e-84
+99,262.0,Mineral deficiency NEC,endocrine/metabolic,Both,289,fitted and delete the covariate(s): {},289/97.31 (2.97),520/480.79 (1.08),1.012335382277623,0.07451437058102564,4.863645731624643e-42,True,1.4007299707078971e-39
+102,269.0,Proteinuria,endocrine/metabolic,Both,162,fitted and delete the covariate(s): {},162/96.87 (1.67),102/484.16 (0.21),2.101707826123847,0.1304128345032133,1.975738558923111e-58,True,5.69012704969856e-56
+103,270.0,Disorders of protein plasma/amino-acid transport and metabolism,endocrine/metabolic,Both,1214,fitted and delete the covariate(s): {},1214/91.15 (13.32),3359/465.98 (7.21),0.6105446367971386,0.03417728334956537,2.2473275437827538e-71,True,6.472303326094331e-69
+104,271.0,Disorders of carbohydrate transport and metabolism,endocrine/metabolic,Both,184,fitted and delete the covariate(s): {},184/102.93 (1.79),327/518.45 (0.63),1.035963941741983,0.09353022602646605,1.6358565202558908e-28,True,4.7112667783369654e-26
+105,272.0,Disorders of lipoid metabolism,endocrine/metabolic,Both,604,fitted and delete the covariate(s): {},604/98.38 (6.14),971/504.45 (1.92),1.1796490231914767,0.05290604913557186,3.946421176124184e-110,True,1.136569298723765e-107
+106,274.0,Gout and other crystal arthropathies,endocrine/metabolic,Both,107,fitted and delete the covariate(s): {},107/103.35 (1.04),174/520.11 (0.33),1.139633022661821,0.1244491985154047,5.315506372030459e-20,True,1.5308658351447722e-17
+107,275.0,Disorders of mineral metabolism,endocrine/metabolic,Both,112,fitted and delete the covariate(s): {},112/103.37 (1.08),187/519.74 (0.36),1.1061657674481609,0.12088139127858086,5.649472199001429e-20,True,1.6270479933124114e-17
+108,276.0,"Disorders of fluid, electrolyte, and acid-base balance",endocrine/metabolic,Both,201,fitted and delete the covariate(s): {},201/102.10 (1.97),429/514.43 (0.83),0.8474911175990504,0.08627900995597645,8.992048200415787e-23,True,2.5897098817197467e-20
+109,277.0,Other disorders of metabolism,endocrine/metabolic,Both,440,fitted and delete the covariate(s): {},440/99.55 (4.42),784/508.76 (1.54),1.0910829382490397,0.06083249129369396,6.190054084282847e-72,True,1.7827355762734599e-69
+111,279.0,Disorders involving the immune mechanism,endocrine/metabolic,Both,421,fitted and delete the covariate(s): {},421/100.29 (4.20),751/510.59 (1.47),1.053751953881163,0.0618419955782319,4.188396787331606e-65,True,1.2062582747515025e-62
+113,281.0,Other deficiency anemia,hematopoietic,Both,218,fitted and delete the covariate(s): {},218/98.18 (2.22),577/485.67 (1.19),0.630112131312232,0.08026547328553783,4.148747973760788e-15,True,1.1948394164431068e-12
+114,282.0,Hereditary hemolytic anemias,hematopoietic,Both,411,fitted and delete the covariate(s): {},411/96.97 (4.24),566/486.84 (1.16),1.2843313369414047,0.06571139861355976,4.547133661348247e-85,True,1.309574494468295e-82
+117,285.0,Other anemias,hematopoietic,Both,172,fitted and delete the covariate(s): {},172/98.84 (1.74),317/488.20 (0.65),0.9707844683501329,0.09555926433225984,3.0222763623644208e-24,True,8.70415592360953e-22
+118,286.0,Coagulation defects,hematopoietic,Both,380,fitted and delete the covariate(s): {},380/99.99 (3.80),1082/502.90 (2.15),0.5788912997135436,0.06030744027595984,8.072143744664547e-22,True,2.3247773984633897e-19
+119,287.0,Purpura and other hemorrhagic conditions,hematopoietic,Both,782,fitted and delete the covariate(s): {},782/98.75 (7.92),1550/503.10 (3.08),0.9660705037592059,0.044884961530998795,9.430265874255666e-103,True,2.715916571785632e-100
+120,288.0,Diseases of white blood cells,hematopoietic,Both,286,fitted and delete the covariate(s): {},286/95.20 (3.00),686/475.07 (1.44),0.7359790792909287,0.071067136533019,3.9260608074983483e-25,True,1.1307055125595243e-22
+121,289.0,Other diseases of blood and blood-forming organs,hematopoietic,Both,724,fitted and delete the covariate(s): {},724/90.66 (7.99),836/475.87 (1.76),1.538130586655366,0.052367265037933056,1.2520810915411844e-189,True,3.605993543638611e-187
+122,290.0,Delirium dementia and amnestic and other cognitive disorders,mental disorders,Both,644,fitted and delete the covariate(s): {},644/93.97 (6.85),1118/473.24 (2.36),1.071061626082596,0.05038890398908814,2.907194027963541e-100,True,8.372718800534998e-98
+123,291.0,Other specified nonpsychotic and/or transient mental disorders,mental disorders,Both,320,fitted and delete the covariate(s): {},320/96.31 (3.32),436/477.30 (0.91),1.3088238471678422,0.07492195980253247,2.460829034804354e-68,True,7.08718762023654e-66
+124,292.0,Neurological disorders,mental disorders,Both,209,fitted and delete the covariate(s): {},209/96.94 (2.16),358/477.71 (0.75),1.073246079211426,0.08849864179069579,7.574105561385522e-34,True,2.1813424016790303e-31
+126,295.0,Schizophrenia and other psychotic disorders,mental disorders,Both,340,fitted and delete the covariate(s): {},340/76.75 (4.43),541/328.67 (1.65),1.001001704445466,0.07081689084966981,2.3090450720819665e-45,True,6.650049807596064e-43
+127,296.0,Mood disorders,mental disorders,Both,433,fitted and delete the covariate(s): {},433/76.11 (5.69),693/327.83 (2.11),1.0115694983499002,0.0626752251713076,1.3383976690320444e-58,True,3.854585286812288e-56
+128,297.0,Suicidal ideation or attempt,mental disorders,Both,1568,fitted and delete the covariate(s): {},1568/67.64 (23.18),3012/314.08 (9.59),0.9315400828472612,0.032902265407006887,2.4360594721276404e-176,True,7.015851279727604e-174
+129,300.0,Anxiety disorders,mental disorders,Both,337,fitted and delete the covariate(s): {},337/76.90 (4.38),473/329.11 (1.44),1.129948445654202,0.0729462083171033,4.042824669623575e-54,True,1.1643335048515896e-51
+130,301.0,Personality disorders,mental disorders,Both,263,fitted and delete the covariate(s): {},263/77.26 (3.40),391/329.47 (1.19),1.0629432677743638,0.08202820672935383,2.1096433963749752e-38,True,6.075772981559928e-36
+131,302.0,Sexual and gender identity disorders,mental disorders,Both,256,fitted and delete the covariate(s): {},256/77.20 (3.32),380/329.73 (1.15),1.0975640996977964,0.08352767852108678,1.939072996730641e-39,True,5.584530230584246e-37
+132,303.0,Psychogenic and somatoform disorders,mental disorders,Both,177,fitted and delete the covariate(s): {},177/77.82 (2.27),268/330.17 (0.81),1.0508057904155108,0.09906411998739305,2.755103211517679e-26,True,7.934697249170917e-24
+134,306.0,Other mental disorder,mental disorders,Both,155,fitted and delete the covariate(s): {},155/78.03 (1.99),175/330.74 (0.53),1.3079670105227685,0.11360113662651976,1.1257150247981826e-30,True,3.2420592714187657e-28
+135,312.0,Conduct disorders,mental disorders,Both,212,fitted and delete the covariate(s): {},212/101.47 (2.09),308/511.29 (0.60),1.2285386851396858,0.09027705503583101,3.563027298704954e-42,True,1.0261518620270267e-39
+136,313.0,Pervasive developmental disorders,mental disorders,Both,179,fitted and delete the covariate(s): {},179/101.73 (1.76),279/511.45 (0.55),1.1816459854728136,0.09751343867019478,8.50356540519308e-34,True,2.4490268366956074e-31
+137,315.0,Develomental delays and disorders,mental disorders,Both,210,fitted and delete the covariate(s): {},210/101.58 (2.07),414/510.61 (0.81),0.9373402971552967,0.08588077039160548,9.833619147594159e-28,True,2.832082314507118e-25
+138,316.0,Substance addiction and disorders,mental disorders,Both,759,fitted and delete the covariate(s): {},759/90.66 (8.37),1237/464.62 (2.66),1.1602680674855166,0.047327915169580716,1.0093595657783422e-132,True,2.9069555494416253e-130
+139,317.0,Alcohol-related disorders,mental disorders,Both,484,fitted and delete the covariate(s): {},484/93.93 (5.15),842/466.85 (1.80),1.0577478371305729,0.05807077339539955,3.938150249413122e-74,True,1.1341872718309792e-71
+141,320.0,Meningitis,neurological,Both,348,fitted and delete the covariate(s): {},348/97.70 (3.56),708/487.40 (1.45),0.9128517660732142,0.0665008175801698,7.0043308085816224e-43,True,2.0172472728715074e-40
+142,323.0,Encephalitis,neurological,Both,568,fitted and delete the covariate(s): {},568/96.05 (5.91),1113/484.14 (2.30),0.9388799246755427,0.052299135698099845,4.619985460896019e-72,True,1.3305558127380535e-69
+143,324.0,Other CNS infection and poliomyelitis,neurological,Both,186,fitted and delete the covariate(s): {},186/98.48 (1.89),329/488.66 (0.67),1.0446044158110583,0.0931012005271773,3.2491721875255786e-29,True,9.357615900073666e-27
+145,327.0,Sleep disorders,neurological,Both,732,fitted and delete the covariate(s): {},732/99.29 (7.37),1407/507.88 (2.77),0.9948886740457512,0.04645902659489187,9.825794897012878e-102,True,2.829828930339709e-99
+146,331.0,Other cerebral degenerations,neurological,Both,304,fitted and delete the covariate(s): {},304/82.27 (3.69),511/392.71 (1.30),1.0438528992181773,0.07397049197229673,3.2151132691775197e-45,True,9.259526215231256e-43
+148,333.0,Extrapyramidal disease and abnormal movement disorders,neurological,Both,841,fitted and delete the covariate(s): {},841/78.64 (10.69),1691/385.44 (4.39),0.8958424103184818,0.04314167802211265,8.949102339181964e-96,True,2.5773414736844054e-93
+149,334.0,Degenerative disease of the spinal cord,neurological,Both,479,fitted and delete the covariate(s): {},479/79.23 (6.05),738/389.03 (1.90),1.2030704258593483,0.060324432867236356,1.7125446272160882e-88,True,4.932128526382334e-86
+153,339.0,Other headache syndromes,neurological,Both,113,fitted and delete the covariate(s): {},113/102.43 (1.10),201/514.22 (0.39),1.0713734577897136,0.12004491616723963,4.466198534529714e-19,True,1.2862651779445576e-16
+154,340.0,Migraine,neurological,Both,365,fitted and delete the covariate(s): {},365/101.02 (3.61),623/512.37 (1.22),1.0881866801876718,0.06674086678234888,9.145669678081248e-60,True,2.6339528672873995e-57
+158,344.0,Other paralytic syndromes,neurological,Both,161,fitted and delete the covariate(s): {},161/83.14 (1.94),275/394.07 (0.70),1.0210431127761024,0.10072272872037308,3.779004895409375e-24,True,1.0883534098779001e-21
+159,345.0,"Epilepsy, recurrent seizures, convulsions",neurological,Both,469,fitted and delete the covariate(s): {},469/81.33 (5.77),853/390.66 (2.18),0.9790161826331646,0.05873012381612275,2.175208358764931e-62,True,6.264600073243001e-60
+162,348.0,Other conditions of brain,neurological,Both,675,fitted and delete the covariate(s): {},675/77.59 (8.70),886/390.03 (2.27),1.3800827328284697,0.05327769226212436,6.069768330691398e-148,True,1.7480932792391227e-145
+163,349.0,Other and unspecified disorders of the nervous system,neurological,Both,126,fitted and delete the covariate(s): {},126/83.37 (1.51),292/394.19 (0.74),0.7059399009719325,0.10870639176397695,8.358371999592718e-11,True,2.407211135882703e-08
+164,350.0,Abnormal movement,neurological,Both,776,fitted and delete the covariate(s): {},776/95.90 (8.09),1527/495.14 (3.08),0.9780842483758152,0.04492079911793154,4.1354803321109086e-105,True,1.1910183356479418e-102
+165,351.0,Other peripheral nerve disorders,neurological,Both,663,fitted and delete the covariate(s): {},663/93.60 (7.08),1655/472.74 (3.50),0.7043559942555216,0.04667606917708357,1.875809040167586e-51,True,5.4023300356826474e-49
+166,352.0,Disorders of other cranial nerves,neurological,Both,686,fitted and delete the covariate(s): {},686/93.69 (7.32),1249/475.34 (2.63),1.033694025906529,0.04845831311311961,5.777963216916179e-101,True,1.6640534064718596e-98
+167,353.0,Nerve root and plexus disorders,neurological,Both,274,fitted and delete the covariate(s): {},274/95.53 (2.87),305/480.16 (0.64),1.536343604840575,0.08510856550773326,7.667358985102449e-73,True,2.208199387709505e-70
+170,357.0,Inflammatory and toxic neuropathy,neurological,Both,230,fitted and delete the covariate(s): {},230/101.33 (2.27),401/510.55 (0.79),1.0745392142941979,0.08377805423196232,1.1722962791679902e-37,True,3.376213284003812e-35
+172,359.0,Muscular dystrophies and other myopathies,neurological,Both,257,fitted and delete the covariate(s): {},257/101.22 (2.54),440/510.56 (0.86),1.0850727028941325,0.07961304295378396,2.6801732914548635e-42,True,7.718899079390007e-40
+173,360.0,Disorders of the globe,sense organs,Both,109,fitted and delete the covariate(s): {},109/93.80 (1.16),248/458.40 (0.54),0.7731057313779758,0.11609557611864266,2.752886594312843e-11,True,7.928313391620989e-09
+175,362.0,Other retinal disorders,sense organs,Both,578,fitted and delete the covariate(s): {},578/90.41 (6.39),957/453.37 (2.11),1.1228098065277796,0.053922238322825194,2.6922540497887194e-96,True,7.753691663391512e-94
+177,364.0,Corneal opacity and other disorders of cornea,sense organs,Both,945,fitted and delete the covariate(s): {},945/86.76 (10.89),1698/448.79 (3.78),1.0762566303224776,0.0417491779725124,1.5209352408241382e-146,True,4.380293493573518e-144
+178,365.0,Glaucoma,sense organs,Both,267,fitted and delete the covariate(s): {},267/92.99 (2.87),472/457.51 (1.03),1.0316620488170074,0.07814306402155966,8.518516853553008e-40,True,2.4533328538232663e-37
+179,366.0,Cataract,sense organs,Both,1051,fitted and delete the covariate(s): {},1051/94.15 (11.16),1957/490.36 (3.99),1.0472311908097007,0.03916435956000962,1.6404575201939512e-157,True,4.72451765815858e-155
+180,367.0,Disorders of refraction and accommodation; blindness and low vision,sense organs,Both,310,fitted and delete the covariate(s): {},310/101.43 (3.06),507/513.18 (0.99),1.1324416998727216,0.0731037775859214,3.9979313023947856e-54,True,1.1514042150896982e-51
+181,368.0,Visual disturbances,sense organs,Both,605,fitted and delete the covariate(s): {},605/99.19 (6.10),1049/508.85 (2.06),1.1009047171760025,0.05203869647075802,2.455647927563607e-99,True,7.072266031383188e-97
+182,369.0,Infection of the eye,sense organs,Both,408,fitted and delete the covariate(s): {},408/95.98 (4.25),642/479.73 (1.34),1.1877202018134354,0.0647530880532731,3.803985488887878e-75,True,1.0955478207997089e-72
+183,370.0,Keratitis,sense organs,Both,374,fitted and delete the covariate(s): {},374/95.95 (3.90),789/478.28 (1.65),0.8641024515916962,0.06358103215335975,4.555206185295266e-42,True,1.3118993813650366e-39
+184,371.0,Inflammation of the eye,sense organs,Both,390,fitted and delete the covariate(s): {},390/95.62 (4.08),792/477.90 (1.66),0.9092123982975255,0.06269325118960459,1.1672093118285108e-47,True,3.361562818066111e-45
+185,372.0,Disorders of conjunctiva,sense organs,Both,132,fitted and delete the covariate(s): {},132/97.27 (1.36),182/481.69 (0.38),1.2889315808459991,0.11642453585880327,1.7352822001510238e-28,True,4.9976127364349486e-26
+186,374.0,Other disorders of eyelids,sense organs,Both,237,fitted and delete the covariate(s): {},237/95.98 (2.47),252/481.28 (0.52),1.5721112884412267,0.09289780022591335,3.044153408015057e-64,True,8.767161815083365e-62
+187,375.0,Disorders of lacrimal system,sense organs,Both,126,fitted and delete the covariate(s): {},126/97.68 (1.29),204/481.70 (0.42),1.127137720064148,0.11510545949776618,1.2159902765887735e-22,True,3.5020519965756675e-20
+189,377.0,Disorders of optic nerve and visual pathways,sense organs,Both,118,fitted and delete the covariate(s): {},118/97.73 (1.21),189/481.99 (0.39),1.146992738858276,0.11906331974900691,5.774665318537353e-22,True,1.6631036117387577e-19
+190,378.0,Strabismus and other disorders of binocular eye movements,sense organs,Both,309,fitted and delete the covariate(s): {},309/96.64 (3.20),549/480.22 (1.14),1.034218762391185,0.07235150866247725,2.3726525277400967e-46,True,6.833239279891478e-44
+191,379.0,Other disorders of eye,sense organs,Both,593,fitted and delete the covariate(s): {},593/94.06 (6.30),1243/473.81 (2.62),0.8803712129625464,0.05065998124793084,1.2101809920549506e-67,True,3.4853212571182576e-65
+192,380.0,Disorders of external ear,sense organs,Both,431,fitted and delete the covariate(s): {},431/99.63 (4.33),839/503.88 (1.67),0.9681758318771796,0.0601675202429932,2.93432595332331e-58,True,8.450858745571132e-56
+193,381.0,Otitis media and Eustachian tube disorders,sense organs,Both,584,fitted and delete the covariate(s): {},584/97.13 (6.01),1031/493.95 (2.09),1.072883694999935,0.05288480279897104,1.6688619044749333e-91,True,4.806322284887808e-89
+195,383.0,Otosclerosis,sense organs,Both,278,fitted and delete the covariate(s): {},278/98.98 (2.81),561/496.33 (1.13),0.9042561328902798,0.07411714944276593,3.094411132957889e-34,True,8.911904062918721e-32
+196,384.0,Other disorders of tympanic membrane,sense organs,Both,142,fitted and delete the covariate(s): {},142/99.82 (1.42),220/498.05 (0.44),1.2135451839591027,0.11019067068802713,3.3029118119773286e-28,True,9.512386018494707e-26
+197,385.0,Other disorders of middle ear and mastoid,sense organs,Both,241,fitted and delete the covariate(s): {},241/99.07 (2.43),418/496.94 (0.84),1.0706816541778759,0.08206891630791063,6.685932930068734e-39,True,1.9255486838597953e-36
+198,386.0,Vertiginous syndromes and other disorders of vestibular system,sense organs,Both,487,fitted and delete the covariate(s): {},487/99.98 (4.87),1034/508.71 (2.03),0.8794782699436919,0.05574856263347624,4.565638098147405e-56,True,1.3149037722664525e-53
+200,389.0,Hearing loss,sense organs,Both,929,fitted and delete the covariate(s): {},929/91.95 (10.10),1741/467.54 (3.72),1.0031669426844068,0.04150569923133601,4.671466248671092e-129,True,1.3453822796172745e-126
+201,394.0,Rheumatic disease of the heart valves,circulatory system,Both,350,fitted and delete the covariate(s): {},350/97.58 (3.59),650/494.17 (1.32),1.0010477368192718,0.06708441974569285,2.3631827048588647e-50,True,6.805966189993531e-48
+202,395.0,Heart valve disorders,circulatory system,Both,538,fitted and delete the covariate(s): {},538/96.95 (5.55),909/493.32 (1.84),1.0976649170730552,0.055309156546348694,1.193565938609513e-87,True,3.437469903195397e-85
+203,396.0,Abnormal heart sounds,circulatory system,Both,315,fitted and delete the covariate(s): {},315/96.16 (3.28),122/497.20 (0.25),2.59944749157828,0.11053814231011887,2.7788752804313224e-122,True,8.003160807642209e-120
+204,401.0,Hypertension,circulatory system,Both,485,fitted and delete the covariate(s): {},485/99.07 (4.90),972/503.78 (1.93),0.9433863775372229,0.056514748752086695,1.480025376183718e-62,True,4.262473083409108e-60
+206,411.0,Ischemic Heart Disease,circulatory system,Both,709,fitted and delete the covariate(s): {},709/94.48 (7.50),1535/475.77 (3.23),0.8567298146970987,0.04629621758351146,1.8680286715261517e-76,True,5.379922573995317e-74
+207,414.0,Other forms of chronic heart disease,circulatory system,Both,615,fitted and delete the covariate(s): {},615/94.78 (6.49),1193/476.86 (2.50),0.9619674859263826,0.05048510999210602,6.031355201169881e-81,True,1.7370302979369258e-78
+208,415.0,Pulmonary heart disease,circulatory system,Both,172,fitted and delete the covariate(s): {},172/102.51 (1.68),333/516.63 (0.64),0.9887429527560485,0.09547199302447895,3.9155469100255667e-25,True,1.1276775100873632e-22
+210,418.0,Nonspecific chest pain,circulatory system,Both,245,fitted and delete the covariate(s): {},245/101.80 (2.41),695/510.96 (1.36),0.5673574269225898,0.07498902898327628,3.8527000953748787e-14,True,1.109577627467965e-11
+211,420.0,Carditis,circulatory system,Both,554,fitted and delete the covariate(s): {},554/98.32 (5.63),928/501.77 (1.85),1.1324168095360696,0.05475486224737839,5.0756027206940584e-95,True,1.4617735835598889e-92
+212,425.0,Cardiomyopathy,circulatory system,Both,172,fitted and delete the covariate(s): {},172/100.52 (1.71),248/505.26 (0.49),1.2570485891316405,0.10116391553475246,1.8918241401957546e-35,True,5.448453523763773e-33
+213,426.0,Cardiac conduction disorders,circulatory system,Both,323,fitted and delete the covariate(s): {},323/99.70 (3.24),690/502.17 (1.37),0.8589587086830468,0.06824834576717156,2.5283093136674504e-36,True,7.281530823362257e-34
+214,427.0,Cardiac dysrhythmias,circulatory system,Both,449,fitted and delete the covariate(s): {},449/99.11 (4.53),957/501.09 (1.91),0.8916953827822127,0.05827479682683326,7.464410522175662e-53,True,2.1497502303865907e-50
+215,428.0,Congestive heart failure; nonhypertensive,circulatory system,Both,169,fitted and delete the covariate(s): {},169/102.96 (1.64),242/518.11 (0.47),1.263949796315459,0.10188223487064321,2.425025038194672e-35,True,6.984072110000656e-33
+217,430.0,Intracranial hemorrhage,circulatory system,Both,373,fitted and delete the covariate(s): {},373/93.49 (3.99),679/461.91 (1.47),1.0210537681544294,0.06579803228572609,2.62099374778127e-54,True,7.548461993610057e-52
+218,433.0,Cerebrovascular disease,circulatory system,Both,1516,fitted and delete the covariate(s): {},1516/84.64 (17.91),3273/445.19 (7.35),0.9095774014090653,0.03208620627113161,8.877509666250194e-177,True,2.556722783880056e-174
+219,440.0,Atherosclerosis,circulatory system,Both,230,fitted and delete the covariate(s): {},230/97.84 (2.35),478/486.31 (0.98),0.8918949344412154,0.08159206385094298,8.180676055794283e-28,True,2.3560347040687536e-25
+221,442.0,Other aneurysm,circulatory system,Both,282,fitted and delete the covariate(s): {},282/97.48 (2.89),511/485.96 (1.05),1.0267397279400317,0.07540656223180693,3.214796626431336e-42,True,9.258614284122249e-40
+223,444.0,Arterial embolism and thrombosis,circulatory system,Both,228,fitted and delete the covariate(s): {},228/97.41 (2.34),282/487.45 (0.58),1.4115030103438704,0.0907069039439205,1.3369208419526904e-54,True,3.850332024823749e-52
+224,446.0,Polyarteritis nodosa and allied conditions,circulatory system,Both,313,fitted and delete the covariate(s): {},313/96.44 (3.25),360/486.88 (0.74),1.5185531094476197,0.07939329131865072,1.5057545472753752e-81,True,4.3365730961530804e-79
+225,447.0,Other disorders of arteries and arterioles,circulatory system,Both,413,fitted and delete the covariate(s): {},413/97.08 (4.25),1067/483.91 (2.20),0.6677715336879936,0.05880144513165599,6.894290314706999e-30,True,1.9855556106356156e-27
+229,452.0,Other venous embolism and thrombosis,circulatory system,Both,146,fitted and delete the covariate(s): {},146/100.41 (1.45),341/501.57 (0.68),0.7646429793895815,0.10001605242835898,2.086166670156443e-14,True,6.008160010050556e-12
+231,454.0,Varicose veins,circulatory system,Both,567,fitted and delete the covariate(s): {},567/98.37 (5.76),1102/498.68 (2.21),0.9698821303411529,0.052579200933445855,5.602845334335543e-76,True,1.6136194562886363e-73
+232,455.0,Hemorrhoids,circulatory system,Both,296,fitted and delete the covariate(s): {},296/99.50 (2.97),538/500.17 (1.08),1.0060646622629668,0.07311166483958631,4.395045087491069e-43,True,1.2657729851974278e-40
+236,459.0,Other disorders of circulatory system,circulatory system,Both,142,fitted and delete the covariate(s): {},142/102.48 (1.39),254/515.45 (0.49),1.0226770182144487,0.10582035429861898,4.276365060156455e-22,True,1.2315931373250592e-19
+237,464.0,Acute sinusitis,respiratory,Both,223,fitted and delete the covariate(s): {},223/101.15 (2.20),327/510.89 (0.64),1.2413102115248782,0.08823915509502203,6.010192449919984e-45,True,1.730935425576955e-42
+238,465.0,Acute upper respiratory infections of multiple or unspecified sites,respiratory,Both,160,fitted and delete the covariate(s): {},160/101.86 (1.57),297/511.53 (0.58),0.9964759549047646,0.09925703497819646,1.0234799567866996e-23,True,2.947622275545695e-21
+241,472.0,Chronic pharyngitis and nasopharyngitis,respiratory,Both,137,fitted and delete the covariate(s): {},137/98.80 (1.39),203/489.50 (0.41),1.1895153599269568,0.11197353239968186,2.3249479449613924e-26,True,6.69585008148881e-24
+242,473.0,Diseases of the larynx and vocal cords,respiratory,Both,160,fitted and delete the covariate(s): {},160/98.68 (1.62),381/488.33 (0.78),0.7209947532519593,0.09512783635694429,3.476399025922698e-14,True,1.001202919465737e-11
+243,474.0,Acute and chronic tonsillitis,respiratory,Both,442,fitted and delete the covariate(s): {},442/96.93 (4.56),812/486.02 (1.67),1.0102557829944463,0.06002918387035606,1.4857370335439178e-63,True,4.278922656606483e-61
+244,475.0,Chronic sinusitis,respiratory,Both,130,fitted and delete the covariate(s): {},130/98.61 (1.32),181/489.41 (0.37),1.2777648068630234,0.11722612358274115,1.1525664197862955e-27,True,3.319391288984531e-25
+245,476.0,Allergic rhinitis,respiratory,Both,188,fitted and delete the covariate(s): {},188/98.50 (1.91),371/488.66 (0.76),0.95796984294603,0.09136811999756819,1.0153790958236215e-25,True,2.92429179597203e-23
+246,477.0,Epistaxis or throat hemorrhage,respiratory,Both,110,fitted and delete the covariate(s): {},110/99.08 (1.11),242/489.44 (0.49),0.8179980844792001,0.1169155120412904,2.6245652041487608e-12,True,7.558747787948431e-10
+248,479.0,Other upper respiratory disease,respiratory,Both,181,fitted and delete the covariate(s): {},181/98.47 (1.84),313/488.83 (0.64),1.0478459081107165,0.09427124009451471,1.057853527811839e-28,True,3.0466181600980965e-26
+249,480.0,Pneumonia,respiratory,Both,1479,fitted and delete the covariate(s): {},1479/86.47 (17.10),3375/458.63 (7.36),0.8610082742067592,0.03220110299871677,1.6814262710250873e-157,True,4.842507660552252e-155
+250,481.0,Influenza,respiratory,Both,289,fitted and delete the covariate(s): {},289/93.38 (3.09),174/474.90 (0.37),2.1965693153797803,0.10010158247154906,1.0012399254684997e-106,True,2.883570985349279e-104
+252,495.0,Asthma,respiratory,Both,243,fitted and delete the covariate(s): {},243/100.55 (2.42),237/511.61 (0.46),1.698164850170195,0.09458042313355954,4.408128475407972e-72,True,1.269541000917496e-69
+253,496.0,Chronic airway obstruction,respiratory,Both,526,fitted and delete the covariate(s): {},526/100.63 (5.23),1258/508.76 (2.47),0.7635619374853327,0.052725782650479905,1.5800748630453413e-47,True,4.550615605570583e-45
+257,500.0,Lung disease due to external agents,respiratory,Both,541,fitted and delete the covariate(s): {},541/95.90 (5.64),718/494.39 (1.45),1.3736989218677786,0.05817971130500409,2.9499739246592782e-123,True,8.495924903018721e-121
+258,501.0,Pneumonitis due to inhalation of food or vomitus,respiratory,Both,174,fitted and delete the covariate(s): {},174/99.70 (1.75),371/496.56 (0.75),0.8624559516915923,0.09350114134588351,2.861783825971835e-20,True,8.241937418798885e-18
+264,507.0,Pleurisy; pleural effusion,respiratory,Both,203,fitted and delete the covariate(s): {},203/99.21 (2.05),373/495.98 (0.75),0.9921561700454398,0.08813684448456918,2.1392543431111237e-29,True,6.161052508160037e-27
+266,509.0,"Respiratory failure, insufficiency, arrest",respiratory,Both,134,fitted and delete the covariate(s): {},134/99.64 (1.34),284/496.62 (0.57),0.868991481616376,0.1064696994965062,3.298864889039609e-16,True,9.500730880434074e-14
+267,510.0,Other diseases of lung,respiratory,Both,131,fitted and delete the covariate(s): {},131/103.47 (1.27),232/520.53 (0.45),1.1052427703216305,0.1121978841540197,6.797730282001487e-23,True,1.957746321216428e-20
+269,513.0,Respiratory abnormalities,respiratory,Both,161,fitted and delete the covariate(s): {},161/103.40 (1.56),347/520.02 (0.67),0.86469393839861,0.0965542197666486,3.3811610252515476e-19,True,9.737743752724457e-17
+272,519.0,"Other diseases of respiratory system, not elsewhere classified",respiratory,Both,162,fitted and delete the covariate(s): {},162/102.71 (1.58),243/517.21 (0.47),1.1932846962144803,0.10269413035683765,3.269214728482999e-31,True,9.415338418031036e-29
+273,520.0,Disorders of tooth development,digestive,Both,139,fitted and delete the covariate(s): {},139/97.51 (1.43),301/481.12 (0.63),0.8086917549959305,0.10370733518777103,6.298276849728123e-15,True,1.8139037327216994e-12
+274,521.0,Diseases of hard tissues of teeth,digestive,Both,269,fitted and delete the covariate(s): {},269/96.66 (2.78),687/479.04 (1.43),0.6879180538904829,0.07281806175644447,3.48414518316293e-21,True,1.0034338127509238e-18
+275,522.0,Diseases of pulp and periapical tissues,digestive,Both,394,fitted and delete the covariate(s): {},394/96.27 (4.09),746/479.35 (1.56),0.9779090097254622,0.06331414111067422,8.108745722961732e-54,True,2.335318768212979e-51
+276,523.0,Gingival and periodontal diseases,digestive,Both,437,fitted and delete the covariate(s): {},437/95.60 (4.57),856/478.04 (1.79),0.9471107832868363,0.05995884440286063,3.3141749539246875e-56,True,9.5448238673031e-54
+279,526.0,Diseases of the jaws,digestive,Both,588,fitted and delete the covariate(s): {},588/94.91 (6.20),1222/476.10 (2.57),0.8850406386282502,0.051034718830847946,2.2697659507645678e-67,True,6.536925938201955e-65
+280,527.0,Diseases of the salivary glands,digestive,Both,217,fitted and delete the covariate(s): {},217/101.16 (2.15),501/507.21 (0.99),0.7697920614457155,0.0821280605397751,7.045286245552908e-21,True,2.0290424387192374e-18
+281,528.0,"Diseases of the oral soft tissues, excluding lesions specific for gingiva and tongue",digestive,Both,578,fitted and delete the covariate(s): {},578/98.94 (5.84),1074/504.06 (2.13),1.0079473281953564,0.05233785792458775,1.1985675929168101e-82,True,3.451874667600413e-80
+282,529.0,Diseases and other conditions of the tongue,digestive,Both,150,fitted and delete the covariate(s): {},150/101.39 (1.48),258/508.09 (0.51),1.0925220592657012,0.10459276179109289,1.536689043313596e-25,True,4.4256644447431566e-23
+283,530.0,Diseases of esophagus,digestive,Both,322,fitted and delete the covariate(s): {},322/100.04 (3.22),545/508.45 (1.07),1.1288919722029287,0.07167887827392173,6.944860133225173e-56,True,2.0001197183688499e-53
+284,531.0,Peptic ulcer (excl. esophageal),digestive,Both,914,fitted and delete the covariate(s): {},914/96.06 (9.52),1460/496.42 (2.94),1.1897361831837958,0.04316385459619121,3.070084583797673e-167,True,8.841843601337298e-165
+286,535.0,Gastritis and duodenitis,digestive,Both,158,fitted and delete the covariate(s): {},158/101.69 (1.55),249/511.27 (0.49),1.177902363264724,0.10346051514756169,4.964402884881772e-30,True,1.4297480308459503e-27
+288,537.0,Other disorders of stomach and duodenum,digestive,Both,285,fitted and delete the covariate(s): {},285/100.96 (2.82),550/509.91 (1.08),0.9675650568136558,0.07396887982155603,4.2448777960473214e-39,True,1.2225248052616286e-36
+290,540.0,Appendiceal conditions,digestive,Both,235,fitted and delete the covariate(s): {},235/102.06 (2.30),475/514.94 (0.92),0.9063103112580364,0.08062760580323056,2.573487789398326e-29,True,7.411644833467178e-27
+291,550.0,Abdominal hernia,digestive,Both,725,fitted and delete the covariate(s): {},725/96.10 (7.54),1358/492.61 (2.76),1.0236067628003245,0.046990517723850427,3.3439464710883117e-105,True,9.630565836734337e-103
+292,555.0,Inflammatory bowel disease and other gastroenteritis and colitis,digestive,Both,257,fitted and delete the covariate(s): {},257/98.74 (2.60),416/493.45 (0.84),1.122907009148406,0.08030876893964521,1.9972148823329893e-44,True,5.751978861119009e-42
+294,557.0,Intestinal malabsorption (non-celiac),digestive,Both,488,fitted and delete the covariate(s): {},488/97.48 (5.01),1002/490.28 (2.04),0.9272407527262817,0.0563149521063635,6.517386410941052e-61,True,1.877007286351023e-58
+297,560.0,Intestinal obstruction without mention of hernia,digestive,Both,411,fitted and delete the covariate(s): {},411/98.07 (4.19),884/490.80 (1.80),0.8343620502330811,0.060412235117401965,2.1833786800514556e-43,True,6.288130598548193e-41
+298,561.0,Symptoms involving digestive system,digestive,Both,400,fitted and delete the covariate(s): {},400/98.00 (4.08),866/491.22 (1.76),0.8391104093887259,0.06129301844935431,1.1627439866477286e-42,True,3.3487026815454586e-40
+299,562.0,Diverticulosis and diverticulitis,digestive,Both,161,fitted and delete the covariate(s): {},161/99.52 (1.62),290/494.46 (0.59),1.022770154787756,0.10004681335783265,1.565593268650153e-24,True,4.508908613712441e-22
+301,564.0,Functional digestive disorders,digestive,Both,150,fitted and delete the covariate(s): {},150/99.58 (1.51),266/494.35 (0.54),1.048925512593034,0.10382889911372044,5.388297451582661e-24,True,1.5518296660558063e-21
+302,565.0,Anal and rectal conditions,digestive,Both,290,fitted and delete the covariate(s): {},290/100.98 (2.87),578/509.01 (1.14),0.9427524374626821,0.0729387636074272,3.2420151655591423e-38,True,9.33700367681033e-36
+305,569.0,Other disorders of intestine,digestive,Both,158,fitted and delete the covariate(s): {},158/101.83 (1.55),270/510.41 (0.53),1.0888960489948094,0.10187003191818278,1.1451166585898319e-26,True,3.2979359767387157e-24
+306,571.0,Chronic liver disease and cirrhosis,digestive,Both,278,fitted and delete the covariate(s): {},278/99.67 (2.79),444/501.92 (0.88),1.1791736907214794,0.077979589576039,1.167291064511586e-51,True,3.3617982657933677e-49
+308,573.0,Other disorders of liver,digestive,Both,727,fitted and delete the covariate(s): {},727/97.49 (7.46),1506/497.77 (3.03),0.9050554944202333,0.045927031531169844,1.900917936029725e-86,True,5.474643655765608e-84
+309,574.0,Cholelithiasis and cholecystitis,digestive,Both,172,fitted and delete the covariate(s): {},172/101.24 (1.70),314/507.65 (0.62),1.0079088642325624,0.09626910121886165,1.1901626151868342e-25,True,3.4276683317380825e-23
+310,575.0,Other biliary tract disease,digestive,Both,357,fitted and delete the covariate(s): {},357/100.12 (3.57),590/505.97 (1.17),1.1400821976826245,0.06820502490856607,1.01041268565225e-62,True,2.90998853467848e-60
+311,577.0,Diseases of pancreas,digestive,Both,198,fitted and delete the covariate(s): {},198/102.36 (1.93),361/515.81 (0.70),1.019237862027229,0.08968606607181867,6.281862075758512e-30,True,1.8091762778184515e-27
+312,578.0,Gastrointestinal hemorrhage,digestive,Both,155,fitted and delete the covariate(s): {},155/102.38 (1.51),294/514.48 (0.57),0.9691922651919559,0.10069006276906371,6.240229160315959e-22,True,1.7971859981709963e-19
+314,580.0,Nephritis; nephrosis; renal sclerosis,genitourinary,Both,938,fitted and delete the covariate(s): {},938/91.30 (10.27),1336/474.13 (2.82),1.3185062654841624,0.04394387131503354,8.617555206124705e-198,True,2.481855899363915e-195
+315,585.0,Renal failure,genitourinary,Both,278,fitted and delete the covariate(s): {},278/96.28 (2.89),518/478.77 (1.08),0.976050742507618,0.07518011785896912,1.5311522618306958e-38,True,4.409718514072404e-36
+316,586.0,Other disorders of the kidney and ureters,genitourinary,Both,274,fitted and delete the covariate(s): {},274/96.14 (2.85),487/478.77 (1.02),1.0564955456228928,0.07683973669054676,5.1397351796472155e-43,True,1.4802437317383981e-40
+320,590.0,Pyelonephritis,genitourinary,Both,195,fitted and delete the covariate(s): {},195/99.99 (1.95),303/501.43 (0.60),1.2101344478199738,0.09342921397294111,2.2766140821965543e-38,True,6.556648556726077e-36
+321,591.0,Urinary tract infection,genitourinary,Both,113,fitted and delete the covariate(s): {},113/100.38 (1.13),194/502.03 (0.39),1.1082732320112867,0.12130890222707014,6.4829232906334e-20,True,1.867081907702419e-17
+322,592.0,Cystitis and urethritis,genitourinary,Both,536,fitted and delete the covariate(s): {},536/97.79 (5.48),786/498.95 (1.58),1.2590253956830066,0.05705103924078344,6.3596685809549916e-108,True,1.8315845513150376e-105
+324,594.0,Urinary calculus,genitourinary,Both,123,fitted and delete the covariate(s): {},123/102.38 (1.20),244/513.38 (0.48),0.9155143198167419,0.11195028971286802,2.8891796952236877e-16,True,8.32083752224422e-14
+326,596.0,Other disorders of bladder,genitourinary,Both,1019,fitted and delete the covariate(s): {},1019/92.67 (11.00),2075/474.39 (4.37),0.9460453841815168,0.03923549478521542,1.8718727124339242e-128,True,5.3909934118097016e-126
+327,597.0,Other disorders of urethra and urinary tract,genitourinary,Both,564,fitted and delete the covariate(s): {},564/94.62 (5.96),1110/478.73 (2.32),0.9659579121524716,0.05273074075294442,5.871276987614907e-75,True,1.6909277724330932e-72
+328,598.0,Abnormal findings on examination of urine,genitourinary,Both,102,fitted and delete the covariate(s): {},102/103.50 (0.99),164/520.41 (0.32),1.133611524488959,0.12769913238970634,6.856065734684175e-19,True,1.9745469315890423e-16
+329,599.0,Other symptoms/disorders or the urinary system,genitourinary,Both,1122,fitted and delete the covariate(s): {},1122/91.41 (12.27),2047/479.07 (4.27),1.0801091058053174,0.038218179126478784,1.0234618314434027e-175,True,2.9475700745569997e-173
+331,601.0,Inflammatory diseases of prostate,genitourinary,Male,153,fitted and delete the covariate(s): {},153/49.50 (3.09),275/249.58 (1.10),1.0561110688347959,0.1033604634384433,1.651342193625419e-24,True,4.755865517641207e-22
+338,610.0,Benign mammary dysplasias,genitourinary,Female,382,fitted and delete the covariate(s): {},382/47.12 (8.11),817/239.22 (3.42),0.8690403500712934,0.06299507220634222,2.7175373808121095e-43,True,7.826507656738875e-41
+339,611.0,Abnormal findings on mammogram or breast exam,genitourinary,Both,204,fitted and delete the covariate(s): {},204/95.89 (2.13),156/482.70 (0.32),1.944923687171481,0.11008612326794706,7.490742846757759e-70,True,2.1573339398662346e-67
+340,612.0,"Breast conditions, congenital or relating to hormones",genitourinary,Both,125,fitted and delete the covariate(s): {},125/97.43 (1.28),189/483.03 (0.39),1.1857851787386795,0.11657878817199185,2.6568924478247814e-24,True,7.651850249735371e-22
+341,613.0,Other nonmalignant breast conditions,genitourinary,Both,129,fitted and delete the covariate(s): {},129/102.87 (1.25),257/517.04 (0.50),0.9334415498397924,0.10943960787234619,1.4725565004376358e-17,True,4.240962721260391e-15
+342,614.0,Inflammatory diseases of female pelvic organs,genitourinary,Female,227,fitted and delete the covariate(s): {},227/49.95 (4.54),447/253.26 (1.76),0.948162830834358,0.08283602771781112,2.455070558515424e-30,True,7.070603208524421e-28
+346,619.0,Noninflammatory female genital disorders,genitourinary,Female,189,fitted and delete the covariate(s): {},189/50.48 (3.74),344/256.01 (1.34),1.0404732688917369,0.09224081082514575,1.6480846626203813e-29,True,4.7464838283466985e-27
+348,621.0,Endometrial hyperplasia,genitourinary,Female,343,fitted and delete the covariate(s): {},343/46.00 (7.46),650/235.50 (2.76),0.9783972122378548,0.06805662008407691,7.296854086629297e-47,True,2.1014939769492374e-44
+353,626.0,Disorders of menstruation and other abnormal bleeding from female genital tract,genitourinary,Female,606,fitted and delete the covariate(s): {},606/44.25 (13.69),1487/227.09 (6.55),0.7696413308923722,0.04947392992844666,1.4374123055609343e-54,True,4.139747440015491e-52
+354,627.0,Menopausal and postmenopausal disorders,genitourinary,Female,699,fitted and delete the covariate(s): {},699/44.46 (15.72),1274/229.67 (5.55),1.073591472418554,0.04870934168016568,1.1712438607174014e-107,True,3.373182318866116e-105
+356,681.0,Superficial cellulitis and abscess,dermatologic,Both,788,fitted and delete the covariate(s): {},788/93.12 (8.46),1317/482.37 (2.73),1.1609418408785392,0.04618319317516147,1.923605381166969e-139,True,5.53998349776087e-137
+357,686.0,Other local infections of skin and subcutaneous tissue,dermatologic,Both,657,fitted and delete the covariate(s): {},657/94.65 (6.94),1218/482.86 (2.52),1.0253022127307811,0.04938399878912891,9.584543066125434e-96,True,2.760348403044125e-93
+358,687.0,Symptoms affecting skin,dermatologic,Both,140,fitted and delete the covariate(s): {},140/103.10 (1.36),253/519.19 (0.49),1.051307482610498,0.1073854082361128,1.2424626058465802e-22,True,3.5782923048381514e-20
+359,689.0,Disorder of skin and subcutaneous tissue NOS,dermatologic,Both,102,fitted and delete the covariate(s): {},102/103.53 (0.99),174/520.93 (0.33),1.1219204798939888,0.12693855490289668,9.718979129767605e-19,True,2.7990659893730705e-16
+361,691.0,Congenital anomalies of skin,dermatologic,Both,218,fitted and delete the covariate(s): {},218/96.53 (2.26),366/476.08 (0.77),1.067827713760083,0.08681686525705722,9.082931515637197e-35,True,2.6158842765035126e-32
+362,694.0,Dyschromia and Vitiligo,dermatologic,Both,180,fitted and delete the covariate(s): {},180/96.85 (1.86),271/476.71 (0.57),1.2124370193219063,0.09814140647184609,4.635961524590348e-35,True,1.3351569190820202e-32
+363,695.0,Erythematous conditions,dermatologic,Both,1248,fitted and delete the covariate(s): {},1248/90.37 (13.81),2841/462.64 (6.14),0.8288206965767818,0.03484488759784286,4.662041612325384e-125,True,1.3426679843497105e-122
+364,696.0,Psoriasis and related disorders,dermatologic,Both,255,fitted and delete the covariate(s): {},255/94.44 (2.70),438/464.04 (0.94),1.0583116308247045,0.08021306325893947,9.531460508754564e-40,True,2.745060626521314e-37
+365,697.0,Sarcoidosis,dermatologic,Both,138,fitted and delete the covariate(s): {},138/97.12 (1.42),398/476.30 (0.84),0.553599344289727,0.0999939045070671,3.0887374910709024e-08,True,8.895563974284198e-06
+368,701.0,Other hypertrophic and atrophic conditions of skin,dermatologic,Both,372,fitted and delete the covariate(s): {},372/100.57 (3.70),686/508.67 (1.35),1.0094113323192364,0.0652788286027479,6.158828671754306e-54,True,1.77374265746524e-51
+369,702.0,Degenerative skin conditions and other dermatoses,dermatologic,Both,980,fitted and delete the covariate(s): {},980/94.53 (10.37),1724/486.32 (3.54),1.080410514189738,0.040934796194235866,1.6291669367534924e-153,True,4.6920007778500585e-151
+370,703.0,"Diseases of nail, NOS",dermatologic,Both,157,fitted and delete the covariate(s): {},157/102.66 (1.53),318/516.28 (0.62),0.9206279485883649,0.09871969748727007,1.1027797199813298e-20,True,3.17600559354623e-18
+371,704.0,Diseases of hair and hair follicles,dermatologic,Both,156,fitted and delete the covariate(s): {},156/102.58 (1.52),331/516.23 (0.64),0.8714127371389618,0.0983583192654612,8.03212948121432e-19,True,2.313253290589724e-16
+372,705.0,Disorders of sweat glands,dermatologic,Both,2251,fitted and delete the covariate(s): {},2251/70.76 (31.81),6278/381.39 (16.46),0.7019325153983986,0.025915568773220737,1.4647546710104852e-161,True,4.2184934525101976e-159
+373,706.0,Diseases of sebaceous glands,dermatologic,Both,163,fitted and delete the covariate(s): {},163/86.64 (1.88),334/419.19 (0.80),0.8578278591969861,0.09692081942118087,8.688555259238252e-19,True,2.5023039146606166e-16
+374,707.0,Chronic ulcer of skin,dermatologic,Both,856,fitted and delete the covariate(s): {},856/96.72 (8.85),2717/495.05 (5.49),0.4865618363807268,0.039798490658464684,2.2680131805130983e-34,True,6.531877959877723e-32
+375,709.0,Diffuse diseases of connective tissue,dermatologic,Both,248,fitted and delete the covariate(s): {},248/95.69 (2.59),483/471.58 (1.02),0.9535425596244943,0.07962030790355036,4.7397877329505875e-33,True,1.3650588670897691e-30
+376,710.0,"Osteomyelitis, periostitis, and other infections involving bone",musculoskeletal,Both,453,fitted and delete the covariate(s): {},453/95.34 (4.75),691/478.28 (1.44),1.2138783674191556,0.06178888273623224,6.307351406328506e-86,True,1.81651720502261e-83
+377,711.0,Arthropathy associated with infections,musculoskeletal,Both,131,fitted and delete the covariate(s): {},131/96.85 (1.35),262/479.85 (0.55),0.8924197456603508,0.10862307854495122,2.108473493900647e-16,True,6.072403662433864e-14
+380,714.0,Rheumatoid arthritis and other inflammatory polyarthropathies,musculoskeletal,Both,500,fitted and delete the covariate(s): {},500/95.64 (5.23),987/483.57 (2.04),0.9526321434142643,0.05578244663375686,2.1777630181732717e-65,True,6.271957492339022e-63
+381,715.0,Other inflammatory spondylopathies,musculoskeletal,Both,305,fitted and delete the covariate(s): {},305/97.33 (3.13),440/486.91 (0.90),1.2387631204212741,0.07572225641051676,3.7339429122591364e-60,True,1.0753755587306313e-57
+382,716.0,Other arthropathies,musculoskeletal,Both,491,fitted and delete the covariate(s): {},491/93.34 (5.26),714/476.94 (1.50),1.2604889430820267,0.0597532597515882,8.859566174975676e-99,True,2.551555058392995e-96
+385,721.0,Spondylosis and allied disorders,musculoskeletal,Both,324,fitted and delete the covariate(s): {},324/97.36 (3.33),589/488.10 (1.21),1.0317107607315912,0.070294255849483,9.046969202315894e-49,True,2.6055271302669775e-46
+386,722.0,Intervertebral disc disorders,musculoskeletal,Both,1172,fitted and delete the covariate(s): {},1172/91.26 (12.84),2097/479.22 (4.38),1.1062759042284533,0.03757535566674008,1.6161066561710795e-190,True,4.654387169772709e-188
+388,724.0,Other and unspecified disorders of back,musculoskeletal,Both,141,fitted and delete the covariate(s): {},141/98.42 (1.43),291/489.63 (0.59),0.8766121208247313,0.10370144944815987,2.833546559777114e-17,True,8.160614092158088e-15
+389,726.0,Peripheral enthesopathies and allied syndromes,musculoskeletal,Both,504,fitted and delete the covariate(s): {},504/93.44 (5.39),981/467.23 (2.10),0.9577764563255577,0.05589682728194933,8.174621136995781e-66,True,2.3542908874547848e-63
+390,727.0,"Other disorders of synovium, tendon, and bursa",musculoskeletal,Both,859,fitted and delete the covariate(s): {},859/89.68 (9.58),1338/463.97 (2.88),1.2254040136561226,0.04493436194778751,9.373340266442752e-164,True,2.6995219967355125e-161
+391,728.0,"Disorders of muscle, ligament, and fascia",musculoskeletal,Both,377,fitted and delete the covariate(s): {},377/94.17 (4.00),771/468.25 (1.65),0.8832787899142434,0.0637565330110138,1.2043175448946925e-43,True,3.4684345292967144e-41
+392,729.0,Other disorders of soft tissues,musculoskeletal,Both,316,fitted and delete the covariate(s): {},316/94.54 (3.34),453/470.18 (0.96),1.260335972400426,0.07460610536881725,5.048749904424231e-64,True,1.4540399724741787e-61
+394,732.0,Osteochondropathies,musculoskeletal,Both,796,fitted and delete the covariate(s): {},796/84.77 (9.39),1426/416.81 (3.42),1.0437696826920522,0.04557218670627374,4.2723281913744447e-116,True,1.23043051911584e-113
+395,733.0,Other disorders of bone and cartilage,musculoskeletal,Both,470,fitted and delete the covariate(s): {},470/87.21 (5.39),886/419.06 (2.11),0.9551730002162174,0.05830486837179667,2.555097291039143e-60,True,7.358680198192732e-58
+396,735.0,Acquired foot deformities,musculoskeletal,Both,845,fitted and delete the covariate(s): {},845/92.24 (9.16),1563/465.53 (3.36),1.0162265773321115,0.04369669160581618,1.2262523618120449e-119,True,3.531606802018689e-117
+397,736.0,Other acquired deformities of limbs,musculoskeletal,Both,171,fitted and delete the covariate(s): {},171/96.08 (1.78),321/471.65 (0.68),0.9876597702575769,0.09635274615868693,1.177841907786322e-24,True,3.3921846944246074e-22
+398,737.0,Curvature of spine,musculoskeletal,Both,806,fitted and delete the covariate(s): {},806/91.56 (8.80),1857/461.63 (4.02),0.7791031041239844,0.0428953212788149,1.0153173992783834e-73,True,2.924114109921744e-71
+399,738.0,Other acquired musculoskeletal deformity,musculoskeletal,Both,224,fitted and delete the covariate(s): {},224/95.56 (2.34),385/470.89 (0.82),1.099724897435509,0.08591523196693596,1.6370744315141492e-37,True,4.7147743627607496e-35
+400,739.0,Contracture of joint,musculoskeletal,Both,117,fitted and delete the covariate(s): {},117/96.47 (1.21),157/472.53 (0.33),1.3165726632600616,0.12467879615883236,4.5804612057626664e-26,True,1.319172827259648e-23
+401,740.0,Osteoarthrosis,musculoskeletal,Both,639,fitted and delete the covariate(s): {},639/98.91 (6.46),1089/507.22 (2.15),1.1296188141908898,0.050984511324437126,9.107297942454816e-109,True,2.6229018074269872e-106
+402,741.0,Symptoms and disorders of the joints,musculoskeletal,Both,367,fitted and delete the covariate(s): {},367/99.85 (3.68),889/500.22 (1.78),0.7166018174193193,0.0626255538322005,2.559687462414011e-30,True,7.371899891752352e-28
+403,742.0,"Derangement of joint, non-traumatic",musculoskeletal,Both,460,fitted and delete the covariate(s): {},460/99.18 (4.64),880/500.77 (1.76),0.9775711197460996,0.058529494072225574,1.2632712551355237e-62,True,3.6382212147903084e-60
+404,743.0,"Osteoporosis, osteopenia and pathological fracture",musculoskeletal,Both,1080,fitted and delete the covariate(s): {},1080/95.42 (11.32),2275/495.48 (4.59),0.9259016653134964,0.0378956695636903,7.645972349551588e-132,True,2.2020400366708576e-129
+406,747.0,Cardiac and circulatory congenital anomalies,congenital anomalies,Both,844,fitted and delete the covariate(s): {},844/95.38 (8.85),1804/489.50 (3.69),0.8840342755422241,0.04248432347078436,3.6264756721898385e-96,True,1.0444249935906735e-93
+407,748.0,"Anomalies of respiratory system, congenital",congenital anomalies,Both,156,fitted and delete the covariate(s): {},156/100.55 (1.55),242/503.54 (0.48),1.2005314969992475,0.10466885538311717,1.8707756114594768e-30,True,5.387833761003293e-28
+408,749.0,Congenital anomalies of face and neck,congenital anomalies,Both,615,fitted and delete the covariate(s): {},615/97.68 (6.30),1065/499.57 (2.13),1.0929294486392074,0.05154980701479117,9.264524249857245e-100,True,2.6681829839588864e-97
+409,750.0,Digestive congenital anomalies,congenital anomalies,Both,914,fitted and delete the covariate(s): {},914/91.27 (10.01),1823/461.79 (3.95),0.9412823945721188,0.041437126144260275,3.1187435973042386e-114,True,8.981981560236207e-112
+410,751.0,Genitourinary congenital anomalies,congenital anomalies,Both,795,fitted and delete the covariate(s): {},795/91.87 (8.65),1504/463.53 (3.24),0.9920266852664069,0.04485226763646001,2.1378565928653443e-108,True,6.157026987452191e-106
+411,752.0,Nervous system congenital anomalies,congenital anomalies,Both,2157,fitted and delete the covariate(s): {},2157/85.86 (25.12),2210/474.06 (4.66),1.7371331546485989,0.032117640412961175,0.0,True,0.0
+412,753.0,Congenital anomalies of the eye,congenital anomalies,Both,263,fitted and delete the covariate(s): {},263/96.32 (2.73),398/482.86 (0.82),1.2228694329095253,0.08131249072617165,4.068382308745153e-51,True,1.171694104918604e-48
+413,754.0,Congenital musculoskeletal deformities of spine,congenital anomalies,Both,104,fitted and delete the covariate(s): {},104/98.27 (1.06),214/485.94 (0.44),0.8836418429889982,0.12138691157436518,3.3494061357088863e-13,True,9.646289670841592e-11
+414,755.0,Congenital anomalies of limbs,congenital anomalies,Both,1360,fitted and delete the covariate(s): {},1360/90.96 (14.95),2527/474.74 (5.32),1.0558381554783252,0.03468164002895358,1.450586287358966e-203,True,4.177688507593822e-201
+415,756.0,Other congenital musculoskeletal anomalies,congenital anomalies,Both,468,fitted and delete the covariate(s): {},468/95.74 (4.89),859/481.86 (1.78),1.029913318070276,0.05854075127359106,2.7822953100996714e-69,True,8.013010493087053e-67
+417,758.0,Chromosomal anomalies and genetic disorders,congenital anomalies,Both,214,fitted and delete the covariate(s): {},214/98.50 (2.17),324/489.81 (0.66),1.1945669602709048,0.08957920644629265,1.4424360833727786e-40,True,4.154215920113602e-38
+418,759.0,Other and unspecified congenital anomalies,congenital anomalies,Both,303,fitted and delete the covariate(s): {},303/97.62 (3.10),602/487.76 (1.23),0.9502356625232747,0.07148986238357279,2.579652468569283e-40,True,7.429399109479535e-38
+423,938.0,Dermatitis due to solar radiation,dermatologic,Both,260,fitted and delete the covariate(s): {},260/102.24 (2.54),461/518.45 (0.89),1.0702975443616538,0.07889953673114732,6.429754618861798e-42,True,1.851769330232198e-39
+424,939.0,Atopic/contact dermatitis due to other or unspecified,dermatologic,Both,803,fitted and delete the covariate(s): {},803/98.13 (8.18),1451/511.66 (2.84),1.0796418529207799,0.04490251209047493,9.615588808356753e-128,True,2.769289576806745e-125
+425,947.0,Urticaria,dermatologic,Both,450,fitted and delete the covariate(s): {},450/101.24 (4.44),647/517.58 (1.25),1.2769842409038967,0.06247849260409479,7.560367153988655e-93,True,2.1773857403487324e-90
+2,31.0,Diseases due to other mycobacteria,infectious diseases,Both,54,Less than threshold of 100,54/98.32 (0.55),79/485.40 (0.16),,,,False,
+5,53.0,Herpes zoster,infectious diseases,Both,54,Less than threshold of 100,54/97.71 (0.55),96/482.91 (0.20),,,,False,
+6,54.0,Herpes simplex,infectious diseases,Both,70,Less than threshold of 100,70/97.61 (0.72),167/482.58 (0.35),,,,False,
+9,78.0,Viral warts & HPV,infectious diseases,Both,37,Less than threshold of 100,37/97.81 (0.38),65/483.07 (0.13),,,,False,
+11,80.0,Postoperative infection,infectious diseases,Both,18,Less than threshold of 100,18/103.26 (0.17),31/513.74 (0.06),,,,False,
+12,81.0,Infection/inflammation of internal prosthetic device; implant; and graft,infectious diseases,Both,83,Less than threshold of 100,83/102.96 (0.81),191/512.45 (0.37),,,,False,
+18,131.0,Protozoan infection,infectious diseases,Both,39,Less than threshold of 100,39/101.61 (0.38),48/505.45 (0.09),,,,False,
+32,164.0,Cancer of intrathoracic organs,neoplasms,Both,89,Less than threshold of 100,89/96.69 (0.92),128/475.33 (0.27),,,,False,
+36,173.0,Neoplasm of uncertain behavior of skin,neoplasms,Both,17,Less than threshold of 100,17/100.42 (0.17),23/500.01 (0.05),,,,False,
+38,175.0,Acquired absence of breast,neoplasms,Female,67,Less than threshold of 100,67/47.82 (1.40),127/235.29 (0.54),,,,False,
+39,180.0,Cervical cancer and dysplasia,neoplasms,Female,44,Less than threshold of 100,44/50.17 (0.88),103/248.97 (0.41),,,,False,
+40,182.0,Malignant neoplasm of uterus,neoplasms,Female,41,Less than threshold of 100,41/50.25 (0.82),73/249.02 (0.29),,,,False,
+42,185.0,Cancer of prostate,neoplasms,Male,14,Less than threshold of 100,14/50.29 (0.28),25/250.71 (0.10),,,,False,
+47,193.0,Thyroid cancer,neoplasms,Both,62,Less than threshold of 100,62/98.66 (0.63),151/491.76 (0.31),,,,False,
+50,196.0,Radiotherapy,neoplasms,Both,7,Less than threshold of 100,7/97.53 (0.07),24/479.08 (0.05),,,,False,
+51,197.0,Chemotherapy,neoplasms,Both,23,Less than threshold of 100,23/97.45 (0.24),37/478.99 (0.08),,,,False,
+59,209.0,Neuroendocrine tumors,neoplasms,Both,0,Less than threshold of 100,0/104.35 (0.00),0/523.07 (0.00),,,,False,
+67,217.0,Vascular hamartomas and non-neoplastic nevi,neoplasms,Both,87,Less than threshold of 100,87/102.71 (0.85),111/515.15 (0.22),,,,False,
+69,220.0,Benign neoplasm of ovary,neoplasms,Female,8,Less than threshold of 100,8/49.62 (0.16),11/245.03 (0.04),,,,False,
+71,222.0,Benign neoplasm of male genital organs,neoplasms,Male,40,Less than threshold of 100,40/50.05 (0.80),40/251.51 (0.16),,,,False,
+75,226.0,Benign neoplasm of thyroid glands,neoplasms,Both,16,Less than threshold of 100,16/99.05 (0.16),24/492.64 (0.05),,,,False,
+76,227.0,Benign neoplasm of other endocrine glands and related structures,neoplasms,Both,77,Less than threshold of 100,77/98.64 (0.78),133/492.12 (0.27),,,,False,
+77,228.0,"Hemangioma and lymphangioma, any site",neoplasms,Both,33,Less than threshold of 100,33/104.02 (0.32),45/522.32 (0.09),,,,False,
+78,229.0,Benign neoplasm of unspecified sites,neoplasms,Both,86,Less than threshold of 100,86/103.60 (0.83),184/520.60 (0.35),,,,False,
+79,230.0,Kaposi's sarcoma,neoplasms,Both,11,Less than threshold of 100,11/104.27 (0.11),13/522.69 (0.02),,,,False,
+80,240.0,Simple and unspecified goiter,endocrine/metabolic,Both,23,Less than threshold of 100,23/100.19 (0.23),49/493.75 (0.10),,,,False,
+81,241.0,Nontoxic nodular goiter,endocrine/metabolic,Both,75,Less than threshold of 100,75/99.86 (0.75),178/493.17 (0.36),,,,False,
+84,245.0,Thyroiditis,endocrine/metabolic,Both,99,Less than threshold of 100,99/99.74 (0.99),157/493.25 (0.32),,,,False,
+86,249.0,Secondary diabetes mellitus,endocrine/metabolic,Both,0,Less than threshold of 100,0/102.36 (0.00),0/509.21 (0.00),,,,False,
+88,251.0,Other disorders of pancreatic internal secretion,endocrine/metabolic,Both,95,Less than threshold of 100,95/97.65 (0.97),181/476.90 (0.38),,,,False,
+91,254.0,Diseases of thymus gland,endocrine/metabolic,Both,56,Less than threshold of 100,56/97.91 (0.57),127/477.30 (0.27),,,,False,
+93,256.0,Ovarian dysfunction,endocrine/metabolic,Female,52,Less than threshold of 100,52/48.95 (1.06),82/239.19 (0.34),,,,False,
+94,257.0,Testicular dysfunction,endocrine/metabolic,Male,19,Less than threshold of 100,19/48.73 (0.39),24/238.13 (0.10),,,,False,
+95,258.0,Iatrogenic endocrine disorders,endocrine/metabolic,Both,21,Less than threshold of 100,21/98.10 (0.21),43/477.73 (0.09),,,,False,
+100,263.0,Other nutritional deficiency,endocrine/metabolic,Both,68,Less than threshold of 100,68/98.11 (0.69),84/482.55 (0.17),,,,False,
+101,264.0,Lack of normal physiological development,endocrine/metabolic,Both,39,Less than threshold of 100,39/98.30 (0.40),69/482.58 (0.14),,,,False,
+110,278.0,"Overweight, obesity and other hyperalimentation",endocrine/metabolic,Both,83,Less than threshold of 100,83/103.63 (0.80),138/521.16 (0.26),,,,False,
+112,280.0,Iron deficiency anemias,hematopoietic,Both,53,Less than threshold of 100,53/99.49 (0.53),98/489.50 (0.20),,,,False,
+115,283.0,Acquired hemolytic anemias,hematopoietic,Both,49,Less than threshold of 100,49/99.52 (0.49),109/489.41 (0.22),,,,False,
+116,284.0,Aplastic anemia,hematopoietic,Both,69,Less than threshold of 100,69/99.40 (0.69),114/489.43 (0.23),,,,False,
+125,293.0,Symptoms involving head and neck,mental disorders,Both,95,Less than threshold of 100,95/103.66 (0.92),198/520.63 (0.38),,,,False,
+133,304.0,Adjustment reaction,mental disorders,Both,36,Less than threshold of 100,36/78.87 (0.46),55/331.41 (0.17),,,,False,
+140,318.0,Tobacco use disorder,mental disorders,Both,94,Less than threshold of 100,94/96.28 (0.98),180/470.31 (0.38),,,,False,
+144,325.0,Phlebitis and thrombophlebitis of intracranial venous sinuses,neurological,Both,16,Less than threshold of 100,16/99.62 (0.16),35/490.68 (0.07),,,,False,
+147,332.0,Parkinson's disease,neurological,Both,10,Less than threshold of 100,10/84.07 (0.12),12/395.47 (0.03),,,,False,
+150,335.0,Multiple sclerosis,neurological,Both,13,Less than threshold of 100,13/84.08 (0.15),12/395.45 (0.03),,,,False,
+151,337.0,Disorders of the autonomic nervous system,neurological,Both,71,Less than threshold of 100,71/83.75 (0.85),103/394.97 (0.26),,,,False,
+152,338.0,Pain,neurological,Both,61,Less than threshold of 100,61/103.93 (0.59),111/521.91 (0.21),,,,False,
+155,341.0,Other demyelinating diseases of central nervous system,neurological,Both,45,Less than threshold of 100,45/83.86 (0.54),82/395.10 (0.21),,,,False,
+156,342.0,Hemiplegia,neurological,Both,36,Less than threshold of 100,36/83.94 (0.43),54/395.24 (0.14),,,,False,
+157,343.0,Infantile cerebral palsy,neurological,Both,57,Less than threshold of 100,57/83.79 (0.68),89/395.02 (0.23),,,,False,
+160,346.0,Abnormal findings on study of brain and/or nervous system,neurological,Both,69,Less than threshold of 100,69/83.70 (0.82),121/394.86 (0.31),,,,False,
+161,347.0,Cataplexy and narcolepsy,neurological,Both,5,Less than threshold of 100,5/84.12 (0.06),22/395.42 (0.06),,,,False,
+168,355.0,Complex regional/central pain syndrome,neurological,Both,15,Less than threshold of 100,15/97.76 (0.15),23/481.57 (0.05),,,,False,
+169,356.0,Hereditary and idiopathic peripheral neuropathy,neurological,Both,82,Less than threshold of 100,82/102.12 (0.80),138/511.95 (0.27),,,,False,
+171,358.0,Myoneural disorders,neurological,Both,34,Less than threshold of 100,34/102.55 (0.33),69/512.24 (0.13),,,,False,
+174,361.0,Retinal detachments and defects,sense organs,Both,83,Less than threshold of 100,83/94.03 (0.88),144/459.04 (0.31),,,,False,
+176,363.0,"Chorioretinal inflammations, scars, and other disorders of choroid",sense organs,Both,82,Less than threshold of 100,82/94.00 (0.87),196/458.60 (0.43),,,,False,
+188,376.0,Disorders of the orbit,sense organs,Both,74,Less than threshold of 100,74/98.13 (0.75),125/482.45 (0.26),,,,False,
+194,382.0,Otalgia,sense organs,Both,18,Less than threshold of 100,18/100.60 (0.18),21/499.07 (0.04),,,,False,
+199,388.0,Other disorders of ear,sense organs,Both,64,Less than threshold of 100,64/97.92 (0.65),85/478.21 (0.18),,,,False,
+205,402.0,Elevated blood pressure reading without diagnosis of hypertension,circulatory system,Both,51,Less than threshold of 100,51/102.09 (0.50),137/508.57 (0.27),,,,False,
+209,416.0,Cardiomegaly,circulatory system,Both,12,Less than threshold of 100,12/103.57 (0.12),19/518.33 (0.04),,,,False,
+216,429.0,Ill-defined descriptions and complications of heart disease,circulatory system,Both,87,Less than threshold of 100,87/103.24 (0.84),187/518.08 (0.36),,,,False,
+220,441.0,Vascular insufficiency of intestine,circulatory system,Both,66,Less than threshold of 100,66/98.79 (0.67),146/487.96 (0.30),,,,False,
+222,443.0,Peripheral vascular disease,circulatory system,Both,96,Less than threshold of 100,96/98.62 (0.97),193/487.87 (0.40),,,,False,
+226,448.0,Disease of capillaries,circulatory system,Both,63,Less than threshold of 100,63/98.82 (0.64),108/488.19 (0.22),,,,False,
+227,450.0,Noninfectious disorders of lymphatic channels,circulatory system,Both,76,Less than threshold of 100,76/103.70 (0.73),174/520.87 (0.33),,,,False,
+228,451.0,Phlebitis and thrombophlebitis,circulatory system,Both,88,Less than threshold of 100,88/100.76 (0.87),125/502.60 (0.25),,,,False,
+230,453.0,Chronic venous hypertension,circulatory system,Both,0,Less than threshold of 100,0/101.29 (0.00),0/503.30 (0.00),,,,False,
+233,456.0,Chronic venous insufficiency [CVI],circulatory system,Both,15,Less than threshold of 100,15/101.18 (0.15),17/503.20 (0.03),,,,False,
+234,457.0,"Encounter for long-term (current) use of anticoagulants, antithrombotics, aspirin",circulatory system,Both,0,Less than threshold of 100,0/101.29 (0.00),0/503.30 (0.00),,,,False,
+235,458.0,Hypotension,circulatory system,Both,98,Less than threshold of 100,98/102.79 (0.95),172/516.01 (0.33),,,,False,
+239,470.0,Septal Deviations/Turbinate Hypertrophy,respiratory,Both,25,Less than threshold of 100,25/99.47 (0.25),69/490.13 (0.14),,,,False,
+240,471.0,Nasal polyps,respiratory,Both,61,Less than threshold of 100,61/99.23 (0.61),80/490.08 (0.16),,,,False,
+247,478.0,Throat pain,respiratory,Both,13,Less than threshold of 100,13/99.53 (0.13),18/490.39 (0.04),,,,False,
+251,483.0,Acute bronchitis and bronchiolitis,respiratory,Both,64,Less than threshold of 100,64/96.51 (0.66),117/475.37 (0.25),,,,False,
+254,497.0,Bronchitis,respiratory,Both,17,Less than threshold of 100,17/102.59 (0.17),33/512.71 (0.06),,,,False,
+255,498.0,Acute bronchospasm,respiratory,Both,0,Less than threshold of 100,0/102.69 (0.00),0/512.85 (0.00),,,,False,
+256,499.0,Cystic fibrosis,respiratory,Both,34,Less than threshold of 100,34/104.06 (0.33),48/521.99 (0.09),,,,False,
+259,502.0,Postinflammatory pulmonary fibrosis,respiratory,Both,35,Less than threshold of 100,35/100.14 (0.35),46/497.78 (0.09),,,,False,
+260,503.0,Pulmonary congestion and hypostasis,respiratory,Both,67,Less than threshold of 100,67/100.06 (0.67),143/497.41 (0.29),,,,False,
+261,504.0,Other alveolar and parietoalveolar pneumonopathy,respiratory,Both,42,Less than threshold of 100,42/100.09 (0.42),87/497.49 (0.17),,,,False,
+262,505.0,Other pulmonary inflamation or edema,respiratory,Both,22,Less than threshold of 100,22/100.17 (0.22),27/497.86 (0.05),,,,False,
+263,506.0,Empyema and pneumothorax,respiratory,Both,88,Less than threshold of 100,88/99.74 (0.88),248/496.70 (0.50),,,,False,
+265,508.0,Pulmonary collapse; interstitial and compensatory emphysema,respiratory,Both,28,Less than threshold of 100,28/100.16 (0.28),66/497.68 (0.13),,,,False,
+268,512.0,Other symptoms of respiratory system,respiratory,Both,67,Less than threshold of 100,67/103.71 (0.65),122/520.86 (0.23),,,,False,
+270,514.0,Abnormal findings examination of lungs,respiratory,Both,52,Less than threshold of 100,52/104.03 (0.50),150/521.92 (0.29),,,,False,
+271,516.0,Abnormal sputum,respiratory,Both,59,Less than threshold of 100,59/103.88 (0.57),95/521.84 (0.18),,,,False,
+277,524.0,"Dentofacial anomalies, including malocclusion",digestive,Both,91,Less than threshold of 100,91/97.70 (0.93),172/481.79 (0.36),,,,False,
+278,525.0,Other diseases of the teeth and supporting structures,digestive,Both,80,Less than threshold of 100,80/97.90 (0.82),178/481.71 (0.37),,,,False,
+285,532.0,Dysphagia,digestive,Both,13,Less than threshold of 100,13/102.44 (0.13),16/511.51 (0.03),,,,False,
+287,536.0,Disorders of function of stomach,digestive,Both,14,Less than threshold of 100,14/102.63 (0.14),26/512.44 (0.05),,,,False,
+289,539.0,Bariatric surgery,digestive,Both,13,Less than threshold of 100,13/104.27 (0.12),24/522.83 (0.05),,,,False,
+293,556.0,Ulceration of the lower GI tract,digestive,Both,19,Less than threshold of 100,19/100.30 (0.19),41/495.55 (0.08),,,,False,
+295,558.0,Noninfectious gastroenteritis,digestive,Both,18,Less than threshold of 100,18/100.32 (0.18),20/495.63 (0.04),,,,False,
+296,559.0,Ileostomy status,digestive,Both,34,Less than threshold of 100,34/100.27 (0.34),51/495.46 (0.10),,,,False,
+300,563.0,Constipation,digestive,Both,31,Less than threshold of 100,31/100.25 (0.31),49/495.47 (0.10),,,,False,
+303,567.0,Peritonitis and retroperitoneal infections,digestive,Both,72,Less than threshold of 100,72/102.32 (0.70),80/511.37 (0.16),,,,False,
+304,568.0,Other disorders of peritoneum,digestive,Both,68,Less than threshold of 100,68/102.32 (0.66),101/511.40 (0.20),,,,False,
+307,572.0,Ascites (non malignant),digestive,Both,12,Less than threshold of 100,12/101.41 (0.12),39/504.21 (0.08),,,,False,
+313,579.0,Other symptoms involving abdomen and pelvis,digestive,Both,56,Less than threshold of 100,56/102.99 (0.54),84/515.89 (0.16),,,,False,
+317,587.0,Kidney replaced by transpant,genitourinary,Both,11,Less than threshold of 100,11/97.93 (0.11),21/481.33 (0.04),,,,False,
+318,588.0,Disorders resulting from impaired renal function,genitourinary,Both,54,Less than threshold of 100,54/97.66 (0.55),132/480.85 (0.27),,,,False,
+319,589.0,Abnormal results of function study of kidney,genitourinary,Both,16,Less than threshold of 100,16/97.84 (0.16),20/481.35 (0.04),,,,False,
+323,593.0,Hematuria,genitourinary,Both,45,Less than threshold of 100,45/100.76 (0.45),98/502.42 (0.20),,,,False,
+325,595.0,Hydronephrosis,genitourinary,Both,26,Less than threshold of 100,26/103.08 (0.25),95/514.22 (0.18),,,,False,
+330,600.0,Hyperplasia of prostate,genitourinary,Male,6,Less than threshold of 100,6/50.33 (0.12),11/250.77 (0.04),,,,False,
+332,602.0,Other disorders of prostate,genitourinary,Male,33,Less than threshold of 100,33/50.17 (0.66),55/250.55 (0.22),,,,False,
+333,603.0,Other disorders of testis,genitourinary,Male,98,Less than threshold of 100,98/49.58 (1.98),254/246.78 (1.03),,,,False,
+334,604.0,Disorders of penis,genitourinary,Male,82,Less than threshold of 100,82/49.65 (1.65),184/247.41 (0.74),,,,False,
+335,605.0,Erectile dysfunction [ED],genitourinary,Male,46,Less than threshold of 100,46/49.92 (0.92),79/248.14 (0.32),,,,False,
+336,608.0,Other disorders of male genital organs,genitourinary,Male,30,Less than threshold of 100,30/49.95 (0.60),57/248.16 (0.23),,,,False,
+337,609.0,Male infertility and abnormal spermatozoa,genitourinary,Male,87,Less than threshold of 100,87/49.66 (1.75),152/247.80 (0.61),,,,False,
+343,615.0,Endometriosis,genitourinary,Female,84,Less than threshold of 100,84/50.90 (1.65),155/254.97 (0.61),,,,False,
+344,617.0,"Disorders secondary to childbirth, surgery, trauma",genitourinary,Female,90,Less than threshold of 100,90/51.53 (1.75),148/258.93 (0.57),,,,False,
+345,618.0,Genital prolapse,genitourinary,Female,86,Less than threshold of 100,86/51.54 (1.67),133/259.14 (0.51),,,,False,
+347,620.0,Dysplasia of female genital organs,genitourinary,Female,69,Less than threshold of 100,69/48.58 (1.42),132/239.57 (0.55),,,,False,
+349,622.0,Polyp of female genital organs,genitourinary,Female,64,Less than threshold of 100,64/48.65 (1.32),97/239.73 (0.40),,,,False,
+350,623.0,Hypertrophy of female genital organs,genitourinary,Female,22,Less than threshold of 100,22/48.87 (0.45),33/240.14 (0.14),,,,False,
+351,624.0,Symptoms involving female genital tract,genitourinary,Female,76,Less than threshold of 100,76/50.73 (1.50),163/252.74 (0.64),,,,False,
+352,625.0,Pain and other symptoms associated with female genital organs,genitourinary,Female,42,Less than threshold of 100,42/51.06 (0.82),92/253.14 (0.36),,,,False,
+355,628.0,Ovarian cyst,genitourinary,Female,21,Less than threshold of 100,21/48.09 (0.44),24/235.60 (0.10),,,,False,
+360,690.0,Erythematosquamous dermatosis,dermatologic,Both,53,Less than threshold of 100,53/97.58 (0.54),75/477.67 (0.16),,,,False,
+366,698.0,Pruritus and related conditions,dermatologic,Both,90,Less than threshold of 100,90/103.53 (0.87),175/520.26 (0.34),,,,False,
+367,700.0,Corns and callosities,dermatologic,Both,15,Less than threshold of 100,15/102.75 (0.15),15/512.24 (0.03),,,,False,
+378,712.0,Infective connective tissue disorders,musculoskeletal,Both,14,Less than threshold of 100,14/97.51 (0.14),32/480.96 (0.07),,,,False,
+379,713.0,Arthropathy associated with other disorders classified elsewhere,musculoskeletal,Both,51,Less than threshold of 100,51/97.32 (0.52),119/480.54 (0.25),,,,False,
+383,717.0,Polymyalgia Rheumatica,musculoskeletal,Both,12,Less than threshold of 100,12/104.27 (0.12),41/522.87 (0.08),,,,False,
+384,720.0,Spinal stenosis,musculoskeletal,Both,64,Less than threshold of 100,64/98.87 (0.65),121/490.37 (0.25),,,,False,
+387,723.0,Other disorders of cervical region,musculoskeletal,Both,91,Less than threshold of 100,91/98.64 (0.92),121/490.45 (0.25),,,,False,
+393,731.0,Osteitis deformans and osteopathies associated with other disorders classified elsewhere,musculoskeletal,Both,73,Less than threshold of 100,73/89.93 (0.81),91/424.05 (0.21),,,,False,
+405,745.0,Pain in joint,musculoskeletal,Both,16,Less than threshold of 100,16/104.24 (0.15),17/522.65 (0.03),,,,False,
+416,757.0,Congenital anomalies of the integument,congenital anomalies,Both,30,Less than threshold of 100,30/99.58 (0.30),50/491.45 (0.10),,,,False,
+419,792.0,Abnormal Papanicolaou smear of cervix and cervical HPV,genitourinary,Female,0,Less than threshold of 100,0/50.47 (0.00),0/249.43 (0.00),,,,False,
+420,796.0,Elevated prostate specific antigen [PSA],genitourinary,Male,0,Less than threshold of 100,0/50.39 (0.00),0/250.82 (0.00),,,,False,
+421,860.0,Bone marrow or stem cell transplant,neoplasms,Both,23,Less than threshold of 100,23/104.18 (0.22),65/522.48 (0.12),,,,False,
+422,931.0,Contact dermatitis and other eczema due to plants [except food],dermatologic,Both,17,Less than threshold of 100,17/103.85 (0.16),26/520.72 (0.05),,,,False,
+426,980.0,Encounter for long-term (current) use of antibiotics,infectious diseases,Both,0,Less than threshold of 100,0/104.35 (0.00),0/523.07 (0.00),,,,False,

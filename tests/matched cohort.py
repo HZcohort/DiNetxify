@@ -1,5 +1,7 @@
 import diseasenetpy as dnt
+import os
 
+path = os.path.dirname(__file__)
 if __name__ =="__main__":
     # Define required columns and other covariates columns
     col_dict = {
@@ -21,14 +23,14 @@ if __name__ =="__main__":
 
     # Load the phenotype CSV file into the data object
     data.phenotype_data(
-        phenotype_data_path="data/dummy_cohort.csv",
+        phenotype_data_path=path+"/data/dummy_cohort.csv",
         column_names=col_dict,
         covariates=vars_lst
     )
 
     # Merge with the first medical records file (CSV)
     data.merge_medical_records(
-        medical_records_data_path="data/dummy_EHR_ICD9.csv",
+        medical_records_data_path=path+"/data/dummy_EHR_ICD9.csv",
         diagnosis_code="ICD-9-WHO",
         column_names={
             'Participant ID':'ID',
@@ -39,7 +41,7 @@ if __name__ =="__main__":
 
     # Merge with the second medical records file (CSV)
     data.merge_medical_records(
-        medical_records_data_path="data/dummy_EHR_ICD10.csv",
+        medical_records_data_path=path+"/data/dummy_EHR_ICD10.csv",
         diagnosis_code="ICD-10-WHO",
         column_names={
             'Participant ID':'ID',
@@ -131,9 +133,9 @@ if __name__ =="__main__":
     )
 
     # save the results and data of 'DiseaseNetworkData' object
-    data.save("data/mached cohort data.pkl.gz")
-    phewas_result.to_csv("result/phewas_result.csv")
-    com_strength_result.to_csv("result/com_strength_result.csv")
-    binomial_result.to_csv("result/binomial_result.csv")
-    comorbidity_result.to_csv("result/comorbidity_result.csv")
-    trajectory_result.to_csv("result/trajectory_result.csv")
+    data.save(path+"/data/mached cohort data.pkl.gz")
+    phewas_result.to_csv(path+"/result/matched cohort/phewas_result.csv")
+    com_strength_result.to_csv(path+"/result/matched cohort/com_strength_result.csv")
+    binomial_result.to_csv(path+"/result/matched cohort/binomial_result.csv")
+    comorbidity_result.to_csv(path+"/result/matched cohort/comorbidity_result.csv")
+    trajectory_result.to_csv(path+"/result/matched cohort/trajectory_result.csv")
