@@ -7,7 +7,7 @@ DiseaseNetPy is a Python package designed for comprehensive disease network anal
 - [Installation](#installation)
 - Quick Start
   - [Test](#test)
-  - [Workflows and Example: Matched Cohort Study Design](#workflows_and_example:_matched_cohort_study_design)
+  - [Workflows and Example: Matched Cohort Study Design](#Workflows and Example: Matched Cohort Study Design)
 - API Reference
   - Classes
     - [DiseaseNetworkData](#diseasenetworkdata)
