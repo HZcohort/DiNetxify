@@ -935,7 +935,7 @@ class ThreeDimensionalNetwork(object):
         self, 
         path: str,
         max_radius: Optional[float]=35.0, 
-        min_radius: Optional[float]=90.0,
+        min_radius: Optional[float]=180.0,
         line_color: Optional[str]="black", 
         line_width: Optional[float]=1.0,
         size_reduction: Optional[float]=0.5,
@@ -1421,7 +1421,7 @@ class ThreeDimensionalNetwork(object):
         col_disease: Optional[str]="disease"
     ) -> None:
         
-        def random_effect(coef_lst,se_lst):
+        def random_effect(coef_lst, se_lst):
             if len(coef_lst)==1:
                 return [coef_lst[0], se_lst[0]]
             
@@ -1444,8 +1444,8 @@ class ThreeDimensionalNetwork(object):
             sys_dict = {}
             sys_lst = set(df[col_system].values)
             for sys in sys_lst:
-                temp = df.loc[df[col_system]==sys].dropna(subset=[col_coef, col_se],how='any')
-                mean = random_effect(temp[col_coef].values,temp[col_se].values)[0]    
+                temp = df.loc[df[col_system]==sys].dropna(subset=[col_coef], how='any')
+                mean = random_effect(temp[col_coef].values,temp[col_se].values)[0]
                 sys_dict[mean] = sys
             sys_dict_ = [sys_dict[i] for i in sorted([x for x in sys_dict.keys() if not pd.isna(x)])]
             sys_dict_ += [x for x in sys_dict.values() if x not in sys_dict_]
@@ -1479,7 +1479,9 @@ class ThreeDimensionalNetwork(object):
             'endocrine/metabolic':'Endocrine/metabolic diseases', 
             'sense organs':'Diseases of the sense organs',
             'injuries & poisonings': 'Injuries & poisonings',
-            'congenital anomalies': 'Congenital anomalies diseases'
+            'congenital anomalies': 'Congenital anomalies diseases',
+            'symptoms':'Symptoms diseases',
+            'others':'Others diseases'
         }
         phe_df = self._phewas.loc[self._phewas[col_coef]>0]
         phe_df = phe_df.sort_values(by=col_disease)

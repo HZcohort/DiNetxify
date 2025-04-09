@@ -178,21 +178,19 @@ def phewas(
     #list of phecode to run
     result_all = []
     if n_process == 1:
-        for phecode in tqdm(phecode_lst_all):
+        for phecode in tqdm(phecode_lst_all, miniters=len(phecode_lst_all)/16):
             if data.study_design == 'matched cohort':
                 result_all.append(cox_conditional_wrapper(phecode,data,covariates,n_threshold,log_file_final,lifelines_disable))
             else:
                 result_all.append(cox_unconditional_wrapper(phecode,data,covariates,n_threshold,log_file_final,lifelines_disable))
     elif n_process > 1:
-        import sys
-        disable_tqdm = not sys.stdout.isatty()
         with multiprocessing.get_context(start_mehtod).Pool(n_process, initializer=init_worker, initargs=(data,covariates,n_threshold,log_file_final,lifelines_disable)) as p:
             if data.study_design == 'matched cohort':
                 result_all = list(
                     tqdm(
                         p.imap(cox_conditional, phecode_lst_all), 
                         total=len(phecode_lst_all),
-                        disable=disable_tqdm
+                        miniters=len(phecode_lst_all)/16
                     )
                 )
             else:
@@ -200,7 +198,7 @@ def phewas(
                     tqdm(
                         p.imap(cox_unconditional, phecode_lst_all), 
                         total=len(phecode_lst_all),
-                        disable=disable_tqdm
+                        miniters=len(phecode_lst_all)/16
                     )
                 )
 
@@ -413,11 +411,9 @@ def comorbidity_strength(data:DiseaseNetworkData, proportion_threshold:float=Non
     #list of phecode
     result_all = []
     if n_process == 1:
-        for d1,d2,describe in tqdm(d1d2_pair_lst):
+        for d1,d2,describe in tqdm(d1d2_pair_lst, miniters=len(d1d2_pair_lst)/16):
             result_all.append(com_phi_rr_wrapper(trajectory_dict,d1,d2,describe,n_threshold,log_file_final))
     elif n_process > 1:
-        import sys
-        disable_tqdm = not sys.stdout.isatty()
         parameters_all = []
         for d1,d2,describe in d1d2_pair_lst:
             # parameters_all.append([trajectory_dict,d1,d2,describe,n_threshold,log_file_final])
@@ -427,7 +423,7 @@ def comorbidity_strength(data:DiseaseNetworkData, proportion_threshold:float=Non
                 tqdm(
                     p.imap(com_phi_rr, parameters_all),
                     total=len(d1d2_pair_lst),
-                    disable=disable_tqdm
+                    miniters=len(d1d2_pair_lst)/16
                 )
             )
 
@@ -537,14 +533,17 @@ def comorbidity_strength_multipletests(df:pd.DataFrame, correction_phi:str='bonf
     return df
 
 
-def binomial_test(data:DiseaseNetworkData, 
-                  comorbidity_strength_result:pd.DataFrame, 
-                  comorbidity_network_result: pd.DataFrame=None,
-                  n_process:int=1, 
-                  log_file:str=None, 
-                  correction:str='bonferroni', 
-                  cutoff:float=0.05, 
-                  enforce_temporal_order:bool=False, **kwargs) -> pd.DataFrame:
+def binomial_test(
+    data:DiseaseNetworkData, 
+    comorbidity_strength_result:pd.DataFrame, 
+    comorbidity_network_result: pd.DataFrame=None,
+    n_process:int=1, 
+    log_file:str=None, 
+    correction:str='bonferroni', 
+    cutoff:float=0.05, 
+    enforce_temporal_order:bool=False, 
+    **kwargs
+) -> pd.DataFrame:
     """
     Conduct binomial test for disease pairs with significant comorbidity stregnth to select those with significant temporal orders (i.e., D1 -> D2).
 
@@ -696,11 +695,30 @@ def binomial_test(data:DiseaseNetworkData,
     time_start = time.time()
     #list of disease pair
     result_all = []
-    import sys
-    disable_tqdm = not sys.stdout.isatty()
-    for d1,d2,n_com,n_d1d2,n_d2d1 in tqdm(comorbidity_sig[[phecode_d1_col,phecode_d2_col,n_nontemporal_col,
-                                                      n_temporal_d1d2_col,n_temporal_d2d1_col]].values, disable=disable_tqdm):
-        result_all.append(binomial(d1,d2,n_com,n_d1d2,n_d2d1,enforce_temporal_order,log_file_final))
+
+    for d1,d2,n_com,n_d1d2,n_d2d1 in tqdm(
+        comorbidity_sig[
+            [
+                phecode_d1_col,
+                phecode_d2_col,
+                n_nontemporal_col,
+                n_temporal_d1d2_col,
+                n_temporal_d2d1_col
+            ]
+        ].values,
+        miniters=len(comorbidity_sig)/16
+    ):
+        result_all.append(
+            binomial(
+                d1,
+                d2,
+                n_com,
+                n_d1d2,
+                n_d2d1,
+                enforce_temporal_order,
+                log_file_final
+            )
+        )
 
     time_end = time.time()
     time_spent = (time_end - time_start)/60
@@ -991,12 +1009,10 @@ def comorbidity_network(data:DiseaseNetworkData,
     #list of disease pair
     result_all = []
     if n_process == 1:
-        for d1,d2 in tqdm(comorbidity_sig[[phecode_d1_col,phecode_d2_col]].values):
+        for d1,d2 in tqdm(comorbidity_sig[[phecode_d1_col,phecode_d2_col]].values, miniters=len(comorbidity_sig)/16):
             result_all.append(logistic_model_wrapper(d1,d2,phenotype_df_exposed,id_col,trajectory_ineligible,trajectory_eligible_withdate,
                                                      all_diagnosis_level,covariates,all_diseases_lst,log_file_final,parameter_dict))
     elif n_process > 1:
-        import sys
-        disable_tqdm = not sys.stdout.isatty()
         parameters_all = []
         for d1,d2 in comorbidity_sig[[phecode_d1_col,phecode_d2_col]].values:
             parameters_all.append([d1,d2])
@@ -1006,7 +1022,7 @@ def comorbidity_network(data:DiseaseNetworkData,
                 tqdm(
                     p.imap(logistic_model, parameters_all), 
                     total=len(parameters_all),
-                    disable=disable_tqdm
+                    miniters=len(parameters_all)/16
                 )
             )
 
@@ -1363,13 +1379,14 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
 
     result_all = []
     if n_process == 1:
-        for d1_lst,d2 in tqdm(parameters_all):
+        for d1_lst, d2 in tqdm(
+            parameters_all,
+            miniters=len(parameters_all)/16
+        ):
             result_all.append(logistic_model_wrapper(d1_lst,d2,phenotype_df_exposed,id_col,end_date_col,trajectory_ineligible,trajectory_temporal,disease_pair_index,
                                                     trajectory_eligible_withdate,all_diagnosis_level,covariates,all_diseases_lst,
                                                     matching_var_dict,matching_n,max_n_cases,log_file_final,parameter_dict))
     elif n_process > 1:
-        import sys
-        disable_tqdm = not sys.stdout.isatty()
         with multiprocessing.get_context(start_mehtod).Pool(n_process, initializer=init_worker, initargs=(phenotype_df_exposed,id_col,end_date_col,trajectory_ineligible,trajectory_temporal,
                                                                                                           disease_pair_index,trajectory_eligible_withdate,all_diagnosis_level,covariates,all_diseases_lst,
                                                                                                           matching_var_dict,matching_n,max_n_cases,log_file_final,parameter_dict)) as p:
@@ -1377,7 +1394,7 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
                 tqdm(
                     p.imap(logistic_model, parameters_all), 
                     total=len(parameters_all),
-                    disable=disable_tqdm
+                    miniters=len(parameters_all)/16
                 )
             )
 
@@ -1409,7 +1426,7 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
         comorbidity_df[f'sex_{d}'] = comorbidity_df[f'phecode_{d}'].apply(lambda x: phecode_info[x]['sex'])
     
     #p-value correction
-    comorbidity_df = trajectory_multipletests(comorbidity_df, correction=correction,cutoff=cutoff)
+    comorbidity_df = trajectory_multipletests(comorbidity_df, correction=correction, cutoff=cutoff)
     return comorbidity_df
 
 

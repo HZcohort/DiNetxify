@@ -116,17 +116,19 @@ if __name__ == "__main__":
       cutoff=0.05                             # The significance threshold for adjusted p-values
     )
 ```
-### Example: Matched Cohort Study Design
+### Test
 In the test folder, we provide three comprehensive examples demonstrating different study designs to help users understand and implement their analyses effectively. Each example includes relevant code, output, and visualizations.
 
 1. Example 1: Matched Cohort Study Design
-Key Features: Exposure, Group ID, Covariate adjustment using Cox proportional hazards models.
+A matched cohort study is an observational research design where exposed and unexposed groups are matched based on specific  covariates (e.g., age, sex, comorbidities) to reduce bias and improve comparability. 
 
 2. Example 2: Cohort Study Design
-Key Features: Exposure, Covariate adjustment using Cox proportional hazards models.
+A cohort study is an observational research design that follows groups of individuals (cohorts) over time to assess the association between exposures (e.g., risk factors, treatments) and outcomes (e.g., disease incidence, mortality). 
 
 3. Example 3: Exposed-only Cohort Design
-Key Features: No exposure
+The exposed-only cohort design is a variation of cohort studies where only individuals exposed to a risk factor are followed over time, and their outcomes are compared to expected population rates (external controls) rather than an internal unexposed group.
+
+### Workflows and Example: Matched Cohort Study Design
 
 ```python
 import diseasenetpy as dnt
