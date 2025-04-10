@@ -41,19 +41,21 @@ pip install lifelines #for phewas analysis with lifelines_disable set to False
 
 This guide walks you through a typical workflow using DiseaseNetPy for a matched cohort study design. The process involves data preparation, PheWAS analysis, comorbidity strength estimation, binomial testing, comorbidity network analysis, and trajectory analysis.
 
+Step 1: Create DiseaseNetworkData object
+Define required columns and other covariates columns
+
+Example for matched cohort
 ```python
 import diseasenetpy as dnt
-# Step 1: Create DiseaseNetworkData object
-# Define required columns and other covariates columns
 col_dict = {
-    'Participant ID': 'new_index',          # Maps the participant identifier
-    'Exposure': 'outcome',                  # Defines exposure status (0 or 1)
-    'Sex': 'sex',                           # Indicates sex (1 for female, 0 for male)
-    'Index date': 'date_start',             # Start date of the study
-    'End date': 'time_end',                 # End date of the study
-    'Match ID': 'match_2'                   # Identifier for matching group
+    'Participant ID': 'ID',                # Maps the participant identifier
+    'Exposure': 'exposure',                # Defines exposure status (0 or 1)
+    'Sex': 'sex',                          # Indicates sex (1 for female, 0 for male)
+    'Index date': 'date_start',            # Start date of the study
+    'End date': 'date_end',                # End date of the study
+    'Match ID': 'group_id'                 # Identifier for matching group
 }
-vars_lst = ['age', 'social', 'BMI', 'smoking', 'drinking']  # List of covariates to be used
+vars_lst = ['age', 'BMI']  # List of covariates to be used
 
 # Initialize the data object with study design and phecode level
 data = dnt.DiseaseNetworkData(
@@ -61,29 +63,83 @@ data = dnt.DiseaseNetworkData(
     phecode_level=1,                        # Level of phecode (1 or 2)
     date_fmt='%Y-%m-%d'                     # Date format in data files
 )
+```
 
+Example for cohort
+```python
+import diseasenetpy as dnt
+col_dict = {
+    'Participant ID': 'ID',                # Maps the participant identifier
+    'Exposure': 'exposure',                # Defines exposure status (0 or 1)
+    'Sex': 'sex',                          # Indicates sex (1 for female, 0 for male)
+    'Index date': 'date_start',            # Start date of the study
+    'End date': 'date_end',                # End date of the study
+}
+vars_lst = ['age', 'BMI']  # List of covariates to be used
+
+# Initialize the data object with study design and phecode level
+data = dnt.DiseaseNetworkData(
+    study_design='cohort',          # Type of study design
+    phecode_level=1,                # Level of phecode (1 or 2)
+    date_fmt='%Y-%m-%d'             # Date format in data files
+)
+```
+
+Example for exposed-only cohort
+```python
+import diseasenetpy as dnt
+col_dict = {
+    'Participant ID': 'ID',                # Maps the participant identifier
+    'Sex': 'sex',                          # Indicates sex (1 for female, 0 for male)
+    'Index date': 'date_start',            # Start date of the study
+    'End date': 'date_end',                # End date of the study
+}
+vars_lst = ['age', 'BMI']  # List of covariates to be used
+
+# Initialize the data object with study design and phecode level
+data = dnt.DiseaseNetworkData(
+    study_design='exposed-only cohort',    # Type of study design
+    phecode_level=1,                       # Level of phecode (1 or 2)
+    date_fmt='%Y-%m-%d'                    # Date format in data files
+)
+```
+
+Step 2: Data harmonization
+```python
 # Load the phenotype CSV file into the data object
 data.phenotype_data(
-    phenotype_data_path='/your/project/path/phenotype.csv',  # Path to phenotype data
-    column_names=col_dict,                                   # Column mappings
-    covariates=vars_lst                                      # Covariates to include
+    phenotype_data_path='/test/data/dummy_cohort.csv',  # Path to phenotype data
+    column_names=col_dict,                              # Column mappings
+    covariates=vars_lst                                 # Covariates to include
 )
 
 # Merge with the first medical records file (CSV)
 data.merge_medical_records(
-    medical_records_data_path='/your/project/path/inp_1.csv',  # Path to first medical records file
-    diagnosis_code='ICD-10-WHO',                               # Diagnosis code type
+    medical_records_data_path='/test/data/dummy_EHR_ICD10.csv',  # Path to first medical records file
+    diagnosis_code='ICD-10-WHO',                                 # Diagnosis code type
     column_names={
-        'Participant ID': 'eid',                               # Participant ID column in medical records
-        'Diagnosis code': 'diag_icd10',                        # Diagnosis code column
-        'Date of diagnosis': 'date'                            # Diagnosis date column
+        'Participant ID': 'ID',                                  # Participant ID column in medical records
+        'Diagnosis code': 'diag_icd10',                          # Diagnosis code column
+        'Date of diagnosis': 'dia_date'                          # Diagnosis date column
     }
 )
 
-# Step 2: Use the pipeline disease network
-# Reminder:
-# When using multiprocessing, ensure that the code is enclosed within the following block.
-# This prevents entering a never ending loop of new process creation.
+# Merge with the second medical records file (CSV)
+data.merge_medical_records(
+    medical_records_data_path="/test/data/dummy_EHR_ICD9.csv",  # Path to first medical records file
+    diagnosis_code="ICD-9-WHO",                                 # Diagnosis code type
+    column_names={
+        'Participant ID':'ID',                                  # Participant ID column in medical records
+        'Diagnosis code':'diag_icd9',                           # Diagnosis code column
+        'Date of diagnosis':'dia_date'                          # Diagnosis date column
+    }
+)
+```
+Step 3: Use the pipeline disease network
+Reminder:
+When using multiprocessing, ensure that the code is enclosed within the following block.
+This prevents entering a never ending loop of new process creation.
+```python
 if __name__ == "__main__":
     dnt.disease_network_pipeline(
       data=data,                               # DiseaseNetworkData object
@@ -103,8 +159,7 @@ if __name__ == "__main__":
       method="RPCN",                           # The method to use for the comorbidity network and disease trajectory analysis
       covariates=[
         'BMI', 
-        'smoking', 
-        'drinking'
+        'age'
       ],                                      # List of covariates to adjust for in the PheWAS, comorbidity network and disease trajectory analysis
       matching_var_dict={
         'sex':'exact'
@@ -118,7 +173,7 @@ if __name__ == "__main__":
     )
 ```
 ### Test
-In the test folder, we provide three comprehensive examples demonstrating different study designs to help users understand and implement their analyses effectively. Each example includes relevant code, output, and visualizations.
+In the test folder, we provide three comprehensive examples demonstrating different study designs to help users understand and implement their analyses effectively. Each example includes relevant code, output.
 
 1. Example 1: Matched Cohort Study Design
 A matched cohort study is an observational research design where exposed and unexposed groups are matched based on specific  covariates (e.g., age, sex, comorbidities) to reduce bias and improve comparability. 
@@ -129,22 +184,22 @@ A cohort study is an observational research design that follows groups of indivi
 3. Example 3: Exposed-only Cohort Design
 The exposed-only cohort design is a variation of cohort studies where only individuals exposed to a risk factor are followed over time, and their outcomes are compared to expected population rates (external controls) rather than an internal unexposed group.
 
-### Workflows and Example: Matched Cohort Study Design
-
+### Workflows and Example
+The difference in each study design lies in Step 1 (creating the DiseaseNetworkData object).
+Example for matched cohort
 ```python
-import diseasenetpy as dnt
-
 # Step 1: Create DiseaseNetworkData object
 # Define required columns and other covariates columns
+import diseasenetpy as dnt
 col_dict = {
-    'Participant ID': 'new_index',          # Maps the participant identifier
-    'Exposure': 'outcome',                  # Defines exposure status (0 or 1)
-    'Sex': 'sex',                           # Indicates sex (1 for female, 0 for male)
-    'Index date': 'date_start',             # Start date of the study
-    'End date': 'time_end',                 # End date of the study
-    'Match ID': 'match_2'                   # Identifier for matching group
+    'Participant ID': 'ID',                # Maps the participant identifier
+    'Exposure': 'exposure',                # Defines exposure status (0 or 1)
+    'Sex': 'sex',                          # Indicates sex (1 for female, 0 for male)
+    'Index date': 'date_start',            # Start date of the study
+    'End date': 'date_end',                # End date of the study
+    'Match ID': 'group_id'                 # Identifier for matching group
 }
-vars_lst = ['age', 'social', 'BMI', 'smoking', 'drinking']  # List of covariates to be used
+vars_lst = ['age', 'BMI']  # List of covariates to be used
 
 # Initialize the data object with study design and phecode level
 data = dnt.DiseaseNetworkData(
@@ -152,33 +207,76 @@ data = dnt.DiseaseNetworkData(
     phecode_level=1,                        # Level of phecode (1 or 2)
     date_fmt='%Y-%m-%d'                     # Date format in data files
 )
+```
 
+Example for cohort
+```python
+import diseasenetpy as dnt
+col_dict = {
+    'Participant ID': 'ID',                # Maps the participant identifier
+    'Exposure': 'exposure',                # Defines exposure status (0 or 1)
+    'Sex': 'sex',                          # Indicates sex (1 for female, 0 for male)
+    'Index date': 'date_start',            # Start date of the study
+    'End date': 'date_end',                # End date of the study
+}
+vars_lst = ['age', 'BMI']  # List of covariates to be used
+
+# Initialize the data object with study design and phecode level
+data = dnt.DiseaseNetworkData(
+    study_design='cohort',          # Type of study design
+    phecode_level=1,                # Level of phecode (1 or 2)
+    date_fmt='%Y-%m-%d'             # Date format in data files
+)
+```
+
+Example for exposed-only cohort
+```python
+import diseasenetpy as dnt
+col_dict = {
+    'Participant ID': 'ID',                # Maps the participant identifier
+    'Sex': 'sex',                          # Indicates sex (1 for female, 0 for male)
+    'Index date': 'date_start',            # Start date of the study
+    'End date': 'date_end',                # End date of the study
+}
+vars_lst = ['age', 'BMI']  # List of covariates to be used
+
+# Initialize the data object with study design and phecode level
+data = dnt.DiseaseNetworkData(
+    study_design='exposed-only cohort',    # Type of study design
+    phecode_level=1,                       # Level of phecode (1 or 2)
+    date_fmt='%Y-%m-%d'                    # Date format in data files
+)
+```
+
+```python
+# Step 2: Data harmonization
+import diseasenetpy as dnt
 # Load the phenotype CSV file into the data object
 data.phenotype_data(
-    phenotype_data_path='/your/project/path/phenotype.csv',  # Path to phenotype data
-    column_names=col_dict,                                   # Column mappings
-    covariates=vars_lst                                      # Covariates to include
+    phenotype_data_path='/test/data/dummy_cohort.csv',  # Path to phenotype data
+    column_names=col_dict,                              # Column mappings
+    covariates=vars_lst                                 # Covariates to include
 )
 
 # Merge with the first medical records file (CSV)
 data.merge_medical_records(
-    medical_records_data_path='/your/project/path/inp_1.csv',  # Path to first medical records file
-    diagnosis_code='ICD-10-WHO',                                # Diagnosis code type
+    medical_records_data_path='/test/data/dummy_EHR_ICD10.csv',  # Path to first medical records file
+    diagnosis_code='ICD-10-WHO',                                 # Diagnosis code type
     column_names={
-        'Participant ID': 'eid',                                # Participant ID column in medical records
-        'Diagnosis code': 'diag_icd10',                        # Diagnosis code column
-        'Date of diagnosis': 'date'                            # Diagnosis date column
+        'Participant ID': 'ID',                                  # Participant ID column in medical records
+        'Diagnosis code': 'diag_icd10',                          # Diagnosis code column
+        'Date of diagnosis': 'dia_date'                          # Diagnosis date column
     }
 )
 
 # Merge with the second medical records file (CSV)
 data.merge_medical_records(
-    medical_records_data_path='/your/project/path/inp_2.csv',  # Path to second medical records file
-    diagnosis_code='ICD-10-WHO',                                # Diagnosis code type
+    medical_records_data_path="/test/data/dummy_EHR_ICD9.csv",  # Path to first medical records file
+    diagnosis_code="ICD-9-WHO",                                 # Diagnosis code type
     column_names={
-        'Participant ID': 'eid',                                # Participant ID column in medical records
-        'Diagnosis code': 'diag_icd10',                        # Diagnosis code column
-        'Date of diagnosis': 'date'                            # Diagnosis date column
+        'Participant ID':'ID',                                  # Participant ID column in medical records
+        'Diagnosis code':'diag_icd9',                           # Diagnosis code column
+        'Date of diagnosis':'dia_date'                          # Diagnosis date column
     }
 )
 
@@ -190,20 +288,30 @@ data.Table1(
 # Save the data object for later use
 data.save('/your/project/path/dep')  # Path to save the data object
 
-# Step 2: PheWAS Analysis
+# Step 3: PheWAS Analysis
 # Reminder:
 # When using multiprocessing, ensure that the code is enclosed within the following block.
 # This prevents entering a never ending loop of new process creation.
 if __name__ == "__main__":
     phewas_result = dnt.phewas(
-        data=data,                                             # DiseaseNetworkData object
+        data=data,                                            # DiseaseNetworkData object
         proportion_threshold=0.01,                            # Minimum proportion of cases to include
         n_process=2,                                          # Number of parallel processes
-        system_exl=[                                           # Phecode systems to exclude
-            'symptoms', 'others', 'injuries & poisonings', 'pregnancy complications'
-        ],
-        covariates=['age', 'social', 'BMI', 'smoking', 'drinking'],  # Covariates to adjust for
-        lifelines_disable=True,                                # Disable lifelines for faster computation
+        system_exl=[                                          # Phecode systems to exclude
+            'symptoms', 
+            'others', 
+            'injuries & poisonings', 
+            'pregnancy complications'
+        ],                                                    # exclude phecode diseases system
+        covariates=[
+          'age', 
+          'social', 
+          'BMI', 
+          'smoking', 
+          'drinking'
+        ],                                                    # Covariates to adjust for
+        correction='bonferroni'                               # Method to Multiple test
+        lifelines_disable=True,                               # Disable lifelines for faster computation
         log_file='/your/project/path/dep.log'                 # Path to log file
     )
 
@@ -220,7 +328,7 @@ phewas_result = dnt.phewas_multipletests(
     cutoff=0.05                               # Significance threshold
 )
 
-# Step 3: Generate Disease Pair for Each Individual and Update the Data Object
+# Step 4: Generate Disease Pair for Each Individual and Update the Data Object
 data.disease_pair(
     phewas_result=phewas_result,               # Filtered PheWAS results
     min_interval_days=30,                      # Minimum interval between diagnoses (30 days here)
@@ -231,14 +339,14 @@ data.disease_pair(
 # Save the updated data object with disease pairs
 data.save('/your/project/path/dep_withtra')    # Path to save the updated data object
 
-# Step 4: Comorbidity Strength Estimation
+# Step 5: Comorbidity Strength Estimation
 # Reminder:
 # When using multiprocessing, ensure that the code is enclosed within the following block.
 # This prevents entering a never ending loop of new process creation.
 if __name__ == "__main__":
     com_strength_result = dnt.comorbidity_strength(
         data=data,                                     # DiseaseNetworkData object
-        proportion_threshold=0.001,                   # Minimum proportion for comorbidity
+        proportion_threshold=0.001,                    # Minimum proportion for comorbidity
         n_process=2,                                   # Number of parallel processes
         log_file='/your/project/path/dep.log'          # Path to log file
     )
@@ -253,14 +361,14 @@ com_strength_result = com_strength_result[
 
 # Adjust p-values for comorbidity strength using FDR Benjamini-Hochberg method
 com_strength_result = dnt.comorbidity_strength_multipletests(
-    df=com_strength_result,                        # DataFrame with comorbidity strength results
-    correction_phi='fdr_bh',                       # P-value correction for phi-correlation
+    df=com_strength_result,                         # DataFrame with comorbidity strength results
+    correction_phi='fdr_bh',                        # P-value correction for phi-correlation
     correction_RR='fdr_bh',                         # P-value correction for Relative Risk
     cutoff_phi=0.05,                                # Significance threshold for phi-correlation
     cutoff_RR=0.05                                  # Significance threshold for Relative Risk
 )
 
-# Step 5: Binomial Test
+# Step 6: Binomial Test
 binomial_result = dnt.binomial_test(
     data=data,                                        # DiseaseNetworkData object
     comorbidity_strength_result=com_strength_result,  # Comorbidity strength results
@@ -279,7 +387,7 @@ binomial_result = dnt.binomial_multipletests(
 # Save the binomial test results to a CSV file
 binomial_result.to_csv('/your/project/path/dep_binomial.csv')  # Path to save binomial test results
 
-# Step 6: Comorbidity Network Analysis
+# Step 7: Comorbidity Network Analysis
 # Reminder:
 # When using multiprocessing, ensure that the code is enclosed within the following block.
 # This prevents entering a never ending loop of new process creation.
@@ -287,9 +395,9 @@ if __name__ == "__main__":
     comorbidity_result = dnt.comorbidity_network(
         data=data,                                       # DiseaseNetworkData object
         comorbidity_strength_result=com_strength_result, # Comorbidity strength results
-        binomial_test_result=binomial_result,           # Binomial test results
-        n_process=2,                                   # Number of parallel processes
-        covariates=['social', 'BMI', 'smoking', 'drinking', 'sex'],  # Covariates to adjust for
+        binomial_test_result=binomial_result,            # Binomial test results
+        n_process=2,                                     # Number of parallel processes
+        covariates=['age', 'BMI'],                       # Covariates to adjust for
         method='CN',                                     # Analysis method ('CN', 'PCN_PCA', 'RPCN')
         log_file='/your/project/path/dep.log'            # Path to log file
     )
@@ -304,7 +412,7 @@ comorbidity_result = dnt.comorbidity_multipletests(
 # Save the comorbidity network analysis results to a CSV file
 comorbidity_result.to_csv('/your/project/path/dep_comorbidity.csv')  # Path to save comorbidity network results
 
-# Step 7: Trajectory Analysis
+# Step 8: Trajectory Analysis
 # Reminder:
 # When using multiprocessing, ensure that the code is enclosed within the following block.
 # This prevents entering a never ending loop of new process creation.
@@ -312,13 +420,13 @@ if __name__ == "__main__":
     trajectory_result = dnt.disease_trajectory(
         data=data,                                       # DiseaseNetworkData object
         comorbidity_strength_result=com_strength_result, # Comorbidity strength results
-        binomial_test_result=binomial_result,           # Binomial test results
+        binomial_test_result=binomial_result,            # Binomial test results
         method='RPCN',                                   # Trajectory analysis method ('CN', 'PCN_PCA', 'RPCN')
         n_process=2,                                     # Number of parallel processes
         matching_var_dict={'age': 2, 'sex': 'exact'},    # Matching variables and criteria
         matching_n=5,                                    # Number of matched controls per case
         enforce_time_interval=False,                     # Enforce time interval in trajectory analysis
-        covariates=['social', 'BMI', 'smoking', 'drinking'],  # Covariates to adjust for
+        covariates=['age', 'BMI'],                       # Covariates to adjust for
         log_file='/your/project/path/dep.log'            # Path to log file
     )
 
@@ -332,7 +440,7 @@ trajectory_result = dnt.trajectory_multipletests(
 # Save the trajectory analysis results to a CSV file
 trajectory_result.to_csv('/your/project/path/dep_trajectory.csv')  # Path to save trajectory analysis results
 
-# Step 8: Result visualization (three-dimension visualization, comorbidity network visualization, significant trajectory visualization)
+# Step 9: Result visualization (three-dimension visualization, comorbidity network visualization, significant trajectory visualization)
 # Create ThreeDimensionalDiseaseNetwork object
 result_network = dnt.visualization.ThreeDimensionalDiseaseNetwork(
   comorbidity_network_result=comorbidity_result,       # DataFrame with comorbidity network results
@@ -421,8 +529,14 @@ A class for handling disease network data creation and operations, for use in th
 ###### `phenotype_data`
 
 ```python
-phenotype_data(self, phenotype_data_path:str, column_names:dict, 
-               covariates:list, force:bool=False)
+phenotype_data(
+  self, 
+  phenotype_data_path:str, 
+  column_names:dict, 
+  is_single_sex: bool=False, 
+  covariates:list, 
+  force:bool=False
+)
 ```
 
 Merges phenotype and medical records data into the main data attribute.
@@ -469,6 +583,10 @@ Merges phenotype and medical records data into the main data attribute.
   - If no additional covariates are included, provide an empty list.
   - Handles missing values by removing individuals with missing continuous variables and categorizing those with missing categorical variables separately.
 
+- `is_single_sex : bool, default=False`
+
+  - Boolean flag indicating if the dataset contains only one sex (male or female)
+
 - `force : bool, default=False`
 
   - If `True`, overwrites existing data attributes even if they contain data.
@@ -483,8 +601,14 @@ Merges phenotype and medical records data into the main data attribute.
 ###### `merge_medical_records`
 
 ```python
-merge_medical_records(self, medical_records_data_path:str, diagnosis_code:str,
-                      column_names:dict, date_fmt:str=None, chunksize:int=1000000)
+merge_medical_records(
+    self, 
+    medical_records_data_path:str, 
+    diagnosis_code:str,
+    column_names:dict, 
+    date_fmt:str=None, 
+    chunksize:int=1000000
+)
 ```
 
 Merges the loaded phenotype data with one or more medical records data.
@@ -557,11 +681,46 @@ Modifies the phecode level setting.
 
 ------
 
+###### `Table1`
+
+Generates a descriptive Table 1 summary of phenotype data.
+
+```python
+Table1(
+    continuous_stat_mode: str='auto'
+)
+```
+
+**Parameters:**
+
+- `continuous_stat_mode : str` (default: `'auto'`)  
+  Specifies the statistical display method for continuous variables:  
+  - `'auto'`: Automatically selects summary statistics based on normality test (Shapiro-Wilk or similar)  
+  - `'normal'`: Forces normal distribution display (mean ± standard deviation)  
+  - `'nonnormal'`: Forces non-parametric display (median [interquartile range])  
+
+**Returns:**
+
+- `pd.DataFrame`  
+  A formatted summary table containing:  
+  - All variables in the phenotype dataset  
+  - Appropriate descriptive statistics per variable  
+  - Group comparisons when applicable (p-values from t-test/ANOVA or Mann-Whitney/Kruskal-Wallis)  
+
+------
+
 ###### `disease_pair`
 
 ```python
-disease_pair(self, phewas_result:pd.DataFrame, min_interval_days:int=0,
-             max_interval_days:int=np.inf, force:bool=False, **kwargs)
+disease_pair(
+    self, 
+    phewas_result:pd.DataFrame, 
+    min_interval_days:int=0, 
+    max_interval_days:int=np.inf, 
+    force:bool=False,
+    n_process:int=1,
+    **kwargs
+)
 ```
 
 Constructs disease pairs based on PheWAS results.
@@ -576,6 +735,9 @@ Constructs disease pairs based on PheWAS results.
   - Maximum allowed time interval (in days) between diagnosis dates for temporal pairs.
 - `force : bool, default=False`
   - If `True`, overwrites existing data attributes.
+- `n_process : int, default=1`
+  - Number of processes to use for parallel processing.
+  - Multiprocessing is enabled when `n_process` is set to a value greater than one.
 - `**kwargs`
   - Additional parameters:
     - `phecode_col : str, default='phecode'`
@@ -626,17 +788,49 @@ Saves the DiseaseNetworkData object's attributes to a `.pkl.gz` (gzip-compressed
 
 - `None`
 
+------
+
+###### `save_npz`
+
+```python
+save_npz(self, file:str)
+```
+
+Saves the `DiseaseNetworkData` object's attributes to a compressed NumPy `.npz` file.
+
+**Parameters:**
+
+- `file : str`  
+  Target filename/path for saving the data:  
+  - If extension is omitted, `.npz` will be automatically appended  
+  - Supports both relative and absolute paths  
+
+**Returns:**
+
+- `None`  
+  The method modifies the filesystem but returns nothing  
+
+
 ### Functions
 
 #### `phewas`
 
 ```python
-dnt.phewas(data:DiseaseNetworkData, covariates:list=None,
-           proportion_threshold:float=None, n_threshold:int=None,
-           n_process:int=1, correction:str='bonferroni', cutoff:float=0.05,
-           system_inc:list=None, system_exl:list=None,
-           phecode_inc:list=None, phecode_exl:list=None, log_file:str=None,
-           lifelines_disable:bool=False) -> pd.DataFrame
+dnt.phewas(
+    data:DiseaseNetworkData, 
+    covariates:list=None,
+    proportion_threshold:float=None, 
+    n_threshold:int=None,
+    n_process:int=1, 
+    correction:str='bonferroni', 
+    cutoff:float=0.05,
+    system_inc:list=None, 
+    system_exl:list=None,
+    phecode_inc:list=None, 
+    phecode_exl:list=None, 
+    log_file:str=None,
+    lifelines_disable:bool=False
+) -> pd.DataFrame
 ```
 
 Conducts Phenome-wide Association Studies (PheWAS) using the specified DiseaseNetworkData object.
@@ -694,8 +888,11 @@ Conducts Phenome-wide Association Studies (PheWAS) using the specified DiseaseNe
 #### `phewas_multipletests`
 
 ```python
-dnt.phewas_multipletests(df:pd.DataFrame, correction:str='bonferroni', 
-                         cutoff:float=0.05) -> pd.DataFrame
+dnt.phewas_multipletests(
+    df:pd.DataFrame, 
+    correction:str='bonferroni', 
+    cutoff:float=0.05
+) -> pd.DataFrame
 ```
 
 Adjusts PheWAS p-values for multiple comparisons using specified correction methods.
@@ -720,11 +917,17 @@ Adjusts PheWAS p-values for multiple comparisons using specified correction meth
 #### `comorbidity_strength`
 
 ```python
-dnt.comorbidity_strength(data:DiseaseNetworkData, proportion_threshold:float=None, 
-                         n_threshold:int=None, n_process:int=1, log_file:str=None, 
-                         correction_phi:str='bonferroni', cutoff_phi:float=0.05, 
-                         correction_RR:str='bonferroni', 
-                         cutoff_RR:float=0.05) -> pd.DataFrame
+dnt.comorbidity_strength(
+    data:DiseaseNetworkData, 
+    proportion_threshold:float=None, 
+    n_threshold:int=None, 
+    n_process:int=1, 
+    log_file:str=None, 
+    correction_phi:str='bonferroni', 
+    cutoff_phi:float=0.05, 
+    correction_RR:str='bonferroni', 
+    cutoff_RR:float=0.05
+) -> pd.DataFrame
 ```
 
 Conducts comorbidity strength estimation among exposed individuals for all possible disease pairs.
@@ -764,10 +967,13 @@ Conducts comorbidity strength estimation among exposed individuals for all possi
 #### `comorbidity_strength_multipletests`
 
 ```python
-dnt.comorbidity_strength_multipletests(df:pd.DataFrame, correction_phi:str='bonferroni', 
-                                       cutoff_phi:float=0.05, 
-                                       correction_RR:str='bonferroni', 
-                                       cutoff_RR:float=0.05) -> pd.DataFrame
+dnt.comorbidity_strength_multipletests(
+    df:pd.DataFrame, 
+    correction_phi:str='bonferroni', 
+    cutoff_phi:float=0.05, 
+    correction_RR:str='bonferroni', 
+    cutoff_RR:float=0.05
+) -> pd.DataFrame
 ```
 
 Adjusts comorbidity strength p-values (phi-correlation and RR) for multiple comparisons.
@@ -795,10 +1001,17 @@ Adjusts comorbidity strength p-values (phi-correlation and RR) for multiple comp
 #### `binomial_test`
 
 ```python
-dnt.binomial_test(data:DiseaseNetworkData, comorbidity_strength_result:pd.DataFrame, 
-                  n_process:int=1, log_file:str=None, 
-                  correction:str='bonferroni', cutoff:float=0.05, 
-                  enforce_temporal_order:bool=False, **kwargs) -> pd.DataFrame
+dnt.binomial_test(
+    data:DiseaseNetworkData, 
+    comorbidity_strength_result:pd.DataFrame, 
+    comorbidity_network_result: pd.DataFrame=None,
+    n_process:int=1, 
+    log_file:str=None, 
+    correction:str='bonferroni', 
+    cutoff:float=0.05, 
+    enforce_temporal_order:bool=False, 
+    **kwargs
+) -> pd.DataFrame
 ```
 
 Conducts binomial tests for disease pairs with significant comorbidity strength to identify significant temporal orders.
@@ -840,8 +1053,11 @@ Conducts binomial tests for disease pairs with significant comorbidity strength 
 #### `binomial_multipletests`
 
 ```python
-dnt.binomial_multipletests(df:pd.DataFrame, correction:str='bonferroni', 
-                           cutoff:float=0.05) -> pd.DataFrame
+dnt.binomial_multipletests(
+    df:pd.DataFrame,
+    correction:str='bonferroni', 
+    cutoff:float=0.05
+) -> pd.DataFrame
 ```
 
 Adjusts binomial test p-values for multiple comparisons.
@@ -866,11 +1082,18 @@ Adjusts binomial test p-values for multiple comparisons.
 #### `comorbidity_network`
 
 ```python
-dnt.comorbidity_network(data:DiseaseNetworkData,comorbidity_strength_result:pd.DataFrame, 
-                        binomial_test_result:pd.DataFrame, method:str='RPCN', 
-                        covariates:list=None, n_process:int=1, log_file:str=None, 
-                        correction:str='bonferroni', 
-                        cutoff:float=0.05, **kwargs) -> pd.DataFrame
+dnt.comorbidity_network(
+    data:DiseaseNetworkData,
+    comorbidity_strength_result:pd.DataFrame, 
+    binomial_test_result:pd.DataFrame=None, 
+    method:str='RPCN', 
+    covariates:list=None, 
+    n_process:int=1, 
+    log_file:str=None, 
+    correction:str='bonferroni', 
+    cutoff:float=0.05, 
+    **kwargs
+) -> pd.DataFrame
 ```
 
 Performs comorbidity network analysis on disease pairs with significant comorbidity strength.
@@ -937,8 +1160,11 @@ Performs comorbidity network analysis on disease pairs with significant comorbid
 #### `comorbidity_multipletests`
 
 ```python
-dnt.comorbidity_multipletests(df:pd.DataFrame, correction:str='bonferroni', 
-                              cutoff:float=0.05) -> pd.DataFrame:
+dnt.comorbidity_multipletests(
+    df:pd.DataFrame, 
+    correction:str='bonferroni', 
+    cutoff:float=0.05
+) -> pd.DataFrame:
 ```
 
 Adjusts comorbidity network analysis p-values for multiple comparisons.
@@ -963,12 +1189,22 @@ Adjusts comorbidity network analysis p-values for multiple comparisons.
 #### `disease_trajectory`
 
 ```python
-dnt.disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.DataFrame, 
-                       binomial_test_result:pd.DataFrame, 
-                       method:str='RPCN', matching_var_dict:dict={'sex':'exact'}, 
-                       matching_n:int=2, covariates:list=None,
-                       n_process:int=1, log_file:str=None, correction:str='bonferroni', 
-                       cutoff:float=0.05, **kwargs) -> pd.DataFrame
+dnt.disease_trajectory(
+    data:DiseaseNetworkData, 
+    comorbidity_strength_result:pd.DataFrame, 
+    binomial_test_result:pd.DataFrame, 
+    method:str='RPCN', 
+    matching_var_dict:dict={'sex':'exact'}, 
+    matching_n:int=2, 
+    max_n_cases:int=np.inf,
+    global_sampling: bool=False, 
+    covariates:list=None, 
+    n_process:int=1, 
+    log_file:str=None, 
+    correction:str='bonferroni', 
+    cutoff:float=0.05, 
+    **kwargs
+) -> pd.DataFrame
 ```
 
 Performs temporal comorbidity network (disease trajectory) analysis to identify pairs with confirmed temporal comorbidity associations.
@@ -1013,6 +1249,17 @@ Performs temporal comorbidity network (disease trajectory) analysis to identify 
 - `matching_n : int, default=2`
 
   - Maximum number of matched controls per case.
+
+- `max_n_cases : int, default=np.inf`
+  
+  - Specifies the maximum number of D2 cases to include in the analysis.
+  - If the number of D2 cases exceeds this value, a random sample of cases will be selected.
+
+- `global_sampling : bool, default=False`
+
+  - Indicates whether to perform independent incidence density sampling for each D1→D2 pair (if False),
+    or to perform a single incidence density sampling for all Dx→D2 pairs with separate regression models for each D1→D2 pair (if True).
+  - Global sampling is recommended when processing large datasets, though it might reduce result heterogeneity.
 
 - `covariates : list, default=None`
 
@@ -1066,8 +1313,11 @@ Performs temporal comorbidity network (disease trajectory) analysis to identify 
 #### `trajectory_multipletests`
 
 ```python
-dnt.trajectory_multipletests(df:pd.DataFrame, correction:str='bonferroni', 
-                             cutoff:float=0.05) -> pd.DataFrame
+dnt.trajectory_multipletests(
+    df:pd.DataFrame, 
+    correction:str='bonferroni', 
+    cutoff:float=0.05
+) -> pd.DataFrame
 ```
 
 Adjusts trajectory analysis p-values for multiple comparisons.

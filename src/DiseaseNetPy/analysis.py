@@ -222,9 +222,11 @@ def phewas(
     return phewas_df
 
 
-def phewas_multipletests(df:pd.DataFrame, 
-                         correction:str='bonferroni', 
-                         cutoff:float=0.05) -> pd.DataFrame:
+def phewas_multipletests(
+    df:pd.DataFrame, 
+    correction:str='bonferroni', 
+    cutoff:float=0.05
+) -> pd.DataFrame:
     """
     Adjusts PheWAS p-values for multiple comparisons using specified correction methods.
 
@@ -284,9 +286,17 @@ def phewas_multipletests(df:pd.DataFrame,
     return df
 
 
-def comorbidity_strength(data:DiseaseNetworkData, proportion_threshold:float=None, n_threshold:int=None, 
-                         n_process:int=1, log_file:str=None, correction_phi:str='bonferroni', cutoff_phi:float=0.05, 
-                         correction_RR:str='bonferroni', cutoff_RR:float=0.05) -> pd.DataFrame:
+def comorbidity_strength(
+    data:DiseaseNetworkData, 
+    proportion_threshold:float=None, 
+    n_threshold:int=None, 
+    n_process:int=1, 
+    log_file:str=None, 
+    correction_phi:str='bonferroni', 
+    cutoff_phi:float=0.05, 
+    correction_RR:str='bonferroni', 
+    cutoff_RR:float=0.05
+) -> pd.DataFrame:
     """
     Conducts comorbidity strength estimation among exposed individuals on all possible disease pairs using the specified DiseaseNetworkData object.
     For each disease pair, we evaluated its relative risk (RR) and phi-correlation as measurement of comorbidity strength.
@@ -452,8 +462,13 @@ def comorbidity_strength(data:DiseaseNetworkData, proportion_threshold:float=Non
     return com_df
 
 
-def comorbidity_strength_multipletests(df:pd.DataFrame, correction_phi:str='bonferroni', cutoff_phi:float=0.05, 
-                                       correction_RR:str='bonferroni', cutoff_RR:float=0.05) -> pd.DataFrame:
+def comorbidity_strength_multipletests(
+    df:pd.DataFrame, 
+    correction_phi:str='bonferroni', 
+    cutoff_phi:float=0.05, 
+    correction_RR:str='bonferroni', 
+    cutoff_RR:float=0.05
+) -> pd.DataFrame:
     """
     Adjusts comorbidity strength p-values (phi-correlation and RR) for multiple comparisons using specified correction methods.
 
@@ -742,7 +757,11 @@ def binomial_test(
     return bino_df
 
 
-def binomial_multipletests(df:pd.DataFrame, correction:str='bonferroni', cutoff:float=0.05) -> pd.DataFrame:
+def binomial_multipletests(
+    df:pd.DataFrame,
+    correction:str='bonferroni', 
+    cutoff:float=0.05
+) -> pd.DataFrame:
     """
     Adjusts binomial p-values for multiple comparisons using specified correction methods.
 
@@ -801,15 +820,18 @@ def binomial_multipletests(df:pd.DataFrame, correction:str='bonferroni', cutoff:
     return df
 
 
-def comorbidity_network(data:DiseaseNetworkData,
-                        comorbidity_strength_result:pd.DataFrame, 
-                        binomial_test_result:pd.DataFrame=None, 
-                        method:str='RPCN', 
-                        covariates:list=None, 
-                        n_process:int=1, 
-                        log_file:str=None, 
-                        correction:str='bonferroni', 
-                        cutoff:float=0.05, **kwargs) -> pd.DataFrame:
+def comorbidity_network(
+    data:DiseaseNetworkData,
+    comorbidity_strength_result:pd.DataFrame, 
+    binomial_test_result:pd.DataFrame=None, 
+    method:str='RPCN', 
+    covariates:list=None, 
+    n_process:int=1, 
+    log_file:str=None, 
+    correction:str='bonferroni', 
+    cutoff:float=0.05, 
+    **kwargs
+) -> pd.DataFrame:
     """
     Perform comorbidity network analysis on disease pairs with significant comorbidity strength to identify pairs with confirmed comorbidity associations.
 
@@ -1056,7 +1078,11 @@ def comorbidity_network(data:DiseaseNetworkData,
     return comorbidity_df
 
 
-def comorbidity_multipletests(df:pd.DataFrame, correction:str='bonferroni', cutoff:float=0.05) -> pd.DataFrame:
+def comorbidity_multipletests(
+    df:pd.DataFrame, 
+    correction:str='bonferroni', 
+    cutoff:float=0.05
+) -> pd.DataFrame:
     """
     Adjusts comorbidity network analysis p-values for multiple comparisons using specified correction methods.
 
@@ -1115,10 +1141,22 @@ def comorbidity_multipletests(df:pd.DataFrame, correction:str='bonferroni', cuto
     return df
 
 
-def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.DataFrame, binomial_test_result:pd.DataFrame, 
-                       method:str='RPCN', matching_var_dict:dict={'sex':'exact'}, matching_n:int=2, max_n_cases:int=np.inf,
-                       global_sampling: bool=False, covariates:list=None, n_process:int=1, log_file:str=None, 
-                       correction:str='bonferroni', cutoff:float=0.05, **kwargs) -> pd.DataFrame:
+def disease_trajectory(
+    data:DiseaseNetworkData, 
+    comorbidity_strength_result:pd.DataFrame, 
+    binomial_test_result:pd.DataFrame, 
+    method:str='RPCN', 
+    matching_var_dict:dict={'sex':'exact'}, 
+    matching_n:int=2, 
+    max_n_cases:int=np.inf,
+    global_sampling: bool=False, 
+    covariates:list=None, 
+    n_process:int=1, 
+    log_file:str=None, 
+    correction:str='bonferroni', 
+    cutoff:float=0.05, 
+    **kwargs
+) -> pd.DataFrame:
     """
     Perform temporal comorbidity network (disease trajectory) analysis on disease pairs with significant comorbidity strength and temporal order, to identify pairs with confirmed temporal comorbidity associations.
     For each disease pair D1 → D2, a nested case-control dataset is constructed using incidence density sampling, treating D2 as the outcome and D1 as the exposure. 
@@ -1430,7 +1468,11 @@ def disease_trajectory(data:DiseaseNetworkData, comorbidity_strength_result:pd.D
     return comorbidity_df
 
 
-def trajectory_multipletests(df:pd.DataFrame, correction:str='bonferroni', cutoff:float=0.05) -> pd.DataFrame:
+def trajectory_multipletests(
+    df:pd.DataFrame, 
+    correction:str='bonferroni', 
+    cutoff:float=0.05
+) -> pd.DataFrame:
     """
     Adjusts trajectory analysis p-values for multiple comparisons using specified correction methods.
 
