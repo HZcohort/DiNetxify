@@ -38,7 +38,7 @@ def disease_network_pipeline(
     Parameters
     ----------
     data : DiseaseNetworkData
-        The DiseaseNetworkData object that stores the data.
+        The DiseaseNetworkData object.
 
     n_process : int
         Specifies the number of parallel processes to use for the disease network analysis.
