@@ -850,7 +850,7 @@ def comorbidity_network(
     Parameters
     ----------
     data : DiseaseNetworkData
-        DESCRIPTION.
+        DiseaseNetworkData object.
 
     comorbidity_strength_result : pd.DataFrame
         DataFrame containing comorbidity strength analysis results produced by the 'DiseaseNetPy.comorbidity_strength' function.

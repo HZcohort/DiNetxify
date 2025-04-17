@@ -159,8 +159,7 @@ class DiseaseNetworkData:
         force: bool=False
     ) -> None:
         """
-        
-        Merges phenotype data into the main data attribute.
+        Reading phenotype data into the DiseaseNetworkData object.
         
         Parameters:
         ----------
@@ -431,7 +430,7 @@ class DiseaseNetworkData:
         chunksize: int=1000000
     ) -> None:
         """
-        Merge the loaded phenotype data with one or more medical records data.
+        Reading one or more medical records data into the DiseaseNetworkData object after the phenotypic data has been loaded.
         If you have multiple medical records data to merge (e.g., with different diagnosis code types), you can call this function multiple times.
 
         Parameters
