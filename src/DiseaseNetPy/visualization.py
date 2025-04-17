@@ -34,7 +34,72 @@ from typing import (
 
 Df = pd.DataFrame
 
-class ThreeDimensionalNetwork(object):
+class Plot(object):
+    """
+    Disease trajectory analysis and comorbidity Network Visualization Tool
+
+    A comprehensive class for visualizing complex disease relationships from:
+    - Phenome-Wide Association Studies (PHEWAS)
+    - Comorbidity network
+    - Disease trajectory analysis
+    - 3D disesae network
+
+    Key Features:
+    ----------------------------
+    1. **Phenome-Wide Association Studies (PHEWAS)**:
+    - Hazard ratio (HR)(cohort/matched cohort) and number of exposures on
+      all diseases (exposed-only cohort)
+    - Circular heatmap plot
+
+    2. **Comorbidity network**:
+    - Louvain community detection for disease clustering
+    - Display the HR of each disease pair
+
+    3. **Disease trajectory analysis**:
+    - Hierarchical ordering by trajectory relationships
+    - Significant trajectory pathway diagrams
+
+    4. **3D disease network**:
+    - Spherical node representation colored by phecode disease system
+    - Trajectory pathways between diseases in x-z axis
+    - Comorbidity network in x-y axis
+
+    Usage Examples:
+    ----------------------------
+    # Basic visualization object
+    # phewas_df, comorbidity_df, and trajectory_df are results of 
+    # PheWAS analysis, comorbidity network, and disease trajectory analysis
+    # from diseaseNetPy.analysis module
+    plot = Plot(phewas_df, comorbidity_df, trajectory_df)
+
+    # Basic 3D disease Network Visualization
+    plot.three_dimension_plot("network_3d.html")
+
+    # Comorbidity Network
+    plot.comorbidity_network_plot("comorbidity_network.html")
+
+    # Disease Trajectories
+    plot.trajectory_plot("trajectory_paths/")
+
+    # PHEWAS Results
+    plot.phewas_plot("phewas_results.png")
+
+    # More details and customization of each function, please look to
+    # annotations of each function
+
+    Data Requirements:
+    ----------------------------
+    - PHEWAS Results: Must contain phecodes, effect sizes, and significance values
+    - Comorbidity Network: Non-temporal disease pairs with association metrics
+    - Trajectory Analysis: Temporal disease pairs with association metrics
+
+    Technical Implementation:
+    ----------------------------
+    - NetworkX package for graph operations
+    - Plotly for 3D visualization
+    - Louvain method for community detection
+    """
+
     def __init__(
         self, 
         phewas_result: Df,
@@ -55,22 +120,82 @@ class ThreeDimensionalNetwork(object):
         filter_trajectory_col: Optional[str]='trajectory_p_significance',
         **kwargs
     ):
-        """initialize the ThreeDimensionalDiseaseNetwork class.
+        """Initialize the Plot class.
+        This class integrates and visualizes disease relationships from three complementary analyses:
+        1. Phenome-Wide Association Study (PHEWAS) results
+        2. Comorbidity network analysis
+        3. Disease trajectory analysis
 
         Args:
-            comorbidity_result (Df): Result of comorbidity network analysis.
-            trajectory_result (Df): Result of trajectory network analysis.
-            phewas_result (Df): Result of PHEWAS analysis.
-            exposure (float, optional): Phecode of exposure in the cohort studies.
+            comorbidity_result (pd.DataFrame): 
+                Result dataframe from comorbidity network analysis containing:
+                - Non-tempora disease pairs (D1-D2)
+                - Association metrics (e.g., beta coefficients, p-values)
+                - Significance identifier (Ture or False)
+                
+            trajectory_result (pd.DataFrame): 
+                Result dataframe from temporal disease trajectory analysis containing:
+                - Temporal disease pairs (source->target)
+                - Temporal association metrics (e.g., beta coefficients, p-values)
+                - Significance identifier (Ture or False)
+                
+            phewas_result (pd.DataFrame): 
+                Result dataframe from PHEWAS analysis containing:
+                - Phecode disease
+                - Effect sizes (e.g., hazard ratios)
+                - Case counts
+                - Disease system classifications
+            
+            exposure (float, optional): 
+                Phecode identifier for the primary exposure variable of interest.
+                Used to highlight exposure-disease relationships in visualizations.
+                Defaults to None, means to (exposed-only cohort)
+                
+            exposure_location (Tuple[float], optional): 
+                Custom 3D coordinates (x,y,z) for positioning the exposure node.
+                If None, will be automatically positioned at (0,0,0).
                 Defaults to None.
+                
+            exposure_size (float, optional): 
+                Relative size scaling factor for the exposure node in visualizations.
+                If None, will be sized according to case counts.
+                Defaults to None.
+                
+            source (str, optional): 
+                Column name indicating source/antecedent diseases in network
+                Defaults to 'phecode_d1'.
+                
+            target (str, optional): 
+                Column name indicating target/consequent diseases in network
+                Defaults to 'phecode_d2'.
+                
+            Additional Parameters:
+            ---------------------
+            phewas_phecode (str): Column name for phecode identifiers in PHEWAS results
+            phewas_number (str): Column name for case counts in PHEWAS results
+            system_col (str): Column name for disease system classifications
+            col_disease_pair (str): Column name for disease pair identifiers
+            filter_phewas_col (str): Column name for PHEWAS significance filter
+            filter_comorbidity_col (str): Column name for comorbidity significance filter  
+            filter_trajectory_col (str): Column name for trajectory significance filter
+            
+        Notes:
+            - All input dataframes should use consistent phecode disease identifiers
+            - Significant results will be filtered using the specified significance columns
+            - Node sizes are proportional to case counts by default
+            - Color schemes are automatically assigned by disease system
 
-            exposure_location (Tuple[float], optional): Three dimension location 
-                of exposure to plot. Defaults to None.
+        Example:
+            >>> plot = Plot(
+                phewas_df, 
+                comorbidity_df, 
+                trajectory_df,
+                exposure=495.2, 
+                exposure_size=15
+            )
 
-            exposure_size (float, optional): Size of exposure. Defaults to None.
-            source (str, optional): Column name of D1. Defaults to 'phecode_d1'.
-            target (str, optional): Column name of D2. Defaults to 'phecode_d2'.
         """
+
         # filter the results
         phewas_result, comorbidity_result, trajectory_result = self.__filter_significant(
             phewas_result,
@@ -931,7 +1056,7 @@ class ThreeDimensionalNetwork(object):
         plot_data.append(trace_data)
         return plot_data
     
-    def threeDimension_plot(
+    def three_dimension_plot(
         self, 
         path: str,
         max_radius: Optional[float]=35.0, 
