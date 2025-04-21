@@ -32,7 +32,7 @@ DiseaseNetPy is a Python package designed for comprehensive disease network anal
     - [phewas_plot](#phewas_plot)
     - [comorbidity_network_plot](#comorbidity_network_plot)
     - [trajectory_plot](#trajectory_plot)
-    - []
+    - [three_dimension_plot](#three_dimension_plot)
 - [Issues reporting and recommendations](#trajectory_multipletests)
 - [License](#license)
 
@@ -64,8 +64,8 @@ The exposed-only cohort design is a variation of cohort studies where only indiv
 There are three dummy data (one phnotypic data, and two medical records data) which are suitable for chort, matched cohort, exposed-only cohort study.
 - **Format**: Both are CSV files
 - **Size**: 
-  phnotypic data: 60,000 records | 3.72 MB
-  ICD9 medical records data: 10,188 records  | 227 kB
+  phnotypic data: 60,000 records | 3.72 MB,
+  ICD9 medical records data: 10,188 records  | 227 kB,
   ICD10 medical records data: 1,048,576 records  | 36.2 MB
 
 ### Data Description
@@ -101,7 +101,7 @@ There are three dummy data (one phnotypic data, and two medical records data) wh
 
 2. **Loading Example**:
   In the tests folder, there are three python scripts (cohort.py, mathced cohort.py, and exposed-only cohort.py) which are suitable for three study designs (cohort/mathced cohort/exposed-only cohort) respectively.
-   ```bash
+  ```bash
   cd tests
   # test of cohort study
   python cohort.py
@@ -111,7 +111,7 @@ There are three dummy data (one phnotypic data, and two medical records data) wh
 
   # or test of exposed-only cohort study
   python exposed-only cohort.py
-   ```
+  ```
 
 3. **Recommended Uses**:
    - python 3.13.0
@@ -119,9 +119,9 @@ There are three dummy data (one phnotypic data, and two medical records data) wh
 
 ### Important Notes
 ⚠️ **Usage Restrictions**:
-- [ ] Commercial use allowed
+- [✔] Commercial use allowed
 - [x] Attribution required
-- [ ] Redistribution prohibited
+- [✔] Redistribution prohibited
 
 📌 **Data Characteristics**:
 - There are no missing values
