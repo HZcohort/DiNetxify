@@ -2,6 +2,7 @@ import diseasenetpy as dnt
 import os
 
 path = os.path.dirname(__file__)
+
 if __name__ =="__main__":
     # Define required columns and other covariates columns
     col_dict = {
@@ -118,16 +119,16 @@ if __name__ =="__main__":
     )
 
     network.threeDimension_plot(
-        "figure/threeDimensionPlot"
+        "threeDimensionPlot"
     )
     network.significant_trajectory_plot(
-        "figure/significant_trajectory"
+        "significant_trajectory"
     )
     network.phewas_plot(
-        "figure/phewas_plot"
+        "phewas_plot"
     )
     network.comorbidity_network_plot(
-        "figure/comorbidity_network_plot"
+        "comorbidity_network_plot"
     )
 
     # save the results and data of 'DiseaseNetworkData' object

@@ -5,12 +5,19 @@ DiseaseNetPy is a Python package designed for comprehensive disease network anal
 ## Table of Contents
 
 - [Installation](#installation)
+- [Study design](#study-design)
+- [Data of test](#data-of-test)
+  - [Dataset Overview](#dataset-overview)
+  - [Data Description](#data-description)
+  - [Usage Guide](#usage-guide)
+  - [Important Notes](#important-notes)
 - Quick Start
   - [Test](#test)
   - [Workflows and Example: Matched Cohort Study Design](#workflows-and-example-matched-cohort-study-design)
 - API Reference
   - Classes
     - [DiseaseNetworkData](#diseasenetworkdata)
+    - [Plot](#plot)
   - Functions
     - [phewas](#phewas)
     - [phewas_multipletests](#phewas_multipletests)
@@ -22,29 +29,112 @@ DiseaseNetPy is a Python package designed for comprehensive disease network anal
     - [comorbidity_multipletests](#comorbidity_multipletests)
     - [disease_trajectory](#disease_trajectory)
     - [trajectory_multipletests](#trajectory_multipletests)
+    - [phewas_plot](#phewas_plot)
+    - [comorbidity_network_plot](#comorbidity_network_plot)
+    - [trajectory_plot](#trajectory_plot)
+    - []
 - [Issues reporting and recommendations](#trajectory_multipletests)
 - [License](#license)
 
 ## Installation
 
-You can install DiseaseNetPy via `pip`. Ensure you have Python 3.7 or higher.
+You can install DiseaseNetPy via `pip`. Ensure you have Python 3.13 .
 
 ```bash
 pip install diseasenetpy
 
 #optional packages
 pip install lifelines #for phewas analysis with lifelines_disable set to False
-
 ```
 
-## Quick Start
+### Study design
+This package suports three different study, such as matched cohort study, cohort study, and exposed-only cohort
 
-This guide walks you through a typical workflow using DiseaseNetPy for a matched cohort study design. The process involves data preparation, PheWAS analysis, comorbidity strength estimation, binomial testing, comorbidity network analysis, and trajectory analysis.
+1. Matched Cohort Study
+A matched cohort study is an observational research design where exposed and unexposed groups are matched based on specific  covariates (e.g., age, sex, comorbidities) to reduce bias and improve comparability. 
+
+2. Cohort Study
+A cohort study is an observational research design that follows groups of individuals (cohorts) over time to assess the association between exposures (e.g., risk factors, treatments) and outcomes (e.g., disease incidence, mortality). 
+
+3. Exposed-only Cohort
+The exposed-only cohort design is a variation of cohort studies where only individuals exposed to a risk factor are followed over time, and their outcomes are compared to expected population rates (external controls) rather than an internal unexposed group.
+
+## Data of test
+### Dataset Overview
+There are three dummy data (one phnotypic data, and two medical records data) which are suitable for chort, matched cohort, exposed-only cohort study.
+- **Format**: Both are CSV files
+- **Size**: 
+  phnotypic data: 60,000 records | 3.72 MB
+  ICD9 medical records data: 10,188 records  | 227 kB
+  ICD10 medical records data: 1,048,576 records  | 36.2 MB
+
+### Data Description
+- **Fields**:
+  phnotypic data
+
+  | Column | Type | Description | Example |
+  |--------|------|-------------|---------|
+  | ID     | int  | Unique identifier of one individual | 1001 |
+  | group_id | str | Identifier of group (matched cohort) | "group_0" |
+  | exposure | int  | Exposure label (cohort/matched cohort) | 0 or 1 |
+  | date_start | datetime | Start time of follow-up | 2016/10/13 |
+  | date_end | datetime  | End time of follow-up | 2022/8/2 |
+  | age | float  | Age for year | 71.23251 |
+  | sex | int  | Identifier of sex | 0 or 1 |
+  | BMI | str  | The level of BMI | c1 |
+
+  medical records data
+
+  | Column | Type | Description | Example |
+  |--------|------|-------------|---------|
+  | ID     | int  | Unique identifier of one individual | 1001 |
+  | dia_date | datetime | Time of diagnosis | 2018/10/01 |
+  | diag_icd10/diag_icd9 | str  | ICD9/ICD10 medical records | "L905"/"E950" |
+
+### Usage Guide
+1. **Download**:
+   ```bash
+   git clone {https://github.com/HZcohort/DiseaseNetPy.git}
+   # or
+   wget {https://github.com/HZcohort/DiseaseNetPy.git}
+   ```
+
+2. **Loading Example**:
+  In the tests folder, there are three python scripts (cohort.py, mathced cohort.py, and exposed-only cohort.py) which are suitable for three study designs (cohort/mathced cohort/exposed-only cohort) respectively.
+   ```bash
+  cd tests
+  # test of cohort study
+  python cohort.py
+
+  # or test of matched cohort study
+  python matched cohort.py
+
+  # or test of exposed-only cohort study
+  python exposed-only cohort.py
+   ```
+
+3. **Recommended Uses**:
+   - python 3.13.0
+   - A multi-core processor with more than 8 cores
+
+### Important Notes
+⚠️ **Usage Restrictions**:
+- [ ] Commercial use allowed
+- [x] Attribution required
+- [ ] Redistribution prohibited
+
+📌 **Data Characteristics**:
+- There are no missing values
+- Covariates (sex, bmi, age)
+
+## Quick Start
+This guide walks you through a typical workflow using DiseaseNetPy for a matched cohort study design. The process involves data preparation, PheWAS analysis, comorbidity strength estimation, binomial testing, comorbidity network analysis, and trajectory analysis. The difference in each study design lies in Step 1 (creating the DiseaseNetworkData object). The data are based on test dataset.
 
 Step 1: Create DiseaseNetworkData object
 Define required columns and other covariates columns
 
 Example for matched cohort
+
 ```python
 import diseasenetpy as dnt
 col_dict = {
@@ -66,6 +156,7 @@ data = dnt.DiseaseNetworkData(
 ```
 
 Example for cohort
+
 ```python
 import diseasenetpy as dnt
 col_dict = {
@@ -86,6 +177,7 @@ data = dnt.DiseaseNetworkData(
 ```
 
 Example for exposed-only cohort
+
 ```python
 import diseasenetpy as dnt
 col_dict = {
@@ -105,6 +197,7 @@ data = dnt.DiseaseNetworkData(
 ```
 
 Step 2: Data harmonization
+
 ```python
 # Load the phenotype CSV file into the data object
 data.phenotype_data(
@@ -135,10 +228,13 @@ data.merge_medical_records(
     }
 )
 ```
+
 Step 3: Use the pipeline disease network
+
 Reminder:
 When using multiprocessing, ensure that the code is enclosed within the following block.
 This prevents entering a never ending loop of new process creation.
+
 ```python
 if __name__ == "__main__":
     dnt.disease_network_pipeline(
@@ -172,23 +268,14 @@ if __name__ == "__main__":
       cutoff=0.05                             # The significance threshold for adjusted p-values
     )
 ```
-### Test
-In the test folder, we provide three comprehensive examples demonstrating different study designs to help users understand and implement their analyses effectively. Each example includes relevant code, output.
 
-1. Example 1: Matched Cohort Study Design
-A matched cohort study is an observational research design where exposed and unexposed groups are matched based on specific  covariates (e.g., age, sex, comorbidities) to reduce bias and improve comparability. 
-
-2. Example 2: Cohort Study Design
-A cohort study is an observational research design that follows groups of individuals (cohorts) over time to assess the association between exposures (e.g., risk factors, treatments) and outcomes (e.g., disease incidence, mortality). 
-
-3. Example 3: Exposed-only Cohort Design
-The exposed-only cohort design is a variation of cohort studies where only individuals exposed to a risk factor are followed over time, and their outcomes are compared to expected population rates (external controls) rather than an internal unexposed group.
-
-### Workflows and Example
+### Basic workflows and examples
 The difference in each study design lies in Step 1 (creating the DiseaseNetworkData object).
+
+Step 1: Create DiseaseNetworkData object
+
 Example for matched cohort
 ```python
-# Step 1: Create DiseaseNetworkData object
 # Define required columns and other covariates columns
 import diseasenetpy as dnt
 col_dict = {
@@ -210,6 +297,7 @@ data = dnt.DiseaseNetworkData(
 ```
 
 Example for cohort
+
 ```python
 import diseasenetpy as dnt
 col_dict = {
@@ -230,6 +318,7 @@ data = dnt.DiseaseNetworkData(
 ```
 
 Example for exposed-only cohort
+
 ```python
 import diseasenetpy as dnt
 col_dict = {
@@ -248,9 +337,9 @@ data = dnt.DiseaseNetworkData(
 )
 ```
 
+Step 2: Data harmonization
+
 ```python
-# Step 2: Data harmonization
-import diseasenetpy as dnt
 # Load the phenotype CSV file into the data object
 data.phenotype_data(
     phenotype_data_path='/test/data/dummy_cohort.csv',  # Path to phenotype data
@@ -287,11 +376,14 @@ data.Table1(
 
 # Save the data object for later use
 data.save('/your/project/path/dep')  # Path to save the data object
+```
 
-# Step 3: PheWAS Analysis
-# Reminder:
-# When using multiprocessing, ensure that the code is enclosed within the following block.
-# This prevents entering a never ending loop of new process creation.
+Step 3: PheWAS Analysis
+Reminder:
+When using multiprocessing, ensure that the code is enclosed within the following block.
+This prevents entering a never ending loop of new process creation.
+
+```python
 if __name__ == "__main__":
     phewas_result = dnt.phewas(
         data=data,                                            # DiseaseNetworkData object
@@ -327,8 +419,11 @@ phewas_result = dnt.phewas_multipletests(
     correction='fdr_bh',                      # P-value correction method
     cutoff=0.05                               # Significance threshold
 )
+```
 
-# Step 4: Generate Disease Pair for Each Individual and Update the Data Object
+Step 4: Generate Disease Pair for Each Individual and Update the Data Object
+
+```python
 data.disease_pair(
     phewas_result=phewas_result,               # Filtered PheWAS results
     min_interval_days=30,                      # Minimum interval between diagnoses (30 days here)
@@ -338,11 +433,14 @@ data.disease_pair(
 
 # Save the updated data object with disease pairs
 data.save('/your/project/path/dep_withtra')    # Path to save the updated data object
+```
 
-# Step 5: Comorbidity Strength Estimation
-# Reminder:
-# When using multiprocessing, ensure that the code is enclosed within the following block.
-# This prevents entering a never ending loop of new process creation.
+Step 5: Comorbidity Strength Estimation
+Reminder:
+When using multiprocessing, ensure that the code is enclosed within the following block.
+This prevents entering a never ending loop of new process creation.
+
+```python
 if __name__ == "__main__":
     com_strength_result = dnt.comorbidity_strength(
         data=data,                                     # DiseaseNetworkData object
@@ -367,8 +465,11 @@ com_strength_result = dnt.comorbidity_strength_multipletests(
     cutoff_phi=0.05,                                # Significance threshold for phi-correlation
     cutoff_RR=0.05                                  # Significance threshold for Relative Risk
 )
+```
 
-# Step 6: Binomial Test
+Step 6: Binomial Test
+
+```python
 binomial_result = dnt.binomial_test(
     data=data,                                        # DiseaseNetworkData object
     comorbidity_strength_result=com_strength_result,  # Comorbidity strength results
@@ -386,11 +487,14 @@ binomial_result = dnt.binomial_multipletests(
 
 # Save the binomial test results to a CSV file
 binomial_result.to_csv('/your/project/path/dep_binomial.csv')  # Path to save binomial test results
+```
 
-# Step 7: Comorbidity Network Analysis
-# Reminder:
-# When using multiprocessing, ensure that the code is enclosed within the following block.
-# This prevents entering a never ending loop of new process creation.
+Step 7: Comorbidity Network Analysis
+Reminder:
+When using multiprocessing, ensure that the code is enclosed within the following block.
+This prevents entering a never ending loop of new process creation.
+
+```python
 if __name__ == "__main__":
     comorbidity_result = dnt.comorbidity_network(
         data=data,                                       # DiseaseNetworkData object
@@ -411,11 +515,14 @@ comorbidity_result = dnt.comorbidity_multipletests(
 
 # Save the comorbidity network analysis results to a CSV file
 comorbidity_result.to_csv('/your/project/path/dep_comorbidity.csv')  # Path to save comorbidity network results
+```
 
-# Step 8: Trajectory Analysis
-# Reminder:
-# When using multiprocessing, ensure that the code is enclosed within the following block.
-# This prevents entering a never ending loop of new process creation.
+Step 8: Trajectory Analysis
+Reminder:
+When using multiprocessing, ensure that the code is enclosed within the following block.
+This prevents entering a never ending loop of new process creation.
+
+```python
 if __name__ == "__main__":
     trajectory_result = dnt.disease_trajectory(
         data=data,                                       # DiseaseNetworkData object
@@ -439,58 +546,98 @@ trajectory_result = dnt.trajectory_multipletests(
 
 # Save the trajectory analysis results to a CSV file
 trajectory_result.to_csv('/your/project/path/dep_trajectory.csv')  # Path to save trajectory analysis results
+```
 
-# Step 9: Result visualization (three-dimension visualization, comorbidity network visualization, significant trajectory visualization)
-# Create ThreeDimensionalDiseaseNetwork object
-result_network = dnt.visualization.ThreeDimensionalDiseaseNetwork(
-  comorbidity_network_result=comorbidity_result,       # DataFrame with comorbidity network results
-  disease_trajectory_result=trajectory_result,         # DataFrame with trajectory analysis results
-  phewas_result=phewas_result,                         # DataFrame with PheWAS results
-  exposure_disease=594.0,                              # Phecode of exposure. Default to 9999, means that it's a registry study
-  exposure_disease_location=(0,0,0),                   # Three-dimensional coordinate. Default to (0,0,0), it's a initial point to plot
-  exposure_disease_size=1,                             # Size of initial point (phecode of exposure) to plot. Default to 1
-  source="phecode_d1",                                 # Column name of D1 (D1->D2). Defaults to 'phecode_d1'
-  target="phecode_d2",                                 # Column name of D2 (D1->D2). Defaults to 'phecode_d2'
+Step 9: Result visualization (three-dimension visualization, comorbidity network visualization, trajectory visualization, PheWAS visualization)
+
+```python
+# Create Plot object
+from diseasenetpy.visualization import Plot
+
+# cohort/matched cohort
+result_plot = Plot(
+    phewas_result=phewas_result,                         # DataFrame with PheWAS results
+    comorbidity_network_result=comorbidity_result,       # DataFrame with comorbidity network results
+    disease_trajectory_result=trajectory_result,         # DataFrame with trajectory analysis results
+    exposure=495.2,                                      # Phecode of exposure. Default to None, means that it's a exposed-only study
+    exposure_size=15,                                    # Relative size scaling factor for the exposure node in visualizations
+    exposure_location=(0,0,0),                           # Custom 3D coordinates (x,y,z) for positioning the exposure node
+    source='phecode_d1',                                 # Column name indicating source/antecedent diseases in disease pair
+    target='phecode_d2',                                 # Column name indicating target/consequent diseases in disease pair
+    phewas_phecode='phecode',                            # Column name of pd.DataFrame for phecode disease name in the PHEWAS result
+    phewas_number='N_cases_exposed',                     # Column name of pd.DataFrame for case counts in the PHEWAS result
+    system_col='system',                                 # Column name of pd.DataFrame for disease system classifications
+    col_disease_pair='name_disease_pair',                # Column name of pd.DataFrame for disease pair identifiers
+    filter_phewas_col='phewas_p_significance',           # Column name of pd.DataFrame for PHEWAS significance filter
+    filter_comorbidity_col='comorbidity_p_significance', # Column name of pd.DataFrame for comorbidity significance filter
+    filter_trajectory_col='trajectory_p_significance',   # Column name of pd.DataFrame for trajectory significance filter
 )
 
-# three-dimension visualization
-result_network.plot_3d(
-  max_radius=45,                                       # Maximum of radius in one sector(cluster)
-  min_radius=15,                                       # Minimum of radius in one sector(cluster)
-  plot_method="full",                                  # Method of plot ("full", "half", "compact")
-  line_color="black",                                  # Color of lines connected with each node(phecode) in the "full" plot method 
-  line_width=2,                                        # Size of lines connected with each node(phecode)
-  layer_distance=20,                                   # Distance of two adjoining layers
-  file_name="/your/project/path"                       # Path to save three-dimension visualization
-  layout_width=900,                                    # Width of layout in the figure. Defaults to 900
-  layout_height=900,                                   # Height of layout in the figure. Defaults to 900
-  font_style="Times New Roman",                        # Font style of layout in the figure. Defaults to "Times New Roman"
-  font_size=15,                                        # Font size of layout in the figure. Defaults to 15
-  location_method="random"                             # Method to calculate the three-dimension location of nodes(phecodes). Defaults to 'random'
+# or exposed-only cohort
+result_plot = Plot(
+    phewas_result=phewas_result,                         # DataFrame with PheWAS results
+    comorbidity_network_result=comorbidity_result,       # DataFrame with comorbidity network results
+    disease_trajectory_result=trajectory_result,         # DataFrame with trajectory analysis results
+    exposure=None,                                       # Phecode of exposure. Default to None, means that it's a exposed-only study
+    exposure_size=None,                                  # Relative size scaling factor for the exposure node in visualizations
+    exposure_location=None,                              # Custom 3D coordinates (x,y,z) for positioning the exposure node
+    source='phecode_d1',                                 # Column name indicating source/antecedent diseases in disease pair
+    target='phecode_d2',                                 # Column name indicating target/consequent diseases in disease pair
+    phewas_phecode='phecode',                            # Column name of pd.DataFrame for phecode disease name in the PHEWAS result
+    phewas_number='N_cases_exposed',                     # Column name of pd.DataFrame for case counts in the PHEWAS result
+    system_col='system',                                 # Column name of pd.DataFrame for disease system classifications
+    col_disease_pair='name_disease_pair',                # Column name of pd.DataFrame for disease pair identifiers
+    filter_phewas_col='phewas_p_significance',           # Column name of pd.DataFrame for PHEWAS significance filter
+    filter_comorbidity_col='comorbidity_p_significance', # Column name of pd.DataFrame for comorbidity significance filter
+    filter_trajectory_col='trajectory_p_significance',   # Column name of pd.DataFrame for trajectory significance filter
+)
+
+# phewas plot
+result_plot.phewas_plot(
+    path="/your/project/path/",                          # Output file path for saving the plot
+    col_coef="phewas_coef",                              # Column name for effect size coefficients (default: "phewas_coef")
+    col_system="system",                                 # Column name for disease system/category (default: "system")
+    col_se="phewas_se",                                  # Column name for standard errors (default: "phewas_se")
+    col_disease="disease",                               # Column name for disease names (default: "disease")
+    is_exposure_only=False,                              # Identifier of exposure (default: False)
+    col_exposure='N_cases_exposed'                       # Column name for exposure number (default: "N_cases_exposed")
 )
 
 # comorbidity network visualization
 result_network.comorbidity_network_plot(
-  max_radius=45,                                       # Maximum of radius in one sector(cluster)
-  min_radius=15,                                       # Minimum of radius in one sector(cluster)
-  line_width=1,                                        # Size of lines connected with each node(phecode). Defaults to 1
-  source="phecode_d1",                                 # Column name of D1 (D1->D2). Defaults to 'phecode_d1'
-  target="phecode_d2",                                 # Column name of D2 (D1->D2). Defaults to 'phecode_d2'
-  location_method="random",                            # Method to calculate the three-dimension location of nodes(phecodes). Defaults to 'random'
-  line_color="black"                                   # Color of lines connected with each node(phecode)
+    path="/your/project/path/",                          # Output file path for saving HTML visualization
+    max_radius=180.0,                                    # Maximum radial position for nodes (default: 180.0)
+    min_radius=35.0,                                     # Minimum radial position for nodes (default: 35.0)
+    size_reduction=0.5,                                  # Scaling factor for node sizes (default: 0.5)
+    cluster_reduction_ratio=0.4,                         # Compression factor for cluster layout (default: 0.4)
+    cluster_weight="comorbidity_beta",                   # Edge weight metric for clustering (default: "comorbidity_beta")
+    line_width=1.0,                                      # Width of comorbidity lines (default: 1.0)
+    line_color="black",                                  # Color of comorbidity lines (default: "black")
+    layer_distance=40.0,                                 # Distance between concentric circles (default: 40.0)
+    font_style="Times New Roman"                         # Font family for text elements (default: "Times New Roman")
 )
 
-# significant trajectory visualization
-result_network.incluster_trajectory_plot(
-  distance=5,                                          # Distance of each nodes(phecodes) in x-y plane
-  layer_distance=5,                                    # Distance of two adjoining layers
-  line_width=1,                                        # Size of lines connected with each node(phecode)
-  line_color="black",                                  # Color of lines connected with each node(phecode)
-  max_radius=45,                                       # Maximum of radius in one sector(cluster)
-  min_radius=15,                                       # Minimum of radius in one sector(cluster)
-  location_method="random",                            # Method to calculate the three-dimension location of nodes(phecodes). Defaults to 'random'
-  source="phecode_d1",                                 # Column name of D1 (D1->D2). Defaults to 'phecode_d1'
-  target="phecode_d2"                                  # Column name of D2 (D1->D2). Defaults to 'phecode_d2'
+# trajectory visualization
+result_network.trajectory_plot(
+    path="/your/project/path/",                          # Directory path to save output images
+    cluster_weight="comorbidity_beta",                   # Edge weight metric used for clustering (default: "comorbidity_beta")
+)
+
+# three-dimension visualization
+result_network.plot_3d(
+    path="/your/project/path/",                          # File path to save the HTML visualization
+    max_radius=180.0,                                    # Maximum radial distance for node placement (default: 180.0)
+    min_radius=35.0,                                     # Minimum radial distance for node placement (default: 35.0)
+    line_color="black",                                  # Color for trajectory lines (default: "black")
+    line_width=1.0,                                      # Width for trajectory lines (default: 1.0)
+    size_reduction=0.5,                                  # Scaling factor for node sizes (default: 0.5)
+    cluster_reduction_ratio=0.4,                         # Cluster compression factor for layout (default: 0.4)
+    cluster_weight="comorbidity_beta",                   # Edge weight metric used for clustering (default: "comorbidity_beta")
+    layer_distance=40.0,                                 # Vertical distance between layers (default: 40.0)
+    layout_width=900.0,                                  # Figure width in pixels (default: 900.0)
+    layout_height=900.0,                                 # Figure height in pixels (default: 900.0)
+    font_style='Times New Roman',                        # Font family for text elements (default: 'Times New Roman')
+    font_size=15.0,                                      # Base font size in points (default: 15.0)
 )
 ```
 
@@ -517,12 +664,131 @@ A class for handling disease network data creation and operations, for use in th
   - Recommendation:
     - Level 2 offers a more granular analysis suitable for larger studies.
     - Level 1 is recommended for smaller studies to maintain statistical power.
+- `min_required_icd_codes : int`
+  - The level of phecode to use for analysis, where level 1 (with a total of 585 medical conditions) corresponds to 3-digit ICD-10 codes and level 2 (a total of 1257 medical conditions) to 4-digit ICD-10 codes.
+  - Recommendation:
+    - For larger studies, level 2 phecodes may enhance result interpretation.
+    - For smaller studies, level 1 is recommended to maintain statistical power.
 - `date_fmt : str, default='%Y-%m-%d'`
   - The format of the date fields in your phenotype and medical records data.
 - `phecode_version : str, default='1.2'`
   - The version of the phecode system used for converting diagnosis codes. Currently, only version 1.2 is supported.
 
 ------
+
+#### `Plot`
+
+```python
+class Plot()
+```
+
+This class integrates and visualizes disease relationships from three complementary analyses:
+1. Phenome-Wide Association Study (PHEWAS) results
+2. Comorbidity network analysis
+3. Disease trajectory analysis
+**Parameters:**
+
+- `comorbidity_result : pd.DataFrame`
+  - Result dataframe from comorbidity network analysis containing:
+    - Non-temporal disease pairs (D1-D2)
+    - Association metrics (e.g., beta coefficients, p-values)
+    - Significance identifier (True or False)
+  
+- `trajectory_result : pd.DataFrame`
+  - Result dataframe from temporal disease trajectory analysis containing:
+    - Temporal disease pairs (source→target)
+    - Temporal association metrics (e.g., beta coefficients, p-values)
+    - Significance identifier (True or False)
+  
+- `phewas_result : pd.DataFrame`
+  - Result dataframe from PHEWAS analysis containing:
+    - Phecode disease identifiers
+    - Effect sizes (e.g., hazard ratios)
+    - Case counts
+    - Disease system classifications
+
+- `exposure : float, optional`
+  - Phecode identifier for the primary exposure variable of interest.
+  - Used to highlight exposure-disease relationships in visualizations.
+  - Default: None (exposed-only cohort)
+  
+- `exposure_location : Tuple[float], optional`
+  - Custom 3D coordinates (x,y,z) for positioning the exposure node.
+  - Default: None (automatically positioned at origin (0,0,0))
+  
+- `exposure_size : float, optional`
+  - Relative size scaling factor for the exposure node.
+  - Default: None (uses automatic sizing)
+
+- `source : str, default='phecode_d1'`
+  - Column name for source/antecedent diseases in disease pairs
+  
+- `target : str, default='phecode_d2'`
+  - Column name for target/consequent diseases in disease pairs
+
+- `phewas_phecode : str, default='phecode'`
+  - Column name for phecode disease identifiers in PHEWAS results
+  
+- `phewas_number : str`
+  - Column name for case counts in PHEWAS results
+  
+- `system_col : str`
+  - Column name for disease system classifications
+  
+- `col_disease_pair : str`
+  - Column name for disease pair identifiers
+  
+- `filter_phewas_col : str`
+  - Column name for PHEWAS significance filter
+  
+- `filter_comorbidity_col : str`
+  - Column name for comorbidity significance filter
+  
+- `filter_trajectory_col : str`
+  - Column name for trajectory significance filter
+
+- `SYSTEM : List[str], optional`
+  - Subset of phecode disease systems to visualize. 
+  - Available systems (17 total):
+    ```python
+    ['neoplasms',
+     'genitourinary',
+     'digestive',
+     'respiratory',
+     'infectious diseases',
+     'mental disorders',
+     'musculoskeletal',
+     'hematopoietic',
+     'dermatologic',
+     'circulatory system',
+     'neurological',
+     'endocrine/metabolic',
+     'sense organs',
+     'injuries & poisonings',
+     'congenital anomalies',
+     'symptoms',
+     'others']
+    ```
+  - Default: All systems present in PHEWAS results
+
+- `COLOR : List[str], optional`
+  - Custom colors for disease systems (hex/RGB/tuple format).
+  - Must match length of SYSTEM parameter.
+  - Default color palette:
+    ```python
+    ['#F46D5A', '#5DA5DA', '#5EBCD1', '#C1D37F',
+     '#CE5A57', '#A5C5D9', '#F5B36D', '#7FCDBB',
+     '#ED9A8D', '#94B447', '#8C564B', '#E7CB94',
+     '#8C9EB2', '#E0E0E0', '#F1C40F', '#9B59B6',
+     '#4ECDC4', '#6A5ACD']
+    ```
+
+**Notes:**
+- All input dataframes must use consistent phecode identifiers
+- Significant results are filtered using specified significance columns
+- Node sizes are proportional to case counts by default
+- Color schemes are automatically assigned by disease system
+- Column mappings retain defaults if analysis outputs use standard names
 
 ##### Methods
 
@@ -787,6 +1053,28 @@ Saves the DiseaseNetworkData object's attributes to a `.pkl.gz` (gzip-compressed
 **Returns:**
 
 - `None`
+
+------
+
+###### `load_npz`
+
+```python
+save_npz(self, file:str, force: bool=False)
+```
+
+Load data from a `.npz` file and restore the attributes to this DiseaseNetworkData object.
+
+**Parameters:**
+
+- `file : str`
+  - The filename with or without `.npz` extension.
+- `force : bool, default=False`
+  - If `True`, overwrites existing data attributes.
+
+**Returns:**
+
+- `None`  
+  The method modifies the filesystem but returns nothing  
 
 ------
 
@@ -1336,6 +1624,367 @@ Adjusts trajectory analysis p-values for multiple comparisons.
 
 - `pd.DataFrame`
   - DataFrame with adjusted trajectory analysis results.
+
+------
+
+#### `phewas_plot`
+
+```python
+def phewas_plot(
+    self,
+    path: str,
+    col_coef: Optional[str]="phewas_coef",
+    col_system: Optional[str]="system",
+    col_se: Optional[str]="phewas_se",
+    col_disease: Optional[str]="disease",
+    is_exposure_only: Optional[bool]=False,
+    col_exposure: Optional[str]='N_cases_exposed'
+) -> None:
+```
+
+Generates a circular PheWAS (Phenome-Wide Association Study) plot. Creates a polar bar plot visualizing disease associations across different disease categories (systems) with effect size visualization.
+
+**Parameters:**
+
+  - `path : str`
+    - Output file path for saving the plot (PNG format)
+
+  - `col_coef : str, default="phewas_coef"`
+    - Column name containing effect size coefficients (log hazard ratios)
+
+  - `col_system : str, default="system"`
+    - Column name containing disease system/category classifications
+
+  - `col_se : str, default="phewas_se"`
+    - Column name containing standard errors of effect estimates
+
+  - `col_disease : str, default="disease"`
+    - Column name containing disease names/labels
+
+  - `is_exposure_only : bool, default=False`
+    - Whether to filter for exposure-only cohort results
+
+  - `col_exposure : str, default="N_cases_exposed"`
+    - Column name containing case counts for exposed individuals
+
+**Plot Features:**
+- Polar coordinate visualization with:
+  - Outer ring showing individual disease associations
+  - Inner segments grouping by disease system
+  - Color gradient indicating effect size (red=positive, green=negative)
+  - Automatic text rotation for optimal label readability
+- System-level estimates calculated using random effects models
+- High-resolution output (1200 DPI)
+
+**Example:**
+```python
+network.phewas_plot(
+    "results/phewas_plot.png",
+    col_coef="beta",
+    col_system="category",
+    col_disease="condition"
+)
+```
+
+**Notes:**
+- Positive associations shown in red (hazard ratio > 1)
+- Negative associations shown in green (hazard ratio < 1)
+- Plot includes:
+  - Color bar legend for effect sizes
+  - System category labels
+  - Individual disease labels
+- Recommended minimum 8"×8" size for readability
+
+**Returns:**
+
+- `None`  
+  The method generates the plot but returns nothing  
+
+------
+
+#### `comorbidity_network_plot`
+
+```python
+def comorbidity_network_plot(
+    self, 
+    path :str,
+    max_radius: Optional[float]=180.0,
+    min_radius: Optional[float]=35.0,
+    size_reduction: Optional[float]=0.5,
+    cluster_reduction_ratio: Optional[float]=0.4,
+    cluster_weight: Optional[str]="comorbidity_beta",
+    line_width: Optional[float]=1.0,
+    line_color: Optional[str]="black",
+    layer_distance: Optional[float]=40.0,
+    font_style: Optional[str]="Times New Roman"
+) -> None:
+```
+
+Generates a 2D visualization of the comorbidity network. Creates an interactive plot showing disease comorbidities with system-based clustering.
+
+**Parameters:**
+
+  - `path : str`
+    - Output file path for saving HTML visualization (must end with .html)
+
+  - `max_radius : float, default=90.0`
+    - Maximum radial position for nodes (arbitrary units)
+    
+  - `min_radius : float, default=35.0`
+    - Minimum radial position for nodes (arbitrary units)
+
+  - `size_reduction : float, default=0.5`
+    - Scaling factor for node sizes (0-1 range recommended)
+
+  - `cluster_reduction_ratio : float, default=0.4`
+    - Compression factor for cluster layout (higher values = more compact)
+
+  - `cluster_weight : str, default="comorbidity_beta"`
+    - Edge weight metric used for clustering. Options:
+      - `"comorbidity_beta"`: Beta coefficients from comorbidity analysis
+      - `"phi_coefficient"`: Phi correlation coefficients
+      - `"RR"`: Risk ratios
+
+  - `line_width : float, default=1.0`
+    - Width of comorbidity connection lines (pixels)
+
+  - `line_color : str, default="black"`
+    - Color of comorbidity lines (supports CSS color names/hex codes)
+
+  - `layer_distance : float, default=40.0`
+    - Distance between concentric circles for systems (arbitrary units)
+
+  - `font_style : str, default="Times New Roman"`
+    - Font family for all text elements
+
+**Example:**
+```python
+network.comorbidity_network_plot(
+    "results/comorbidity_network.html",
+    max_radius=120,
+    line_color="#555555",
+    cluster_weight="RR",
+    font_style="Arial"
+)
+```
+
+**Returns:**
+
+  - `None`  
+    The method generates the plot but returns nothing  
+
+------
+
+#### `trajectory_plot`
+
+```python
+def trajectory_plot(
+    self, 
+    path: str,
+    cluster_weight: Optional[str]="comorbidity_beta",
+) -> None:
+```
+
+Generates hierarchical trajectory visualizations for disease clusters. Creates 2D network plots showing temporal disease relationships within each identified cluster, with nodes positioned based on trajectory patterns.
+
+**Parameters:**
+
+- `path : str`
+  - Directory path where cluster visualizations will be saved
+  - Will create directory if it doesn't exist
+  - Output files will be named `cluster_<number>.png`
+
+- `cluster_weight : str, default="comorbidity_beta"`
+  - Metric used for determining cluster relationships. Options:
+    - `"comorbidity_beta"`: Beta coefficients from comorbidity analysis
+    - `"phi_coefficient"`: Phi correlation values  
+    - `"RR"`: Risk ratios
+    - `"OR"`: Odds ratios
+
+**Visualization Features:**
+- Hierarchical node layout showing temporal progression
+- Nodes:
+  - Colored by disease system category
+  - Sized by disease significance (p-value)
+  - Exposure disease (if specified) highlighted in gray
+- Edges:
+  - Width proportional to trajectory strength
+  - Direction indicates temporal sequence (source→target)
+- Per-cluster images with consistent scaling
+
+**Workflow:**
+1. Cluster Analysis:
+    - Performs community detection if not already completed
+    - Uses specified `cluster_weight` metric
+2. Trajectory Processing:
+    - Filters for statistically significant trajectories
+    - Calculates edge weights
+3. Visualization Generation:
+    - Creates separate plot for each cluster
+    - Computes hierarchical node positions
+    - Renders nodes and edges with matplotlib
+4. Output:
+    - Saves PNG images (600 DPI) to specified directory
+    - Names files sequentially (cluster_1.png, cluster_2.png, etc.)
+
+**Example:**
+```python
+# Basic usage
+network.trajectory_plot("results/trajectory_plots")
+
+# Custom edge weighting
+network.trajectory_plot(
+    "output/figures",
+    cluster_weight="RR"
+)
+```
+
+**Notes:**
+- Requires pre-computed trajectory analysis results
+- Recommended minimum cluster size: 5 diseases
+- For publication-quality figures:
+  - Use vector formats (PDF/SVG) by changing file extension
+  - Adjust figure size via matplotlib rcParams
+- Color scheme matches system categories from comorbidity plot
+- Exposure node (if present) uses special marker style
+
+**Returns:**
+
+  - `None`  
+    The method generates the plot but returns nothing  
+
+------
+
+#### `three_dimension_plot`
+
+```python
+def three_dimension_plot(
+    self, 
+    path: str,
+    max_radius: Optional[float]=180.0, 
+    min_radius: Optional[float]=35.0,
+    line_color: Optional[str]="black", 
+    line_width: Optional[float]=1.0,
+    size_reduction: Optional[float]=0.5,
+    cluster_reduction_ratio: Optional[float]=0.4,
+    cluster_weight: str="comorbidity_beta",
+    layer_distance: Optional[float]=40.0,
+    layout_width: Optional[float]=900.0,
+    layout_height: Optional[float]=900.0,
+    font_style: Optional[str]='Times New Roman',
+    font_size: Optional[float]=15.0,
+) -> None:
+```
+Generates an interactive 3D visualization of disease trajectories and comorbidities.
+
+  Creates a spherical plot showing temporal disease relationships with:
+  - Hierarchical clustering in 3D space
+  - Dynamic node positioning based on trajectory patterns
+  - System-based color coding
+
+**Parameters:**
+
+  - `path : str`
+    - Output file path for HTML visualization (must end with .html)
+    - Example: "results/3d_network.html"
+
+  - `max_radius : float, default=180.0`
+    - Maximum distance from center for node placement (arbitrary units)
+
+  - `min_radius : float, default=35.0`
+    - Minimum distance from center for node placement (arbitrary units)
+
+  - `line_color : str, default="black"`
+    - Color for trajectory paths (supports hex/RGB/color names)
+
+  - `line_width : float, default=1.0`
+    - Width of trajectory lines (pixels)
+
+  - `size_reduction : float, default=0.5`
+    - Node size scaling factor (0.1-1.0 recommended)
+
+  - `cluster_reduction_ratio : float, default=0.4`
+    - Cluster compactness factor (higher = more dense)
+
+  - `cluster_weight : str, default="comorbidity_beta"`
+    - Edge weighting metric for clustering. Options:
+      - `"comorbidity_beta"`: Regression coefficients
+      - `"phi_coefficient"`: Phi correlations
+      - `"RR"`: Risk ratios
+      - `"OR"`: Odds ratios
+
+  - `layer_distance : float, default=40.0`
+    - Vertical spacing between disease systems (arbitrary units)
+
+  - `layout_width : float, default=900.0`
+    - Figure width in pixels (minimum 600 recommended)
+
+  - `layout_height : float, default=900.0`
+    - Figure height in pixels (minimum 600 recommended)
+
+  - `font_style : str, default='Times New Roman'`
+    - Font family for all text elements
+
+  - `font_size : float, default=15.0`
+    - Base font size in points (10-20 recommended)
+
+**Visualization Features:**
+  - 3D spherical coordinate system:
+    - Nodes positioned by disease system clusters
+    - Vertical dimension represents temporal progression
+  - Interactive elements:
+    - Zoom/rotate/pan functionality
+    - Hover tooltips showing disease details
+    - Toggleable legend
+  - Visual encoding:
+    - Node color = disease system (17 categories)
+    - Node size = disease significance
+    - Edge width = trajectory strength
+    - Special marker for exposure disease (if specified)
+
+**Workflow:**
+  1. Data Preparation:
+      - Performs cluster analysis if missing
+      - Calculates 3D node positions
+  2. Visualization:
+      - Creates Plotly 3D scatter plot
+      - Adds trajectory paths as 3D lines
+      - Configures camera and lighting
+  3. Output:
+      - Generates standalone HTML file
+      - Embeds all required JavaScript
+
+**Example:**
+  ```python
+  # Basic usage
+  network.three_dimension_plot("results/3d_network.html")
+
+  # Customized visualization
+  network.three_dimension_plot(
+      path="output/3d_plot.html",
+      max_radius=150,
+      line_color="#3498db",
+      cluster_weight="RR",
+      size_reduction=0.7,
+      font_style="Arial"
+  )
+  ```
+
+**Notes:**
+- Requires Plotly (v5.0+) for visualization
+- Optimal browser: Chrome/Firefox (WebGL acceleration)
+- For publication:
+  - Use higher resolution (increase layout dimensions)
+  - Consider PNG screenshot for static versions
+- Performance scales with node count (~100 nodes recommended)
+- Color scheme consistent with 2D visualizations
+
+**Returns:**
+
+  - `None`  
+    The method generates the plot but returns nothing  
+
+------
 
 ## Issues reporting and recommendations
 

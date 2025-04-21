@@ -35,71 +35,180 @@ from typing import (
 Df = pd.DataFrame
 
 class Plot(object):
+    """Initialize the Plot class.
+    This class integrates and visualizes disease relationships from three complementary analyses:
+    1. Phenome-Wide Association Study (PHEWAS) results
+    2. Comorbidity network analysis
+    3. Disease trajectory analysis
+
+    Args:
+        comorbidity_result (pd.DataFrame): 
+            Result dataframe from comorbidity network analysis containing:
+            - Non-temporal disease pairs (D1-D2)
+            - Association metrics (e.g., beta coefficients, p-values)
+            - Significance identifier (Ture or False)
+            
+        trajectory_result (pd.DataFrame): 
+            Result dataframe from temporal disease trajectory analysis containing:
+            - Temporal disease pairs (source->target)
+            - Temporal association metrics (e.g., beta coefficients, p-values)
+            - Significance identifier (Ture or False)
+            
+        phewas_result (pd.DataFrame): 
+            Result dataframe from PHEWAS analysis containing:
+            - Phecode disease
+            - Effect sizes (e.g., hazard ratios)
+            - Case counts
+            - Disease system classifications
+        
+        exposure (float, optional): 
+            Phecode identifier for the primary exposure variable of interest.
+            Used to highlight exposure-disease relationships in visualizations.
+            Defaults to None, means to exposed-only cohort.
+            
+        exposure_location (Tuple[float], optional): 
+            Custom 3D coordinates (x,y,z) for positioning the exposure node.
+            If None, will be automatically positioned at (0,0,0).
+            Defaults to None, means to exposed-only cohort
+            
+        exposure_size (float, optional): 
+            Relative size scaling factor for the exposure node in visualizations.
+            Defaults to None, means to exposed-only cohort.
+        
+        Additional Parameters:
+        If there are no changes of column name of pd.DataFrame of results of data analysis module, 
+        you will retain the default values.
+        ---------------------
+        source (str, optional): 
+            Column name indicating source/antecedent diseases in disease pair.
+            Defaults to 'phecode_d1'.
+            
+        target (str, optional): 
+            Column name indicating target/consequent diseases in disease pair.
+            Defaults to 'phecode_d2'.
+
+        phewas_phecode (str, optional): 
+            Column name of pd.DataFrame for phecode disease name in the PHEWAS result.
+            It means that Defaults to 'phecode'
+
+        phewas_number (str): Column name of pd.DataFrame for case counts in the PHEWAS result
+        system_col (str): Column name of pd.DataFrame for disease system classifications
+        col_disease_pair (str): Column name of pd.DataFrame for disease pair identifiers
+        filter_phewas_col (str): Column name of pd.DataFrame for PHEWAS significance filter
+        filter_comorbidity_col (str): Column name of pd.DataFrame for comorbidity significance filter  
+        filter_trajectory_col (str): Column name of pd.DataFrame for trajectory significance filter
+
+        **kwargs:
+        SYSTEM (List[str]): 
+            All phecode disease systems to be analysed. If you want to visualize a part of
+            system of results form data analysis module, you will add a parameter like 
+            that SYSTEM=['neoplasms']. All phecode disease systems (17 kinds of systems) are shown below.
+            If there no SYSTEM, the phecode disease systems will be based on the result of PheWAS analysis.
+
+        ['neoplasms'
+        'genitourinary', 
+        'digestive', 
+        'respiratory',
+        'infectious diseases', 
+        'mental disorders', 
+        'musculoskeletal',
+        'hematopoietic', 
+        'dermatologic', 
+        'circulatory system',
+        'neurological',
+        'endocrine/metabolic', 
+        'sense organs',
+        'injuries & poisonings',
+        'congenital anomalies',
+        'symptoms',
+        'others']
+
+        COLOR (List[str]): 
+            One color presents a phecode disease system. If you want to change the color of phecode 
+            disease system, you will add a parameter like that COLOR=['red'] or COLOR=['#ED9A8D']
+            or [(255, 0, 0)]. The elements of SYSTEM and COLOR are in a one-to-one correspondence.
+            Defaults to below.
+
+        ['#F46D5A',
+        '#5DA5DA',
+        '#5EBCD1',
+        '#C1D37F',
+        '#CE5A57',
+        '#A5C5D9',
+        '#F5B36D',
+        '#7FCDBB',
+        '#ED9A8D',
+        '#94B447',
+        '#8C564B',
+        '#E7CB94',
+        '#8C9EB2',
+        '#E0E0E0',
+        "#F1C40F",
+        '#9B59B6',
+        '#4ECDC4',
+        '#6A5ACD']
+
+    Notes:
+        - All input dataframes should use consistent phecode disease identifiers
+        - Significant results will be filtered using the specified significance columns
+        - Node sizes are proportional to case counts by default
+        - Color schemes are automatically assigned by disease system
+
+    Example:
+        1. cohort/matched cohort study
+        >>> plot = Plot(
+            phewas_df,
+            comorbidity_df,
+            trajectory_df,
+            exposure=495.2, 
+            exposure_size=15,
+            exposure_location=(0,0,0),
+            source: Optional[str]='phecode_d1',
+            target: Optional[str]='phecode_d2',
+            phewas_phecode: Optional[str]='phecode',
+            phewas_number: Optional[str]='N_cases_exposed',
+            system_col: Optional[str]='system',
+            col_disease_pair: Optional[str]='name_disease_pair',
+            filter_phewas_col: Optional[str]='phewas_p_significance',
+            filter_comorbidity_col: Optional[str]='comorbidity_p_significance',
+            filter_trajectory_col: Optional[str]='trajectory_p_significance',
+        )
+
+        if there are no changes of column name of pd.DataFrame of the results 
+        in data analysis module, it will be simplified like that:
+        >>> plot = Plot(
+            phewas_df, 
+            comorbidity_df, 
+            trajectory_df,
+            exposure=495.2,
+        )
+
+        2. exposed-only study
+        >>> plot = Plot(
+            phewas_df, 
+            comorbidity_df, 
+            trajectory_df,
+            exposure=None, 
+            exposure_size=None,
+            exposure_location=None,
+            source: Optional[str]='phecode_d1',
+            target: Optional[str]='phecode_d2',
+            phewas_phecode: Optional[str]='phecode',
+            phewas_number: Optional[str]='N_cases_exposed',
+            system_col: Optional[str]='system',
+            col_disease_pair: Optional[str]='name_disease_pair',
+            filter_phewas_col: Optional[str]='phewas_p_significance',
+            filter_comorbidity_col: Optional[str]='comorbidity_p_significance',
+            filter_trajectory_col: Optional[str]='trajectory_p_significance',
+        )
+        if there are no changes of column name of pd.DataFrame of the results 
+        in data analysis module, it will be simplified like that:
+        >>> plot = Plot(
+            phewas_df,
+            comorbidity_df,
+            trajectory_df,
+        )
     """
-    Disease trajectory analysis and comorbidity Network Visualization Tool
-
-    A comprehensive class for visualizing complex disease relationships from:
-    - Phenome-Wide Association Studies (PHEWAS)
-    - Comorbidity network
-    - Disease trajectory analysis
-    - 3D disesae network
-
-    Key Features:
-    ----------------------------
-    1. **Phenome-Wide Association Studies (PHEWAS)**:
-    - Hazard ratio (HR)(cohort/matched cohort) and number of exposures on
-      all diseases (exposed-only cohort)
-    - Circular heatmap plot
-
-    2. **Comorbidity network**:
-    - Louvain community detection for disease clustering
-    - Display the HR of each disease pair
-
-    3. **Disease trajectory analysis**:
-    - Hierarchical ordering by trajectory relationships
-    - Significant trajectory pathway diagrams
-
-    4. **3D disease network**:
-    - Spherical node representation colored by phecode disease system
-    - Trajectory pathways between diseases in x-z axis
-    - Comorbidity network in x-y axis
-
-    Usage Examples:
-    ----------------------------
-    # Basic visualization object
-    # phewas_df, comorbidity_df, and trajectory_df are results of 
-    # PheWAS analysis, comorbidity network, and disease trajectory analysis
-    # from diseaseNetPy.analysis module
-    plot = Plot(phewas_df, comorbidity_df, trajectory_df)
-
-    # Basic 3D disease Network Visualization
-    plot.three_dimension_plot("network_3d.html")
-
-    # Comorbidity Network
-    plot.comorbidity_network_plot("comorbidity_network.html")
-
-    # Disease Trajectories
-    plot.trajectory_plot("trajectory_paths/")
-
-    # PHEWAS Results
-    plot.phewas_plot("phewas_results.png")
-
-    # More details and customization of each function, please look to
-    # annotations of each function
-
-    Data Requirements:
-    ----------------------------
-    - PHEWAS Results: Must contain phecodes, effect sizes, and significance values
-    - Comorbidity Network: Non-temporal disease pairs with association metrics
-    - Trajectory Analysis: Temporal disease pairs with association metrics
-
-    Technical Implementation:
-    ----------------------------
-    - NetworkX package for graph operations
-    - Plotly for 3D visualization
-    - Louvain method for community detection
-    """
-
     def __init__(
         self, 
         phewas_result: Df,
@@ -120,82 +229,6 @@ class Plot(object):
         filter_trajectory_col: Optional[str]='trajectory_p_significance',
         **kwargs
     ):
-        """Initialize the Plot class.
-        This class integrates and visualizes disease relationships from three complementary analyses:
-        1. Phenome-Wide Association Study (PHEWAS) results
-        2. Comorbidity network analysis
-        3. Disease trajectory analysis
-
-        Args:
-            comorbidity_result (pd.DataFrame): 
-                Result dataframe from comorbidity network analysis containing:
-                - Non-tempora disease pairs (D1-D2)
-                - Association metrics (e.g., beta coefficients, p-values)
-                - Significance identifier (Ture or False)
-                
-            trajectory_result (pd.DataFrame): 
-                Result dataframe from temporal disease trajectory analysis containing:
-                - Temporal disease pairs (source->target)
-                - Temporal association metrics (e.g., beta coefficients, p-values)
-                - Significance identifier (Ture or False)
-                
-            phewas_result (pd.DataFrame): 
-                Result dataframe from PHEWAS analysis containing:
-                - Phecode disease
-                - Effect sizes (e.g., hazard ratios)
-                - Case counts
-                - Disease system classifications
-            
-            exposure (float, optional): 
-                Phecode identifier for the primary exposure variable of interest.
-                Used to highlight exposure-disease relationships in visualizations.
-                Defaults to None, means to (exposed-only cohort)
-                
-            exposure_location (Tuple[float], optional): 
-                Custom 3D coordinates (x,y,z) for positioning the exposure node.
-                If None, will be automatically positioned at (0,0,0).
-                Defaults to None.
-                
-            exposure_size (float, optional): 
-                Relative size scaling factor for the exposure node in visualizations.
-                If None, will be sized according to case counts.
-                Defaults to None.
-                
-            source (str, optional): 
-                Column name indicating source/antecedent diseases in network
-                Defaults to 'phecode_d1'.
-                
-            target (str, optional): 
-                Column name indicating target/consequent diseases in network
-                Defaults to 'phecode_d2'.
-                
-            Additional Parameters:
-            ---------------------
-            phewas_phecode (str): Column name for phecode identifiers in PHEWAS results
-            phewas_number (str): Column name for case counts in PHEWAS results
-            system_col (str): Column name for disease system classifications
-            col_disease_pair (str): Column name for disease pair identifiers
-            filter_phewas_col (str): Column name for PHEWAS significance filter
-            filter_comorbidity_col (str): Column name for comorbidity significance filter  
-            filter_trajectory_col (str): Column name for trajectory significance filter
-            
-        Notes:
-            - All input dataframes should use consistent phecode disease identifiers
-            - Significant results will be filtered using the specified significance columns
-            - Node sizes are proportional to case counts by default
-            - Color schemes are automatically assigned by disease system
-
-        Example:
-            >>> plot = Plot(
-                phewas_df, 
-                comorbidity_df, 
-                trajectory_df,
-                exposure=495.2, 
-                exposure_size=15
-            )
-
-        """
-
         # filter the results
         phewas_result, comorbidity_result, trajectory_result = self.__filter_significant(
             phewas_result,
@@ -249,6 +282,7 @@ class Plot(object):
                 raise ValueError(
                     f"The system of {outside_system} is not support"
                 )
+            
         system_color = dict(
             zip(
                 SYSTEM,
@@ -333,13 +367,20 @@ class Plot(object):
         source: str,
         target: str
     ) -> None:
-        """_summary_
+        """Verifies that all disease pairs in the trajectory network exist in the comorbidity network.
+
+        This validation method checks whether every source-target disease pair present in the
+        result of disease trajectory analysis dataframe (tra_df) also exists in the result of 
+        comorbidity network analysis dataframe (com_df). Raises a warning if any pair is missing.
 
         Args:
-            tra_df (Df): _description_
-            com_df (Df): _description_
-            d1_str (str): _description_
-            d2_str (str): _description_
+            tra_df (Df): DataFrame containing temporal disease pairs with source and target columns
+            com_df (Df): DataFrame containing non-temporal disease pairs with source and target columns
+            source (str): Column name for source diseases in both dataframes
+            target (str): Column name for target diseases in both dataframes
+
+    Raises:
+        Warning: If any disease pair in tra_df is not found in com_df
         """
         tra_pairs = [
             [row[source], row[target]]
@@ -367,16 +408,28 @@ class Plot(object):
         target: str,
         col_disease_pair: str
     ) -> Df:
-        """_summary_
+        """Generates temporal disease pairs starting from an exposure point.
+
+        Processes a disease network dataframe to create trajectory sequences beginning
+        with the specified exposure disease. The method:
+        1. Filters diseases connected to the exposure
+        2. Creates new trajectory pairs from exposure to each connected disease
+        3. Combines them with existing trajectories
 
         Args:
-            df (Df): _description_
-            exposure (float): _description_
-            d1_str (str): _description_
-            d2_str (str): _description_
+            df (Df): Input dataframe containing disease trajectory relationships
+            exposure (float): The starting disease/exposure point for new trajectories
+            source (str): Column name for source diseases (D1 of D1->D2)
+            target (str): Column name for target diseases (D2 of D1->D2)
+            col_disease_pair (str): Column name to store formatted disease pairs
 
         Returns:
-            Df: _description_
+            Df: Expanded dataframe containing both exposure and a first disease in order 
+                of disease trajectories
+
+        Example:
+            Given exposure=1.0 and connections to diseases [2.0, 3.0], creates:
+            [[1.0, 2.0, "1.0-2.0"], [1.0, 3.0, "1.0-3.0"]] plus original data
         """
         df = df.loc[df[source].isin(df[target].values)]
         first_layer = set(df[source].values)
@@ -394,27 +447,44 @@ class Plot(object):
         source: str,
         target: str
     ) -> set:
-        """_summary_
+        """Extracts all unique disease from source and target columns of a dataframe.
+
+        Combines values from both specified columns and returns them as a set to ensure
+        uniqueness. This is particularly useful for network/graph analysis where you need
+        to identify all distinct disease.
 
         Args:
-            df (Df): _description_
-            d1_str (str): _description_
-            d2_str (str): _description_
+            df (Df): Input dataframe containing node relationships
+            source (str): Column name containing source diseases
+            target (str): Column name containing target diseases
 
         Returns:
-            set: _description_
+            set: A set containing all unique nodes from both source and target columns
+
+        Example:
+            >>> df = pd.DataFrame({'from': ['A', 'B'], 'to': ['B', 'C']})
+            >>> __get_nodes(df, 'from', 'to')
+            set('A', 'B', 'C')
         """
         return set(df[source].to_list() + df[target].to_list())
     
     @staticmethod
     def __split_name(name: str) -> str:
-        """line feed the name of disease.
+        """Formats disease names by inserting line breaks for better readability.
+    
+        Splits long disease names into multiple lines when the accumulated character count
+        exceeds the specified maximum line length (12). Maintains word boundaries and removes
+        any trailing whitespace.
 
         Args:
-            name (str): Disease name.
+            name (str): Disease name to be formatted
 
         Returns:
-            str: Disease name lined feed.
+            str: Formatted disease name with line breaks for better display
+
+        Examples:
+            >>> __split_name("Chronic obstructive pulmonary disease")
+            'Chronic obstructive\npulmonary disease'
         """
         words = name.split(' ')
         total_number, new_word = 0, ''
@@ -430,17 +500,28 @@ class Plot(object):
 
     @staticmethod
     def __sphere_cordinate(
-        center: Tuple[float],
+        center: Tuple[float, float, float],
         r: float
-    ) -> Tuple[float]:
-        """get the cordinate of sphere.
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """Generates 3D coordinate arrays for a sphere surface.
+
+        Calculates the (x, y, z) coordinates of points uniformly distributed on the surface
+        of a sphere with given center and radius using spherical coordinates.
 
         Args:
-            center (tuple): the location of centre point.
-            r (float): the radius of sphere.
+            center: (x, y, z) coordinates of the sphere's center point
+            radius: Radius of the sphere (must be positive)
+            resolution: Number of points along each angular dimension (default: 50)
+                    Higher values create smoother spheres but require more memory
 
         Returns:
-            tuple: the cordinate of sphere.
+            A tuple containing three 2D numpy arrays representing:
+            (x_coordinates, y_coordinates, z_coordinates) of the sphere surface points
+
+        Example:
+            >>> x, y, z = __sphere_coordinate((0, 0, 0), 1.0)
+            >>> x.shape
+            (50, 50)
         """
         theta1 = np.linspace(0, 2*np.pi, 50)
         phi1 = np.linspace(0, np.pi, 50)
@@ -457,14 +538,31 @@ class Plot(object):
         source_lst :List[float], 
         target_lst :List[float]
     ) -> Dict[float, int]:
-        """_summary_
+        """Calculates topological order distances for nodes in a directed graph.
+
+        Performs a topological sort using Kahn's algorithm to determine the longest path
+        distance from any source node (in-degree 0) to each node in the graph. This is
+        useful for determining hierarchical relationships in dependency graphs.
 
         Args:
-            source_lst (List[float]): _description_
-            target_lst (List[float]): _description_
+            source_lst: List of source nodes for each edge in the graph
+            target_lst: List of target nodes for each edge in the graph
+                (must be same length as source_lst)
 
         Returns:
-            Dict[int]: _description_
+            A dictionary mapping each node to its maximum distance from a source node.
+            Source nodes have distance 1 by default.
+
+        Example:
+            >>> source = [1.0, 1.0, 2.0, 3.0]
+            >>> target = [2.0, 3.0, 4.0, 4.0]
+            >>> __calculate_order(source, target)
+            {1.0: 1, 2.0: 2, 3.0: 2, 4.0: 3}
+            
+        Note:
+            - The graph must be a Directed Acyclic Graph (DAG)
+            - If cycles exist, the algorithm will only process nodes reachable
+            from true source nodes (in-degree 0)
         """
         adj = defaultdict(list)
         in_degree = defaultdict(int)
@@ -493,18 +591,51 @@ class Plot(object):
     
     @staticmethod
     def __most_frequent_element(lst: List[Any]) -> Any:
+        """Finds the most frequently occurring element in a list.
+
+        Args:
+            lst: Input list of elements to analyze
+
+        Returns:
+            The most frequent element, or tuple of (element, count) if return_count=True.
+            Returns None if input list is empty.
+
+        Raises:
+            ValueError: If input list is empty and no default tie_breaker behavior is specified
+
+        Examples:
+            >>> __most_frequent_element([1, 2, 2, 3, 3, 3])
+            3
+        """
+        if not lst:
+            return None
+        
         counter = Counter(lst)
         most_common = counter.most_common(1)
         return most_common[0][0]
 
     def __check_node_attrs(self, key: str) -> bool:
-        """_summary_
+        """Checks if a given attribute key exists in any node's attributes.
+
+        This method verifies whether the specified attribute key is present in any
+        of the node attributes stored in the graph. The check stops at the first
+        occurrence of the key.
 
         Args:
-            key (str): _description_
+            key: The attribute key to search for in node attributes
 
         Returns:
-            bool: _description_
+            True if the key exists in any node's attributes, False otherwise
+
+        Example:
+            >>> graph._nodes_attrs = {1: {'color': 'red'}, 2: {'size': 10}}
+            >>> graph.__check_node_attrs('color')
+            True
+            >>> graph.__check_node_attrs('weight')
+            False
+
+        Note:
+            This performs a shallow check for key existence only, not the values.
         """
         for _, attrs in self._nodes_attrs.items():
             if key in attrs.keys():
@@ -517,6 +648,34 @@ class Plot(object):
         self, 
         cluster_nodes: Dict[int, float]
     ) -> Dict[int, float]:
+        """Calculates size ratios for clusters relative to the total network size.
+
+        For each cluster, sums the sizes of all nodes in the cluster, then computes
+        each cluster's proportion of the total network size. This is useful for
+        visualizing cluster importance or dominance in the network.
+
+        Args:
+            cluster_nodes: Dictionary mapping cluster IDs to lists of node IDs.
+                        Format: {cluster_id: [node_id1, node_id2, ...]}
+
+        Returns:
+            Dictionary mapping cluster IDs to their proportional size ratios.
+            Ratios sum to 1.0 across all clusters.
+
+        Example:
+            >>> self._nodes_attrs = {
+                    1: {"size": 10}, 
+                    2: {"size": 20},
+                    3: {"size": 30}
+                }
+            >>> cluster_nodes = {0: [1, 2], 1: [3]}
+            >>> self.__calculate_ratio(cluster_nodes)
+            {0: 0.5, 1: 0.5}  # (10+20)/60 and 30/60
+
+        Raises:
+            KeyError: If any node in cluster_nodes is missing from self._nodes_attrs
+            ZeroDivisionError: If total network size is 0
+        """
         for cluster, nodes in cluster_nodes.items():
             size = [self._nodes_attrs[x]["size"] for x in nodes]
             sum_size = sum(size)
@@ -528,7 +687,30 @@ class Plot(object):
         return cluster_nodes
     
     def __init_attrs(self, **kwargs) -> None:
-        """_summary_
+        """Initializes protected attributes from keyword arguments.
+    
+        Dynamically sets protected instance attributes (prefixed with '_') from provided
+        keyword arguments. This provides a flexible way to initialize multiple protected
+        attributes at once.
+
+        Args:
+            **kwargs: Arbitrary keyword arguments where:
+                    key = attribute name (will be prefixed with '_')
+                    value = attribute value
+
+        Example:
+            >>> obj.__init_attrs(size=10, color='red', visible=True)
+            >>> obj._size
+            10
+            >>> obj._color
+            'red'
+            >>> obj._visible
+            True
+
+        Note:
+            - All created attributes will be protected (start with underscore)
+            - Existing attributes with same name will be overwritten
+            - For public attributes, consider using regular initialization
         """
         for key, value in kwargs.items():
             setattr(self, f"_{key}", value)
@@ -542,13 +724,52 @@ class Plot(object):
                     self._nodes_attrs[node].update({f"{key}":attr})
     def __filter_significant(
         self,
-        phewas_result,
-        comorbidity_result,
-        trajectory_result,
-        filter_phewas_col,
-        filter_comorbidity_col,
-        filter_trajectory_col
+        phewas_result: Df,
+        comorbidity_result: Df,
+        trajectory_result: Df,
+        filter_phewas_col: str,
+        filter_comorbidity_col: str,
+        filter_trajectory_col: str
     ) -> Df:
+        """Filters input dataframes to only include statistically significant results.
+
+        Applies boolean filters to each input dataframe based on specified significance
+        columns, returning only rows marked as significant (True). If no filter column
+        is provided for a dataframe, it is returned unchanged.
+
+        Args:
+            phewas_result: DataFrame containing PheWAS analysis results
+            comorbidity_result: DataFrame containing comorbidity analysis results
+            trajectory_result: DataFrame containing disease trajectory results
+            filter_phewas_col: Column name in phewas_result indicating significance.
+                            If None, no filtering is applied.
+            filter_comorbidity_col: Column name in comorbidity_result indicating significance.
+                                If None, no filtering is applied.
+            filter_trajectory_col: Column name in trajectory_result indicating significance.
+                                If None, no filtering is applied.
+
+        Returns:
+            A tuple containing the filtered dataframes in order:
+            (filtered_phewas, filtered_comorbidity, filtered_trajectory)
+
+        Example:
+            >>> phewas_df = pd.DataFrame({'p_value': [0.01, 0.5], 'significant': [True, False]})
+            >>> comorbidity_df = pd.DataFrame({'OR': [1.2, 3.4], 'sig': [True, True]})
+            >>> filtered = __filter_significant(
+                    phewas_df, comorbidity_df, None,
+                    filter_phewas_col='significant',
+                    filter_comorbidity_col='sig'
+                )
+            # Returns:
+            # - phewas_df with only significant rows
+            # - comorbidity_df unchanged (all rows significant)
+            # - None (no trajectory input)
+
+        Note:
+            - Each filter column should contain boolean values
+            - None values for filter columns skip filtering for that dataframe
+            - Original dataframes are not modified (returns filtered copies
+        """
         if filter_phewas_col:
             phewas_result = phewas_result.loc[
                 phewas_result[filter_phewas_col] == True
@@ -566,13 +787,32 @@ class Plot(object):
         return phewas_result, comorbidity_result, trajectory_result
     
     def __get_same_nodes(self, key_name:str) -> Dict[Any, Any]:
-        """_summary_
+        """Groups node IDs by their attribute values for a specified attribute key.
+
+        Creates a dictionary mapping each unique attribute value to a list of node IDs
+        that share that value. This is useful for analyzing or visualizing nodes with
+        common characteristics.
 
         Args:
-            key_name (str): _description_
+            key_name: The name of the attribute to group by. Must exist in all nodes'
+                    attribute dictionaries.
 
         Returns:
-            Dict[Any]: _description_
+            A dictionary where:
+            - Keys are the unique attribute values found for the specified key
+            - Values are lists of node IDs that have each attribute value
+
+        Example:
+            >>> graph._nodes_attrs = {
+                    1: {'color': 'red', 'size': 10},
+                    2: {'color': 'blue', 'size': 20},
+                    3: {'color': 'red', 'size': 15}
+                }
+            >>> graph.group_nodes_by_attribute('color')
+            {'red': [1, 3], 'blue': [2]}
+
+        Raises:
+            KeyError: If the specified key_name is not found in any node's attributes
         """
         attrs = []
         for attr in self._nodes_attrs.values():
@@ -589,6 +829,44 @@ class Plot(object):
         self,
         edge_lst: List[tuple[str, float]],
     ) -> Dict[str, List[float]]:
+        """Generates edge attribute data for 3D visualization coordinates.
+
+        Processes a list of edges to create coordinate sequences for visualization,
+        handling special cases for exposure nodes. Produces three separate coordinate
+        streams (x, y, z) with None values separating different edges.
+
+        Args:
+            edge_lst: List of edges as tuples (source_node, target_node)
+                    where nodes are referenced by their string IDs
+
+        Returns:
+            Dictionary with three coordinate streams:
+            {
+                0: List of x-coordinates [source_x, target_x, None, ...],
+                1: List of y-coordinates [source_y, target_y, None, ...],
+                2: List of z-coordinates [source_z, target_z, None, ...]
+            }
+            None values separate different edges in the visualization path.
+
+        Example:
+            >>> self._exposure = "E1"
+            >>> self._exposure_location = (1.0, 2.0, 3.0)
+            >>> self._nodes_attrs = {
+                    "N1": {"location": (4.0, 5.0, 6.0)},
+                    "N2": {"location": (7.0, 8.0, 9.0)}
+                }
+            >>> self.__get_edge_attrs([("E1", "N1"), ("N1", "N2")])
+            {
+                0: [1.0, 4.0, None, 4.0, 7.0, None],
+                1: [2.0, 5.0, None, 5.0, 8.0, None],
+                2: [3.0, 6.0, None, 6.0, 9.0, None]
+            }
+
+        Note:
+            - Exposure nodes use special predefined locations
+            - None values are inserted between edges for visualization breaks
+            - Assumes all nodes have "location" attributes with 3D coordinates
+        """
         edge_attrs = {
             0:[],
             1:[],
@@ -612,12 +890,37 @@ class Plot(object):
         return edge_attrs
 
     def __sig_nodes(self) -> List[List[float]]:
-        """_summary_
+        """Identifies significant disease progression paths in the trajectory network.
+
+        Analyzes the disease trajectory network to find:
+        1. All longest paths starting from exposure node
+        2. Significant cycles (if no exposure specified)
+        3. Paths where all nodes belong to the same cluster
 
         Returns:
-            List[List[float]]: _description_
-        """
+            List of significant paths, where each path is represented as:
+            List[node_ids] with nodes in progression order
 
+        Algorithm:
+            1. Builds directed graph from trajectory data
+            2. Finds all longest paths from exposure node (or node 0 if no exposure)
+            3. Identifies significant cycles (when no exposure specified)
+            4. Filters paths where all nodes share the same cluster
+
+        Example:
+            >>> self._exposure = "D1"
+            >>> self._trajectory = pd.DataFrame({
+                    'source': ['D1', 'D1', 'D2'],
+                    'target': ['D2', 'D3', 'D4']
+                })
+            >>> self.__sig_nodes()
+            [['D2'], ['D3'], ['D2', 'D4']]  # Sample output
+
+        Note:
+            - Uses DFS to find longest paths
+            - Only considers cycles when no exposure is specified
+            - Path significance determined by cluster homogeneity
+        """
         def get_all_longest_paths(G, start):
             all_paths = []
             def dfs(current_node, path):
@@ -701,28 +1004,46 @@ class Plot(object):
             z=1.5
         )
     ):
-        """get the atrribution of sphere to plot.
+        """Generates visualization attributes for 3D sphere representation.
+
+        Creates all necessary attributes for plotting a 3D sphere in Plotly, including
+        coordinates, colors, and lighting parameters. Used for visualizing disease nodes
+        in 3D network visualizations.
 
         Args:
-            center (Tuple[float]): Three dimension location of centre point.
-            r (float): Radius of sphere.
-            name (str): Name of disease.
-            label (str): the label of disease.
-            color (str): the color of sphere to plot.
-            light_dict (dict, optional): the atrributions of light in the ployly module, more details in plotly. 
-                                         Defaults to dict(ambient=0.2, diffuse=0.8, specular=0.4, roughness=0.2, fresnel=2.0).
-            light_position_dict (dict, optional): the location of the light. Defaults to dict(x=1.5, y=1.5, z=1.5).
+            center: (x, y, z) coordinates of sphere center
+            radius: Radius of the sphere (positive float)
+            color: Hex or named color for sphere visualization
+            name: Name identifier for the disease/sphere
+            label: Display label for the sphere
+            light_dict: Lighting properties for Plotly surface rendering. Defaults to:
+                    {
+                        'ambient': 0.2,
+                        'diffuse': 0.8,
+                        'specular': 0.4,
+                        'roughness': 0.2,
+                        'fresnel': 2.0
+                    }
+            light_position_dict: 3D position of light source. Defaults to:
+                                {'x': 1.5, 'y': 1.5, 'z': 1.5}
 
         Returns:
-            x (iterable object): the cordinates in the x-axis.
-            y (iterable object): the cordinates in the y-axis.
-            z (iterable object): the cordinates in the z-axis.
-            colorscale_ (list[list]): the color of sphere
-            light_dict (dict{str:float}): the atrributions of light in the ployly module. 
-                                          Defaults to dict(ambient=0.2, diffuse=0.8, specular=0.4, roughness=0.2, fresnel=2.0).
-            label (str): the label of disease.
-            name (str): the name of disease.
-            light_position_dict (dict{str:float}): the location of the light. Defaults to dict(x=1.5, y=1.5, z=1.5).
+            A tuple containing:
+            - x, y, z: 2D numpy arrays of sphere surface coordinates
+            - colorscale: Color gradient definition for Plotly
+            - light_dict: Final lighting properties used
+            - light_position_dict: Final light position used
+
+        Example:
+            >>> x, y, z, colors, lights, light_pos = __sphere_attrs(
+                    center=(0, 0, 0),
+                    radius=1.5,
+                    color='#FF0000',
+                    name='Diabetes',
+                    label='DM2'
+                )
+            >>> x.shape  # Returns coordinate arrays
+            (50, 50)
         """
         x, y, z = self.__sphere_cordinate(center, r)
         colorscale = [[0.0, color], [0.5, color], [1.0, color]]
@@ -737,18 +1058,44 @@ class Plot(object):
             cluster_ratio :Dict[int, float],
             max_attempts :Optional[int]=10000
         ) -> None:
-        """calculate the location of center point of sphere.
+        """Randomly calculates and assigns 3D locations for nodes in a clustered network.
+
+        Distributes nodes in 3D space with the following characteristics:
+        - Nodes are positioned in circular sectors based on their cluster
+        - Radial distance is randomized between min/max radius
+        - Z-coordinate decreases with node order (hierarchy)
+        - Ensures nodes don't overlap based on their size attributes
 
         Args:
-            node (float): phecode.
-            _hash_dict (dict): {cluster:[phecodes in the cluster]}.
-            begin_angle (float, optional): the minimum of angle in the arc. Defaults to 0.25.
-            end_angele (float, optional): the maximum of angle in the arc. Defaults to 0.25.
-            _iter_time (int, optional): the time of iteration. Defaults to 10000.
+            max_radius: Maximum radial distance from center
+            min_radius: Minimum radial distance from center
+            cluster_reduction_ratio: Ratio to reduce cluster sector angles (prevents edge crowding)
+            z_axis: Z-axis spacing between different orders
+            cluster_ratio: Dictionary mapping clusters to their angular proportion
+                        (e.g., {0: 0.3, 1: 0.7} for 30%/70% split)
+            max_attempts: Maximum attempts to find non-overlapping positions (default: 10000)
 
         Returns:
-            _location_dict (dict{float:{tuple}}): the dict of {phecodes:location(x,y,z)}.
-            _hash_dict (dict{float:list}): the dict of {cluster:[phecodes in the cluster]}.
+            None: Updates node locations directly in self._nodes_attrs
+
+        Algorithm:
+            1. Assigns exposure location as (0, 0, 0) if not set
+            2. For each node:
+            a. Calculates angular range based on cluster
+            b. Randomly selects radius and angle within cluster sector
+            c. Checks for collisions with existing nodes
+            d. Updates location if valid position found
+
+        Example:
+            >>> self._calculate_location_random(
+                    max_radius=10,
+                    min_radius=5,
+                    cluster_reduction_ratio=0.1,
+                    z_axis=0.5,
+                    cluster_ratio={0: 0.4, 1: 0.6}
+                )
+            # Updates self._nodes_attrs with "location" entries like:
+            # {node1: {"location": (3.2, 4.1, -1.0)}, ...}
         """
         if self._exposure_location is None:
             self._exposure_location = (0, 0, 0)
@@ -801,7 +1148,45 @@ class Plot(object):
         phewas_phecode: str,
         phewas_number: str
     ) -> None:
+        """Initializes and updates basic node attributes for network visualization.
 
+        Creates and assigns three core node attributes:
+        1. Node names (formatted with phenotype and phecode)
+        2. Disease system/category
+        3. Node sizes (calculated from phewas results)
+        4. System-based colors
+
+        Args:
+            phewas_phecode: Column name in self._phewas containing phecode identifiers
+            phewas_number: Column name in self._phewas containing numerical values 
+                        used for size calculation
+
+        Returns:
+            None: Updates self._nodes_attrs and self._network_attrs in place
+
+        Processing Steps:
+            1. Creates formatted node names: "Phenotype (Phecode.X)"
+            2. Maps each node to its disease system/category
+            3. Calculates node sizes from phewas values (cube root scaling)
+            4. Assigns system-specific colors to nodes
+            5. Updates network-wide system color mapping
+
+        Example:
+            >>> self._make_node_basic_attrs(
+                    phewas_phecode="phecode",
+                    phewas_number="p_value"
+                )
+            # Results in nodes_attrs containing:
+            # {
+            #   123.1: {
+            #     "name": "Diabetes (123.1)",
+            #     "system": "Endocrine",
+            #     "size": 4.2,
+            #     "color": "#FF0000"
+            #   },
+            #   ...
+            # }
+        """
         # disease name attrs
         node_name = {
             node:self.__split_name('%s (%.1f)' % (name, node)) 
@@ -847,13 +1232,36 @@ class Plot(object):
         weight: str,
         max_attempts: Optional[int]=5000,
     ) -> None:
-        """Use the louvain algorithm to cluster 
-            the disease acording to the relation 
-            of comorbidity network.
+        """Performs Louvain community detection on the comorbidity network.
+
+        Identifies disease clusters based on comorbidity relationships using:
+        - Multiple runs of Louvain algorithm with different random seeds
+        - Selection of the highest modularity partition
+        - Updates node attributes with cluster assignments
 
         Args:
-            max_attempts (int, optional): the time of iteration. Defaults to 5000.
-            weight (str, optional): the weight of the disease pair (D1 with D2). Defaults to 'comorbidity_beta'.
+            weight: Edge weight column name from comorbidity data
+            max_attempts: Maximum number of Louvain runs with different seeds.
+                        Higher values may find better partitions but take longer.
+                        Defaults to 5000.
+
+        Returns:
+            None: Updates self._nodes_attrs and self._network_attrs in place with:
+                - Individual node cluster assignments
+                - Total number of clusters found
+
+        Algorithm Steps:
+            1. Constructs undirected graph from comorbidity data
+            2. Runs Louvain algorithm multiple times with different random seeds
+            3. Selects partition with highest modularity score
+            4. Stores cluster assignments in node attributes
+            5. Records total cluster count in network attributes
+
+        Example:
+            >>> self.__cluster(weight='comorbidity_beta')
+            # Updates:
+            # - self._nodes_attrs with 'cluster' assignments
+            # - self._network_attrs['cluster number'] with cluster count
         """
         # create network class and add the edges
         Graph_position = nx.Graph()
@@ -866,15 +1274,6 @@ class Plot(object):
             for _, row in self._comorbidity.iterrows()
         ]
 
-        # [
-        #     Graph_position.add_edge(
-        #         row[self._source],
-        #         row[self._target],
-        #         weight=row["trajectory_beta"]
-        #     ) 
-        #     for _, row in self._trajectory.iterrows()
-        # ]
-        # random and repeated clustering the nodes
         result = []
         for i in range(max_attempts):
             partition = community_louvain.best_partition(
@@ -916,15 +1315,43 @@ class Plot(object):
         distance: float,
         cluster_reduction_ratio: float
     ) -> None:
-        """get the three dimension location of nodes(phecodes), using the metod that nodes(phecodes) of 
-           one cluster be gathered in one sector in the x-y plane and the latter nodes(phecodes) locates the under layer.
+        """Distributes nodes in 3D space with cluster-based sector arrangement.
+
+        Assigns 3D coordinates to nodes with the following spatial organization:
+        - Nodes from the same cluster are grouped in circular sectors in x-y plane
+        - Nodes are radially distributed between min_radius and max_radius
+        - Z-coordinate represents hierarchy/layer (lower values for higher orders)
+        - Cluster sectors are proportionally sized based on node counts
+        - Includes buffer spacing between clusters via reduction ratio
 
         Args:
-            max_radius (float): the maximum of radius in the sector.
-            min_radius (float): the minimum of radius in the sector.
+            max_radius: Maximum distance from origin in x-y plane (must be > min_radius)
+            min_radius: Minimum distance from origin in x-y plane (must be >= 0)
+            distance: Vertical spacing between layers along z-axis
+            cluster_reduction_ratio: Ratio to reduce cluster sector angles (0-1)
+                                Higher values create more space between clusters
 
         Returns:
-            dict: {str:tuple} for example: {"549.4":(1, 2, 3)}
+            None: Updates node locations directly in self._nodes_attrs
+
+        Spatial Organization:
+            - x-y plane: Nodes distributed in radial sectors by cluster
+            - z-axis: Represents hierarchical order (exposure on top)
+            - Cluster sectors sized proportionally to their node counts
+
+        Example:
+            >>> self.__make_location_random(
+                    max_radius=10.0,
+                    min_radius=2.0,
+                    distance=0.5,
+                    cluster_reduction_ratio=0.1
+                )
+            # Updates node locations in self._nodes_attrs like:
+            # {
+            #   "549.4": (3.2, 4.1, -1.5),
+            #   "250.1": (5.7, 2.3, -2.0),
+            #   ...
+            # }
         """
         same_cluster_nodes = self.__get_same_nodes("cluster")
         cluster_ratio = self.__calculate_ratio(same_cluster_nodes)
@@ -937,7 +1364,31 @@ class Plot(object):
         )
     
     def __trajectory_order(self) -> None:
-        """get the layer number of nodes(phecodes) in the trajectory network (D1->D2).
+        """Determines hierarchical ordering of nodes in the disease trajectory network.
+
+        Calculates and assigns order/level numbers to nodes based on their position in the
+        disease progression paths (D1→D2 relationships). The ordering follows these rules:
+        - Exposure node is considered order 0 (if present)
+        - Direct targets of exposure are order 1
+        - Each subsequent step in progression increments the order
+        - Maximum order is stored as a network attribute
+
+        Returns:
+            None: Updates node attributes with 'order' values and network attributes
+                with maximum order number
+
+        Algorithm:
+            1. Filters trajectory relationships (excluding exposure as source)
+            2. Calculates node orders using topological sorting
+            3. Updates node attributes with order numbers
+            4. Records maximum order in network attributes
+
+        Example:
+            Given trajectory D1→D2→D3 and exposure D1:
+            - D1: order 0 (exposure)
+            - D2: order 1
+            - D3: order 2
+            - Network attribute "order number" = 2
         """
         tra_df = self._trajectory.loc[
             self._trajectory[self._source]!=self._exposure
@@ -957,7 +1408,35 @@ class Plot(object):
         )
 
     def __comorbidity_order(self) -> None:
-        """get the layer number of nodes(phecodes) in the comorbidity network (D1-D2).
+        """Determines hierarchical ordering for nodes in the comorbidity network.
+
+        Assigns order numbers to nodes based on their comorbidity relationships using:
+        1. Direct comorbidity partners' orders (most frequent)
+        2. Same-cluster nodes' orders (if no direct partners)
+        3. Network maximum order (as fallback)
+
+        The ordering follows these rules:
+        - For nodes with comorbidity partners: use most frequent partner order
+        - For isolated nodes: use most frequent order from same cluster
+        - For completely unconnected nodes: use network maximum order
+
+        Returns:
+            None: Updates node attributes with 'order' values
+
+        Processing Steps:
+            1. First pass: Assign orders based on direct comorbidity relationships
+            2. Second pass: Assign orders based on cluster membership
+            3. Final pass: Assign network maximum order to remaining nodes
+
+        Example:
+            Given comorbidity pairs:
+            - D1 (order 1) - D2
+            - D1 - D3 (order 2)
+            - D4 (no partners) in cluster with D1
+            Then:
+            - D2 gets order 1 (from D1)
+            - D3 keeps order 2
+            - D4 gets order 1 (from cluster)
         """
         comorbidity_nodes = self._comorbidity[[self._source, self._target]].values
         for node, attr in self._nodes_attrs.items():
@@ -991,14 +1470,32 @@ class Plot(object):
         line_color: str, 
         size_reduction: float,
     ) -> List[Any]:
-        """get the attribution of plot. This method plots the all trajectory(D1->D2), comorbidity(D1-D2), and nodes(phecodes).
+        """Generates 3D plot data for disease trajectories and comorbidities network visualization.
+
+        Creates Plotly graphical objects representing:
+        - Disease nodes as colored spheres (grouped by disease system)
+        - Trajectory edges as connecting lines between nodes
 
         Args:
-            line_color (str): the color of line between each node(phecode)
-            line_width (float): the width of line between each node(phecode)
+            line_width: Width of trajectory lines (default: 1.0)
+            line_color: Color of trajectory lines (default: 'gray')
+            size_reduction: Scaling factor for node sizes (default: 1.0)
 
         Returns:
-            list: the attribution of plot
+            List of Plotly graphical objects (Surface and Scatter3d) containing:
+            - Spheres for each disease node (phecode), colored by system
+            - Lines for all disease trajectories between nodes
+
+        Example:
+            >>> plot_data = network.__plot(line_width=2.0, line_color='blue')
+            >>> fig = go.Figure(data=plot_data)
+            >>> fig.show()
+
+        Note:
+            - Nodes are grouped by disease system in the legend
+            - First node in each system shows in legend (others hidden)
+            - Hover shows disease name
+            - Uses spherical coordinates for 3D layout
         """
         plot_data = [] 
         sys_nodes = self.__get_same_nodes("system")
@@ -1059,8 +1556,8 @@ class Plot(object):
     def three_dimension_plot(
         self, 
         path: str,
-        max_radius: Optional[float]=35.0, 
-        min_radius: Optional[float]=180.0,
+        max_radius: Optional[float]=180.0, 
+        min_radius: Optional[float]=35.0,
         line_color: Optional[str]="black", 
         line_width: Optional[float]=1.0,
         size_reduction: Optional[float]=0.5,
@@ -1072,23 +1569,50 @@ class Plot(object):
         font_style: Optional[str]='Times New Roman',
         font_size: Optional[float]=15.0,
     ) -> None:
-        """plot the three-dimension comorbidity and trajectory network.
+        """Generates and saves a 3D visualization of comorbidity and disease trajectory networks.
+
+        Creates an interactive 3D plot showing:
+        - Disease nodes (phecodes) as colored spheres grouped by clusters/systems
+        - Disease trajectories as connecting lines between nodes
+        - Optional exposure disease marker if specified
 
         Args:
-            max_radius (float): the maximum of radius in the sector.
-            min_radius (float): the minimum of radius in the sector.
-            plot_method (str): the method of plot, which is one of "full", "half", "compact".
-            line_color (str): the color of line in the nodes(phecodes).
-            line_width (float): the width of line in the nodes(phecodes).
-            layer_distance (float): the distance of two adjoining layers.
-            file_name (str): the name of file to save.
-            layout_width (float, optional): the width of layout in the figure. Defaults to 900.
-            layout_height (float, optional): the height of layout in the figure. Defaults to 900.
-            font_style (str, optional): the font style of layout in the figure. Defaults to 'Times New Roman'.
-            font_size (float, optional): the font size of layout in the figure. Defaults to 15.
+            path: File path to save the HTML visualization
+            max_radius: Maximum radial distance for node placement (default: 180.0)
+            min_radius: Minimum radial distance for node placement (default: 35.0)
+            line_color: Color for trajectory lines (default: "black")
+            line_width: Width for trajectory lines (default: 1.0)
+            size_reduction: Scaling factor for node sizes (default: 0.5)
+            cluster_reduction_ratio: Cluster compression factor for layout (default: 0.4)
+            cluster_weight: Edge weight metric used for clustering (default: "comorbidity_beta")
+            layer_distance: Vertical distance between layers (default: 40.0)
+            layout_width: Figure width in pixels (default: 900.0)
+            layout_height: Figure height in pixels (default: 900.0)
+            font_style: Font family for text elements (default: 'Times New Roman')
+            font_size: Base font size in points (default: 15.0)
 
-        Raises:
-            KeyError: if the augrment plot_method does not be included in "full", "compact", and "half", it will raises KeyError.
+        Workflow:
+            1. Checks/calculates cluster assignments if missing
+            2. Computes trajectory orders if missing
+            3. Generates 3D node positions if missing
+            4. Creates visualization with:
+            - Exposure marker (if specified)
+            - Disease nodes (colored by system)
+            - Trajectory paths
+            5. Saves interactive plot to HTML file
+
+        Example:
+            >>> network.three_dimension_plot(
+                    path="visualization.html",
+                    max_radius=50,
+                    line_color="blue",
+                    size_reduction=0.8
+                )
+
+        Note:
+            - Requires plotly for visualization
+            - Output is an interactive HTML file
+            - All distance/size parameters are in arbitrary units
         """
         if not self.__check_node_attrs("cluster"):
             self.__cluster(cluster_weight)
@@ -1174,8 +1698,8 @@ class Plot(object):
     def comorbidity_network_plot(
         self, 
         path :str,
-        max_radius: Optional[float]=35.0,
-        min_radius: Optional[float]=90.0,
+        max_radius: Optional[float]=180.0,
+        min_radius: Optional[float]=35.0,
         size_reduction: Optional[float]=0.5,
         cluster_reduction_ratio: Optional[float]=0.4,
         cluster_weight: Optional[str]="comorbidity_beta",
@@ -1184,13 +1708,49 @@ class Plot(object):
         layer_distance: Optional[float]=40.0,
         font_style: Optional[str]="Times New Roman"
     ) -> None:
-        """plot the result of commorbidity. The method same to plot_3d just in the plane of x-y.
+        """Generates a 2D visualization of the comorbidity network.
+
+        Creates an interactive plot showing disease comorbidities as:
+        - Disease nodes (phecodes) as colored circles (grouped by disease system)
+        - Comorbidity relationships as connecting lines between nodes
+        - Node sizes proportional to disease significance
+        - Color coding by disease system/category
 
         Args:
-            max_radius (float): the maximum of radius in the sector.
-            min_radius (float): the minimum of radius in the sector.
-            line_width (float, optional): the width of line in the nodes(phecodes). Defaults to 1.
-            line_color (str, optional): the color of line in the nodes(phecodes). Defaults to "black".
+            path: Output file path for saving HTML visualization
+            max_radius: Maximum radial position for nodes (default: 90.0)
+            min_radius: Minimum radial position for nodes (default: 35.0)
+            size_reduction: Scaling factor for node sizes (default: 0.5)
+            cluster_reduction_ratio: Compression factor for cluster layout (default: 0.4)
+            cluster_weight: Edge weight metric for clustering (default: "comorbidity_beta")
+            line_width: Width of comorbidity lines (default: 1.0)
+            line_color: Color of comorbidity lines (default: "black")
+            layer_distance: Distance between concentric circles (default: 40.0)
+            font_style: Font family for text elements (default: "Times New Roman")
+
+        Workflow:
+            1. Checks/calculates cluster assignments if missing
+            2. Computes node orders if missing
+            3. Generates 2D node positions if missing
+            4. Creates visualization with:
+            - Comorbidity edges as connecting lines
+            - Disease nodes as colored circles
+            5. Saves interactive plot to HTML file
+
+        Example:
+            >>> network.comorbidity_network_plot(
+                    "comorbidity.html",
+                    max_radius=50,
+                    line_color="blue",
+                    size_reduction=0.7
+                )
+
+        Note:
+            - Output is an interactive HTML file using Plotly
+            - All distance parameters are in arbitrary units
+            - First node in each system shows in legend (others hidden)
+            - Hover shows disease name
+
         """
         if not self.__check_node_attrs("cluster"):
             self.__cluster(cluster_weight)
@@ -1280,18 +1840,44 @@ class Plot(object):
 
         py.plot(fig, filename=path)
 
-    def significant_trajectory_plot(
+    def trajectory_plot(
         self, 
         path: str,
         cluster_weight: Optional[str]="comorbidity_beta",
     ) -> None:
-        """plot the incluster trajectory of each cluster.
+        """Generates and saves trajectory visualizations for each disease cluster.
+
+        Creates 2D network plots showing disease trajectories within each cluster,
+        with nodes positioned hierarchically based on trajectory relationships.
+        Each cluster is saved as a separate image file.
 
         Args:
-            distance (float): the distance of each nodes(phecodes) in x-y plane.
-            layer_distance (float): the distance of two adjoining layers.
-            line_width (float): the width of line in the nodes(phecodes).
-            line_color (str): the color of line in the nodes(phecodes).
+            path: Directory path to save output images
+            cluster_weight: Edge weight metric used for clustering (default: "comorbidity_beta")
+
+        Workflow:
+            1. Performs cluster analysis if not already done
+            2. Identifies significant trajectories
+            3. For each cluster:
+            - Creates hierarchical layout
+            - Generates visualization with:
+                * Nodes colored by disease type
+                * Edges weighted by trajectory strength
+                * Exposure disease marked specially (if exists)
+            - Saves as PNG image
+
+        Example:
+            >>> network.trajectory_plot(
+                    "output/plots",
+                    cluster_weight="comorbidity_beta"
+                )
+
+        Note:
+            - Outputs one PNG file per cluster (named 'cluster_<number>.png')
+            - Uses matplotlib for static visualization
+            - Exposure disease (if exists) appears as grey node
+            - Node sizes proportional to disease significance
+            - Edge widths proportional to trajectory strength
         """
         if not self.__check_node_attrs("cluster"):
             self.__cluster(cluster_weight)
@@ -1543,9 +2129,44 @@ class Plot(object):
         col_coef: Optional[str]="phewas_coef",
         col_system: Optional[str]="system",
         col_se: Optional[str]="phewas_se",
-        col_disease: Optional[str]="disease"
+        col_disease: Optional[str]="disease",
+        is_exposure_only: Optional[bool]=False,
+        col_exposure: Optional[str]='N_cases_exposed'
     ) -> None:
-        
+        """Generates a circular PheWAS (Phenome-Wide Association Study) plot.
+
+        Creates a polar bar plot visualizing disease associations across different
+        disease categories (systems), with:
+        - Outer ring showing individual disease associations
+        - Inner segments grouping by disease system
+        - Color gradient indicating effect size (hazard ratio)
+        - Automatic text rotation for readability
+
+        Args:
+            path: Output file path for saving the plot
+            col_coef: Column name for effect size coefficients (default: "phewas_coef")
+            col_system: Column name for disease system/category (default: "system")
+            col_se: Column name for standard errors (default: "phewas_se")
+            col_disease: Column name for disease names (default: "disease")
+            is_exposure_only: Identifier of exposure (default: False)
+            col_exposure: Column name for exposure number (default: "N_cases_exposed")
+
+        Example:
+            >>> network.phewas_plot(
+                    "phewas_plot.png",
+                    col_coef="beta",
+                    col_system="category"
+                )
+
+        Note:
+            - Uses random effects model for system-level estimates
+            - Positive associations shown in red, negative in green
+            - Output is a high-resolution PNG (1200 DPI)
+            - Plot includes:
+            * Color bar legend for effect sizes
+            * System category labels
+            * Individual disease labels
+        """
         def random_effect(coef_lst, se_lst):
             if len(coef_lst)==1:
                 return [coef_lst[0], se_lst[0]]
