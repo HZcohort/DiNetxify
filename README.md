@@ -64,9 +64,9 @@ The exposed-only cohort design is a variation of cohort studies where only indiv
 There are three dummy data (one phnotypic data, and two medical records data) which are suitable for chort, matched cohort, exposed-only cohort study.
 - **Format**: Both are CSV files
 - **Size**: 
-  phnotypic data: 60,000 records | 3.72 MB,
-  ICD9 medical records data: 10,188 records  | 227 kB,
-  ICD10 medical records data: 1,048,576 records  | 36.2 MB
+  - phnotypic data: 60,000 records | 3.72 MB
+  - ICD9 medical records data: 10,188 records  | 227 kB
+  - ICD10 medical records data: 1,048,576 records  | 36.2 MB
 
 ### Data Description
 - **Fields**:
@@ -92,26 +92,26 @@ There are three dummy data (one phnotypic data, and two medical records data) wh
   | diag_icd10/diag_icd9 | str  | ICD9/ICD10 medical records | "L905"/"E950" |
 
 ### Usage Guide
-1. **Download**:
-   ```bash
-   git clone {https://github.com/HZcohort/DiseaseNetPy.git}
-   # or
-   wget {https://github.com/HZcohort/DiseaseNetPy.git}
-   ```
+1. **Download**
+```bash
+git clone {https://github.com/HZcohort/DiseaseNetPy.git}
+# or
+wget {https://github.com/HZcohort/DiseaseNetPy.git}
+```
 
-2. **Loading Example**:
+2. **Loading Example**
   In the tests folder, there are three python scripts (cohort.py, mathced cohort.py, and exposed-only cohort.py) which are suitable for three study designs (cohort/mathced cohort/exposed-only cohort) respectively.
-  ```bash
-  cd tests
-  # test of cohort study
-  python cohort.py
+```bash
+cd tests
+# test of cohort study
+python cohort.py
 
-  # or test of matched cohort study
-  python matched cohort.py
+# or test of matched cohort study
+python matched cohort.py
 
-  # or test of exposed-only cohort study
-  python exposed-only cohort.py
-  ```
+# or test of exposed-only cohort study
+python exposed-only cohort.py
+```
 
 3. **Recommended Uses**:
    - python 3.13.0
