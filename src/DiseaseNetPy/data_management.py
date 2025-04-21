@@ -640,6 +640,37 @@ class DiseaseNetworkData:
         else:
             raise ValueError(f"Attribute {attr_name} not found")
     
+    @classmethod
+    def concat(cls, first_data: "DiseaseNetworkData", second_data: "DiseaseNetworkData",
+               duplicates:str='raise') -> "DiseaseNetworkData":
+        """
+        Concatenate two DiseaseNetworkData objects into a single instance.
+        The inputs must share identical study-level parameters (study_design, phecode_level, min_required_icd_codes, date_fmt, phecode_version), 
+        have the same additional covariates (both names and data types), 
+        and have matching presence or absence of each key attribute (phenotype_df, diagnosis, n_diagnosis, history, and trajectory). 
+        If both objects have the trajectory attribute, they must also have the same significant_phecodes attribute.
+
+        Parameters
+        ----------
+        first_data : DiseaseNetworkData
+            The first DiseaseNetworkData object to concatenate.
+        
+        second_data : DiseaseNetworkData
+            The second DiseaseNetworkData object to concatenate.
+        
+        duplicates : str, default='raise'
+            Strategy for handling duplicate Participant IDs in the merged dataset:
+            - 'raise' : raise an error if any duplicates are found.
+            - 'first' : keep the records from the first object.
+            - 'second': keep the records from the second object.
+
+        Returns
+        -------
+        DiseaseNetworkData
+            A new DiseaseNetworkData object containing the combined data from both inputs.
+        """
+
+
     def modify_phecode_level(
         self, 
         phecode_level:int
@@ -827,6 +858,73 @@ class DiseaseNetworkData:
                 self.min_required_icd_codes
                 )
 
+    def save(
+        self,
+        file:str
+    ) -> None:
+        """
+        Save the DiseaseNetPy.DiseaseNetworkData object's attributes to a gzip-compressed pickle file,
+        which can be restored using the corresponding load method.
+    
+        Parameters
+        ----------
+        file : str
+            The filename or path prefix where the data object will be saved. 
+            The '.pkl.gz' extension will be automatically appended if not already included.
+    
+        Returns
+        -------
+        None.
+        """
+        import pickle
+        import gzip
+
+        if not isinstance(file,str):
+            raise TypeError("The input 'file' must be a string.")
+        
+        #attribute check
+        data_attrs = ['phenotype_df']
+        for attr in data_attrs:
+            if getattr(self, attr) is None:
+                raise ValueError(f"Attribute '{attr}' is empty, nothing to save")
+        
+        data_attrs = ['diagnosis','history','trajectory']
+        for attr in data_attrs:
+            if getattr(self, attr) is None:
+                print(f"Attribute '{attr}' is empty.") 
+        
+        # Create a dictionary to save the data
+        save_dict = {
+            'study_design': self.study_design,
+            'date_fmt': self.date_fmt,
+            'phecode_level': self.phecode_level,
+            'phecode_version': self.phecode_version,
+            'min_required_icd_codes': self.min_required_icd_codes,
+            'phecode_info': self.phecode_info,
+            'phenotype_df': self.phenotype_df,
+            'diagnosis': self.diagnosis,
+            'n_diagnosis': self.n_diagnosis,
+            'history': self.history,
+            'trajectory': self.trajectory,
+            '__warning_phenotype': self.__warning_phenotype,
+            '__phenotype_statistics': self.__phenotype_statistics,
+            '__phenotype_info': self.__phenotype_info,
+            '__warning_medical_records': self.__warning_medical_records,
+            '__medical_records_statistics': self.__medical_records_statistics,
+            '__medical_records_info': self.__medical_records_info,
+            '__significant_phecodes':self.__significant_phecodes
+        }
+        
+        # Add '.pkl.gz' extension if not present
+        if not file.endswith('.pkl.gz'):
+            file += '.pkl.gz'
+        
+        #save it
+        with gzip.open(file, 'wb') as f:
+            pickle.dump(save_dict, f, protocol=pickle.HIGHEST_PROTOCOL)
+        
+        print(f"DiseaseNetworkData is saved to {file}.")
+
     def load(
         self, 
         file:str, 
@@ -901,7 +999,6 @@ class DiseaseNetworkData:
             '__warning_medical_records', 
             '__medical_records_statistics', 
             '__medical_records_info',
-            '__module_dir', 
             '__significant_phecodes'
         ]
 
@@ -912,78 +1009,13 @@ class DiseaseNetworkData:
                 data_dict.pop(attr, None)
             )
 
+        # Restore the module directory, always use the current module directory
+        self.__module_dir = os.path.dirname(__file__)
+
         # Clear the remaining data_dict to free memory
         del data_dict
         gc.collect()
         print("All attributes restored.")
-
-    def save(
-        self,
-        file:str
-    ) -> None:
-        """
-        Save the DiseaseNetPy.DiseaseNetworkData object's attributes to a gzip-compressed pickle file,
-        which can be restored using the corresponding load method.
-    
-        Parameters
-        ----------
-        file : str
-            The filename or path prefix where the data object will be saved. 
-            The '.pkl.gz' extension will be automatically appended if not already included.
-    
-        Returns
-        -------
-        None.
-        """
-        import pickle
-        import gzip
-
-        if not isinstance(file,str):
-            raise TypeError("The input 'file' must be a string.")
-        
-        #attribute check
-        data_attrs = ['phenotype_df']
-        for attr in data_attrs:
-            if getattr(self, attr) is None:
-                raise ValueError(f"Attribute '{attr}' is empty, nothing to save")
-        
-        data_attrs = ['diagnosis','history','trajectory']
-        for attr in data_attrs:
-            if getattr(self, attr) is None:
-                print(f"Attribute '{attr}' is empty.") 
-        
-        # Create a dictionary to save the data
-        save_dict = {
-            'study_design': self.study_design,
-            'date_fmt': self.date_fmt,
-            'phecode_level': self.phecode_level,
-            'phecode_version': self.phecode_version,
-            'min_required_icd_codes': self.min_required_icd_codes,
-            'phecode_info': self.phecode_info,
-            'phenotype_df': self.phenotype_df,
-            'diagnosis': self.diagnosis,
-            'n_diagnosis': self.n_diagnosis,
-            'history': self.history,
-            'trajectory': self.trajectory,
-            '__warning_phenotype': self.__warning_phenotype,
-            '__phenotype_statistics': self.__phenotype_statistics,
-            '__phenotype_info': self.__phenotype_info,
-            '__warning_medical_records': self.__warning_medical_records,
-            '__medical_records_statistics': self.__medical_records_statistics,
-            '__medical_records_info': self.__medical_records_info,
-            '__module_dir':self.__module_dir,
-            '__significant_phecodes':self.__significant_phecodes
-        }
-        
-        # Add '.pkl.gz' extension if not present
-        if not file.endswith('.pkl.gz'):
-            file += '.pkl.gz'
-        
-        #save it
-        with gzip.open(file, 'wb') as f:
-            pickle.dump(save_dict, f, protocol=pickle.HIGHEST_PROTOCOL)
-        
-        print(f"DiseaseNetworkData is saved to {file}.")
 
     def save_npz(
         self,
@@ -1048,8 +1080,7 @@ class DiseaseNetworkData:
             'date_fmt': np.array(self.date_fmt, dtype=object),
             'phecode_level': np.array(self.phecode_level, dtype=object),
             'phecode_version': np.array(self.phecode_version, dtype=object),
-            'min_required_icd_codes': np.array(self.min_required_icd_codes, dtype=object),
-            'module_dir': np.array(self.__module_dir, dtype=object)
+            'min_required_icd_codes': np.array(self.min_required_icd_codes, dtype=object)
         }
         
         # Prepare complete save dictionary
@@ -1158,9 +1189,8 @@ class DiseaseNetworkData:
                 value = loaded[key].item()
                 setattr(self, attr, value)
         
-        # Restore module_dir to the private attribute
-        if 'module_dir' in loaded:
-            self.__module_dir = loaded['module_dir'].item()
+        # Restore module_dir, always set to the current module directory
+        self.__module_dir = os.path.dirname(__file__)
         
         # Restore complex attributes directly from NumPy arrays
         complex_mapping = {
