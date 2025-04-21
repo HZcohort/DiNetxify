@@ -70,7 +70,7 @@ There are three dummy data (one phnotypic data, and two medical records data) wh
 
 ### Data Description
 - **Fields**:
-  phnotypic data
+  - phnotypic data
 
   | Column | Type | Description | Example |
   |--------|------|-------------|---------|
@@ -83,7 +83,7 @@ There are three dummy data (one phnotypic data, and two medical records data) wh
   | sex | int  | Identifier of sex | 0 or 1 |
   | BMI | str  | The level of BMI | c1 |
 
-  medical records data
+  - medical records data
 
   | Column | Type | Description | Example |
   |--------|------|-------------|---------|
@@ -120,7 +120,7 @@ python exposed-only cohort.py
 ### Important Notes
 ⚠️ **Usage Restrictions**:
 - [✔] Commercial use allowed
-- [x] Attribution required
+- [×] Attribution required
 - [✔] Redistribution prohibited
 
 📌 **Data Characteristics**:
