@@ -956,15 +956,45 @@ result_network.comorbidity_network_plot(
 
 ### 4.4 Disease Trajectory Plot
 
+```python
+# Disease trajectory visualization
+result_network.trajectory_plot(
+    path="/your/project/path/",                          # Directory path to save output images
+    cluster_weight="comorbidity_beta",                   # Edge weight metric used for clustering (default: "comorbidity_beta")
+)
+```
+
 #### Optional Parameters:
 
 #### Kwargs Parameters:
 
 ### 4.5 Three Dimension Plot
 
+```python
+# three-dimension visualization
+result_network.plot_3d(
+    path="/your/project/path/",                          # File path to save the HTML visualization
+    max_radius=180.0,                                    # Maximum radial distance for node placement (default: 180.0)
+    min_radius=35.0,                                     # Minimum radial distance for node placement (default: 35.0)
+    line_color="black",                                  # Color for trajectory lines (default: "black")
+    line_width=1.0,                                      # Width for trajectory lines (default: 1.0)
+    size_reduction=0.5,                                  # Scaling factor for node sizes (default: 0.5)
+    cluster_reduction_ratio=0.4,                         # Cluster compression factor for layout (default: 0.4)
+    cluster_weight="comorbidity_beta",                   # Edge weight metric used for clustering (default: "comorbidity_beta")
+    layer_distance=40.0,                                 # Vertical distance between layers (default: 40.0)
+    layout_width=900.0,                                  # Figure width in pixels (default: 900.0)
+    layout_height=900.0,                                 # Figure height in pixels (default: 900.0)
+    font_style='Times New Roman',                        # Font family for text elements (default: 'Times New Roman')
+    font_size=15.0,                                      # Base font size in points (default: 15.0)
+)
+```
+
 #### Optional Parameters:
 
 #### Kwargs Parameters:
+
+
+
 
 ## API Reference
 
