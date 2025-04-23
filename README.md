@@ -5,6 +5,7 @@ DiseaseNetPy is a Python package designed for comprehensive disease network anal
 ## Table of Contents
 
 - [Installation](#installation)
+- [Three-dimensional disease network analysis using DiseaseNetPy](#three-dimensional-disease-network-analysis-using-diseasenetpy)
   - [1. Input data preparation](#1-input-data-preparation)
     - [1.1 Requirements for input data](#11-requirements-for-input-data)
     - [1.2 Description of the dummy dataset provided](#12-description-of-the-dummy-dataset-provided)
@@ -58,9 +59,12 @@ pip install diseasenetpy
 #optional packages
 pip install lifelines #for phewas analysis with lifelines_disable set to False
 ```
-## 1. Input data preparation
 
-### 1.1 Requirements for input data
+## Three-dimensional disease network analysis using DiseaseNetPy
+
+### 1. Input data preparation
+
+#### 1.1 Requirements for input data
 
 DiseaseNetPy performs 3D disease network analysis on cohort data derived from electronic health records (EHR). We currently support three study designs: standard cohort, matched cohort, and exposed-only cohort. Standard and matched cohort studies are suitable for investigating the disease network of individuals with a specific disease (e.g., depression) or exposure (e.g., smoking). The exposed-only cohort design is suitable for investigating the disease network in the whole population or a subset (e.g., older individuals) without a comparison group.
 
@@ -88,7 +92,7 @@ To begin using DiseaseNetPy, two datasets are required: a **phenotype data** fil
   
   Each medical records file must use a single diagnosis code version; currently supported versions are WHO or CM versions of ICD-9 and ICD-10. Other code systems must be converted to a supported format. ICD-10 codes may be formatted with a decimal point (e.g., `F32.1`) or without one (e.g., `F321`); ICD-9 codes may use a decimal format (e.g., `9.9`) or a non-decimal “short” format (e.g., `0099`). The **Date of diagnosis** column must use a consistent date format specified by the 1989 C standard.
 
-### 1.2 Description of the dummy dataset provided
+#### 1.2 Description of the dummy dataset provided
 
 The package includes example datasets demonstrating the required data format for disease network analysis:
 
@@ -121,11 +125,11 @@ The **dummy_EHR_ICD9.csv** file contains 10,188 simulated electronic health reco
 
 The **dummy_EHR_ICD10.csv** file contains 1,048,576 simulated electronic health records (36.2 MB) with ICD-10 coded diagnoses, structured with three key fields: patient identifier (**ID**), diagnosis date (**dia_date**), and corresponding ICD-10 code (**diag_icd10**). This standardized format demonstrates the required medical records structure for disease network analysis, where each row represents a discrete diagnosis event (e.g., patient 1001's `L905` coded diagnosis on 2014/9/23).
 
-## 2. Data Harmonization
+### 2. Data Harmonization
 
 Data harmonization loads and merges phenotype and medical records data into a single `DiseaseNetworkData` object for subsequent analysis, ensuring consistent coding (e.g., mapping diagnosis codes to phecodes) and standardized formatting.
 
-### 2.1 Initializing the data object
+#### 2.1 Initializing the data object
 
 First, import DiseaseNetPy and initialize an empty `DiseaseNetworkData` object, specifying the study design, phecode level, and any optional parameters if needed:
 
@@ -160,7 +164,7 @@ data = dnt.DiseaseNetworkData(
 - **date_fmt** – format of date fields (Index date and End date) in the phenotype data. Default is `'%Y-%m-%d'` (year-month-day, e.g., 2005-12-01).
 - **phecode_version** – currently only `'1.2'` is supported.
 
-### 2.2 Load phenotype data
+#### 2.2 Load phenotype data
 
 After initializing the data object, use the `phenotype_data()` method to load your cohort phenotype file by providing the file path, a dictionary mapping required columns, and a list of additional covariate names.
 
@@ -222,7 +226,7 @@ data.phenotype_data(
 - **is_single_sex** – set to `True` if the dataset contains only one sex. Default is `False`.
 - **force** – set to `True` to overwrite existing data in the object. Default is `False`, which raises an error if data already exist.
 
-#### After data loading:
+##### After data loading:
 
 After loading data, you can inspect basic information (e.g., number of individuals, average follow-up time) by printing the object:
 
@@ -244,7 +248,7 @@ Consider removing them before merge.
 """
 ```
 
-Additionally, you can generate a basic descriptive Table 1 for all variables in your phenotype data using the `Table1()` method and save it to an Excel file:
+Additionally, you can generate a basic descriptive table 1 for all variables in your phenotype data using the `Table1()` method and save it to an Excel file:
 
 ```python
 table_1 = data.Table1()
@@ -268,7 +272,7 @@ print(table_1)
 table_1.to_excel(r"/test/data/Table1.xlsx")  # Save Table 1 to an Excel file
 ```
 
-### 2.3 Load medical records data
+#### 2.3 Load medical records data
 
 After loading the phenotypic data, use the `merge_medical_records()` method to load your one or more medical records files by providing the file path, a format of ICD code, and mapping required columns, and a dictionary mapping required columns.
 
@@ -302,12 +306,12 @@ data.merge_medical_records(
 - **diagnosis_code** – Diagnosis ICD code type used in the medical records data (e.g., `ICD-9-CM`, `ICD-9-WHO`, `ICD-10-CM`, `ICD-10-WHO`).
 - **column_names** – dictionary mapping the required variable names (e.g., `Participant ID`, `Diagnosis code`, `Date of diagnosis`) to the corresponding headers in your file.
 
-#### Optional parameters:
+##### Optional parameters:
 
 - **date_fmt** – The format of the date fields in your medical records data. Defaults to the same format as phenotype data if not specified.
 - **chunksize** – Number of rows per chunk to read, useful for large datasets. Default=1_000_000.
 
-#### After data loading:
+##### After data loading:
 
 Within loading data, you can inspect basic information (e.g., number of records, number of phecode mapping) by the printing information:
 
@@ -333,11 +337,11 @@ Phecode diagnosis records successfully merged (0 invalid records were not merged
 """
 ```
 
-## 3. Data Analysis
+### 3. Data Analysis
 
 Data analysis is based on a `DiseaseNetworkData` object to subsequent analysis, including PheWAS analysis, disease pair generation, comorbidity strength estimation, binomial testing, comorbidity network analysis, and trajectory analysis. The result format of each analysis is `pd.DataFrame`.
 
-### 3.1 Quick Pipeline
+#### 3.1 Quick Pipeline
 
 This guide walks you through a typical workflow using DiseaseNetPy for a matched cohort study design. The process involves data preparation, PheWAS analysis, comorbidity strength estimation, binomial testing, comorbidity network analysis, and trajectory analysis.
 
@@ -416,21 +420,21 @@ if __name__ == "__main__":
     Default is `bonferroni`.
 - **cutoff** – The significance threshold for adjusted p-values. Default is `0.05`.
 
-#### Kwargs Parameters:
+##### Kwargs Parameters:
 
-##### RPCN Method Parameters:
+###### RPCN Method Parameters:
 
 - **alpha** – The weight multiplying the l1 penalty term for other diseases covariates. Ignored if 'auto_penalty' is enabled.
 - **auto_penalty** – If 'True', automatically determines the best 'alpha' based on model AIC value. Default is `True`.
 - **alpha_range** – When 'auto_penalty' is True, search the optimal 'alpha' in this range. Default is `(1,15)`.
 - **scaling_factor** – The scaling factor for the alpha when 'auto_penalty' is True. Default is `1`.
 
-##### PCN_PCA Method Parameters:
+###### PCN_PCA Method Parameters:
 
 - **n_PC** – Fixed number of principal components to include in each model. Default is `5`.
 - **explained_variance** – Cumulative explained variance threshold to determine the number of principal components. Overrides 'n_PC' if specified.
 
-### 3.2 PheWAS Analysis
+#### 3.2 PheWAS Analysis
 The first step of data analysis is PheWAS analysis, aiming to filter significantly occurring diseases. Conducts Phenome-wide association studies (PheWAS) using the specified DiseaseNetworkData object.
 
 ```python
@@ -476,7 +480,7 @@ if __name__ == "__main__":
 
 - **data** – The DiseaseNetworkData object.
 
-#### Optional Parameters:
+##### Optional Parameters:
 
 - **covariates** – List of phenotypic covariates to include in the model. Default is `None`.
 - **proportion_threshold** – The minimum proportion of cases within the exposed group required for a phecode to be included in the PheWAS analysis. If the proportion of cases is below this threshold, the phecode is excluded from the analysis. `proportion_threshold` and `n_threshold` are mutually exclusive. Default is `None`.
@@ -510,11 +514,11 @@ Available systems: Same as `system_inc` Default is `None`.
 - **log_file** - Path and prefix for log file. If None, logs are written to temporary directory with prefix DiseaseNet_. Default is `None`.
 - **lifelines_disable** - Whether to disable lifelines. Lifelines provide more robust fitting but require longer computation time. Default is `False`.
 
-#### After PheWAS Analysis:
+##### After PheWAS Analysis:
 
 After PheWAS analysis, we get a `phewas_result` of `pd.DataFrame` format. And then use `phewas_result` to disease pair construction
 
-### 3.3 Disease Pair Construction
+#### 3.3 Disease Pair Construction
 
 The second step of data analysis is Disease pair construction, aiming to filter significantly occurring diseases. Conducts Phenome-wide association studies (PheWAS) using the specified DiseaseNetworkData object.
 
@@ -532,23 +536,23 @@ data.save('/your/project/path/dep_withtra')    # Path to save the updated data o
 
 - **phewas_result** - `pd.DataFrame` containing PheWAS analysis results produced by the `DiseaseNetPy.phewas` function.
 
-#### Optional Parameters:
+##### Optional Parameters:
 
 - **min_interval_days** - Minimum required time interval (in days) between diagnosis dates when constructing temporal D1→D2 disease pairs. Individuals with D1 and D2 diagnoses interval ≤ this value are considered to have non-temporal pairs. Default is `0`.
 - **max_interval_days** - Maximum allowed time interval (in days) between diagnosis dates when constructing disease pairs. Individuals with interval > this value are excluded from temporal analysis. Default is `np.inf`.
 - **force** - If `True`, overwrites existing data attributes. If `False`, raises error when data exists. Default is `False`.
 - **n_process** - Number of processes for parallel processing. Values >1 enable multiprocessing. Default is `1`.
 
-#### Kwargs Parameters:
+##### Kwargs Parameters:
 
 - **phecode_col** - Column name for phecode identifiers in `phewas_result`. Default is `'phecode'`.  
 - **significance_col** - Column name for PheWAS significance values. Default is `'phewas_p_significance'`.
 
-#### After Disease Pair Construction:
+##### After Disease Pair Construction:
 
 After disease pair construction, we get a new `DiseaseNetworkData` object. And then use `DiseaseNetworkData` to comorbidity strength estimation.
 
-### 3.4 Comorbidity Strength Estimation
+#### 3.4 Comorbidity Strength Estimation
 
 The third step of data analysis is comorbidity strength estimation, aiming to estimate the comorbidity strength of disease pairs.
 
@@ -585,7 +589,7 @@ if __name__ == "__main__":
 
 - **data** - DiseaseNetworkData object containing the processed disease network data.
 
-#### Optional Parameters:
+##### Optional Parameters:
 
 - **proportion_threshold** - Minimum proportion of exposed individuals required for disease pair co-occurrence to be included in analysis. Disease pairs below this threshold are excluded. *Note:* Mutually exclusive with `n_threshold`. Default is `None`.
 - **n_threshold** - Minimum number of exposed individuals required for disease pair co-occurrence to be included in analysis. Disease pairs below this threshold are excluded. *Note:* Mutually exclusive with proportion_threshold. Default is `None`.
@@ -596,11 +600,11 @@ if __name__ == "__main__":
 - **cutoff_RR** - Significance threshold for adjusted RR p-values. Default is `0.05`.
 - **log_file** - Path/prefix for log file. If `None`, uses temporary directory with prefix `DiseaseNet_`. Default is `None`.
 
-#### After Comorbidity Strength Estimation:
+##### After Comorbidity Strength Estimation:
 
 After comorbidity strength estimation, we get `com_strength_result` of `pd.DataFrame` format. And then use `com_strength_result` to binomial test.
 
-### 3.5 Binomial Test
+#### 3.5 Binomial Test
 
 The 4th step of data analysis is binomial test, aiming to filter non-temperal/temperal disease pairs.
 
@@ -626,7 +630,7 @@ binomial_result.to_csv('/your/project/path/dep_binomial.csv')  # Path to save bi
 
 - **data** - DiseaseNetworkData object containing processed disease network data.
 
-#### Optional Parameters:
+##### Optional Parameters:
 
 - **comorbidity_strength_result** - DataFrame containing comorbidity strength analysis results from `DiseaseNetPy.comorbidity_strength`.
 - **comorbidity_network_result** - DataFrame containing comorbidity network analysis results from `DiseaseNetPy.comorbidity_network`. When provided, limits binomial test to significant disease pairs. Default is `None`.
@@ -636,7 +640,7 @@ binomial_result.to_csv('/your/project/path/dep_binomial.csv')  # Path to save bi
 - **log_file** - Path/prefix for log file. If `None`, uses temporary directory with prefix `DiseaseNet_`. Default is `None`.
 - **enforce_temporal_order** - If `True`, excludes individuals with non-temporal D1-D2 pairs. If `False`, includes all individuals. Default is `False`.
 
-#### Kwargs Parameters:
+##### Kwargs Parameters:
 
 - **phecode_d1_col** - Column for disease 1 phecode. Default is `phecode_d1`.  
 - **phecode_d2_col** - Column for disease 2 phecode. Default is `phecode_d2`.
@@ -647,11 +651,11 @@ binomial_result.to_csv('/your/project/path/dep_binomial.csv')  # Path to save bi
 - **significance_RR_col** - Column for RR significance. Default is `RR_p_significance`.
 - **significance_coef_col** - Column for comorbidity significance. Default is `comorbidity_p_significance`.
 
-#### After Binomial Test:
+##### After Binomial Test:
 
 After binomial test, we get `binomial_result` of `pd.DataFrame` format. And then use `binomial_result` to comorbidity network analysis, and trajectory analysis.
 
-### 3.6 Comorbidity Network Analysis
+#### 3.6 Comorbidity Network Analysis
 
 The 5th step of data analysis is comorbidity network analysis, aiming to construct the comorbidity network.
 
@@ -685,7 +689,7 @@ if __name__ == "__main__":
 - **data** - DiseaseNetworkData object containing processed disease network data.
 - **comorbidity_strength_result** - DataFrame containing comorbidity strength analysis results from `DiseaseNetPy.comorbidity_strength`.
 
-#### Optional Parameters:
+##### Optional Parameters:
 
 - **binomial_test_result** - DataFrame containing binomial test analysis results from `DiseaseNetPy.binomial_test`. Default is `None`.
 - **method** - Comorbidity network analysis method to use. Options: `RPCN`: Regularized Partial Correlation Network. `PCN_PCA`: Partial Correlation Network with PCA. `CN`: Correlation Network. Default is `RPCN`.
@@ -695,7 +699,7 @@ if __name__ == "__main__":
 - **cutoff** - Significance threshold for adjusted p-values. Default is `0.05`.
 - **log_file** - Path/prefix for log file. If `None`, uses temporary directory with prefix `DiseaseNet_`. Default is `None`.
 
-#### Kwargs Parameters:
+##### Kwargs Parameters:
 
   - **phecode_d1_col** - Column for disease 1 phecode. Default is `phecode_d1`.  
   - **phecode_d2_col** - Column for disease 2 phecode. Default is `phecode_d2`.  
@@ -703,19 +707,19 @@ if __name__ == "__main__":
   - **significance_RR_col** - Column for RR. Default is `RR_p_significance`.  
   - **significance_binomial_col** - Column for binomial test. Default is `binomial_p_significance`.
 
-  #### RPCN Method:  
+  ##### RPCN Method:  
 
   - **alpha** - L1 penalty weight. Default is `None`  
   - **auto_penalty** - Auto-determine alpha. Default is `True`  
   - **alpha_range** - Alpha search range. Default is `(1,15)`  
   - **scaling_factor** - Alpha scaling factor. Default is `1`
 
-  #### PCN_PCA Method:  
+  ##### PCN_PCA Method:  
 
   - **n_PC** - Number of principal components. Default is `5`  
   - **explained_variance** - Variance threshold. Default is `None`
 
-### 3.7 Trajectory Analysis
+#### 3.7 Trajectory Analysis
 
 The 6th step of data analysis is trajectory analysis, aiming to construct disease trajectory.
 
@@ -753,7 +757,7 @@ if __name__ == "__main__":
 - **comorbidity_strength_result** - DataFrame containing comorbidity strength analysis results from `DiseaseNetPy.comorbidity_strength`.
 - **binomial_test_result** - DataFrame containing binomial test analysis results from `DiseaseNetPy.binomial_test`.
 
-#### Optional Parameters:
+##### Optional Parameters:
 
 - **method** - Comorbidity network analysis method: `RPCN`: Regularized Partial Correlation Network. `PCN_PCA`: Partial Correlation Network with PCA. `CN`: Correlation Network. Default is `RPCN`.
 - **matching_var_dict** - Dictionary specifying matching variables and criteria: Categorical/binary: `{'var':'exact'}`. Continuous: `{'var':max_diff}` (scalar > 0). Always use `'sex'` for sex matching. Default is `{'sex':'exact'}`.
@@ -766,25 +770,25 @@ if __name__ == "__main__":
 - **cutoff** - Significance threshold for adjusted p-values. Default is `0.05`.
 - **log_file** - Log file path/prefix. If `None`, uses temp dir with `DiseaseNet_` prefix. Default is `None`.
 
-#### Kwargs Parameters:
+##### Kwargs Parameters:
 
-##### RPCN Method:
+- ###### RPCN Method:
 
 - **alpha**: L1 penalty weight (ignored if auto_penalty). Default is `None`
 - **auto_penalty**: Auto-determine optimal alpha. Default is `True`
 - **alpha_range**: Alpha search range. Default is `(1,15)`
 - **scaling_factor**: Alpha scaling factor. Default is `1`
 
-##### PCN_PCA Method:
+- ###### PCN_PCA Method:
 
 - **n_PC**: Principal components count. Default is `5`
 - **explained_variance**: Variance threshold (overrides n_PC). Default is `None`
 
-##### Analysis Option:
+- ###### Analysis Option:
 
 - **enforce_time_interval** - Apply min/max time intervals for D2 outcome determination. Default is `True`.
 
-##### Column Mappings:
+- ###### Column Mappings:
 
   - **phecode_d1_col**: Disease 1 phecode column. Default is `phecode_d1`
   - **phecode_d2_col**: Disease 2 phecode column. Default is `phecode_d2`
@@ -792,9 +796,9 @@ if __name__ == "__main__":
   - **significance_RR_col**: RR column. Default is `RR_p_significance`
   - **significance_binomial_col**: Binomial test column. Default is `binomial_p_significance`
 
-## 4. Visualization
+### 4. Visualization
 
-### 4.1 Initializing the plot object
+#### 4.1 Initializing the plot object
 
 First, from DiseaseNetPy.visualization import plot and initialize an empty `Plot` object, specifying the result of PheWAS analysis, comorbidity network analysis, disease trajectory analysis, and any optional parameters if needed:
 
@@ -845,7 +849,7 @@ result_plot = Plot(
 - **trajectory_result** - DataFrame containing temporal disease trajectory analysis with: Temporal disease pairs (source→target). Temporal association metrics. Significance indicators (True/False).
 - **phewas_result** - DataFrame containing PheWAS analysis results with: Phecode diseases. Effect sizes (hazard ratios). Case counts. Disease system classifications
 
-#### Optional Parameters:
+##### Optional Parameters:
 
 - **exposure** - Phecode identifier for primary exposure variable. Highlights exposure-disease relationships. Default is `None` (exposed-only cohort).
 - **exposure_location** - Custom 3D coordinates (x,y,z) for exposure node positioning. Default is `None` (auto-positioned at (0,0,0)).
@@ -860,7 +864,7 @@ result_plot = Plot(
 - **filter_comorbidity_col**: Comorbidity significance column. Default `comorbidity_p_significance`.
 - **filter_trajectory_col**: Trajectory significance column. Default `trajectory_p_significance`.
 
-#### Kwargs Parameters:
+##### Kwargs Parameters:
 
 - **SYSTEM** - List of phecode systems to visualize. Available systems (17 total):
   ['neoplasms', 'genitourinary', 'digestive', 'respiratory',
@@ -875,11 +879,11 @@ result_plot = Plot(
     '#94B447', '#8C564B', '#E7CB94', '#8C9EB2', '#E0E0E0', "#F1C40F",
     '#9B59B6', '#4ECDC4', '#6A5ACD']
 
-#### After initializing the plot object:
+##### After initializing the plot object:
 
 After initializing the plot object, use `result_plot` of `Plot` object to visualization.
 
-### 4.2 PheWAS Plot
+#### 4.2 PheWAS Plot
 
 Generates a circular PheWAS (Phenome-Wide Association Study) plot. Creates a polar bar plot visualizing disease associations across different disease categories (systems). For a cohort/matched cohort study, the figure shows hazard ratios between exposure and outcome diseases. While the figure shows exposed number of diseases.
 
@@ -897,7 +901,7 @@ result_plot.phewas_plot(
 ```
 - **path** - Output file path for saving the plot (including filename and extension)
 
-#### Optional Parameters:
+##### Optional Parameters:
 
 - **col_coef** - Column name containing effect size coefficients (e.g., hazard ratios or odds ratios). Default is `phewas_coef`
 - **col_system** - Column name containing disease system/category classifications. Default is `"system"`
@@ -906,11 +910,11 @@ result_plot.phewas_plot(
 - **is_exposure_only** - Boolean flag indicating whether the plot is for an exposure-only cohort study. Default is `False`
 - **col_exposure** - Column name containing case counts for exposed individuals. Default is `"N_cases_exposed"`
 
-#### After PheWAS plot:
+##### After PheWAS plot:
 
 After generating the PheWAS plot, the visualization will be exported as an image file in your preferred format (.jpg, .svg, or .png).
 
-### 4.3 Comorbidity Network Plot
+#### 4.3 Comorbidity Network Plot
 
 Generate a 2D visualization of the comorbidity network.
 
@@ -931,7 +935,7 @@ result_network.comorbidity_network_plot(
 ```
 - **path** - Output file path for saving the interactive HTML visualization.  
 
-#### Optional Parameters:
+##### Optional Parameters:
 
 - **max_radius** - Maximum radial position for nodes (in pixels). Controls outer boundary of the network. Default is `90.0`.
 - **min_radius** - Minimum radial position for nodes (in pixels). Controls inner boundary. Default is `35.0`
@@ -943,11 +947,11 @@ result_network.comorbidity_network_plot(
 - **cluster_weight** - Edge attribute used for clustering calculations. Typically the association strength metric. Default is `comorbidity_beta`
 - **font_style** - Font family for all text elements. Use web-safe fonts or loaded font families. Default is `Times New Roman`.
 
-#### After Comorbidity Network Plot:
+##### After Comorbidity Network Plot:
 
 After generating the comorbidity network plot, the visualization will be exported as an image file in your preferred format (.html).
 
-### 4.4 Disease Trajectory Plot
+#### 4.4 Disease Trajectory Plot
 
 Creates 2D network plots showing disease trajectories within each cluster, with nodes positioned hierarchically based on trajectory relationships. Each cluster is saved as a separate image file.
 
@@ -961,15 +965,15 @@ result_network.trajectory_plot(
 
 - **path** - Directory path where output visualization images will be saved. *Note:* Include trailing slash for proper path resolution (e.g., `/output/plots/`)
 
-#### Optional Parameters:
+##### Optional Parameters:
 
 - **cluster_weight** Specifies the edge weight metric used for network clustering calculations. Default is `comorbidity_beta`.
 
-#### After Disease Trajectory Plot:
+##### After Disease Trajectory Plot:
 
 After generating the disease trajectory plot, the visualization will be exported as an image file in your preferred format (.jpg, .svg, or .png).
 
-### 4.5 Three Dimension Plot
+#### 4.5 Three Dimension Plot
 
 Generates and saves a 3D visualization of comorbidity and disease trajectory networks.
 
@@ -994,7 +998,7 @@ result_network.plot_3d(
 
 - **path** - Absolute or relative file path to save the interactive HTML visualization.
 
-#### Optional Parameters:
+##### Optional Parameters:
 - **max_radius** - Maximum radial distance (in pixels) from center for node placement. Default is `180.0`.
 - **min_radius** - Minimum radial distance (in pixels) from center for node placement. Default is `35.0`.
 - **layer_distance** - Vertical spacing (in pixels) between concentric layers. Default is `40.0`.
@@ -1008,7 +1012,7 @@ result_network.plot_3d(
 - **font_style** - Font family for all text elements. Use web-safe fonts. Default is `Times New Roman`
 - **font_size** - Base font size in points for all text elements. Default is `15.0`.
 
-#### After Disease Trajectory Plot:
+##### After Disease Trajectory Plot:
 
 After generating the disease trajectory plot, the visualization will be exported as an image file in your preferred format (.html).
 
