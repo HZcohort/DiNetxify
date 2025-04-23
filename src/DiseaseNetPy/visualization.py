@@ -1710,7 +1710,7 @@ class Plot(object):
     ) -> None:
         """Generates a 2D visualization of the comorbidity network.
 
-        Creates an interactive plot showing disease comorbidities as:
+        Creates an plot showing disease comorbidities as:
         - Disease nodes (phecodes) as colored circles (grouped by disease system)
         - Comorbidity relationships as connecting lines between nodes
         - Node sizes proportional to disease significance

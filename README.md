@@ -909,11 +909,11 @@ result_plot = Plot(
 
 #### After initializing the plot object:
 
-
+After initializing the plot object, use `result_plot` of `Plot` object to visualization.
 
 ### 4.2 PheWAS Plot
 
-
+Generates a circular PheWAS (Phenome-Wide Association Study) plot. Creates a polar bar plot visualizing disease associations across different disease categories (systems). For a cohort/matched cohort study, the figure shows hazard ratios between exposure and outcome diseases. While the figure shows exposed number of diseases.
 
 ```python
 # phewas plot
@@ -927,12 +927,24 @@ result_plot.phewas_plot(
     col_exposure='N_cases_exposed'                       # Column name for exposure number (default: "N_cases_exposed")
 )
 ```
+- **path** - Output file path for saving the plot (including filename and extension)
 
 #### Optional Parameters:
 
-#### Kwargs Parameters:
+- **col_coef** - Column name containing effect size coefficients (e.g., hazard ratios or odds ratios). Default is `phewas_coef`
+- **col_system** - Column name containing disease system/category classifications. Default is `"system"`
+- **col_se** - Column name containing standard errors for effect sizes. Default is `phewas_se`
+- **col_disease** - Column name containing disease names/descriptions. Default is `"disease"`
+- **is_exposure_only** - Boolean flag indicating whether the plot is for an exposure-only cohort study. Default is `False`
+- **col_exposure** - Column name containing case counts for exposed individuals. Default is `"N_cases_exposed"`
+
+#### After PheWAS plot:
+
+After generating the PheWAS plot, the visualization will be exported as an image file in your preferred format (.jpg, .svg, or .png).
 
 ### 4.3 Comorbidity Network Plot
+
+Generate a 2D visualization of the comorbidity network.
 
 ```python
 # comorbidity network visualization
@@ -949,12 +961,27 @@ result_network.comorbidity_network_plot(
     font_style="Times New Roman"                         # Font family for text elements (default: "Times New Roman")
 )
 ```
+- **path** - Output file path for saving the interactive HTML visualization.  
 
 #### Optional Parameters:
 
-#### Kwargs Parameters:
+- **max_radius** - Maximum radial position for nodes (in pixels). Controls outer boundary of the network. Default is `90.0`.
+- **min_radius** - Minimum radial position for nodes (in pixels). Controls inner boundary. Default is `35.0`
+- **layer_distance** - Spacing between concentric circles (in pixels). Affects radial grouping. Default is `40.0`.
+- **size_reduction** - Scaling factor for node diameters (0-1 range). Adjusts visual prominence. Default is `0.5`
+- **line_width** - Stroke width for comorbidity connections (in pixels). Default is `1.0`
+- **line_color** - Color specification for comorbidity lines. Accepts: Named colors (e.g., `steelblue`). HEX codes (e.g., `#4682B4`). RGB tuples (e.g., `(70, 130, 180)`). Default is `black`
+- **cluster_reduction_ratio** - Compression factor (0-1) for cluster tightness. Lower values create denser groupings. Default is `0.4`.
+- **cluster_weight** - Edge attribute used for clustering calculations. Typically the association strength metric. Default is `comorbidity_beta`
+- **font_style** - Font family for all text elements. Use web-safe fonts or loaded font families. Default is `Times New Roman`.
+
+#### After Comorbidity Network Plot:
+
+After generating the comorbidity network plot, the visualization will be exported as an image file in your preferred format (.html).
 
 ### 4.4 Disease Trajectory Plot
+
+Creates 2D network plots showing disease trajectories within each cluster, with nodes positioned hierarchically based on trajectory relationships. Each cluster is saved as a separate image file.
 
 ```python
 # Disease trajectory visualization
@@ -964,11 +991,19 @@ result_network.trajectory_plot(
 )
 ```
 
+- **path** - Directory path where output visualization images will be saved. *Note:* Include trailing slash for proper path resolution (e.g., `/output/plots/`)
+
 #### Optional Parameters:
 
-#### Kwargs Parameters:
+- **cluster_weight** Specifies the edge weight metric used for network clustering calculations. Default is `comorbidity_beta`.
+
+#### After Disease Trajectory Plot:
+
+After generating the disease trajectory plot, the visualization will be exported as an image file in your preferred format (.jpg, .svg, or .png).
 
 ### 4.5 Three Dimension Plot
+
+Generates and saves a 3D visualization of comorbidity and disease trajectory networks.
 
 ```python
 # three-dimension visualization
@@ -989,12 +1024,25 @@ result_network.plot_3d(
 )
 ```
 
+- **path** - Absolute or relative file path to save the interactive HTML visualization.
+
 #### Optional Parameters:
+- **max_radius** - Maximum radial distance (in pixels) from center for node placement. Default is `180.0`.
+- **min_radius** - Minimum radial distance (in pixels) from center for node placement. Default is `35.0`.
+- **layer_distance** - Vertical spacing (in pixels) between concentric layers. Default is `40.0`.
+- **layout_width** - Total figure width in pixels. Default is `900.0`.
+- **layout_height** - Total figure height in pixels. Default is `900.0`.
+- **line_color** - Color specification for trajectory pathways. Accepts: CSS color names (e.g., `steelblue`). HEX codes (e.g., `#4682B4`). RGB tuples (e.g., `(70, 130, 180)`). Default is `black`.
+- **line_width** - Stroke width (in pixels) for trajectory lines. Default is `1.0`.
+- **size_reduction** - Multiplicative scaling factor for node diameters (0.1-1.0). Default is `0.5`.
+- **cluster_reduction_ratio** - Compression factor (0.1-1.0) for cluster density. Default is `0.4`.
+- **cluster_weight** - Edge metric used for clustering calculations. Default is `comorbidity_beta`.
+- **font_style** - Font family for all text elements. Use web-safe fonts. Default is `Times New Roman`
+- **font_size** - Base font size in points for all text elements. Default is `15.0`.
 
-#### Kwargs Parameters:
+#### After Disease Trajectory Plot:
 
-
-
+After generating the disease trajectory plot, the visualization will be exported as an image file in your preferred format (.html).
 
 ## API Reference
 
