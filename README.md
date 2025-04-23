@@ -313,7 +313,7 @@ data.merge_medical_records(
 
 ##### After data loading:
 
-Within loading data, you can inspect basic information (e.g., number of records, number of phecode mapping) by the printing information:
+After loading data, you can inspect basic information (e.g., number of records, number of phecode mapping) by the printing information:
 
 ```python
 """
@@ -435,7 +435,7 @@ if __name__ == "__main__":
 - **explained_variance** – Cumulative explained variance threshold to determine the number of principal components. Overrides 'n_PC' if specified.
 
 #### 3.2 PheWAS Analysis
-The first step of data analysis is PheWAS analysis, aiming to filter significantly occurring diseases. Conducts Phenome-wide association studies (PheWAS) using the specified DiseaseNetworkData object.
+The first step of data analysis is PheWAS analysis, aiming to filter significantly occurring diseases. Conducts Phenome-wide association studies (PheWAS) using the specified `DiseaseNetworkData` object.
 
 ```python
 # Reminder:
@@ -554,7 +554,7 @@ After disease pair construction, we get a new `DiseaseNetworkData` object. And t
 
 #### 3.4 Comorbidity Strength Estimation
 
-The third step of data analysis is comorbidity strength estimation, aiming to estimate the comorbidity strength of disease pairs.
+The third step of data analysis is comorbidity strength estimation, aiming to estimate the comorbidity strength of disease pairs (D1-D2).
 
 ```python
 # Reminder:
@@ -606,7 +606,7 @@ After comorbidity strength estimation, we get `com_strength_result` of `pd.DataF
 
 #### 3.5 Binomial Test
 
-The 4th step of data analysis is binomial test, aiming to filter non-temperal/temperal disease pairs.
+The 4th step of data analysis is binomial test, aiming to filter non-temperal/temperal disease pairs (D1-D2/D1➡D2).
 
 ```python
 binomial_result = dnt.binomial_test(
@@ -628,7 +628,7 @@ binomial_result = dnt.binomial_multipletests(
 binomial_result.to_csv('/your/project/path/dep_binomial.csv')  # Path to save binomial test results
 ```
 
-- **data** - DiseaseNetworkData object containing processed disease network data.
+- **data** - `DiseaseNetworkData` object containing processed disease network data.
 
 ##### Optional Parameters:
 
@@ -772,23 +772,23 @@ if __name__ == "__main__":
 
 ##### Kwargs Parameters:
 
-- ###### RPCN Method:
+###### RPCN Method:
 
 - **alpha**: L1 penalty weight (ignored if auto_penalty). Default is `None`
 - **auto_penalty**: Auto-determine optimal alpha. Default is `True`
 - **alpha_range**: Alpha search range. Default is `(1,15)`
 - **scaling_factor**: Alpha scaling factor. Default is `1`
 
-- ###### PCN_PCA Method:
+###### PCN_PCA Method:
 
 - **n_PC**: Principal components count. Default is `5`
 - **explained_variance**: Variance threshold (overrides n_PC). Default is `None`
 
-- ###### Analysis Option:
+###### Analysis Option:
 
 - **enforce_time_interval** - Apply min/max time intervals for D2 outcome determination. Default is `True`.
 
-- ###### Column Mappings:
+###### Column Mappings:
 
   - **phecode_d1_col**: Disease 1 phecode column. Default is `phecode_d1`
   - **phecode_d2_col**: Disease 2 phecode column. Default is `phecode_d2`
