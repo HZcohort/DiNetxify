@@ -26,7 +26,6 @@ from .utility import (
 import warnings
 warnings.filterwarnings('ignore')
 
-
 def phewas(
     data: DiseaseNetworkData, 
     covariates: list=None, 
@@ -118,7 +117,7 @@ def phewas(
     
     log_file : str, default=None
         Path and prefix for the text file where log will be recorded.
-        If None, the log will be written to the temporary files directory with file prefix of DiseaseNet_.
+        If None, the log will be written to the temporary files directory with file prefix of DiseaseNet_phewas_.
     
     lifelines_disable : bool, default=False
         Whether to disable the use of lifelines. 
@@ -360,7 +359,7 @@ def comorbidity_strength(
     
     log_file : str, default=None
         Path and prefix for the text file where log will be recorded.
-        If None, the log will be written to the temporary files directory with file prefix of DiseaseNet_.
+        If None, the log will be written to the temporary files directory with file prefix of DiseaseNet_com_strength_.
 
     Returns:
     ----------
@@ -598,7 +597,7 @@ def binomial_test(
     
     log_file : str, default=None
         Path and prefix for the text file where log will be recorded.
-        If None, the log will be written to the temporary files directory with file prefix of DiseaseNet_.
+        If None, the log will be written to the temporary files directory with file prefix of DiseaseNet_binomial_test_.
     
     enforce_temporal_order : bool, default=False
         If True, exclude individuals with non-temporal D1-D2 pair when performing the test.
@@ -913,7 +912,7 @@ def comorbidity_network(
     
     log_file : str, default=None
         Path and prefix for the text file where log will be recorded.
-        If None, the log will be written to the temporary files directory with file prefix of DiseaseNet_.
+        If None, the log will be written to the temporary files directory with file prefix of DiseaseNet_comorbidity_network_.
     
     **kwargs
         Additional keyword argument to define the required columns in 'comorbidity_strength_result' and 'binomial_test_result':
@@ -1261,7 +1260,7 @@ def disease_trajectory(
     
     log_file : str, default=None
         Path and prefix for the text file where log will be recorded.
-        If None, the log will be written to the temporary files directory with file prefix of DiseaseNet_.
+        If None, the log will be written to the temporary files directory with file prefix of DiseaseNet_trajectory_.
     
     **kwargs
         Analysis option

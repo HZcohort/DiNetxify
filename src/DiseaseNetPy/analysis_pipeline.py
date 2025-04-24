@@ -10,6 +10,7 @@ import os
 from .utility import n_process_check,threshold_check,filter_phecodes,validate_method_specific_kwargs,covariates_check,matching_var_check
 from .utility import correction_method_check
 import time
+import pandas as pd
 
 def disease_network_pipeline(
     data:DiseaseNetworkData, 
@@ -31,7 +32,7 @@ def disease_network_pipeline(
     enforce_temporal_order:bool=False,
     correction:str='bonferroni',
     cutoff=0.05,
-    **kwargs) -> str:
+    **kwargs) -> pd.DataFrame:
     """
     This is a pipeline function to run the whole disease network analysis.
 
@@ -378,6 +379,6 @@ def disease_network_pipeline(
     print(f'The disease network analysis pipeline has been completed, total time: {time_used} mins.')
     
     #return all the results df in order
-    return phewas_result,com_strength_result,com_network_result,binomial_result,trajectory_result
+    return phewas_result, com_strength_result, com_network_result, binomial_result, trajectory_result
 
     
