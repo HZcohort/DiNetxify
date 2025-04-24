@@ -134,7 +134,7 @@ def cox_conditional(phecode: float):
     
     #check number
     if len(dataset_analysis) == 0:
-        result += [0,'Potentially sex specific']
+        result += [0, 'Potentially sex specific']
         write_log(log_file_,f'No individuals remaining after filtering for phecode {phecode}\n')
         return result
     
@@ -142,19 +142,19 @@ def cox_conditional(phecode: float):
     number_exposed = len(dataset_analysis[dataset_analysis[exp_col]==1])
     number_unexposed = len(dataset_analysis[dataset_analysis[exp_col]==0])
     if number_exposed == 0:
-        result += [0,'Disease specific (zero exposed)']
+        result += [0, 'Disease specific (zero exposed)']
         write_log(log_file_,f'No exposed individuals remaining after filtering for phecode {phecode}\n')
         return result
     
     if number_unexposed == 0:
-        result += [0,'Disease specific (zero unexposed)']
+        result += [0, 'Disease specific (zero unexposed)']
         write_log(log_file_,f'No unexposed individuals remaining after filtering for phecode {phecode}\n')
         return result
     
     #define diagnosis time and outcome
     outcome_time_lst = []
     for id_ in dataset_analysis[id_col].values:
-        date = time_first_diagnosis(d_lst,diagnosis[id_],n_diagnosis[id_],min_icd_num)
+        date = time_first_diagnosis(d_lst, diagnosis[id_], n_diagnosis[id_], min_icd_num)
         outcome_time_lst.append(date)
     dataset_analysis[outcome_time_col] = outcome_time_lst
     dataset_analysis[outcome_col] = dataset_analysis[outcome_time_col].apply(lambda x: 0 if pd.isna(x) else 1)
@@ -189,9 +189,13 @@ def cox_conditional(phecode: float):
     dataset_analysis = dataset_analysis[dataset_analysis[matching_col].isin(match_id)]
     
     #check the covariates vif
-    del_covariates = check_variance_vif_single(dataset_analysis,
-                                               [exp_col],covariates_,
-                                               vif_cutoff='phenotypic_covar', group_col=matching_col)
+    del_covariates = check_variance_vif_single(
+        dataset_analysis,
+        [exp_col],
+        covariates_,
+        vif_cutoff='phenotypic_covar', 
+        group_col=matching_col
+    )
     final_covariates = [x for x in covariates_ if x not in del_covariates]
     
     #error message

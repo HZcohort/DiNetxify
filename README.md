@@ -1,7 +1,4 @@
 # Three-dimensional disease network analysis using DiseaseNetPy
-
-DiseaseNetPy is a Python package designed for comprehensive disease network analysis and visualization. This novel disease network analysis approach (three-dimensional disease network analysis) integrates and refines existing disease trajectory and comorbidity network analysis methods. This new approach enhances disease association verification by incorporating regularized partial correlations. It also facilitates robust identification and visualization of disease clusters (i.e., groups of depression-associated diseases with high within-group connectivity) through both non-temporal (illustrated by the x-axis and y-axis) and temporal (z-axis) dimensions.
-
 ## Table of contents
 
 - [1. Input data preparation](#1-input-data-preparation)  
@@ -59,56 +56,59 @@ DiseaseNetPy is a Python package designed for comprehensive disease network anal
 
 ### 1.1 Requirements for input data
 
-DiseaseNetPy performs 3D disease network analysis on cohort data derived from electronic health records (EHR). We currently support three study designs: standard cohort, matched cohort, and exposed-only cohort. Standard and matched cohort studies are suitable for investigating the disease network of individuals with a specific disease (e.g., depression) or exposure (e.g., smoking). The exposed-only cohort design is suitable for investigating the disease network in the whole population or a subset (e.g., older individuals) without a comparison group.
+DiseaseNetPy enables 3D disease network analysis on cohort data from electronic health records (EHR) and offers three study designs: the standard cohort, which compares individuals with a specific disease (e.g., depression) or exposure (e.g., smoking) against the general population; the matched cohort, which pairs subjects on key characteristics to reduce bias; and the exposed-only cohort, which examines disease networks within a defined subgroup (e.g., older adults) without a comparison group.
 
 To begin using DiseaseNetPy, two datasets are required: a **phenotype data** file recording each individual's basic and additional characteristics, and a **medical records data** file extracted from an EHR database that stores diagnosis codes and dates for all cohort individuals over the study period. Specific requirements for these datasets are as follows:
 
 - **Phenotype data**: An on-disk CSV (or TSV) file with headers, listing each participant with the following required and optional columns:
+
+  - **Participant ID**: Unique identifier for each individual.  
+  - **Index date**: Start of follow-up (e.g., date of exposure or baseline).  
+  - **End date**: End of follow-up (e.g., last visit, death, or study completion).  
+  - **Exposure**: Binary indicator (1 = exposed, 0 = unexposed) for standard and matched cohort designs (omit for exposed-only cohorts).  
+  - **Match ID**: Identifier for matched sets (only for matched cohort designs).  
+  - **Sex**: Biological sex (1 = female, 0 = male).  
+  - **Additional covariates (optional)**: Any number of extra variables for adjustment or matching (e.g., age, BMI, education).  
+
+  For all required columns, missing values are not permitted and dates must follow the datetime formats (e.g., “%Y-%m-%d”); the **Sex** and **Exposure** fields must use the specified 1/0 coding, and you may include an unlimited number of additional covariates. Column types—binary, categorical, or continuous—are detected automatically and transformed as needed (e.g., one-hot encoding), with missing categorical values assigned to a separate “NA” category.
+
+- **Medical records data**: One or more CSV or TSV files (with a header row), each listing diagnosis events for study participants. Every record must include:  
+
+  - **Participant ID**: The unique identifier matching the phenotype dataset.  
+  - **Diagnosis code**: A standardized code (e.g., ICD-10, ICD-9).  
+  - **Date of diagnosis**: Date of diagnosis or event in datetime formats (e.g., “%Y-%m-%d”).
   
-  - **Participant ID** – unique identifier for each individual.
-  - **Index date** – start date of follow-up (e.g., date of exposure or baseline).
-  - **End date** – end of follow-up (e.g., last visit, death, or study end).
-  - **Exposure** – exposure status (1 for exposed, 0 for unexposed) for cohort and matched cohort designs (omit this column for the exposed-only design).
-  - **Match ID** – group identifier for matching sets (only for matched cohort design).
-  - **Sex** – sex of the individual (coded as 1 for female, 0 for male).
-  - **Additional covariates (optional)** – any number of covariates useful for adjustment or matching (e.g., age, BMI, education).
-  
-  For required columns, missing data are not allowed, and dates must be specified using format codes according to the 1989 C standard. The **Sex** and **Exposure** columns must be coded as specified. There is no limit on the number of additional covariates. Covariate types (binary, categorical, or continuous) are automatically determined based on value type and distribution and transformed accordingly (e.g., via one-hot encoding). Missing values are allowed: for categorical variables, they form a separate NA category; for continuous variables, individuals with missing values are dropped.
-  
-- **Medical records data**: One or more CSV (or TSV) files with headers, containing diagnosis records for participants. Each file should include the following columns:
-  
-  - **Participant ID** – must match the IDs in the phenotype file.
-  - **Diagnosis code** – a diagnosis identifier (ICD-10, ICD-9, or another coding system).
-  - **Date of diagnosis** – the date when the diagnosis was recorded.
-  
-  Unlike the phenotype file, the medical records files should be in a record-per-row format, allowing multiple rows per participant, consistent with typical EHR structures. Records matching participant IDs in the phenotype file and occurring within the specified follow-up period (i.e., before the end date) are loaded; all others are discarded. Therefore, there is **no need** to pre-filter medical records - you should provide complete diagnosis information for all cohort individuals. Specifically, it is **not recommended** to filter data based on first occurrence of each code or diagnosis date.
-  
-  Each medical records file must use a single diagnosis code version; currently supported versions are WHO or CM versions of ICD-9 and ICD-10. Other code systems must be converted to a supported format. ICD-10 codes may be formatted with a decimal point (e.g., `F32.1`) or without one (e.g., `F321`); ICD-9 codes may use a decimal format (e.g., `9.9`) or a non-decimal “short” format (e.g., `0099`). The **Date of diagnosis** column must use a consistent date format specified by the 1989 C standard.
+  Unlike the **Phenotype data**, the **medical records data** should be in a record-per-row format, allowing multiple rows per participant. Records matching **participant ID** in the **phenotype data** and occurring within the specified follow-up period (i.e., before the end date) are loaded. Therefore, there is **no need** to pre-filter medical records - you should provide complete diagnosis information for all cohort individuals. Specifically, it is **not recommended** to filter data based on first occurrence of each code or diagnosis date.
+
+  Each **medical records data** must use a single diagnosis code version; currently supported versions are WHO or CM versions of ICD-9 and ICD-10. Other code systems must be converted to a supported format.
 
 ### 1.2 Description of the dummy dataset provided
 
-There are example datasets demonstrating the required data format for disease network analysis. All data is randomly generated. Although the ICD-9/10 codes are real, this data does not have practical reference value.
+The example datasets demonstrate the required data format for disease network analysis; although they use valid ICD-9/ICD-10 codes, all records are randomly generated and have no practical reference value.
 
-- **dummy_phenotype.csv**: 60,000 records (3.72 MB)
+- **dummy_phenotype.csv**: 60,000 records (3.72 MB)  
 
-  - **ID** – unique identifier for each individual (e.g., 1001).
-  - **date_start** – start date of follow-up (e.g., 2016/10/13).
-  - **date_end** – end of follow-up (e.g., 2022/8/2).
-  - **exposure** – exposure status (e.g., 1 for exposed, 0 for unexposed).
-  - **group_id** – group identifier for matching sets (e.g., "group_0").
-  - **sex** – sex of the individual (e.g., 0 or 1).
-  - **age** – age for year (e.g., 65.2).
-  - **BMI** – the BMI level for each individual (e.g., "c1").
+  - **ID**: Unique identifier for each individual (e.g., 1001)  
+  - **date_start**: Start date of follow-up (e.g., 2016-10-13)  
+  - **date_end**: End date of follow-up (e.g., 2022-08-02)  
+  - **exposure**: Exposure status (1 = exposed, 0 = unexposed)  
+  - **group_id**: Match group identifier (e.g., `group_0`)  
+  - **sex**: Biological sex (0 = male, 1 = female)  
+  - **age**: Age in years (e.g., 65.2)  
+  - **BMI**: Body Mass Index category (e.g., `c1`)
 
-The dummy phenotype dataset (**dummy_phenotype.csv**) contains 60,000 synthetic records (3.72 MB) simulating real-world cohort data for disease network analysis. Each record includes essential participant information: a unique identifier (**ID**), follow-up period dates (**date_start** and **date_end**), exposure status (**exposure** coded as 0/1), and matching group identifiers (**group_id**) for matched cohort studies. The dataset also captures demographic characteristics including biological sex (**sex** coded as 0/1), precise age in years (**age** as a discrete variable), and BMI categories (**BMI** as a categorical variable). The covariates of dummy phenotype dataset are **sex**, **age**, and **BMI**.
+The dummy phenotype dataset (**dummy_phenotype.csv**) comprises 60,000 synthetic records (3.72 MB) simulating real-world cohort data for disease network analysis, where each row contains a unique participant identifier (**ID**), follow-up start and end dates (**date_start**, **date_end**), exposure status (**exposure**, 0/1), matching group identifiers (**group_id**) for matched cohort studies, and key covariates—biological sex (**sex**, 0/1), exact age in years (**age**), and BMI category (**BMI**).
 
-- **dummy_EHR_ICD9.csv**: 10,188 records (227 kB)
+- **dummy_EHR_ICD9.csv**: 10,188 records (227 kB)  
 
-  - **ID** – unique identifier for each individual (e.g., 1001).
-  - **dia_date** – date of diagnosis (e.g., 2016/10/13).
-  - **diag_icd9** – ICD9 of diagnosis  (e.g., "E950").
+  - **ID**: Unique identifier for each individual (e.g., 1001)  
+  - **dia_date**: Date of diagnosis (e.g., 2016/10/13)  
+  - **diag_icd9**: ICD-9 code for diagnosis (e.g., "E950")  
 
 The **dummy_EHR_ICD9.csv** file contains 10,188 simulated electronic health records (227 kB) with ICD-9 coded diagnoses, structured with three key fields: patient identifier (**ID**), diagnosis date (**dia_date**), and corresponding ICD-9 code (**diag_icd9**). This standardized format demonstrates the required medical records structure for disease network analysis, where each row represents a discrete diagnosis event (e.g., patient 1001's `E950` coded diagnosis on 2016/10/13).
+
+The **dummy_EHR_ICD9.csv** file contains 10,188 simulated EHR diagnosis records (227 kB), with each row capturing a unique participant ID (**ID**), the diagnosis date (**dia_date**) in YYYY-MM-DD format, and the ICD-9 code (**diag_icd9**), exemplifying the required event-per-row structure (e.g., patient 1001’s `E950` diagnosis on 2016-10-13) for disease network analysis.
+
 
 - **dummy_EHR_ICD10.csv**: 1,048,576 records (36.2 MB)
 
@@ -124,7 +124,7 @@ Data harmonization loads and merges phenotype and medical records data into a si
 
 ### 2.1 Initializing the data object
 
-First, import DiseaseNetPy and initialize an empty `DiseaseNetworkData` object, specifying the study design, phecode level, and any optional parameters if needed:
+First, import `DiseaseNetworkData` from DiseaseNetPy and instantiate it with your chosen study design, phecode level, and any optional parameters to create an data object.
 
 ```python
 import diseasenetpy as dnt
@@ -155,7 +155,7 @@ data = dnt.DiseaseNetworkData(
 
 - **min_required_icd_codes** – the minimum number of ICD codes mapping to a phecode required for it to be considered valid; default is 1. For example, setting this to 2 requires at least two records mapping to phecode 250.2 (Type 2 diabetes) for a participant to be considered diagnosed. Ensure your medical records include complete data (not limited to first occurrences) when using this parameter.
 - **date_fmt** – format of date fields (Index date and End date) in the phenotype data. Default is `'%Y-%m-%d'` (year-month-day, e.g., 2005-12-01).
-- **phecode_version** – currently only `'1.2'` is supported.
+- **phecode_version** – currently only `1.2` is supported.
 
 ### 2.2 Load phenotype data
 
@@ -330,6 +330,26 @@ Phecode diagnosis records successfully merged (0 invalid records were not merged
 """
 ```
 
+#### After data loading:
+
+After data loading, you can inspect basic information of **medical records data** (e.g., number of ICD code mapped to phecodes, average number of disease diagnosis) by printing the object:
+
+```python
+print(data)
+# This will output something like (e.g., for a matched cohort study):
+"""
+Merged Medical records
+2 medical records data with 1,678,983 diagnosis records were merged (0 with missing values).
+Average number of disease diagnosis during follow-up: 18.99 (exposed) and 7.31 (unexposed)
+Average number of disease diagnosis before follow-up: 8.40 (exposed) and 3.46 (unexposed)
+
+Warning: 102 exposed individuals and 440 unexposed individuals have negative or zero follow-up time.
+Consider removing them before merge.
+Warning: 18.15% of ICD-10-WHO codes were not mapped to phecodes for file d:\GitHubWarehouse\test\src/data/dummy_EHR_ICD10.csv.
+Warning: 2.07% of ICD-9-WHO codes were not mapped to phecodes for file d:\GitHubWarehouse\test\src/data/dummy_EHR_ICD9.csv.
+"""
+```
+
 ## 3. Data Analysis
 
 Data analysis is based on a `DiseaseNetworkData` object to subsequent analysis, including PheWAS analysis, disease pair generation, comorbidity strength estimation, binomial testing, comorbidity network analysis, and disease trajectory analysis. The result format of each analysis is `pd.DataFrame`.
@@ -401,8 +421,8 @@ if __name__ == "__main__":
     - **PCN_PCA**: Partial Correlation Network with PCA. There are two `**Kwarg` parameters.
       - **n_PC** – Fixed number of principal components to include in each model. Default is `5`.
       - **explained_variance** – Cumulative explained variance threshold to determine the number of principal components. Overrides 'n_PC' if specified.
-    - **CN**: Correlation Network. This parameter will be passed to the comorbidity_network and disease_trajectory function. See the these two functions for more information.
-    The correlation network (CN) represents the most straightforward approach, utilizing a logistic regression model with user-defined covariates to assess pairwise disease associations. Building upon this foundation, the regularized partial correlation network (RPCN) (Epskamp et al., 2016) employs a regularized logistic regression framework that integrates both user-specified covariates and historical disease data. Notably, we further develop the RPCNPCA variant by incorporating principal component analysis (PCA) for covariate dimensionality reduction prior to network construction.
+    - **CN**: Correlation Network. This parameter will be passed to the `comorbidity_network` and `disease_trajectory` function. See the these two functions for more information.
+  - The correlation network (CN) represents the most straightforward approach, utilizing a logistic regression model with user-defined covariates to assess pairwise disease associations. Building upon this foundation, the regularized partial correlation network (RPCN) (Epskamp et al., 2016) employs a regularized logistic regression framework that integrates both user-specified covariates and historical disease data. Notably, we further develop the RPCNPCA variant by incorporating principal component analysis (PCA) for covariate dimensionality reduction prior to network construction.
 - **covariates** – List of covariates to adjust for in the PheWAS, comorbidity network and disease trajectory analysis. Default is `None`.
 - **matching_var_dict** – Specifies the matching variables and the criteria used for incidence density sampling. Default is `{'sex':'exact'}`.
 - **matching_n** – Specifies the maximum number of matched controls for each case. This parameter will be passed to the disease_trajectory function. Default is `2`.
@@ -464,15 +484,15 @@ print(phewas_result)
 | `phecode`              | String    | Disease code (Phecode) used in PheWAS |
 | `disease`              | String    | Disease name corresponding to the Phecode |
 | `system`               | String    | Phecode disease system corresponding to the Phecode (e.g., infectious diseases) |
-| `sex`                  | String    | Sex category used in the analysis (e.g., Both, Male, Female) |
+| `sex`                  | String    | Sex-specific (e.g., Both, Male, Female) |
 | `N_cases_exposed`      | Integer   | Number of cases among the exposed group |
 | `describe`             | String    | Description of the analysis or model (e.g., covariates used) |
-| `exposed_group`        | String    | Format: cases/total (percentage) in the exposed group |
-| `unexposed_group`      | String    | Format: cases/total (percentage) in the unexposed group |
-| `phewas_coef`          | Float     | Estimated coefficient from the PheWAS regression model |
+| `exposed_group`        | String    | Time at risk in the exposed group |
+| `unexposed_group`      | String    | Time at risk in the unexposed group |
+| `phewas_coef`          | Float     | Estimated coefficient from the model |
 | `phewas_se`            | Float     | Standard error of the estimated coefficient |
 | `phewas_p`             | Float     | P-value indicating statistical significance of the coefficient |
-| `phewas_p_significance`| Boolean   | Indicates whether the p-value is statistically significant (True/False) |
+| `phewas_p_significance`| Boolean   | Indicates whether the result is statistically significant (True/False) |
 | `phewas_p_adjusted`    | Float     | Adjusted p-value accounting for multiple comparisons |
 
 ```python
@@ -511,14 +531,14 @@ print(com_strength_result)
 | `RR_p`                  | Float   | P-value for relative risk |
 | `phi_p_adjusted`        | Float   | Adjusted P-value for Phi coefficient (multiple comparisons) |
 | `RR_p_adjusted`         | Float   | Adjusted P-value for relative risk (multiple comparisons) |
-| `phi_p_significance`    | Boolean | Whether the Phi P-value is statistically significant |
-| `RR_p_significance`     | Boolean | Whether the RR P-value is statistically significant |
+| `phi_p_significance`    | Boolean | Whether the Phi is statistically significant |
+| `RR_p_significance`     | Boolean | Whether the RR is statistically significant |
 | `disease_d1`            | String  | Name of disease 1 |
 | `system_d1`             | String  | Phecode disease system related to disease 1 |
-| `sex_d1`                | String  | Sex associated with disease 1 |
+| `sex_d1`                | String  | Sex-specific for disease 1 |
 | `disease_d2`            | String  | Name of disease 2 |
 | `system_d2`             | String  | Phecode disease system related to disease 2 |
-| `sex_d2`                | String  | Sex associated with disease 2 |
+| `sex_d2`                | String  | Sex-specific for disease 2 |
 
 ```python
 print(binomial_result)
@@ -552,11 +572,11 @@ print(binomial_result)
 | `binomial_proportion_ci`   | String  | Confidence interval for the binomial proportion (format: lower-upper) |
 | `disease_d1`               | String  | Name of disease 1 |
 | `system_d1`                | String  | Phecode disease system associated with disease 1 |
-| `sex_d1`                   | String  | Sex category associated with disease 1 |
+| `sex_d1`                   | String  | Sex-specific for disease 1 |
 | `disease_d2`               | String  | Name of disease 2 |
 | `system_d2`                | String  | Phecode disease system associated with disease 2 |
-| `sex_d2`                   | String  | Sex category associated with disease 2 |
-| `binomial_p_significance` | Boolean | Indicates whether the binomial p-value is statistically significant |
+| `sex_d2`                   | String  | Sex-specific for disease 2 |
+| `binomial_p_significance` | Boolean | Indicates whether the result is statistically significant |
 | `binomial_p_adjusted`     | Float   | Adjusted p-value for multiple comparisons |
 
 ```python
@@ -597,11 +617,11 @@ print(com_network_result)
 | `comorbidity_aic`           | Float   | Akaike Information Criterion for the model |
 | `disease_d1`                | String  | Name of the first disease |
 | `system_d1`                 | String  | Phecode disease system for the first disease |
-| `sex_d1`                    | String  | Sex category associated with the first disease |
+| `sex_d1`                    | String  | Sex-specific for the first disease |
 | `disease_d2`                | String  | Name of the second disease |
 | `system_d2`                 | String  | Phecode disease system for the second disease |
-| `sex_d2`                    | String  | Sex category associated with the second disease |
-| `comorbidity_p_significance`| Boolean | Whether the comorbidity p-value is statistically significant |
+| `sex_d2`                    | String  | Sex-specific for the second disease |
+| `comorbidity_p_significance`| Boolean | Whether the result is statistically significant |
 | `comorbidity_p_adjusted`    | Float   | Adjusted p-value accounting for multiple comparisons |
 
 ```python
@@ -623,7 +643,6 @@ print(trajectory_result)
 
 | Variable Name               | Type    | Description |
 |-----------------------------|---------|-------------|
-| `Unnamed: 0`                | Integer | Original row index from the source file |
 | `phecode_d1`                | Float   | Phecode for the first disease in the disease pair |
 | `phecode_d2`                | Float   | Phecode for the second disease in the disease pair |
 | `name_disease_pair`         | String  | Identifier for the disease pair (format: d1->d2) |
@@ -631,25 +650,25 @@ print(trajectory_result)
 | `n_total`                   | Integer | Total number of individuals in the sub-cohort |
 | `n_exposed/n_cases`         | String  | Number of exposed among cases (format: exposed/cases) |
 | `n_exposed/n_controls`      | String  | Number of exposed among controls (format: exposed/controls) |
-| `trajectory_method`         | String  | Method used for trajectory analysis |
+| `trajectory_method`         | String  | Method used for disease trajectory analysis |
 | `describe`                  | String  | Description of model fitting and covariates used/removed |
-| `co_vars_list`              | String  | List of covariates included in the trajectory model |
+| `co_vars_list`              | String  | List of covariates included in the model |
 | `co_vars_zvalues`           | String  | Z-values for each covariate in the model |
-| `trajectory_beta`           | Float   | Estimated coefficient from the trajectory model |
+| `trajectory_beta`           | Float   | Estimated coefficient from the model |
 | `trajectory_se`             | Float   | Standard error of the estimated coefficient |
-| `trajectory_p`              | Float   | P-value for the trajectory coefficient |
-| `trajectory_aic`            | Float   | Akaike Information Criterion for the trajectory model |
+| `trajectory_p`              | Float   | P-value for the coefficient |
+| `trajectory_aic`            | Float   | Akaike Information Criterion for the model |
 | `disease_d1`                | String  | Name of the first disease |
 | `system_d1`                 | String  | Phecode disease system for the first disease |
-| `sex_d1`                    | String  | Sex category associated with the first disease |
+| `sex_d1`                    | String  | Sex-specific for the first disease |
 | `disease_d2`                | String  | Name of the second disease |
 | `system_d2`                 | String  | Phecode disease system for the second disease |
-| `sex_d2`                    | String  | Sex category associated with the second disease |
-| `trajectory_p_significance` | Boolean | Whether the trajectory p-value is statistically significant |
+| `sex_d2`                    | String  | Sex-specific for the second disease |
+| `trajectory_p_significance` | Boolean | Whether the result is statistically significant |
 | `trajectory_p_adjusted`     | Float   | Adjusted p-value accounting for multiple comparisons |
 
 #### Save the results:
-All analysis outputs are stored as standardized `pd.DataFrame` objects, enabling flexible data serialization through pandas' native I/O methods. The results can be exported to multiple formats including but not limited to:
+All analysis outputs are standardized `pd.DataFrame` objects, enabling flexible data serialization through pandas' native I/O methods. The results can be exported to multiple formats including but not limited to:
 - Tabular formats (.csv/.tsv)
 - Spreadsheet files (.xlsx/.ods)
 - Binary formats (.feather/.parquet)
@@ -757,7 +776,7 @@ phewas_result.to_csv('/your/project/path/dep_phewas.csv')
 
 ### 3.3 Disease pair construction
 
-Following diseases filtering, we systematically construct pairwise disease combinations through exhaustive permutation of the remaining diseases. These generated disease pairs are subsequently archived within the `DiseaseNetworkData` object using its native `disease_pair() `method, with configurable temporal constraints (e.g., minimum/maximum allowable time intervals between disease onset events) to enforce clinically meaningful temporal relationships.
+Following diseases filtering, we construct pairwise disease combinations through exhaustive permutation of the remaining diseases. These generated disease pairs are subsequently archived within the `DiseaseNetworkData` object using its native `disease_pair() `method, with configurable temporal constraints (e.g., minimum/maximum allowable time intervals between disease onset events) to enforce clinically meaningful temporal relationships.
 
 ```python
 # Disease pair construction of the `DiseaseNetworkData` object
@@ -977,7 +996,7 @@ if __name__ == "__main__":
     - `CN`: Correlation Network. Default is `RPCN`.
 - **log_file** - Path/prefix for log file. If `None`, uses temporary directory with prefix `DiseaseNet_comorbidity_network_`. Default is `None`.
 
-#### Optional Parameters:
+#### Optional parameters:
 
 - **correction** - P-value correction method. 
   Available methods:  
@@ -1094,7 +1113,6 @@ if __name__ == "__main__":
 - **significance_RR_col**: RR column. Default is `RR_p_significance`
 - **significance_binomial_col**: Binomial test column. Default is `binomial_p_significance`
 
-
 #### After trajectory analysis:
 
 After trajectory analysis, we get a `trajectory_result` (`pd.DataFrame`) including temporal disease pairs. The details of result is shows in the pipeline. Additionally, alternative p-value adjustment methods can be implemented to enhance statistical rigor.
@@ -1118,7 +1136,7 @@ Same to the pipeline, we can save the result to multiple formats including but n
 - Database interfaces (SQL)
 
 ```python
-# For example: save the comorbidity network analysis results to a CSV file
+# For example: save the trajectory analysis analysis results to a CSV file
 trajectory_result.to_csv('/your/project/path/dep_trajectory.csv')
 ```
 
@@ -1586,7 +1604,14 @@ disease_network_pipeline(
 - `max_interval_days` (*int/float, default=np.inf*): Maximum allowed time interval (in days) between diagnosis dates when constructing temporal and non-temporal D1-D2 disease pair for each individual. This parameter will be passed to the DiseaseNetPy.DiseaseNetworkData.disease_pair function. See the disease_pair function for more information.
 - `enforce_temporal_order` (*bool, default=False*): If set to True, exclude individuals with non-temporal D1-D2 pair when performing the binomial test; also applies the specified minimum and maximum time intervals when performing disease trajectory analysis. See 'enforce_temporal_order' parameter in binomial_test function and 'enforce_time_interval' parameter in disease_trajectory function.
 - `correction` (*str, default='bonferroni'*): Method for p-value correction from the statsmodels.stats.multitest.multipletests. Available methods are: none : no correction bonferroni : one-step correction sidak : one-step correction holm-sidak : step down method using Sidak adjustments holm : step-down method using Bonferroni adjustments simes-hochberg : step-up method (independent) hommel : closed method based on Simes tests (non-negative) fdr_bh : Benjamini/Hochberg (non-negative) fdr_by : Benjamini/Yekutieli (negative) fdr_tsbh : two stage fdr correction (non-negative) fdr_tsbky : two stage fdr correction (non-negative) See https://www.statsmodels.org/dev/generated/statsmodels.stats.multitest.multipletests.html for more details.
-- `cutoff` (*float, default=0.05*): The significance threshold for adjusted p-values. **kwargs RPCN Method Parameters: alpha : non-negative scalar The weight multiplying the l1 penalty term for other diseases covariates. Ignored if 'auto_penalty' is enabled. auto_penalty : bool, default=True If 'True', automatically determines the best 'alpha' based on model AIC value. alpha_range : tuple, default=(1,15) When 'auto_penalty' is True, search the optimal 'alpha' in this range. scaling_factor : positive scalar, default=1 The scaling factor for the alpha when 'auto_penalty' is True. PCN_PCA Method Parameters: n_PC : int, default=5 Fixed number of principal components to include in each model. explained_variance : float Cumulative explained variance threshold to determine the number of principal components. Overrides 'n_PC' if specified.
+- `cutoff` (*float, default=0.05*): The significance threshold for adjusted p-values. 
+- `**kwargs `RPCN Method Parameters: 
+  - `alpha` : non-negative scalar The weight multiplying the l1 penalty term for other diseases covariates. Ignored if `auto_penalty` is enabled. 
+  - `auto_penalty` : bool, default=True If `True`, automatically determines the best `alpha` based on model AIC value. 
+  - `alpha_range` : tuple, default=(1,15) When `auto_penalty` is True, search the optimal `alpha` in this range. 
+  - `scaling_factor` : positive scalar, default=1 The scaling factor for the alpha when `auto_penalty` is True. 
+  - `n_PC` : int, default=5 Fixed number of principal components to include in each model. 
+  - `explained_variance` : float Cumulative explained variance threshold to determine the number of principal components. Overrides `n_PC` if specified.
 
 
 #### Function: `phewas`
@@ -1840,8 +1865,20 @@ disease_trajectory(
 - `n_process` (*int, default=1*): Specifies the number of parallel processes to use for the analysis. Multiprocessing is enabled when `n_process` is set to a value greater than one.
 - `correction` (*str, default='bonferroni'*): Method for comorbidity network analysis p-value correction from the statsmodels.stats.multitest.multipletests. Available methods are: none : no correction bonferroni : one-step correction sidak : one-step correction holm-sidak : step down method using Sidak adjustments holm : step-down method using Bonferroni adjustments simes-hochberg : step-up method (independent) hommel : closed method based on Simes tests (non-negative) fdr_bh : Benjamini/Hochberg (non-negative) fdr_by : Benjamini/Yekutieli (negative) fdr_tsbh : two stage fdr correction (non-negative) fdr_tsbky : two stage fdr correction (non-negative) See https://www.statsmodels.org/dev/generated/statsmodels.stats.multitest.multipletests.html for more details.
 - `cutoff` (*float, default=0.05*): The significance threshold for adjusted comorbidity network analysis p-values.
-- `log_file` (*str, default=None*): Path and prefix for the text file where log will be recorded. If None, the log will be written to the temporary files directory with file prefix of DiseaseNet_trajectory_. **kwargs Analysis option enforce_time_interval : bool, default=True If set to True, applies the specified minimum and maximum time intervals when determining the D2 outcome among individuals diagnosed with D1. These time interval requirements should be defined using the DiseaseNetPy.DiseaseNetworkData.disease_pair() function. Additional keyword argument to define the required columns in 'comorbidity_strength_result' and 'binomial_test_result': phecode_d1_col : str, default='phecode_d1' Name of the column in 'comorbidity_strength_result' and 'binomial_test_result' that specifies the phecode identifiers for disease 1 of the disease pair. phecode_d2_col : str, default='phecode_d2' Name of the column in 'comorbidity_strength_result' and 'binomial_test_result' that specifies the phecode identifiers for disease 2 of the disease pair. significance_phi_col : str, default='phi_p_significance' Name of the column in 'comorbidity_strength_result' that indicates the significance of phi-correlation for each disease pair. significance_RR_col : str, default='RR_p_significance' Name of the column in 'comorbidity_strength_result' that indicates the significance of RR for each disease pair. significance_binomial_col : str default='binomial_p_significance' Name of the column in 'binomial_test_result' that indicates the significance of binomial test for each disease pair. RPCN Method Parameters: alpha : non-negative scalar The weight multiplying the l1 penalty term for other diseases covariates. Ignored if 'auto_penalty' is enabled. auto_penalty : bool, default=True If 'True', automatically determines the best 'alpha' based on model AIC value. alpha_range : tuple, default=(1,15) When 'auto_penalty' is True, search the optimal 'alpha' in this range. scaling_factor : positive scalar, default=1 The scaling factor for the alpha when 'auto_penalty' is True. PCN_PCA Method Parameters: n_PC : int, default=5 Fixed number of principal components to include in each model. explained_variance : float Cumulative explained variance threshold to determine the number of principal components. Overrides 'n_PC' if specified.
-
+- `log_file` (*str, default=None*): Path and prefix for the text file where log will be recorded. If None, the log will be written to the temporary files directory with file prefix of DiseaseNet_trajectory_. 
+- `**kwargs` Analysis option 
+  - `enforce_time_interval` : bool, default=True If set to True, applies the specified minimum and maximum time intervals when determining the D2 outcome among individuals diagnosed with D1. These time interval requirements should be defined using the `DiseaseNetPy.DiseaseNetworkData.disease_pair()` function.
+  - `phecode_d1_col` : str, default='phecode_d1' Name of the column in `comorbidity_strength_result` and `binomial_test_result` that specifies the phecode identifiers for disease 1 of the disease pair.
+  - `phecode_d2_col` : str, default='phecode_d2' Name of the column in `comorbidity_strength_result` and `binomial_test_result` that specifies the phecode identifiers for disease 2 of the disease pair. 
+  - `significance_phi_col` : str, default='phi_p_significance' Name of the column in `comorbidity_strength_result` that indicates the significance of phi-correlation for each disease pair. 
+  - `significance_RR_col` : str, default='RR_p_significance' Name of the column in `comorbidity_strength_result` that indicates the significance of RR for each disease pair. 
+  - `significance_binomial_col` : str default='binomial_p_significance' Name of the column in `binomial_test_result` that indicates the significance of binomial test for each disease pair. 
+  - `alpha` : non-negative scalar The weight multiplying the l1 penalty term for other diseases covariates. Ignored if `auto_penalty` is enabled. 
+  - `auto_penalty` : bool, default=True If `True`, automatically determines the best `alpha` based on model AIC value. 
+  - `alpha_range` : tuple, default=(1,15) When `auto_penalty` is True, search the optimal `alpha` in this range. 
+  - `scaling_factor` : positive scalar, default=1 The scaling factor for the `alpha` when 'auto_penalty' is True. 
+  - `n_PC` : int, default=5 Fixed number of principal components to include in each model. 
+  - `explained_variance` : float Cumulative explained variance threshold to determine the number of principal components. Overrides 'n_PC' if specified.
 
 #### Function: `trajectory_multipletests`
 
@@ -1858,8 +1895,6 @@ trajectory_multipletests(
 - `df` (*pd.DataFrame*): DataFrame containing the results from the 'disease_trajectory' function.
 - `correction` (*str, default='bonferroni'*): Method for binomial p-value correction from the statsmodels.stats.multitest.multipletests. Available methods are: none : no correction bonferroni : one-step correction sidak : one-step correction holm-sidak : step down method using Sidak adjustments holm : step-down method using Bonferroni adjustments simes-hochberg : step-up method (independent) hommel : closed method based on Simes tests (non-negative) fdr_bh : Benjamini/Hochberg (non-negative) fdr_by : Benjamini/Yekutieli (negative) fdr_tsbh : two stage fdr correction (non-negative) fdr_tsbky : two stage fdr correction (non-negative) See https://www.statsmodels.org/dev/generated/statsmodels.stats.multitest.multipletests.html for more details.
 - `cutoff` (*float, default=0.05*): The significance threshold for adjusted binomial p-values.
-
-
 
 ### Class `Plot`
 
@@ -1934,19 +1969,19 @@ three_dimension_plot(
 Generate and save a 3D interactive HTML visualization.
 
 **Parameters:**
-- `path` (`str`): Output HTML file path.
-- `max_radius` (`float`): Maximum radial distance for node placement.
-- `min_radius` (`float`): Minimum radial distance.
-- `line_color` (`str`): Color of trajectory lines.
-- `line_width` (`float`): Thickness of trajectory lines.
-- `size_reduction` (`float`): Scaling for node sizes.
-- `cluster_reduction_ratio` (`float`): Compression factor for cluster layout.
-- `cluster_weight` (`str`): Edge weight metric for clustering.
-- `layer_distance` (`float`): Vertical spacing between clusters.
-- `layout_width` (`float`): Width of the HTML canvas in pixels.
-- `layout_height` (`float`): Height of the HTML canvas.
-- `font_style` (`str`): Font family for labels.
-- `font_size` (`float`): Font size in points.
+- `path`: File path to save the HTML visualization
+- `max_radius`: Maximum radial distance for node placement (default: 180.0)
+- `min_radius`: Minimum radial distance for node placement (default: 35.0)
+- `line_color`: Color for trajectory lines (default: "black")
+- `line_width`: Width for trajectory lines (default: 1.0)
+- `size_reduction`: Scaling factor for node sizes (default: 0.5)
+- `cluster_reduction_ratio`: Cluster compression factor for layout (default: 0.4)
+- `cluster_weight`: Edge weight metric used for clustering (default: "comorbidity_beta")
+- `layer_distance`: Vertical distance between layers (default: 40.0)
+- `layout_width`: Figure width in pixels (default: 900.0)
+- `layout_height`: Figure height in pixels (default: 900.0)
+- `font_style`: Font family for text elements (default: 'Times New Roman')
+- `font_size`: Base font size in points (default: 15.0)
 
 ---
 
@@ -1971,16 +2006,16 @@ comorbidity_network_plot(
 Generate and save a 2D HTML visualization of the comorbidity network.
 
 **Parameters:**
-- `path` (`str`): Output HTML file path.
-- `max_radius` (`float`): Max radial position for nodes.
-- `min_radius` (`float`): Min radial position.
-- `size_reduction` (`float`): Node size scaling.
-- `cluster_reduction_ratio` (`float`): Cluster compression ratio.
-- `cluster_weight` (`str`): Metric for clustering edges.
-- `line_width` (`float`): Width of network edges.
-- `line_color` (`str`): Color of network edges.
-- `layer_distance` (`float`): Spacing between concentric layers.
-- `font_style` (`str`): Font for labels.
+- `path`: Output file path for saving HTML visualization
+- `max_radius`: Maximum radial position for nodes (default: 90.0)
+- `min_radius`: Minimum radial position for nodes (default: 35.0)
+- `size_reduction`: Scaling factor for node sizes (default: 0.5)
+- `cluster_reduction_ratio`: Compression factor for cluster layout (default: 0.4)
+- `cluster_weight`: Edge weight metric for clustering (default: "comorbidity_beta")
+- `line_width`: Width of comorbidity lines (default: 1.0)
+- `line_color`: Color of comorbidity lines (default: "black")
+- `layer_distance`: Distance between concentric circles (default: 40.0)
+- `font_style`: Font family for text elements (default: "Times New Roman")
 
 ---
 
@@ -1994,11 +2029,11 @@ trajectory_plot(
 ) -> None
 ```
 
-Generate and save trajectory plots per cluster as PNGs.
+Generate and save trajectory plots per cluster as (.png/.svg/.jpg files).
 
 **Parameters:**
-- `path` (`str`): Directory to save PNG files.
-- `cluster_weight` (`str`): Edge weight metric for trajectories.
+- `path`: Directory path to save output images
+- `cluster_weight`: Edge weight metric used for clustering (default: "comorbidity_beta")
 
 ---
 
@@ -2017,16 +2052,16 @@ phewas_plot(
 ) -> None
 ```
 
-Generate and save a high-resolution PNG of the circular PheWAS plot.
+Creates a polar bar plot visualizing disease associations across different disease categories (systems)
 
 **Parameters:**
-- `path` (`str`): Output PNG file path.
-- `col_coef` (`str`): Column for effect size coefficients.
-- `col_system` (`str`): Column for system category.
-- `col_se` (`str`): Column for standard errors.
-- `col_disease` (`str`): Column for disease names.
-- `is_exposure_only` (`bool`): Filter for exposure-only cohort.
-- `col_exposure` (`str`): Column for exposed case counts.
+- `path`: Output file path for saving the plot
+- `col_coef`: Column name for effect size coefficients (default: "phewas_coef")
+- `col_system`: Column name for disease system/category (default: "system")
+- `col_se`: Column name for standard errors (default: "phewas_se")
+- `col_disease`: Column name for disease names (default: "disease")
+- `is_exposure_only`: Identifier of exposure (default: False)
+- `col_exposure`: Column name for exposure number (default: "N_cases_exposed")
 
 ## Issues reporting and recommendations
 
