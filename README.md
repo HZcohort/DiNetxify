@@ -51,9 +51,7 @@
     - [three_dimension_plot](#three_dimension_plot)  
     - [comorbidity_network_plot](#comorbidity_network_plot)  
     - [trajectory_plot](#trajectory_plot)  
-    - [phewas_plot](#phewas_plot)  
-- [Issues reporting and recommendations](#issues-reporting-and-recommendations)  
-- [License](#license)
+    - [phewas_plot](#phewas_plot)
 
 ## 1. Input data preparation
 
@@ -85,41 +83,32 @@ To begin using DiseaseNetPy, two datasets are required: a **phenotype data** fil
 
   Each **medical records data** must use a single diagnosis code version; currently supported versions are WHO or CM versions of ICD-9 and ICD-10. Other code systems must be converted to a supported format.
 
-### 1.2 Description of the dummy dataset provided
+### 1.2 Dummy dataset overview
 
-The example datasets demonstrate the required data format for disease network analysis; although they use valid ICD-9/ICD-10 codes, all records are randomly generated and have no practical reference value.
+A dummy dataset is provided to help you become familiar with the required input format and to run through the full analysis workflow before applying it to your own cohort. It simulates a matched‐cohort study of 10 000 exposed individuals and 50 000 matched unexposed individuals, together with their entire follow-up electronic health record (EHR) data.
 
-- **dummy_phenotype.csv**: 60,000 records (3.72 MB)  
+**Caution:** All participant characteristics and diagnosis records in this dataset are randomly generated. Although the ICD-9 and ICD-10 codes correspond to real‐world classifications, and the analysis may produce apparently significant associations based on that, these results do **not** reflect any true medical findings.
 
-  - **ID**: Unique identifier for each individual (e.g., 1001)  
-  - **date_start**: Start date of follow-up (e.g., 2016-10-13)  
-  - **date_end**: End date of follow-up (e.g., 2022-08-02)  
-  - **exposure**: Exposure status (1 = exposed, 0 = unexposed)  
-  - **group_id**: Match group identifier (e.g., `group_0`)  
-  - **sex**: Biological sex (0 = male, 1 = female)  
-  - **age**: Age in years (e.g., 65.2)  
-  - **BMI**: Body Mass Index category (e.g., `c1`)
-
-The dummy phenotype dataset (**dummy_phenotype.csv**) comprises 60,000 synthetic records (3.72 MB) simulating real-world cohort data for disease network analysis, where each row contains a unique participant identifier (**ID**), follow-up start and end dates (**date_start**, **date_end**), exposure status (**exposure**, 0/1), matching group identifiers (**group_id**) for matched cohort studies, and key covariates—biological sex (**sex**, 0/1), exact age in years (**age**), and BMI category (**BMI**).
-
-- **dummy_EHR_ICD9.csv**: 10,188 records (227 kB)  
-
-  - **ID**: Unique identifier for each individual (e.g., 1001)  
-  - **dia_date**: Date of diagnosis (e.g., 2016/10/13)  
-  - **diag_icd9**: ICD-9 code for diagnosis (e.g., "E950")  
-
-The **dummy_EHR_ICD9.csv** file contains 10,188 simulated electronic health records (227 kB) with ICD-9 coded diagnoses, structured with three key fields: patient identifier (**ID**), diagnosis date (**dia_date**), and corresponding ICD-9 code (**diag_icd9**). This standardized format demonstrates the required medical records structure for disease network analysis, where each row represents a discrete diagnosis event (e.g., patient 1001's `E950` coded diagnosis on 2016/10/13).
-
-The **dummy_EHR_ICD9.csv** file contains 10,188 simulated EHR diagnosis records (227 kB), with each row capturing a unique participant ID (**ID**), the diagnosis date (**dia_date**) in YYYY-MM-DD format, and the ICD-9 code (**diag_icd9**), exemplifying the required event-per-row structure (e.g., patient 1001’s `E950` diagnosis on 2016-10-13) for disease network analysis.
-
-
-- **dummy_EHR_ICD10.csv**: 1,048,576 records (36.2 MB)
-
-  - **ID** – unique identifier for each individual (e.g., 1001).
-  - **dia_date** – date of diagnosis (e.g., 2014/9/23).
-  - **diag_icd10** – ICD10 of diagnosis  (e.g., "L905").
-
-The **dummy_EHR_ICD10.csv** file contains 1,048,576 simulated electronic health records (36.2 MB) with ICD-10 coded diagnoses, structured with three key fields: patient identifier (**ID**), diagnosis date (**dia_date**), and corresponding ICD-10 code (**diag_icd10**). This standardized format demonstrates the required medical records structure for disease network analysis, where each row represents a discrete diagnosis event (e.g., patient 1001's `L905` coded diagnosis on 2014/9/23).
+- The dataset consists of three CSV files, located in the `tests/data` directory:
+  - **`dummy_phenotype.csv`**
+     Baseline characteristics for all 60 000 individuals, containing:
+    - **ID**: unique participant identifier
+    - **date_start**, **date_end**: follow-up start and end dates
+    - **exposure**: exposure status (0 = unexposed, 1 = exposed)
+    - **group_id**: matching group identifier
+    - **sex**: biological sex (1 for female and 0 for male)
+    - **age**: baseline age (years)
+    - **BMI**: body‐mass index category
+  - **`dummy_EHR_ICD9.csv`**
+     Simulated EHR diagnoses coded using ICD-9 (n = 10,188 records), with columns:
+    - **ID**: participant identifier
+    - **dia_date**: diagnosis date
+    - **diag_icd9**: ICD-9 diagnosis code
+  - **`dummy_EHR_ICD10.csv`**
+     Simulated EHR diagnoses coded using ICD-10 (n = 1,048,576 records), with columns:
+    - **ID**: participant identifier
+    - **dia_date**: diagnosis date
+    - **diag_icd10**: ICD-10 diagnosis code
 
 ## 2. Data Harmonization
 
@@ -151,20 +140,20 @@ data = dnt.DiseaseNetworkData(
 )
 ```
 
-- **study_design** – the cohort design: `'cohort'`, `'matched cohort'`, or `'exposed-only cohort'`.
-- **phecode_level** – the level of phecode used for analysis; level 1 provides broader categories (~585 conditions), while level 2 offers more detail (~1257 conditions). Level 1 is recommended for smaller datasets to maintain statistical power.
+- **study_design** – the cohort design: `'cohort'`, `'matched cohort'`, or `'exposed-only cohort'`. Default is `'cohort'`.
+- **phecode_level** – the level of phecode used for analysis; level 1 provides broader categories (~585 conditions), while level 2 offers more detail (~1257 conditions). Level 1 is recommended for smaller datasets to maintain statistical power. The level of phecode: `1`, or `2`. Default is `1`.
 
 #### Optional parameters:
 
-- **min_required_icd_codes** – the minimum number of ICD codes mapping to a phecode required for it to be considered valid; default is 1. For example, setting this to 2 requires at least two records mapping to phecode 250.2 (Type 2 diabetes) for a participant to be considered diagnosed. Ensure your medical records include complete data (not limited to first occurrences) when using this parameter.
+- **min_required_icd_codes** – the minimum number of ICD codes mapping to a phecode required for it to be considered valid. Default is `1`. For example, setting this to 2 requires at least two records mapping to phecode 250.2 (Type 2 diabetes) for a participant to be considered diagnosed. Ensure your medical records include complete data (not limited to first occurrences) when using this parameter.
 - **date_fmt** – format of date fields (Index date and End date) in the phenotype data. Default is `'%Y-%m-%d'` (year-month-day, e.g., 2005-12-01).
-- **phecode_version** – currently only `1.2` is supported.
+- **phecode_version** – currently only `1.2` is supported. Default is `1.2`.
 
 ### 2.2 Load phenotype data
 
-After initializing the data object, use the `phenotype_data()` method to load your cohort phenotype file by providing the file path, a dictionary mapping required columns, and a list of additional covariate names.
+After initializing the data object, use the `phenotype_data()` method to load your one cohort phenotype file by providing the file path, a dictionary mapping required columns, and a list of additional covariate names.
 
-The following example codes show how to load the dummy phenotype dataset under different study designs. Although the file is originally formatted for a matched cohort study, you can adapt it for other designs: omitting the **Match ID** column loads it as a standard cohort study (ignoring the matching), while omitting both **Match ID** and **Exposure** columns loads it as an exposed‑only cohort study - treating all participants as exposed (i.e., representing the entire population).
+The following example codes show how to load the dummy phenotype dataset under different study designs. Although the file (**dummy_phenotype.csv**) is originally formatted for a matched cohort study, you can adapt it for other designs: omitting the **Match ID** column loads it as a standard cohort study (ignoring the matching), while omitting both **Match ID** and **Exposure** columns loads it as an exposed‑only cohort study - treating all participants as exposed (i.e., representing the entire population).
 
 ```python
 # Load phenotype data for a matched cohort study
@@ -213,7 +202,7 @@ data.phenotype_data(
 )
 ```
 
-- **phenotype_data_path** – path to your phenotype data file (CSV or TSV).
+- **phenotype_data_path** – path to your one **Phenotype data** file (CSV or TSV).
 - **column_names** – dictionary mapping the required variable names (e.g., `Participant ID`, `Index date`, `End date`, `Sex`) to the corresponding headers in your file. Include `Exposure` for cohort and matched cohort designs, and `Match ID` for matched cohort designs.
 - **covariates** – list of additional covariate names. Provide an empty list if none. The method automatically detects and converts variable types. Records with missing values in continuous variables are removed, while missing values in categorical variables form an NA category.
 
@@ -224,7 +213,7 @@ data.phenotype_data(
 
 #### After data loading:
 
-After loading data, you can inspect basic information (e.g., number of individuals, average follow-up time) by printing the object:
+After loading data, you can inspect basic information (e.g., number of individuals, average follow-up time) by printing the data object:
 
 ```python
 print(data)
@@ -244,7 +233,7 @@ Consider removing them before merge.
 """
 ```
 
-Additionally, you can generate a basic descriptive table 1 for all variables in your phenotype data using the `Table1()` method and save it to an Excel file:
+Additionally, you can generate a basic descriptive table 1 (`pd.DataFrame`) for all variables in your phenotype data using the `Table1()` method and save it to multiple formats (e.g., .csv/.tsv/.xlsx):
 
 ```python
 table_1 = data.Table1()
@@ -264,15 +253,13 @@ print(table_1)
 9                    BMI=c1        1,999 (19.99%)        9,952 (19.90%)
 10                   BMI=c3        2,032 (20.32%)        9,825 (19.65%)     Chi-squared test p-value=2.552e-01 
 """
-
-table_1.to_excel(r"/test/data/Table1.xlsx")  # Save Table 1 to an Excel file
+# For example: save Table 1 to an Excel file
+table_1.to_excel(r"/test/data/Table1.xlsx")  
 ```
 
 ### 2.3 Load medical records data
 
-After loading the phenotypic data, use the `merge_medical_records()` method to load your one or more medical records files by providing the file path, a format of ICD code, and mapping required columns, and a dictionary mapping required columns.
-
-The following example codes show how to load the dummy EHR ICD9/ICD10 dataset.
+After loading the phenotypic data, use the `merge_medical_records()` method to load your one or more medical records files by providing the file path, a format of ICD code, and mapping required columns, and a dictionary mapping required columns. The following example codes show how to load the dummy EHR ICD9/ICD10 dataset.
 
 ```python
 # Merge with the first medical records file (dummy_EHR_ICD10.csv)
@@ -291,14 +278,14 @@ data.merge_medical_records(
     medical_records_data_path=r"/test/data/dummy_EHR_ICD9.csv",  
     diagnosis_code="ICD-9-WHO",                                  
     column_names={
-        'Participant ID':'ID',                                   
-        'Diagnosis code':'diag_icd9',                            
-        'Date of diagnosis':'dia_date'                           
+        'Participant ID': 'ID',                                   
+        'Diagnosis code': 'diag_icd9',                            
+        'Date of diagnosis': 'dia_date'                           
     }
 )
 ```
 
-- **medical_records_data_path** – path to your medical records data files (CSV or TSV).
+- **medical_records_data_path** – path to your one **medical records data** file (CSV or TSV).
 - **diagnosis_code** – Diagnosis ICD code type used in the medical records data (e.g., `ICD-9-CM`, `ICD-9-WHO`, `ICD-10-CM`, `ICD-10-WHO`).
 - **column_names** – dictionary mapping the required variable names (e.g., `Participant ID`, `Diagnosis code`, `Date of diagnosis`) to the corresponding headers in your file.
 
@@ -2209,14 +2196,3 @@ Creates a polar bar plot visualizing disease associations across different disea
 - `col_disease`: Column name for disease names (default: "disease")
 - `is_exposure_only`: Identifier of exposure (default: False)
 - `col_exposure`: Column name for exposure number (default: "N_cases_exposed")
-
-## Issues reporting and recommendations
-
-Please contact:
-Can Hou: houcan@wchscu.cn
-
-Haowen Liu: haowenliu81@gmail.com
-
-## License
-
-DiseaseNetPy is released under [The GNU General Public License v3.0](https://www.gnu.org/licenses/gpl-3.0.html)
