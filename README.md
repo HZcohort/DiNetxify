@@ -3,7 +3,7 @@
 
 - [1. Input data preparation](#1-input-data-preparation)  
   - [1.1 Requirements for input data](#11-requirements-for-input-data)  
-  - [1.2 Description of the dummy dataset provided](#12-description-of-the-dummy-dataset-provided)  
+  - [1.2 Dummy dataset overview](#12-dummy-dataset-overview)  
 - [2. Data Harmonization](#2-data-harmonization)  
   - [2.1 Initializing the data object](#21-initializing-the-data-object)  
   - [2.2 Load phenotype data](#22-load-phenotype-data)  
