@@ -85,7 +85,7 @@ To begin using DiseaseNetPy, two datasets are required: a **phenotype data** fil
 
 ### 1.2 Dummy dataset overview
 
-A dummy dataset is provided to help you become familiar with the required input format and to run through the full analysis workflow before applying it to your own cohort. It simulates a matched‐cohort study of 10 000 exposed individuals and 50 000 matched unexposed individuals, together with their entire follow-up electronic health record (EHR) data.
+A dummy dataset is provided to help you become familiar with the required input format and to run through the full analysis workflow before applying it to your own cohort. It simulates a matched‐cohort study of 10 000 exposed individuals and 50 000 matched unexposed individuals, together with their entire follow-up EHR data.
 
 **Caution:** All participant characteristics and diagnosis records in this dataset are randomly generated. Although the ICD-9 and ICD-10 codes correspond to real‐world classifications, and the analysis may produce apparently significant associations based on that, these results do **not** reflect any true medical findings.
 
