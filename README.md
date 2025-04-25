@@ -23,35 +23,37 @@
   - [4.4 Disease trajectory plot](#44-disease-trajectory-plot)  
   - [4.5 Three dimension plot](#45-three-dimension-plot)  
 - [API Reference](#api-reference)  
-  - [Class `DiseaseNetworkData`](#class-diseasenetworkdata)  
-    - [`phenotype_data`](#phenotype_data)  
-    - [`Table1`](#table1)  
-    - [`merge_medical_records`](#merge_medical_records)  
-    - [`get_attribute`](#get_attribute)  
-    - [`concat`](#concat)  
-    - [`modify_phecode_level`](#modify_phecode_level)  
-    - [`disease_pair`](#disease_pair) 
-    - [`save`](#save)
-    - [`load`](#load)
-    - [`save_npz`](#save_npz)
-    - [`load_npz`](#load_npz)
-  - [Analysis functions](#analysis-functions) 
-    - [`disease_network_pipeline`](#disease_network_pipeline)
-    - [`phewas`](#phewas)
-    - [`phewas_multipletests`](#phewas_multipletests)
-    - [`comorbidity_strength`](#comorbidity_strength)
-    - [`comorbidity_strength_multipletests`](#comorbidity_strength_multipletests)
-    - [`binomial_test`](#binomial_test)
-    - [`binomial_multipletests`](#binomial_multipletests)
-    - [`comorbidity_network`](#comorbidity_network)
-    - [`comorbidity_multipletests`](#comorbidity_multipletests)
-    - [`disease_trajectory`](#disease_trajectory)
-    - [`trajectory_multipletests`](#trajectory_multipletests)
-  - [Class `Plot`](#class-plot)
-    - [`three_dimension_plot`](#three_dimension_plot)
-    - [`comorbidity_network_plot`](#comorbidity_network_plot)
-    - [`trajectory_plot`](#trajectory_plot)
-    - [`phewas_plot`](#phewas_plot)
+  - [Class DiseaseNetworkData](#class-diseasenetworkdata)  
+    - [phenotype_data](#phenotype_data)  
+    - [Table1](#table1)  
+    - [merge_medical_records](#merge_medical_records)  
+    - [get_attribute](#get_attribute)  
+    - [concat](#concat)  
+    - [modify_phecode_level](#modify_phecode_level)  
+    - [disease_pair](#disease_pair) 
+    - [save](#save)
+    - [load](#load)
+    - [save_npz](#save_npz)
+    - [load_npz](#load_npz)
+  - [Analysis functions](#analysis-functions)  
+    - [disease_network_pipeline](#disease_network_pipeline)  
+    - [phewas](#phewas)  
+    - [phewas_multipletests](#phewas_multipletests)  
+    - [comorbidity_strength](#comorbidity_strength)  
+    - [comorbidity_strength_multipletests](#comorbidity_strength_multipletests)  
+    - [binomial_test](#binomial_test)  
+    - [binomial_multipletests](#binomial_multipletests)  
+    - [comorbidity_network](#comorbidity_network)  
+    - [comorbidity_multipletests](#comorbidity_multipletests)  
+    - [disease_trajectory](#disease_trajectory)  
+    - [trajectory_multipletests](#trajectory_multipletests)  
+  - [Class Plot](#class-plot)  
+    - [three_dimension_plot](#three_dimension_plot)  
+    - [comorbidity_network_plot](#comorbidity_network_plot)  
+    - [trajectory_plot](#trajectory_plot)  
+    - [phewas_plot](#phewas_plot)  
+- [Issues reporting and recommendations](#issues-reporting-and-recommendations)  
+- [License](#license)
 
 ## 1. Input data preparation
 
@@ -83,32 +85,41 @@ To begin using DiseaseNetPy, two datasets are required: a **phenotype data** fil
 
   Each **medical records data** must use a single diagnosis code version; currently supported versions are WHO or CM versions of ICD-9 and ICD-10. Other code systems must be converted to a supported format.
 
-### 1.2 Dummy dataset overview
+### 1.2 Description of the dummy dataset provided
 
-A dummy dataset is provided to help you become familiar with the required input format and to run through the full analysis workflow before applying it to your own cohort. It simulates a matched‐cohort study of 10 000 exposed individuals and 50 000 matched unexposed individuals, together with their entire follow-up electronic health record (EHR) data.
+The example datasets demonstrate the required data format for disease network analysis; although they use valid ICD-9/ICD-10 codes, all records are randomly generated and have no practical reference value.
 
-**Caution:** All participant characteristics and diagnosis records in this dataset are randomly generated. Although the ICD-9 and ICD-10 codes correspond to real‐world classifications, and the analysis may produce apparently significant associations based on that, these results do **not** reflect any true medical findings.
+- **dummy_phenotype.csv**: 60,000 records (3.72 MB)  
 
-- The dataset consists of three CSV files, located in the `tests/data` directory:
-  - **`dummy_phenotype.csv`**
-     Baseline characteristics for all 60 000 individuals, containing:
-    - **ID**: unique participant identifier
-    - **date_start**, **date_end**: follow-up start and end dates
-    - **exposure**: exposure status (0 = unexposed, 1 = exposed)
-    - **group_id**: matching group identifier
-    - **sex**: biological sex (1 for female and 0 for male)
-    - **age**: baseline age (years)
-    - **BMI**: body‐mass index category
-  - **`dummy_EHR_ICD9.csv`**
-     Simulated EHR diagnoses coded using ICD-9 (n = 10,188 records), with columns:
-    - **ID**: participant identifier
-    - **dia_date**: diagnosis date
-    - **diag_icd9**: ICD-9 diagnosis code
-  - **`dummy_EHR_ICD10.csv`**
-     Simulated EHR diagnoses coded using ICD-10 (n = 1,048,576 records), with columns:
-    - **ID**: participant identifier
-    - **dia_date**: diagnosis date
-    - **diag_icd10**: ICD-10 diagnosis code
+  - **ID**: Unique identifier for each individual (e.g., 1001)  
+  - **date_start**: Start date of follow-up (e.g., 2016-10-13)  
+  - **date_end**: End date of follow-up (e.g., 2022-08-02)  
+  - **exposure**: Exposure status (1 = exposed, 0 = unexposed)  
+  - **group_id**: Match group identifier (e.g., `group_0`)  
+  - **sex**: Biological sex (0 = male, 1 = female)  
+  - **age**: Age in years (e.g., 65.2)  
+  - **BMI**: Body Mass Index category (e.g., `c1`)
+
+The dummy phenotype dataset (**dummy_phenotype.csv**) comprises 60,000 synthetic records (3.72 MB) simulating real-world cohort data for disease network analysis, where each row contains a unique participant identifier (**ID**), follow-up start and end dates (**date_start**, **date_end**), exposure status (**exposure**, 0/1), matching group identifiers (**group_id**) for matched cohort studies, and key covariates—biological sex (**sex**, 0/1), exact age in years (**age**), and BMI category (**BMI**).
+
+- **dummy_EHR_ICD9.csv**: 10,188 records (227 kB)  
+
+  - **ID**: Unique identifier for each individual (e.g., 1001)  
+  - **dia_date**: Date of diagnosis (e.g., 2016/10/13)  
+  - **diag_icd9**: ICD-9 code for diagnosis (e.g., "E950")  
+
+The **dummy_EHR_ICD9.csv** file contains 10,188 simulated electronic health records (227 kB) with ICD-9 coded diagnoses, structured with three key fields: patient identifier (**ID**), diagnosis date (**dia_date**), and corresponding ICD-9 code (**diag_icd9**). This standardized format demonstrates the required medical records structure for disease network analysis, where each row represents a discrete diagnosis event (e.g., patient 1001's `E950` coded diagnosis on 2016/10/13).
+
+The **dummy_EHR_ICD9.csv** file contains 10,188 simulated EHR diagnosis records (227 kB), with each row capturing a unique participant ID (**ID**), the diagnosis date (**dia_date**) in YYYY-MM-DD format, and the ICD-9 code (**diag_icd9**), exemplifying the required event-per-row structure (e.g., patient 1001’s `E950` diagnosis on 2016-10-13) for disease network analysis.
+
+
+- **dummy_EHR_ICD10.csv**: 1,048,576 records (36.2 MB)
+
+  - **ID** – unique identifier for each individual (e.g., 1001).
+  - **dia_date** – date of diagnosis (e.g., 2014/9/23).
+  - **diag_icd10** – ICD10 of diagnosis  (e.g., "L905").
+
+The **dummy_EHR_ICD10.csv** file contains 1,048,576 simulated electronic health records (36.2 MB) with ICD-10 coded diagnoses, structured with three key fields: patient identifier (**ID**), diagnosis date (**dia_date**), and corresponding ICD-10 code (**diag_icd10**). This standardized format demonstrates the required medical records structure for disease network analysis, where each row represents a discrete diagnosis event (e.g., patient 1001's `L905` coded diagnosis on 2014/9/23).
 
 ## 2. Data Harmonization
 
@@ -900,7 +911,7 @@ binomial_result = dnt.binomial_test(
 
 - **comorbidity_network_result** - DataFrame containing comorbidity network analysis results from `DiseaseNetPy.comorbidity_network()`. When provided, limits binomial test to significant disease pairs. Default is `None`.
 - **correction** - P-value correction method for binomial tests. 
-  Available methods:  
+Available methods:  
   - none: No correction  
   - bonferroni: One-step correction  
   - sidak: One-step correction  
@@ -2199,3 +2210,13 @@ Creates a polar bar plot visualizing disease associations across different disea
 - `is_exposure_only`: Identifier of exposure (default: False)
 - `col_exposure`: Column name for exposure number (default: "N_cases_exposed")
 
+## Issues reporting and recommendations
+
+Please contact:
+Can Hou: houcan@wchscu.cn
+
+Haowen Liu: haowenliu81@gmail.com
+
+## License
+
+DiseaseNetPy is released under [The GNU General Public License v3.0](https://www.gnu.org/licenses/gpl-3.0.html)
