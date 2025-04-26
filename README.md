@@ -59,7 +59,7 @@
 
 DiseaseNetPy enables 3D disease network analysis on cohort data from electronic health records (EHR) and offers three study designs: the standard cohort, which compares individuals with a specific disease (e.g., depression) or exposure (e.g., smoking) against the general population; the matched cohort, which pairs subjects on key characteristics to reduce bias; and the exposed-only cohort, which examines disease networks within a defined subgroup (e.g., older adults) without a comparison group.
 
-To begin using DiseaseNetPy, two datasets are required: a **phenotype data** file recording each individual's basic and additional characteristics, and a **medical records data** file extracted from an EHR database that stores diagnosis codes and dates for all cohort individuals over the study period. Specific requirements for these datasets are as follows:
+To begin using DiseaseNetPy, two datasets are required: a **phenotype data** file recording each individual's basic and additional characteristics, and one or more **medical records data** files extracted from an EHR database that stores diagnosis codes and dates for all cohort individuals over the study period. Specific requirements for these datasets are as follows:
 
 - **Phenotype data**: An on-disk CSV (or TSV) file with headers, listing each participant with the following required and optional columns:
 
@@ -79,7 +79,7 @@ To begin using DiseaseNetPy, two datasets are required: a **phenotype data** fil
   - **Diagnosis code**: A standardized code (e.g., ICD-10, ICD-9).  
   - **Date of diagnosis**: Date of diagnosis or event in datetime formats (e.g., “%Y-%m-%d”).
   
-  Unlike the **Phenotype data**, the **medical records data** should be in a record-per-row format, allowing multiple rows per participant. Records matching **participant ID** in the **phenotype data** and occurring within the specified follow-up period (i.e., before the end date) are loaded. Therefore, there is **no need** to pre-filter medical records - you should provide complete diagnosis information for all cohort individuals. Specifically, it is **not recommended** to filter data based on first occurrence of each code or diagnosis date.
+  Unlike the **phenotype data**, the **medical records data** should be in a record-per-row format, allowing multiple rows per participant. Records matching **participant ID** in the **phenotype data** and occurring within the specified follow-up period (i.e., before the end date) are loaded. Therefore, there is **no need** to pre-filter medical records - you should provide complete diagnosis information for all cohort individuals. Specifically, it is **not recommended** to filter data based on first occurrence of each code or diagnosis date.
 
   Each **medical records data** must use a single diagnosis code version; currently supported versions are WHO or CM versions of ICD-9 and ICD-10. Other code systems must be converted to a supported format.
 
@@ -110,13 +110,13 @@ A dummy dataset is provided to help you become familiar with the required input 
     - **dia_date**: diagnosis date
     - **diag_icd10**: ICD-10 diagnosis code
 
-## 2. Data Harmonization
+## 2. Data harmonization
 
-Data harmonization loads and merges phenotype and medical records data into a single `DiseaseNetworkData` object for subsequent analysis, ensuring consistent coding (e.g., mapping diagnosis codes to phecodes) and standardized formatting.
+Data harmonization loads and merges **phenotype data** and **medical records data** into a single `DiseaseNetworkData` object for subsequent analysis, ensuring consistent coding (e.g., mapping diagnosis codes to phecodes) and standardized formatting (e.g., date time of diagnosis, and follow-up).
 
 ### 2.1 Initializing the data object
 
-First, import `DiseaseNetworkData` from DiseaseNetPy and instantiate it with your chosen study design, phecode level, and any optional parameters to create an data object.
+First, import `DiseaseNetPy` package and instantiate `DiseaseNetworkData` with your chosen study design, phecode level, and any optional parameters to create a variable (i.e., `data`) which is an object of type `DiseaseNetworkData`.
 
 ```python
 import diseasenetpy as dnt
@@ -140,20 +140,20 @@ data = dnt.DiseaseNetworkData(
 )
 ```
 
-- **study_design** – the cohort design: `'cohort'`, `'matched cohort'`, or `'exposed-only cohort'`. Default is `'cohort'`.
-- **phecode_level** – the level of phecode used for analysis; level 1 provides broader categories (~585 conditions), while level 2 offers more detail (~1257 conditions). Level 1 is recommended for smaller datasets to maintain statistical power. The level of phecode: `1`, or `2`. Default is `1`.
+- **study_design** – the type of study design. Options: `'cohort'`, `'matched cohort'`, or `'exposed-only cohort'`. Default is `'cohort'`.
+- **phecode_level** – the level of phecode used for analysis; level 1 provides broader categories (~585 conditions), while level 2 offers more details (~1257 conditions). Level 1 is recommended for smaller datasets to maintain statistical power. Options: `1`, or `2`. Default is `1`.
 
 #### Optional parameters:
 
-- **min_required_icd_codes** – the minimum number of ICD codes mapping to a phecode required for it to be considered valid. Default is `1`. For example, setting this to 2 requires at least two records mapping to phecode 250.2 (Type 2 diabetes) for a participant to be considered diagnosed. Ensure your medical records include complete data (not limited to first occurrences) when using this parameter.
-- **date_fmt** – format of date fields (Index date and End date) in the phenotype data. Default is `'%Y-%m-%d'` (year-month-day, e.g., 2005-12-01).
-- **phecode_version** – currently only `1.2` is supported. Default is `1.2`.
+- **min_required_icd_codes** – the minimum number of ICD codes mapping to a phecode required for it to be considered valid. For example, setting it to 2 requires at least two records mapping to phecode 250.2 (Type 2 diabetes) for a participant to be considered diagnosed. Ensure your medical records include complete data (not limited to first occurrences) when using this parameter. Default is `1`.
+- **date_fmt** – format of date fields (**Index date** and **End date**) in the **phenotype data**. Default is `'%Y-%m-%d'` (year-month-day, e.g., 2005-12-01).
+- **phecode_version** – the version of the phecode system used for converting diagnosis codes. Currently only `1.2` is supported. Default is `1.2`.
 
 ### 2.2 Load phenotype data
 
-After initializing the data object, use the `phenotype_data()` method to load your one cohort phenotype file by providing the file path, a dictionary mapping required columns, and a list of additional covariate names.
+After initializing the data object, use the `phenotype_data()` method to load your one **phenotype data** file by providing the file path, a dictionary mapping required columns, and a list of additional covariate names.
 
-The following example codes show how to load the dummy phenotype dataset under different study designs. Although the file (**dummy_phenotype.csv**) is originally formatted for a matched cohort study, you can adapt it for other designs: omitting the **Match ID** column loads it as a standard cohort study (ignoring the matching), while omitting both **Match ID** and **Exposure** columns loads it as an exposed‑only cohort study - treating all participants as exposed (i.e., representing the entire population).
+The following example codes show how to load the **dummy_phenotype.csv** under different study designs. Although the file (**dummy_phenotype.csv**) is originally formatted for a matched cohort study, you can adapt it for other designs: omitting the **Match ID** column loads it as a standard cohort study (ignoring the matching), while omitting both **Match ID** and **Exposure** columns loads it as an exposed‑only cohort study - treating all participants as exposed (i.e., representing the entire population).
 
 ```python
 # Load phenotype data for a matched cohort study
@@ -203,17 +203,17 @@ data.phenotype_data(
 ```
 
 - **phenotype_data_path** – path to your one **Phenotype data** file (CSV or TSV).
-- **column_names** – dictionary mapping the required variable names (e.g., `Participant ID`, `Index date`, `End date`, `Sex`) to the corresponding headers in your file. Include `Exposure` for cohort and matched cohort designs, and `Match ID` for matched cohort designs.
-- **covariates** – list of additional covariate names. Provide an empty list if none. The method automatically detects and converts variable types. Records with missing values in continuous variables are removed, while missing values in categorical variables form an NA category.
+- **column_names** – dictionary mapping the required variable names (e.g., `'Participant ID'`, `'Index date'`, `'End date'`, `'Sex'`) to the corresponding headers in your file. Include `'Exposure'` for cohort and matched cohort designs, and `'Match ID'` for matched cohort designs.
+- **covariates** – list of additional covariate names. Provide an empty list if none. The method automatically detects and converts variable types. Records with missing values in continuous variables are removed, while missing values in categorical variables form an `NA` category.
 
 #### Optional parameters:
 
 - **is_single_sex** – set to `True` if the dataset contains only one sex. Default is `False`.
 - **force** – set to `True` to overwrite existing data in the object. Default is `False`, which raises an error if data already exist.
 
-#### After data loading:
+#### After loading data:
 
-After loading data, you can inspect basic information (e.g., number of individuals, average follow-up time) by printing the data object:
+After loading **phenotype data**, you can inspect basic information (e.g., number of individuals, average follow-up time) by printing the `data` object:
 
 ```python
 print(data)
@@ -233,7 +233,7 @@ Consider removing them before merge.
 """
 ```
 
-Additionally, you can generate a basic descriptive table 1 (`pd.DataFrame`) for all variables in your phenotype data using the `Table1()` method and save it to multiple formats (e.g., .csv/.tsv/.xlsx):
+Additionally, you can generate a basic descriptive table 1 (`pd.DataFrame`) for all variables in your **phenotype data** using the `Table1()` method and save it to multiple formats (e.g., .csv/.tsv/.xlsx):
 
 ```python
 table_1 = data.Table1()
@@ -259,7 +259,7 @@ table_1.to_excel(r"/test/data/Table1.xlsx")
 
 ### 2.3 Load medical records data
 
-After loading the phenotypic data, use the `merge_medical_records()` method to load your one or more medical records files by providing the file path, a format of ICD code, and mapping required columns, and a dictionary mapping required columns. The following example codes show how to load the dummy EHR ICD9/ICD10 dataset.
+After loading the **phenotypic data**, use the `merge_medical_records()` method to load your one or more medical records files by providing the file path, a format of ICD code, and mapping required columns, and a dictionary mapping required columns. The following example codes show how to load the dummy EHR ICD9/ICD10 dataset.
 
 ```python
 # Merge with the first medical records file (dummy_EHR_ICD10.csv)
@@ -285,18 +285,18 @@ data.merge_medical_records(
 )
 ```
 
-- **medical_records_data_path** – path to your one **medical records data** file (CSV or TSV).
+- **medical_records_data_path** – Path to your one **medical records data** file (CSV or TSV).
 - **diagnosis_code** – Diagnosis ICD code type used in the medical records data (e.g., `ICD-9-CM`, `ICD-9-WHO`, `ICD-10-CM`, `ICD-10-WHO`).
-- **column_names** – dictionary mapping the required variable names (e.g., `Participant ID`, `Diagnosis code`, `Date of diagnosis`) to the corresponding headers in your file.
+- **column_names** – Dictionary mapping the required variable names (e.g., `Participant ID`, `Diagnosis code`, `Date of diagnosis`) to the corresponding headers in your file.
 
 #### Optional parameters:
 
 - **date_fmt** – The format of the date fields in your medical records data. Defaults to the same format as phenotype data if not specified.
-- **chunksize** – Number of rows per chunk to read, useful for large datasets. Default=1_000_000.
+- **chunksize** – Number of rows per chunk to read, useful for large datasets. Default is 1 000 000.
 
 #### During data loading:
 
-During loading data, you can inspect basic information (e.g., number of records, number of phecode mapping) by the printing information:
+During loading data, you can get basic information (e.g., number of records, number of phecode mapping):
 
 ```python
 """
@@ -320,9 +320,9 @@ Phecode diagnosis records successfully merged (0 invalid records were not merged
 """
 ```
 
-#### After data loading:
+#### After loading data:
 
-After data loading, you can inspect basic information of **medical records data** (e.g., number of ICD code mapped to phecodes, average number of disease diagnosis) by printing the object:
+After loading data, you can inspect basic information of **medical records data** (e.g., number of ICD code mapped to phecodes, average number of disease diagnosis) by printing the `data` object:
 
 ```python
 print(data)
@@ -342,11 +342,11 @@ Warning: 2.07% of ICD-9-WHO codes were not mapped to phecodes for file d:\GitHub
 
 ## 3. Data Analysis
 
-Data analysis is based on a `DiseaseNetworkData` object to subsequent analysis, including PheWAS analysis, disease pair generation, comorbidity strength estimation, binomial testing, comorbidity network analysis, and disease trajectory analysis. The result format of each analysis is `pd.DataFrame`.
+In data analysis, you can use the `DiseaseNetworkData` object to subsequent **one-step analysis** (Include **PheWAS analysis**, **disease pair generation**, **comorbidity strength estimation**, **binomial testing**, **comorbidity network analysis**, and **disease trajectory analysis**), or **step-by-step analysis**. Through **step-by-step analysis** or **one-step anlaysis**, you can get results (`pd.DataFrame`) and save them to any format files provided `pd.DataFrame` suports. Compared to **step-by-step analysis**, the **one-step analysis** requires less code and avoids repetitive operations. However, **one-step analysis** does not allow for precise control over the parameter details of each analysis step. 
 
-### 3.1 Pipeline
+### 3.1 One-step analysis
 
-In this section, we can use the `disease_network_pipeline` function to complete the entire disease network analysis workflow. Compared to a step-by-step analysis, the `disease_network_pipeline` function requires less code and avoids repetitive operations. However, it does not allow for precise control over the parameter details of each analysis step. The following code applies to all research designs.
+Based on the `DiseaseNetworkData` object, you can use the `disease_network_pipeline` function to complete the entire disease network analysis workflow. And the following code applies to three study designs.
 
 ```python
 # Reminder:
@@ -672,8 +672,9 @@ com_network_result.to_csv("/your/project/path/com_network_result.csv")
 binomial_result.to_csv("/your/project/path/binomial_result.csv")
 trajectory_result.to_csv("/your/project/path/trajectory_result.csv")
 ```
+### 3.2 One-step analysis
 
-### 3.2 PheWAS Analysis
+#### 3.2.1 PheWAS Analysis
 
 The analysis begins with Phenome-Wide Association Studies (PheWAS) using the `DiseaseNetworkData` object. For cohort/matched-cohort designs, this step assesses correlations between exposure and outcome diseases, filtering those with strong associations. In exposure-only cohorts, it calculates disease incidence rates and applies minimum incidence thresholds.
 
