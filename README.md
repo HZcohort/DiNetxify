@@ -1204,10 +1204,10 @@ result_plot.phewas_plot(
 #### Optional parameters:
 
 - **col_coef** - column name containing effect size coefficients (e.g., hazard ratios). Default is `'phewas_coef'`
-- **col_system** - column name containing disease system/category classifications. Default is `"system"`
+- **col_system** - column name containing disease system/category classifications. Default is `'system'`
 - **col_se** - column name containing standard errors for effect sizes. Default is `'phewas_se'`
-- **col_disease** - column name containing disease names/descriptions. Default is `"disease"`
-- **col_exposure** - column name containing case counts for exposed individuals. Default is `"N_cases_exposed"`
+- **col_disease** - column name containing disease names/descriptions. Default is `'disease'`
+- **col_exposure** - column name containing case counts for exposed individuals. Default is `'N_cases_exposed'`
 
 ### 4.3 Comorbidity network plot
 
