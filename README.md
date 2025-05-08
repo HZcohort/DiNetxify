@@ -908,15 +908,15 @@ binomial_result = dnt.binomial_test(
     - fdr_by: Benjamini/Yekutieli (negative)  
     - fdr_tsbh: Two stage FDR correction (non-negative)  
     - fdr_tsbky: Two stage FDR correction (non-negative)  
-- **cutoff** - Significance threshold for adjusted binomial p-values. Default is `0.05`.
-- **phecode_d1_col** - Column for disease 1 phecode. Default is `'phecode_d1'`.  
-- **phecode_d2_col** - Column for disease 2 phecode. Default is `'phecode_d2'`.
-- **n_nontemporal_col** - Column for non-temporal pair counts. Default is `'n_d1d2_nontemporal'`.  
-- **n_temporal_d1d2_col** - Column for D1→D2 temporal counts. Default is `'n_d1d2_temporal'`.  
-- **n_temporal_d2d1_col** - Column for D2→D1 temporal counts. Default is `'n_d2d1_temporal'`.  
-- **significance_phi_col** - Column for phi-correlation significance. Default is `'phi_p_significance'`.  
-- **significance_RR_col** - Column for RR significance. Default is `'RR_p_significance'`.
-- **significance_coef_col** - Column for comorbidity significance. Default is `'comorbidity_p_significance'`.
+- **cutoff** - significance threshold for adjusted binomial p-values. Default is `0.05`.
+- **phecode_d1_col** - column for disease 1 phecode. Default is `'phecode_d1'`.  
+- **phecode_d2_col** - column for disease 2 phecode. Default is `'phecode_d2'`.
+- **n_nontemporal_col** - column for non-temporal pair counts. Default is `'n_d1d2_nontemporal'`.  
+- **n_temporal_d1d2_col** - column for D1→D2 temporal counts. Default is `'n_d1d2_temporal'`.  
+- **n_temporal_d2d1_col** - column for D2→D1 temporal counts. Default is `'n_d2d1_temporal'`.  
+- **significance_phi_col** - column for phi-correlation significance. Default is `'phi_p_significance'`.  
+- **significance_RR_col** - column for RR significance. Default is `'RR_p_significance'`.
+- **significance_coef_col** - column for comorbidity significance. Default is `'comorbidity_p_significance'`.
 
 ##### After binomial test:
 
@@ -1126,9 +1126,11 @@ trajectory_result.to_csv('/your/project/path/dep_trajectory.csv')
 
 ## 4. Visualization
 
+The visualization part provides four methods: PheWAS plot, comorbidity network plot, disease trajectory plot, and three dimension plot.
+
 ### 4.1 Initializing the plot object
 
-After `import the Plot class from DiseaseNetPy.visualization` and initializing a `Plot` object with results from PheWAS analysis, comorbidity network analysis, and disease trajectory analysis (along with optional parameters). The Plot object provides four visualization method: PheWAS Plot, Comorbidity Network plot, Disease Trajectory plot, and Three Dimension Plot.
+To get started with visualization, first import the `Plot` class from `DiseaseNetPy.visualization`. You'll then create a `Plot` object by passing in your analysis results (**PheWAS analysis**, **comorbidity network analysis**, and **disease trajectory analysis**). The following example code demonstrates how to initialize a `Plot` object for a standard cohort/matched-cohort study.
 
 ```python
 # Create Plot object
@@ -1155,98 +1157,89 @@ result_plot = Plot(
 )
 ```
 
-- **comorbidity_result** - DataFrame containing comorbidity network analysis results with: Non-temporal disease pairs (D1-D2). Association metrics (beta coefficients, p-values). Significance indicators (True/False).
-- **trajectory_result** - DataFrame containing temporal disease trajectory analysis with: Temporal disease pairs (source→target). Temporal association metrics. Significance indicators (True/False).
-- **phewas_result** - DataFrame containing PheWAS analysis results with: Phecode diseases. Effect sizes (hazard ratios). Case counts. Disease system classifications
-- **exposure** - Phecode identifier for primary exposure variable. Highlights exposure-disease relationships. Default is `None` (exposed-only cohort).
-- **exposure_location** - Custom 3D coordinates (x,y,z) for exposure node positioning. Default is `None` (auto-positioned at (0,0,0)).
-- **exposure_size** - Relative size scaling factor for exposure node. Default is `None` (exposed-only cohort).
+- **comorbidity_result** - `DataFrame` containing comorbidity network analysis results with: Non-temporal disease pairs (D1-D2). Association metrics (beta coefficients, p-values). Significance indicators (True/False).
+- **trajectory_result** - `DataFrame` containing temporal disease trajectory analysis with: Temporal disease pairs (source→target). Temporal association metrics. Significance indicators (True/False).
+- **phewas_result** - `DataFrame` containing PheWAS analysis results with: Phecode diseases. Effect sizes (hazard ratios). Case counts. Disease system classifications
+- **exposure** - phecode identifier for primary exposure variable. Highlights exposure-disease relationships. Default is `None` (exposed-only cohort).
+- **exposure_location** - custom 3D coordinates (x, y, z) for exposure node positioning. Default is `None` (auto-positioned at (0,0,0)).
+- **exposure_size** - relative size scaling factor for exposure node. Default is `None` (exposed-only cohort).
 
 #### Optional Parameters:
 
-- **source**- Source disease column. Default is `'phecode_d1'`.
-- **target**: Target disease column. Default is `'phecode_d2'`.
-- **phewas_phecode**: Phecode column. Default `'phecode'`.
-- **phewas_number**: Case count column. Default `'N_cases_exposed'`.
-- **system_col**: Disease system column. Default `'system'`.
-- **col_disease_pair**: Disease pair identifier column. Default `'name_disease_pair'`.
-- **filter_phewas_col**: PheWAS significance column. Default `'phewas_p_significance'`.
-- **filter_comorbidity_col**: Comorbidity significance column. Default `'comorbidity_p_significance'`.
-- **filter_trajectory_col**: Trajectory significance column. Default `'trajectory_p_significance'`.
-- **SYSTEM** - List of phecode systems to visualize. Available systems (17 total):
-  ['neoplasms', 'genitourinary', 'digestive', 'respiratory',
-   'infectious diseases', 'mental disorders', 'musculoskeletal',
-   'hematopoietic', 'dermatologic', 'circulatory system',
-   'neurological', 'endocrine/metabolic', 'sense organs',
-   'injuries & poisonings', 'congenital anomalies', 'symptoms',
-   'others']
-- **COLOR** - Custom colors for systems (hex, RGB, or named colors). Must match SYSTEM order. Default is 
-    ['#F46D5A', '#5DA5DA', '#5EBCD1', '#C1D37F',
-    '#CE5A57', '#A5C5D9', '#F5B36D', '#7FCDBB', '#ED9A8D',
-    '#94B447', '#8C564B', '#E7CB94', '#8C9EB2', '#E0E0E0', "#F1C40F",
-    '#9B59B6', '#4ECDC4', '#6A5ACD']
+- **source** - source disease column. Default is `'phecode_d1'`.
+- **target** - target disease column. Default is `'phecode_d2'`.
+- **phewas_phecode** - phecode column. Default `'phecode'`.
+- **phewas_number** - case count column. Default `'N_cases_exposed'`.
+- **system_col** - disease system column. Default `'system'`.
+- **col_disease_pair**: disease pair identifier column. Default `'name_disease_pair'`.
+- **filter_phewas_col**: pheWAS significance column. Default `'phewas_p_significance'`.
+- **filter_comorbidity_col**: comorbidity significance column. Default `'comorbidity_p_significance'`.
+- **filter_trajectory_col**: trajectory significance column. Default `'trajectory_p_significance'`.
+- **SYSTEM** - list of phecode systems to visualize. Available systems (17 total):
+  ['neoplasms', 'genitourinary', 'digestive', 'respiratory', 'infectious diseases', 'mental disorders', 'musculoskeletal',
+   'hematopoietic', 'dermatologic', 'circulatory system', 'neurological', 'endocrine/metabolic', 'sense organs',
+   'injuries & poisonings', 'congenital anomalies', 'symptoms', 'others']
+- **COLOR** - custom colors for systems (hex, RGB, or named colors). Must match SYSTEM order. Default is 
+    ['#F46D5A', '#5DA5DA', '#5EBCD1', '#C1D37F', '#CE5A57', '#A5C5D9', '#F5B36D', '#7FCDBB', '#ED9A8D',
+    '#94B447', '#8C564B', '#E7CB94', '#8C9EB2', '#E0E0E0', '#F1C40F', '#9B59B6', '#4ECDC4', '#6A5ACD']
 
 #### After initializing the Plot object:
 
-After initializing the plot object, use `result_plot` object to visualization.
+After initializing the `Plot` object, you can use the `result_plot` object to visualization.
 
 ### 4.2 PheWAS plot
 
-Generates a circular PheWAS (Phenome-Wide Association Study) plot. Creates a polar bar plot visualizing disease associations across different disease categories (systems). For a cohort/matched cohort study, the figure shows hazard ratios between exposure and outcome diseases. While the figure shows exposed number of diseases in the exposed-only cohort.
+The `phewas_plot()` function provides a visualization of the phecode diseases included in the disease network analysis (**comorbidity network analysis** and **disease trajectory analysis**). For a standard cohort study or a matched-cohort study, this method displays the effect of exposure on outcome phecode diseases, represented by hazard ratios (HR). For an exposed-only cohort study, the method presents the number of individuals affected by each phecode disease. Additionally, this function supports three image formats (.png, .svg, and .jpg). The following example code demonstrates how to use `phewas_plot()` function.
 
 ```python
 # phewas plot
 result_plot.phewas_plot(
-    path="/your/project/path/",
+    path="/your/project/path/phewas_plot.png",
     is_exposure_only=False,                         
 )
 ```
-- **path** - Output file path for saving the plot (including filename and extension)
-- **is_exposure_only** - Boolean flag indicating whether the plot is for an exposure-only cohort study. Default is `False`
+- **path** - output file path for saving the plot (including filename and extension)
+- **is_exposure_only** - boolean flag indicating whether the plot is for an exposure-only cohort study. Default is `False`
 
 #### Optional parameters:
 
-- **col_coef** - Column name containing effect size coefficients (e.g., hazard ratios or odds ratios). Default is `'phewas_coef'`
-- **col_system** - Column name containing disease system/category classifications. Default is `"system"`
-- **col_se** - Column name containing standard errors for effect sizes. Default is `'phewas_se'`
-- **col_disease** - Column name containing disease names/descriptions. Default is `"disease"`
-- **col_exposure** - Column name containing case counts for exposed individuals. Default is `"N_cases_exposed"`
-
-#### After PheWAS plot:
-
-After generating the PheWAS plot, the visualization will be exported as an image file in your preferred format (.jpg, .svg, and .png).
+- **col_coef** - column name containing effect size coefficients (e.g., hazard ratios). Default is `'phewas_coef'`
+- **col_system** - column name containing disease system/category classifications. Default is `"system"`
+- **col_se** - column name containing standard errors for effect sizes. Default is `'phewas_se'`
+- **col_disease** - column name containing disease names/descriptions. Default is `"disease"`
+- **col_exposure** - column name containing case counts for exposed individuals. Default is `"N_cases_exposed"`
 
 ### 4.3 Comorbidity network plot
 
-Generate a 2D visualization of the comorbidity network. Illustrates phecode disease co-occurrence patterns through network visualization, with each community using the Louvain clustering algorithm.
+The `comorbidity_network_plot()` function visualizes the associations of phecode diseases within the same comorbidity community and across different comorbidity communities. In this method, the Louvain algorithm is first applied to group each outcome phecode disease into distinct comorbidity communities based on their associations with other phecode diseases. Each community is then arranged within a separate sector of the plot, with clear spacing between different communities. In the visualization, the phecode disease systems to which each disease belongs are represented by distinct colors, allowing for a clear identification of which types of phecode diseases are predominant within each comorbidity community. 
+
+The following example code demonstrates how to use `comorbidity_network_plot()` function.
 
 ```python
 # comorbidity network visualization
 result_plot.comorbidity_network_plot(
-    path="/your/project/path/"
+    path="/your/project/path/comorbidity_network.html"
 )
 ```
-- **path** - Output file path for saving the interactive HTML visualization.  
+- **path** - output file path for saving the HTML visualization (including filename and extension).  
 
 #### Optional parameters:
 
-- **max_radius** - Maximum radial position for nodes (in pixels). Controls outer boundary of the network. Default is `90.0`.
-- **min_radius** - Minimum radial position for nodes (in pixels). Controls inner boundary. Default is `35.0`
-- **layer_distance** - Spacing between concentric circles (in pixels). Affects radial grouping. Default is `40.0`.
-- **size_reduction** - Scaling factor for node diameters (0-1 range). Adjusts visual prominence. Default is `0.5`
-- **line_width** - Stroke width for comorbidity connections (in pixels). Default is `1.0`
-- **line_color** - Color specification for comorbidity lines. Accepts: Named colors (e.g., `steelblue`). HEX codes (e.g., `#4682B4`). RGB tuples (e.g., `(70, 130, 180)`). Default is `black`
-- **cluster_reduction_ratio** - Compression factor (0-1) for cluster tightness. Lower values create denser groupings. Default is `0.4`.
-- **cluster_weight** - Edge attribute used for clustering calculations. Typically the association strength metric. Default is `comorbidity_beta`
-- **font_style** - Font family for all text elements. Use web-safe fonts or loaded font families. Default is `Times New Roman`.
-
-#### After comorbidity network plot:
-
-After generating the comorbidity network plot, the visualization will be exported as an image file in your preferred format (.html).
+- **max_radius** - maximum radial position for nodes (in pixels). Controls outer boundary of the network. Default is `90.0`.
+- **min_radius** - minimum radial position for nodes (in pixels). Controls inner boundary. Default is `35.0`
+- **layer_distance** - spacing between concentric circles (in pixels). Affects radial grouping. Default is `40.0`.
+- **size_reduction** - scaling factor for node diameters (0-1 range). Adjusts visual prominence. Default is `0.5`
+- **line_width** - stroke width for comorbidity connections (in pixels). Default is `1.0`
+- **line_color** - color specification for comorbidity lines. Accepts: Named colors (e.g., `steelblue`). HEX codes (e.g., `#4682B4`). RGB tuples (e.g., `(70, 130, 180)`). Default is `'black'`
+- **cluster_reduction_ratio** - compression factor (0-1) for cluster tightness. Lower values create denser groupings. Default is `0.4`.
+- **cluster_weight** - edge attribute used for clustering calculations. Typically the association strength metric. Default is `'comorbidity_beta'`
+- **font_style** - font family for all text elements. Use web-safe fonts or loaded font families. Default is `Times New Roman`.
 
 ### 4.4 Disease trajectory plot
 
-Creates 2D network plots showing disease trajectories within each cluster, with nodes positioned hierarchically based on trajectory relationships. Each cluster is saved as a separate image file.
+The `trajectory_plot()` function provides a visualization of all temporal disease pairs within the same comorbidity community. In the visualization, multiple temporal disease pairs are sequentially connected (e.g., D1 → D2 and D2 → D3 are combined to form D1 → D2 → D3), creating a complete disease trajectory.
+
+The following example code demonstrates how to use `trajectory_plot()` function.
 
 ```python
 # Disease trajectory visualization
@@ -1255,19 +1248,21 @@ result_plot.trajectory_plot(
 )
 ```
 
-- **path** - Directory path where output visualization images will be saved. *Note:* Include trailing slash for proper path resolution (e.g., `/output/plots/`)
+- **path** - directory path where output visualization images will be saved. *Note:* Include trailing slash for proper path resolution (e.g., `/output/plots/`)
 
 #### Optional parameters:
 
-- **cluster_weight** Specifies the edge weight metric used for network clustering calculations. Default is `comorbidity_beta`.
+- **cluster_weight** specifies the edge weight metric used for network clustering calculations. Default is `'comorbidity_beta'`.
 
 #### After disease trajectory plot:
 
-After generating the disease trajectory plot, the visualization will be exported as image files in your preferred format (.jpg, .svg, and .png).
+After running the `trajectory_plot()` function, multiple PNG images will be generated, with each image displaying the disease trajectories within a specific comorbidity community.
 
 ### 4.5 Three dimension plot
 
-Generates and saves a 3D visualization of comorbidity and disease trajectory networks. Combines trajectory and network visualizations by displaying comorbidity networks in the x-y plane while simultaneously showing disease trajectories in the x-z plane. Phecode diseases of the same cluster will gather together, and lines of plot are expressed as the trajectory.
+The `three_dimension_plot()` function combines the visualization approaches of both the `comorbidity_network_plot()` and `trajectory_plot()` functions, displaying the two types of plots on two perpendicular planes (the x–y plane and the y–z plane). From a top-down perspective, the plot displays the comorbidity network, while from a horizontal perspective, it presents the disease trajectory.
+
+The following example code demonstrates how to use `three_dimension_plot()` function.
 
 ```python
 # three dimension visualization
@@ -1276,26 +1271,22 @@ result_plot.three_dimension_plot(
 )
 ```
 
-- **path** - Absolute or relative file path to save the interactive HTML visualization.
+- **path** - absolute or relative file path to save the interactive HTML visualization.
 
 #### Optional Parameters:
 
-- **max_radius** - Maximum radial distance (in pixels) from center for node placement. Default is `180.0`.
-- **min_radius** - Minimum radial distance (in pixels) from center for node placement. Default is `35.0`.
-- **layer_distance** - Vertical spacing (in pixels) between concentric layers. Default is `40.0`.
-- **layout_width** - Total figure width in pixels. Default is `900.0`.
-- **layout_height** - Total figure height in pixels. Default is `900.0`.
-- **line_color** - Color specification for trajectory pathways. Accepts: CSS color names (e.g., `steelblue`). HEX codes (e.g., `#4682B4`). RGB tuples (e.g., `(70, 130, 180)`). Default is `black`.
-- **line_width** - Stroke width (in pixels) for trajectory lines. Default is `1.0`.
-- **size_reduction** - Multiplicative scaling factor for node diameters (0.1-1.0). Default is `0.5`.
-- **cluster_reduction_ratio** - Compression factor (0.1-1.0) for cluster density. Default is `0.4`.
-- **cluster_weight** - Edge metric used for clustering calculations. Default is `comorbidity_beta`.
-- **font_style** - Font family for all text elements. Use web-safe fonts. Default is `Times New Roman`
-- **font_size** - Base font size in points for all text elements. Default is `15.0`.
-
-#### After disease trajectory plot:
-
-After generating the disease trajectory plot, the visualization will be exported as an image file in your preferred format (.html).
+- **max_radius** - maximum radial distance (in pixels) from center for node placement. Default is `180.0`.
+- **min_radius** - minimum radial distance (in pixels) from center for node placement. Default is `35.0`.
+- **layer_distance** - vertical spacing (in pixels) between concentric layers. Default is `40.0`.
+- **layout_width** - total figure width in pixels. Default is `900.0`.
+- **layout_height** - total figure height in pixels. Default is `900.0`.
+- **line_color** - color specification for trajectory pathways. Accepts: CSS color names (e.g., `steelblue`). HEX codes (e.g., `#4682B4`). RGB tuples (e.g., `(70, 130, 180)`). Default is `'black'`.
+- **line_width** - stroke width (in pixels) for trajectory lines. Default is `1.0`.
+- **size_reduction** - multiplicative scaling factor for node diameters (0.1-1.0). Default is `0.5`.
+- **cluster_reduction_ratio** - compression factor (0.1-1.0) for cluster density. Default is `0.4`.
+- **cluster_weight** - edge metric used for clustering calculations. Default is `'comorbidity_beta'`.
+- **font_style** - font family for all text elements. Use web-safe fonts. Default is `'Times New Roman'`
+- **font_size** - base font size in points for all text elements. Default is `15.0`.
 
 ## API Reference
 ### Class `DiseaseNetworkData`
