@@ -499,7 +499,7 @@ print(com_strength_result)
 | `n_d1d2_nontemporal`    | Integer | Number of individuals diagnosed with both disease 1 and disease 2 with a defined non-temporal order (i.e., the time between the two diagnosis is less than and equal to the `min_interval_days` parameter or more than the `max_interval_days` parameter) |
 | `n_d1d2_temporal`       | Integer | Number of individuals diagnosed with disease 1 followed by disease 2 in a defined temporal order (i.e., the interval time between the two diagnosis is more than the `min_interval_days` parameter, and less than and equal to the `max_interval_days` parameter) |
 | `n_d2d1_temporal`       | Integer | Number of individuals diagnosed with disease 2 followed by disease 1 in a defined temporal order (i.e., the interval time between the two diagnosis is more than the `min_interval_days` parameter, and less than and equal to the `max_interval_days` parameter) |
-| `phi_coef`              | Float   | The association between disease 1 and disease 2 |
+| `phi_coef`              | Float   | Phi coefficient (φ), the association between disease 1 and disease 2 |
 | `phi_p`                 | Float   | P-value for Phi coefficient significance |
 | `RR`                    | Float   | Relative risk estimate for the disease pair |
 | `RR_p`                  | Float   | P-value for relative risk |
