@@ -312,6 +312,7 @@ def medical_records_process(
     date_fmt:str,
     chunk_n,
     seperator,
+    exclusion_list:list,
     all_phecode_dict:dict,
     phecode_map:dict
 ):
@@ -337,6 +338,9 @@ def medical_records_process(
     
     seperator : str
         Seperator used for reading.
+
+    exclusion_list : list
+        A list of diagnosis codes to exclude.
     
     all_phecode_dict : dict
         A empty nested dictionary for updating. Keys are participant ID, values are empty dictionary
@@ -385,6 +389,12 @@ def medical_records_process(
         #drop records not in the list
         #sort and drop duplicates
         chunk = chunk.sort_values(by=[date_col],ascending=True).drop_duplicates()
+        #drop records in the exclusion list
+        if exclusion_list:
+            chunk = chunk[~chunk[icd_col].str[:5].isin(exclusion_list) & 
+                          ~chunk[icd_col].str[:4].isin(exclusion_list) & 
+                          ~chunk[icd_col].str[:3].isin(exclusion_list)]
+
         #mapping
         new_phecode_lst = []
         for patient_id, icd, date in chunk[[eid_col,icd_col,date_col]].values:
