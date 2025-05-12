@@ -371,6 +371,9 @@ def medical_records_process(
                          usecols=[eid_col,icd_col,date_col])
     for chunk in chunks:
         len_before = len(chunk)
+        #drop na values
+        chunk.dropna(how='any', inplace=True)
+        n_missing = len_before - len(chunk)
         #filtering the participant ID
         chunk = chunk[chunk[eid_col].isin(all_phecode_dict)]
         #drop records in the exclusion list
@@ -379,8 +382,6 @@ def medical_records_process(
                           ~chunk[icd_col].str[:4].isin(exclusion_list) & 
                           ~chunk[icd_col].str[:3].isin(exclusion_list)]
         len_valid = len(chunk)
-        chunk.dropna(how='any', inplace=True)
-        n_missing = len_valid - len(chunk)
         chunk[date_col] = chunk[date_col].apply(lambda x: datetime.strptime(x,date_fmt))
         if 'ICD-9' in code_type: 
             chunk[icd_col] = chunk[icd_col].apply(lambda x: decimal_to_short(x))
@@ -391,7 +392,7 @@ def medical_records_process(
         n_total_read += len_before
         n_total_missing += n_missing
         n_total_records += len_valid
-        print(f'{n_total_read:,} records read ({n_total_records:,} included after filltering on participant ID/exclusion list of diagnosis codes), {n_total_missing:,} records with missing values excluded.')
+        print(f'{n_total_read:,} records read {n_total_missing:,} records with missing values excluded, ({n_total_records:,} included after filltering on participant ID/exclusion list of diagnosis codes).')
         #drop records not in the list
         #sort and drop duplicates
         chunk = chunk.sort_values(by=[date_col],ascending=True).drop_duplicates()
