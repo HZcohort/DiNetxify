@@ -395,7 +395,7 @@ def medical_records_process(
         n_total_read += len_before
         n_total_missing += n_missing
         n_total_records += len_valid
-        print(f'{n_total_read:,} records read {n_total_missing:,} records with missing values excluded, ({n_total_records:,} included after filltering on participant ID/exclusion list of diagnosis codes).')
+        print(f'{n_total_read:,} records read, {n_total_records:,} left after filltering on participant ID/exclusion list of diagnosis codes, {n_total_missing:,} records with missing values excluded.')
         #drop records not in the list
         #sort and drop duplicates
         chunk = chunk.sort_values(by=[date_col],ascending=True).drop_duplicates()
