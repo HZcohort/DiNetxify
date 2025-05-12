@@ -371,9 +371,6 @@ def medical_records_process(
                          usecols=[eid_col,icd_col,date_col])
     for chunk in chunks:
         len_before = len(chunk)
-        #drop na values
-        chunk.dropna(how='any', inplace=True)
-        n_missing = len_before - len(chunk)
         #convert the icd_col to string
         chunk[icd_col] = chunk[icd_col].astype(str)
         #filtering the participant ID
@@ -384,6 +381,10 @@ def medical_records_process(
                           ~chunk[icd_col].str[:4].isin(exclusion_list) & 
                           ~chunk[icd_col].str[:3].isin(exclusion_list)]
         len_valid = len(chunk)
+        #drop na values
+        chunk.dropna(how='any', inplace=True)
+        n_missing = len_valid - len(chunk)
+        #comvert the date column to datetime
         chunk[date_col] = chunk[date_col].apply(lambda x: datetime.strptime(x,date_fmt))
         if 'ICD-9' in code_type: 
             chunk[icd_col] = chunk[icd_col].apply(lambda x: decimal_to_short(x))
