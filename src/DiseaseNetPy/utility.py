@@ -91,9 +91,9 @@ def read_check_csv(path_file:str,
                 cols_not_in = [col for col in cols_check if col not in df.columns]
                 raise ValueError(f'Tried with seperator "{sep}", but the required columns {cols_not_in} were not found')
             # Check for missing values in the required columns
-            if df[cols_check].isnull().all().any():
+            if df[cols_check].isnull().all().all():
                 print(df[cols_check].isnull().all())
-                raise ValueError("Some columns contain missing values for all rows, please check the data.")
+                raise ValueError("All values in the first 50 rows are missing; unable to proceed. Please verify your input data.")
             # Check date columns with the specified format
             for date_col in date_cols:
                 if not pd.to_datetime(df[date_col], format=date_fmt, errors='raise').notnull().all():
@@ -371,7 +371,13 @@ def medical_records_process(
                          usecols=[eid_col,icd_col,date_col])
     for chunk in chunks:
         len_before = len(chunk)
+        #filtering the participant ID
         chunk = chunk[chunk[eid_col].isin(all_phecode_dict)]
+        #drop records in the exclusion list
+        if exclusion_list:
+            chunk = chunk[~chunk[icd_col].str[:5].isin(exclusion_list) & 
+                          ~chunk[icd_col].str[:4].isin(exclusion_list) & 
+                          ~chunk[icd_col].str[:3].isin(exclusion_list)]
         len_valid = len(chunk)
         chunk.dropna(how='any', inplace=True)
         n_missing = len_valid - len(chunk)
@@ -385,15 +391,10 @@ def medical_records_process(
         n_total_read += len_before
         n_total_missing += n_missing
         n_total_records += len_valid
-        print(f'{n_total_read:,} records read ({n_total_records:,} included after filltering on participant ID), {n_total_missing:,} records with missing values excluded.')
+        print(f'{n_total_read:,} records read ({n_total_records:,} included after filltering on participant ID/exclusion list of diagnosis codes), {n_total_missing:,} records with missing values excluded.')
         #drop records not in the list
         #sort and drop duplicates
         chunk = chunk.sort_values(by=[date_col],ascending=True).drop_duplicates()
-        #drop records in the exclusion list
-        if exclusion_list:
-            chunk = chunk[~chunk[icd_col].str[:5].isin(exclusion_list) & 
-                          ~chunk[icd_col].str[:4].isin(exclusion_list) & 
-                          ~chunk[icd_col].str[:3].isin(exclusion_list)]
 
         #mapping
         new_phecode_lst = []
