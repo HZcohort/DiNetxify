@@ -374,6 +374,8 @@ def medical_records_process(
         #drop na values
         chunk.dropna(how='any', inplace=True)
         n_missing = len_before - len(chunk)
+        #convert the icd_col to string
+        chunk[icd_col] = chunk[icd_col].astype(str)
         #filtering the participant ID
         chunk = chunk[chunk[eid_col].isin(all_phecode_dict)]
         #drop records in the exclusion list
