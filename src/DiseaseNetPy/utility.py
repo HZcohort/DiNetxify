@@ -1325,11 +1325,55 @@ def check_variance_vif(df:pd.DataFrame,
         raise ValueError("Invalid input.")
 
 def compute_vif_sm_exact(df):
+    """
+    Compute Variance Inflation Factor (VIF) for each feature in the DataFrame.
+    This function handles perfectly collinear variables by setting their VIF to infinity.
+    """
+    result = {}
     X = df.dropna().astype(float).values
-    G = X.T @ X
-    G_inv = np.linalg.inv(G)
-    # VIF_j = G[j,j] * (G_inv)[j,j]
-    return dict(zip(df.columns, np.diag(G) * np.diag(G_inv)))
+    # detect perfectly collinear columns by checking correlation matrix
+    corr_matrix = df.corr().abs()
+    
+    # find groups of perfectly collinear variables
+    collinear_groups = []
+    processed_columns = set()
+
+    for i, col in enumerate(df.columns):
+        if col in processed_columns:
+            continue
+        # find columns perfectly correlated with this one
+        perfect_matches = [c for c in df.columns if c != col and corr_matrix.loc[col, c] >= 0.999]
+        if perfect_matches:
+            # Create a group including the current column
+            group = [col] + perfect_matches
+            collinear_groups.append(group)
+            processed_columns.update(group)
+        else:
+            processed_columns.add(col)
+    
+    #for each group of collinear variables, mark others as infinite VIF
+    perfect_collinear = []
+    for group in collinear_groups:
+        perfect_collinear.extend(group[1:])
+    for col in perfect_collinear:
+        result[col] = np.inf
+
+    # Calculate VIF for non-collinear variables
+    remaining_cols = [col for col in df.columns if col not in perfect_collinear]
+    # Add the representative columns from collinear groups back to remaining columns
+    for group in collinear_groups:
+        if group[0] not in remaining_cols:
+            remaining_cols.append(group[0])
+    
+    if remaining_cols:
+        X_remaining = df[remaining_cols].values
+        G = X_remaining.T @ X_remaining
+        G_inv = np.linalg.inv(G)
+        # Calculate VIF for remaining variables
+        remaining_vifs = dict(zip(remaining_cols, np.diag(G) * np.diag(G_inv)))
+        result.update(remaining_vifs)
+    
+    return result
 
 def check_variance_vif_single(df:pd.DataFrame, forcedin_var_lst:list,
                               covar_lst:list, group_col:str=None,
