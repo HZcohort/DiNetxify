@@ -1257,6 +1257,7 @@ def find_best_alpha_and_vars(model, best_range, alpha_lst, co_vars):
         final_disease_vars = refined_vars_dict[final_best_alpha]
     return final_best_alpha, final_disease_vars
 
+#decprecated function
 def check_variance_vif(df:pd.DataFrame, 
                        covar_lst:list, 
                        disease_var_lst:list=None, 
@@ -1323,6 +1324,13 @@ def check_variance_vif(df:pd.DataFrame,
     else:
         raise ValueError("Invalid input.")
 
+def compute_vif_sm_exact(df):
+    X = df.dropna().astype(float).values
+    G = X.T @ X
+    G_inv = np.linalg.inv(G)
+    # VIF_j = G[j,j] * (G_inv)[j,j]
+    return dict(zip(df.columns, np.diag(G) * np.diag(G_inv)))
+
 def check_variance_vif_single(df:pd.DataFrame, forcedin_var_lst:list,
                               covar_lst:list, group_col:str=None,
                               vif_cutoff:int=None) -> list:
@@ -1367,16 +1375,18 @@ def check_variance_vif_single(df:pd.DataFrame, forcedin_var_lst:list,
     #always check VIF
     covar_lst = [x for x in covar_lst if x not in var_removed] #remove the variables with 0 within group variance
     vars_all = covar_lst + forcedin_var_lst #remaining covariates plus forced-in variables
-    vars_all_set = vars_all.copy() #variables that remained unchanged during the VIF check loop
-    for var in vars_all_set:
-        #do not check forced-in variables
-        if var in forcedin_var_lst:
-            continue
-        index_ = vars_all.index(var)
-        vif = variance_inflation_factor(df[vars_all],index_)
-        if vif >= vif_cutoff:
-            vars_all.remove(var)
-            var_removed[var] = f'VIF={vif}'
-   
+    #vars_all_set = vars_all.copy() #variables that remained unchanged during the VIF check loop
+
+    while True:
+        all_vifs = compute_vif_sm_exact(df[vars_all])
+        offenders = {v:val for v, val in all_vifs.items()
+                     if v not in forcedin_var_lst and val > vif_cutoff}
+        if not offenders:
+            break
+        # Remove the variable with the highest VIF
+        worst = max(offenders, key=offenders.get)
+        var_removed[worst] = f"VIF={offenders[worst]:.2f}"
+        vars_all.remove(worst)
+
     #return the dictionary of variables to be excluded
     return var_removed
