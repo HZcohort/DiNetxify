@@ -427,7 +427,8 @@ class DiseaseNetworkData:
         diagnosis_code: str, 
         column_names: dict, 
         date_fmt: str=None, 
-        chunksize: int=1000000
+        chunksize: int=1000000,
+        diagnosis_code_exclusion: list=[]
     ) -> None:
         """
         Reading one or more medical records data into the DiseaseNetworkData object after the phenotypic data has been loaded.
@@ -466,6 +467,12 @@ class DiseaseNetworkData:
             Read medical records data in chunks. This is useful for large dataset.
             You can increase this value if you get enough memory.
         
+        diagnosis_code_exclusion : list, default=[]
+            List of diagnosis codes to exclude from being merged. 
+            Codes should follow the same ICD system as specified in 'diagnosis_code'. 
+            You may supply codes at the 3-, 4-, or 5-character level.
+            Records matching any of these codes will be omitted.
+        
         Returns
         -------
         None
@@ -483,6 +490,8 @@ class DiseaseNetworkData:
             raise TypeError("The input 'date_fmt' must be a string.")
         if not isinstance(chunksize, int):
             raise TypeError("The input 'chunksize' must be an integer.")
+        if not isinstance(diagnosis_code_exclusion, list):
+            raise TypeError("The input 'diagnosis_code_exclusion' must be a list.")
 
         #attribute check
         data_attrs = ['phenotype_df']
@@ -538,6 +547,7 @@ class DiseaseNetworkData:
         self._medical_records_info['sep'] = seperator
         self._medical_records_info['column_names'] = column_names
         self._medical_records_info['chunksize'] = chunksize
+        self._medical_records_info['diagnosis_code_exclusion'] = diagnosis_code_exclusion
         
         #process the medical records data
         #----------
@@ -549,6 +559,7 @@ class DiseaseNetworkData:
             self._medical_records_info['date_fmt'],
             self._medical_records_info['chunksize'],
             self._medical_records_info['sep'],
+            self._medical_records_info['diagnosis_code_exclusion'],
             self._phecode_dict,
             self._phecode_mapping
         )

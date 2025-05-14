@@ -91,9 +91,9 @@ def read_check_csv(path_file:str,
                 cols_not_in = [col for col in cols_check if col not in df.columns]
                 raise ValueError(f'Tried with seperator "{sep}", but the required columns {cols_not_in} were not found')
             # Check for missing values in the required columns
-            if df[cols_check].isnull().all().any():
+            if df[cols_check].isnull().all().all():
                 print(df[cols_check].isnull().all())
-                raise ValueError("Some columns contain missing values for all rows, please check the data.")
+                raise ValueError("All values in the first 50 rows are missing; unable to proceed. Please verify your input data.")
             # Check date columns with the specified format
             for date_col in date_cols:
                 if not pd.to_datetime(df[date_col], format=date_fmt, errors='raise').notnull().all():
@@ -312,6 +312,7 @@ def medical_records_process(
     date_fmt:str,
     chunk_n,
     seperator,
+    exclusion_list:list,
     all_phecode_dict:dict,
     phecode_map:dict
 ):
@@ -337,6 +338,9 @@ def medical_records_process(
     
     seperator : str
         Seperator used for reading.
+
+    exclusion_list : list
+        A list of diagnosis codes to exclude.
     
     all_phecode_dict : dict
         A empty nested dictionary for updating. Keys are participant ID, values are empty dictionary
@@ -367,10 +371,20 @@ def medical_records_process(
                          usecols=[eid_col,icd_col,date_col])
     for chunk in chunks:
         len_before = len(chunk)
+        #convert the icd_col to string
+        chunk[icd_col] = chunk[icd_col].astype(str)
+        #filtering the participant ID
         chunk = chunk[chunk[eid_col].isin(all_phecode_dict)]
+        #drop records in the exclusion list
+        if exclusion_list:
+            chunk = chunk[~chunk[icd_col].str[:5].isin(exclusion_list) & 
+                          ~chunk[icd_col].str[:4].isin(exclusion_list) & 
+                          ~chunk[icd_col].str[:3].isin(exclusion_list)]
         len_valid = len(chunk)
+        #drop na values
         chunk.dropna(how='any', inplace=True)
         n_missing = len_valid - len(chunk)
+        #comvert the date column to datetime
         chunk[date_col] = chunk[date_col].apply(lambda x: datetime.strptime(x,date_fmt))
         if 'ICD-9' in code_type: 
             chunk[icd_col] = chunk[icd_col].apply(lambda x: decimal_to_short(x))
@@ -381,10 +395,11 @@ def medical_records_process(
         n_total_read += len_before
         n_total_missing += n_missing
         n_total_records += len_valid
-        print(f'{n_total_read:,} records read ({n_total_records:,} included after filltering on participant ID), {n_total_missing:,} records with missing values excluded.')
+        print(f'{n_total_read:,} records read, {n_total_records:,} left after filltering on participant ID/exclusion list of diagnosis codes, {n_total_missing:,} records with missing values excluded.')
         #drop records not in the list
         #sort and drop duplicates
         chunk = chunk.sort_values(by=[date_col],ascending=True).drop_duplicates()
+
         #mapping
         new_phecode_lst = []
         for patient_id, icd, date in chunk[[eid_col,icd_col,date_col]].values:
@@ -1242,6 +1257,7 @@ def find_best_alpha_and_vars(model, best_range, alpha_lst, co_vars):
         final_disease_vars = refined_vars_dict[final_best_alpha]
     return final_best_alpha, final_disease_vars
 
+#decprecated function
 def check_variance_vif(df:pd.DataFrame, 
                        covar_lst:list, 
                        disease_var_lst:list=None, 
@@ -1308,6 +1324,57 @@ def check_variance_vif(df:pd.DataFrame,
     else:
         raise ValueError("Invalid input.")
 
+def compute_vif_sm_exact(df):
+    """
+    Compute Variance Inflation Factor (VIF) for each feature in the DataFrame.
+    This function handles perfectly collinear variables by setting their VIF to infinity.
+    """
+    result = {}
+    X = df.dropna().astype(float).values
+    # detect perfectly collinear columns by checking correlation matrix
+    corr_matrix = df.corr().abs()
+    
+    # find groups of perfectly collinear variables
+    collinear_groups = []
+    processed_columns = set()
+
+    for i, col in enumerate(df.columns):
+        if col in processed_columns:
+            continue
+        # find columns perfectly correlated with this one
+        perfect_matches = [c for c in df.columns if c != col and corr_matrix.loc[col, c] >= 0.999]
+        if perfect_matches:
+            # Create a group including the current column
+            group = [col] + perfect_matches
+            collinear_groups.append(group)
+            processed_columns.update(group)
+        else:
+            processed_columns.add(col)
+    
+    #for each group of collinear variables, mark others as infinite VIF
+    perfect_collinear = []
+    for group in collinear_groups:
+        perfect_collinear.extend(group[1:])
+    for col in perfect_collinear:
+        result[col] = np.inf
+
+    # Calculate VIF for non-collinear variables
+    remaining_cols = [col for col in df.columns if col not in perfect_collinear]
+    # Add the representative columns from collinear groups back to remaining columns
+    for group in collinear_groups:
+        if group[0] not in remaining_cols:
+            remaining_cols.append(group[0])
+    
+    if remaining_cols:
+        X_remaining = df[remaining_cols].values
+        G = X_remaining.T @ X_remaining
+        G_inv = np.linalg.inv(G)
+        # Calculate VIF for remaining variables
+        remaining_vifs = dict(zip(remaining_cols, np.diag(G) * np.diag(G_inv)))
+        result.update(remaining_vifs)
+    
+    return result
+
 def check_variance_vif_single(df:pd.DataFrame, forcedin_var_lst:list,
                               covar_lst:list, group_col:str=None,
                               vif_cutoff:int=None) -> list:
@@ -1352,16 +1419,18 @@ def check_variance_vif_single(df:pd.DataFrame, forcedin_var_lst:list,
     #always check VIF
     covar_lst = [x for x in covar_lst if x not in var_removed] #remove the variables with 0 within group variance
     vars_all = covar_lst + forcedin_var_lst #remaining covariates plus forced-in variables
-    vars_all_set = vars_all.copy() #variables that remained unchanged during the VIF check loop
-    for var in vars_all_set:
-        #do not check forced-in variables
-        if var in forcedin_var_lst:
-            continue
-        index_ = vars_all.index(var)
-        vif = variance_inflation_factor(df[vars_all],index_)
-        if vif >= vif_cutoff:
-            vars_all.remove(var)
-            var_removed[var] = f'VIF={vif}'
-   
+    #vars_all_set = vars_all.copy() #variables that remained unchanged during the VIF check loop
+
+    while True:
+        all_vifs = compute_vif_sm_exact(df[vars_all])
+        offenders = {v:val for v, val in all_vifs.items()
+                     if v not in forcedin_var_lst and val > vif_cutoff}
+        if not offenders:
+            break
+        # Remove the variable with the highest VIF
+        worst = max(offenders, key=offenders.get)
+        var_removed[worst] = f"VIF={offenders[worst]:.2f}"
+        vars_all.remove(worst)
+
     #return the dictionary of variables to be excluded
     return var_removed
