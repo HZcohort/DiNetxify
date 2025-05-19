@@ -1255,7 +1255,7 @@ class DiseaseNetworkData:
             self.__print_string += f"Average follow-up years: {self.__phenotype_statistics['avg_follow_exposed']:.2f} (exposed) and {self.__phenotype_statistics['avg_follow_unexposed']:.2f} (unexposed)\n"
         if len(self.__medical_records_info) > 0:
             self.__print_string += '\nMerged Medical records\n'
-            self.__print_string += f"{self.__medical_records_statistics['n_merged_files']} medical records data with {self.__medical_records_statistics['n_merged_records']:,} diagnosis records were merged ({self.__medical_records_statistics['n_missing']:,} with missing values).\n"
+            self.__print_string += f"{self.__medical_records_statistics['n_merged_records']:,} diagnosis records from {self.__medical_records_statistics['n_merged_files']} medical records file were merged ({self.__medical_records_statistics['n_missing']:,} with missing values).\n"
             self.__print_string += f"Average number of disease diagnosis during follow-up: {self.__medical_records_statistics['n_phecode_diagnosis_per_exposed']:.2f} (exposed) and {self.__medical_records_statistics['n_phecode_diagnosis_per_unexposed']:.2f} (unexposed)\n"
             self.__print_string += f"Average number of disease diagnosis before follow-up: {self.__medical_records_statistics['n_phecode_history_per_exposed']:.2f} (exposed) and {self.__medical_records_statistics['n_phecode_history_per_unexposed']:.2f} (unexposed)\n"
         if len(self.__warning_phenotype) > 0:
