@@ -18,11 +18,7 @@ import random
 import math
 import os
 
-from collections import (
-    defaultdict,
-    deque,
-    Counter
-)
+from collections import Counter
 
 from typing import (
     Any,
@@ -229,6 +225,22 @@ class Plot(object):
         filter_trajectory_col: Optional[str]='trajectory_p_significance',
         **kwargs
     ):
+        
+        # Dictionary of variables to check (name: value)
+        variables_to_check = {
+            'phewas_result': phewas_result,
+            'comorbidity_result': comorbidity_result,
+            'trajectory_result': trajectory_result
+        }
+
+        # Check each variable's type
+        for var_name, var in variables_to_check.items():
+            if isinstance(var, pd.DataFrame):
+                print(f"{var_name} is a pandas DataFrame")
+            else:
+                print(f"{var_name} is NOT a pandas DataFrame (type: {type(var)})")
+
+
         # filter the results
         phewas_result, comorbidity_result, trajectory_result = self.__filter_significant(
             phewas_result,
@@ -254,14 +266,35 @@ class Plot(object):
             '#E7CB94',
             '#8C9EB2',
             '#E0E0E0',
-            "#F1C40F",
             '#9B59B6',
+            "#F1C40F",
             '#4ECDC4',
             '#6A5ACD' 
         ]
 
+        SYSTEM = [
+            'circulatory system',
+            'sense organs',
+            'injuries & poisonings',
+            'neurological',
+            'dermatologic',
+            'digestive',
+            'hematopoietic',
+            'musculoskeletal',
+            'endocrine/metabolic',
+            'mental disorders',
+            'infectious diseases',
+            'genitourinary',
+            'neoplasms',
+            'respiratory',
+            'pregnancy complications'
+        ]
+
         if system_col:
-            SYSTEM = list(phewas_result[system_col].unique())
+            system = list(phewas_result[system_col].unique())
+            for x in system:
+                if x not in SYSTEM:
+                    SYSTEM.append(x)
 
         SYSTEM = kwargs.get("SYSTEM", SYSTEM)
         COLOR = kwargs.get("COLOR", COLOR)
@@ -316,6 +349,7 @@ class Plot(object):
             keep="first"
         )
 
+        # If there is a exposure, address a first layer (exposure -> disease)
         if exposure:
             trajectory_result = self.__sequence(
                 trajectory_result,
@@ -431,8 +465,7 @@ class Plot(object):
             Given exposure=1.0 and connections to diseases [2.0, 3.0], creates:
             [[1.0, 2.0, "1.0-2.0"], [1.0, 3.0, "1.0-3.0"]] plus original data
         """
-        df = df.loc[df[source].isin(df[target].values)]
-        first_layer = set(df[source].values)
+        first_layer = df.loc[~df[source].isin(df[target].values)][source].unique()
         d1_d2 = [[exposure, d, '%f-%f' % (exposure,d)] for d in first_layer]
         d1_d2_df = pd.DataFrame(
             d1_d2,
@@ -536,7 +569,8 @@ class Plot(object):
     @staticmethod
     def __calculate_order(
         source_lst :List[float], 
-        target_lst :List[float]
+        target_lst :List[float],
+        exposure
     ) -> Dict[float, int]:
         """Calculates topological order distances for nodes in a directed graph.
 
@@ -564,30 +598,47 @@ class Plot(object):
             - If cycles exist, the algorithm will only process nodes reachable
             from true source nodes (in-degree 0)
         """
-        adj = defaultdict(list)
-        in_degree = defaultdict(int)
-        nodes = set(source_lst) | set(target_lst)
-        
-        for u, v in zip(source_lst, target_lst):
-            adj[u].append(v)
-            in_degree[v] += 1
-        
-        distance = {node: 1 for node in nodes}
-        
-        queue = deque()
-        for node in nodes:
-            if in_degree[node] == 0:
-                queue.append(node)
-        
+        tra_df = pd.DataFrame({'d1':source_lst,'d2':target_lst})
+
+        if exposure == 0:
+            first_layer = tra_df.loc[~tra_df['d1'].isin(tra_df['d2'].values)]['d1'].unique()
+            d1_d2 = [[exposure, d] for d in first_layer]
+            d1_d2_df = pd.DataFrame(
+                d1_d2,
+                columns=['d1', 'd2']
+            )
+            tra_df = pd.concat([tra_df, d1_d2_df])
+
+        G = nx.from_pandas_edgelist(tra_df, source='d1', target='d2', create_using=nx.DiGraph())
+        # Compute strongly connected components (SCCs)
+        scc = list(nx.strongly_connected_components(G))
+        node_to_scc = {}
+        for idx, comp in enumerate(scc):
+            for node in comp:
+                node_to_scc[node] = idx
+        # Condense the graph into a DAG where each node is a SCC
+        C = nx.condensation(G, scc)
+        # Use BFS on the condensed graph to assign layers
+        #get the exposure from df
+        exposure = tra_df[tra_df['d1']==exposure]['d1'].values[0]
+        start_comp = [node_to_scc[exposure]]
+        comp_layer = {node: 1 for node in start_comp}
+        queue = start_comp
         while queue:
-            u = queue.popleft()
-            for v in adj[u]:
-                if distance[u] + 1 > distance[v]:
-                    distance[v] = distance[u] + 1
-                in_degree[v] -= 1
-                if in_degree[v] == 0:
-                    queue.append(v)
-        return distance
+            current = queue.pop(0)
+            current_layer = comp_layer[current]
+            for neighbor in C.successors(current):
+                # Update the layer if this gives a longer path from the start
+                if neighbor not in comp_layer or comp_layer[neighbor] < current_layer + 1:
+                    comp_layer[neighbor] = current_layer + 1
+                    queue.append(neighbor)
+        # Map each original node to its component's layer
+        d_lst_layer = {node: comp_layer[node_to_scc[node]] for node in G.nodes() if node_to_scc[node] in comp_layer}
+
+        if exposure == 0:
+            del d_lst_layer[0]
+            
+        return d_lst_layer
     
     @staticmethod
     def __most_frequent_element(lst: List[Any]) -> Any:
@@ -722,6 +773,7 @@ class Plot(object):
             for node, attr in value.items():
                 if node in self._nodes_attrs.keys():
                     self._nodes_attrs[node].update({f"{key}":attr})
+
     def __filter_significant(
         self,
         phewas_result: Df,
@@ -784,6 +836,7 @@ class Plot(object):
             trajectory_result = trajectory_result.loc[
                 trajectory_result[filter_trajectory_col] == True
             ]
+        
         return phewas_result, comorbidity_result, trajectory_result
     
     def __get_same_nodes(self, key_name:str) -> Dict[Any, Any]:
@@ -1367,7 +1420,7 @@ class Plot(object):
         """Determines hierarchical ordering of nodes in the disease trajectory network.
 
         Calculates and assigns order/level numbers to nodes based on their position in the
-        disease progression paths (D1→D2 relationships). The ordering follows these rules:
+        disease progression paths (D1 → D2 relationships). The ordering follows these rules:
         - Exposure node is considered order 0 (if present)
         - Direct targets of exposure are order 1
         - Each subsequent step in progression increments the order
@@ -1390,14 +1443,20 @@ class Plot(object):
             - D3: order 2
             - Network attribute "order number" = 2
         """
-        tra_df = self._trajectory.loc[
-            self._trajectory[self._source]!=self._exposure
-        ]
+        tra_df = self._trajectory
         
-        node_order = self.__calculate_order(
-            tra_df[self._source].to_list(),
-            tra_df[self._target].to_list()
-        )
+        if self._exposure:
+            node_order = self.__calculate_order(
+                tra_df[self._source].to_list(),
+                tra_df[self._target].to_list(),
+                self._exposure
+            )
+        else:
+            node_order = self.__calculate_order(
+                tra_df[self._source].to_list(),
+                tra_df[self._target].to_list(),
+                0
+            )
 
         self.__update_node_attrs(
             order = node_order

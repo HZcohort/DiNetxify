@@ -800,7 +800,7 @@ data.disease_pair(
 ```
 
 - **phewas_result** - `pd.DataFrame` containing PheWAS analysis results produced by the `DiseaseNetPy.phewas()` function.
-- **min_interval_days** - minimum required time interval (in days) between diagnosis dates when constructing temporal D1→D2 disease pairs. Individuals with D1 and D2 diagnoses interval ≤ this value are considered to have non-temporal pairs. Default is `0`.
+- **min_interval_days** - minimum required time interval (in days) between diagnosis dates when constructing temporal D1 → D2 disease pairs. Individuals with D1 and D2 diagnoses interval ≤ this value are considered to have non-temporal pairs. Default is `0`.
 - **max_interval_days** - maximum allowed time interval (in days) between diagnosis dates when constructing disease pairs. Individuals with interval more than this value are excluded from temporal analysis. Default is `np.inf`.
 - **force** - if `True`, overwrites existing data attributes. If `False`, raises error when data exists. Default is `False`.
 
