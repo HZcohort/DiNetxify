@@ -236,10 +236,56 @@ class Plot(object):
         # Check each variable's type
         for var_name, var in variables_to_check.items():
             if isinstance(var, pd.DataFrame):
-                print(f"{var_name} is a pandas DataFrame")
+                continue
             else:
-                print(f"{var_name} is NOT a pandas DataFrame (type: {type(var)})")
+                raise TypeError(f"{var_name} is NOT a pandas.DataFrame (type: {type(var)})")
 
+        validate_string_params = {
+            'source': source,
+            'target': target,
+            'phewas_phecode': phewas_phecode,
+            'phewas_number': phewas_number,
+            'system_col': system_col,
+            'col_disease_pair': col_disease_pair,
+            'filter_phewas_col': filter_phewas_col,
+            'filter_comorbidity_col': filter_comorbidity_col,
+            'filter_trajectory_col': filter_trajectory_col
+        }
+
+        for name, value in validate_string_params.items():
+            if isinstance(value, str):
+                continue
+            else:
+                raise TypeError(f"{name} is NOT a string {type(value)}")
+
+        # check the variables whether in column names of the phewas_result
+        for col_name in [phewas_phecode, phewas_number, system_col, filter_phewas_col]:
+            if col_name not in phewas_result.columns:
+                raise ValueError(f"{col_name} is NOT a column name in the phewas_result (pandas.DataFrame)")
+
+        # check the variables whether in column names of the comorbidity_result
+        for col_name in [source, target, col_disease_pair, filter_comorbidity_col]:
+            if col_name not in comorbidity_result.columns:
+                raise ValueError(f"{col_name} is NOT a column name in the comorbidity_result (pandas.DataFrame)")
+
+        # check the variables whether in column names of the trajectory_result
+        for col_name in [source, target, col_disease_pair, filter_trajectory_col]:
+            if col_name not in trajectory_result.columns:
+                raise ValueError(f"{col_name} is NOT a column name in the trajectory_result (pandas.DataFrame)") 
+                
+        diseases_phewas = phewas_result[phewas_phecode].to_list()
+
+        # check the disesaes of comorbidity result whether are included in phewas result
+        diseases_com = comorbidity_result[source].to_list() + comorbidity_result[target].to_list()
+        for disease in set(diseases_com):
+            if disease not in diseases_phewas:
+                raise ValueError(f"{disease} of comorbidity result is NOT in the phewas_result (pandas.DataFrame)")    
+
+        # check the disesaes of trajectory result whether are included in phewas result
+        diseases_tra = trajectory_result[source].to_list() + trajectory_result[target].to_list()
+        for disease in set(diseases_tra):
+            if disease not in diseases_phewas:
+                raise ValueError(f"{disease} of trajectory result is NOT in the phewas_result (pandas.DataFrame)")  
 
         # filter the results
         phewas_result, comorbidity_result, trajectory_result = self.__filter_significant(
@@ -635,9 +681,6 @@ class Plot(object):
         # Map each original node to its component's layer
         d_lst_layer = {node: comp_layer[node_to_scc[node]] for node in G.nodes() if node_to_scc[node] in comp_layer}
 
-        if exposure == 0:
-            del d_lst_layer[0]
-            
         return d_lst_layer
     
     @staticmethod
@@ -1154,18 +1197,19 @@ class Plot(object):
             self._exposure_location = (0, 0, 0)
 
         cluster_location = {x:{} for x in range(self._network_attrs["cluster number"])}
+        interval_ratio = (self._network_attrs["cluster number"]) * 0.05 * cluster_reduction_ratio
         for node, attrs in self._nodes_attrs.items():
             is_sep = True
             order = attrs["order"]
             cluster = attrs["cluster"]
-            max_ang = 2*math.pi*sum([cluster_ratio[i] for i in range(cluster+1)])
-            min_ang = max_ang - 2*math.pi*cluster_ratio[cluster]
+            max_ang = 2*math.pi*sum([cluster_ratio[i] for i in range(cluster+1)])*(1-interval_ratio)
+            min_ang = max_ang - 2*math.pi*cluster_ratio[cluster]*(1-interval_ratio)
 
             for _ in range(max_attempts):
                 radius = random.uniform(min_radius, max_radius)
                 node_ang = random.uniform(
-                    min_ang + cluster_reduction_ratio/2 * 2*math.pi*cluster_ratio[cluster],
-                    max_ang - cluster_reduction_ratio/2 * 2*math.pi*cluster_ratio[cluster]
+                    min_ang + cluster*interval_ratio/(self._network_attrs["cluster number"])*2*math.pi,
+                    max_ang + cluster*interval_ratio/(self._network_attrs["cluster number"])*2*math.pi
                 )
                 node_loc = (
                     radius * math.cos(node_ang),
@@ -1620,7 +1664,7 @@ class Plot(object):
         line_color: Optional[str]="black", 
         line_width: Optional[float]=1.0,
         size_reduction: Optional[float]=0.5,
-        cluster_reduction_ratio: Optional[float]=0.4,
+        cluster_reduction_ratio: Optional[float]=1,
         cluster_weight: str="comorbidity_beta",
         layer_distance: Optional[float]=40.0,
         layout_width: Optional[float]=900.0,
@@ -1642,7 +1686,7 @@ class Plot(object):
             line_color: Color for trajectory lines (default: "black")
             line_width: Width for trajectory lines (default: 1.0)
             size_reduction: Scaling factor for node sizes (default: 0.5)
-            cluster_reduction_ratio: Cluster compression factor for layout (default: 0.4)
+            cluster_reduction_ratio: Cluster compression factor for layout (default: 1)
             cluster_weight: Edge weight metric used for clustering (default: "comorbidity_beta")
             layer_distance: Vertical distance between layers (default: 40.0)
             layout_width: Figure width in pixels (default: 900.0)
@@ -1760,7 +1804,7 @@ class Plot(object):
         max_radius: Optional[float]=180.0,
         min_radius: Optional[float]=35.0,
         size_reduction: Optional[float]=0.5,
-        cluster_reduction_ratio: Optional[float]=0.4,
+        cluster_reduction_ratio: Optional[float]=1,
         cluster_weight: Optional[str]="comorbidity_beta",
         line_width: Optional[float]=1.0,
         line_color: Optional[str]="black",
@@ -1903,6 +1947,8 @@ class Plot(object):
         self, 
         path: str,
         cluster_weight: Optional[str]="comorbidity_beta",
+        source: Optional[str]='phecode_d1',
+        target: Optional[str]='phecode_d2',
     ) -> None:
         """Generates and saves trajectory visualizations for each disease cluster.
 
@@ -1941,16 +1987,16 @@ class Plot(object):
         if not self.__check_node_attrs("cluster"):
             self.__cluster(cluster_weight)
 
-        sig_trajectory = self.__sig_nodes()
+        # sig_trajectory = self.__sig_nodes()
 
         if self._exposure:
             exposure = self._exposure
         else:
             exposure = 0
 
-        if not sig_trajectory:
-            raise TypeError("There is no significant trajectory\
-                            of network, please try other method of plot")
+        # if not sig_trajectory:
+        #     raise TypeError("There is no significant trajectory\
+        #                     of network, please try other method of plot")
         
         def rotate(angle_,valuex,valuey,pointx,pointy):
             valuex = np.array(valuex)
@@ -1976,27 +2022,44 @@ class Plot(object):
                 rl_n = int(n/2)
                 return [5+(i-1)*10 for i in range(rl_n,0,-1)] + [(i-1)*-10-5 for i in range(1,rl_n+1)]
 
-        def sort_arc(lst,y,r=300):
+        def sort_arc(lst, y, r=300):
             n_dots = len(lst)
             x_pos = {}
             for dot in lst:
                 angle = angle_lst(n_dots)[lst.index(dot)]
-                x_pos[dot] = rotate(angle,500,y,500,y-r)
-            
+                x_pos[dot] = rotate(angle, 500, y, 500, y-r)
             return x_pos
             
-        def hierarchy_layout(df,method='prox'):
-            d_lst_layer = {exposure:1}
-            i = 1
-            while True:
-                d_lst = [x for x in d_lst_layer.keys() if d_lst_layer[x]==i]
-                if len(d_lst) == 0:
-                    break
-                i += 1
-                d_next = df.loc[df[self._source].isin(d_lst)][self._target].values
-                for d in d_next:
-                    d_lst_layer[d] = i
+        def hierarchy_layout(df, start_node, method='prox'):
+            # Create a directed graph from the dataframe
+            G = nx.from_pandas_edgelist(df, source=source, target=target, create_using=nx.DiGraph())
             
+            # Compute strongly connected components (SCCs)
+            scc = list(nx.strongly_connected_components(G))
+            node_to_scc = {}
+            for idx, comp in enumerate(scc):
+                for node in comp:
+                    node_to_scc[node] = idx
+
+            # Condense the graph into a DAG where each node is a SCC
+            C = nx.condensation(G, scc)
+
+            # Use BFS on the condensed graph to assign layers
+            start_comp = node_to_scc[start_node]
+            comp_layer = {start_comp: 1}
+            queue = [start_comp]
+            while queue:
+                current = queue.pop(0)
+                current_layer = comp_layer[current]
+                for neighbor in C.successors(current):
+                    # Update the layer if this gives a longer path from the start
+                    if neighbor not in comp_layer or comp_layer[neighbor] < current_layer + 1:
+                        comp_layer[neighbor] = current_layer + 1
+                        queue.append(neighbor)
+            
+            # Map each original node to its component's layer
+            d_lst_layer = {node: comp_layer[node_to_scc[node]] for node in G.nodes() if node_to_scc[node] in comp_layer}
+
             n_layer = max([x for x in d_lst_layer.values()])
             
             if n_layer <= 5:
@@ -2008,7 +2071,7 @@ class Plot(object):
             new_pos = {}
             for l in range(1,n_layer+1):
                 if l == 1:
-                    new_pos[exposure] = (500,1000)
+                    new_pos[start_node] = (500,1000)
                 else:
                     d_lst = [x for x in d_lst_layer.keys() if d_lst_layer[x]==l]
                     temp_pos = sort_arc(d_lst,layer_y[l])
@@ -2022,7 +2085,7 @@ class Plot(object):
                 pos_dict = {i:j for i,j in zip(np.arange(len(d_lst)),[new_pos[d] for d in d_lst])}
                 dis_dict = {}
                 for d in d_lst:
-                    d_connected = [x for x in df.loc[df[self._target]==d][self._target].values if x in d_lst_last]
+                    d_connected = [x for x in df.loc[df[target]==d][source].values if x in d_lst_last]
                     dis_d_dict = {}
                     for pos_index in pos_dict.keys():
                         current_pos = pos_dict[pos_index]
@@ -2030,7 +2093,7 @@ class Plot(object):
                     dis_d_dict_order = sorted(dis_d_dict.items(), key = lambda kv:(kv[1], kv[0]))
                     dis_d_dict_ = {i:j for i,j in dis_d_dict_order}
                     dis_dict[d] = dis_d_dict_
-
+                    
                 if method == 'exact':
                     dis_dict_iter = {}
                     for p in itertools.permutations(pos_dict.keys()):
@@ -2065,7 +2128,7 @@ class Plot(object):
             return total
         
         def ratio(number: float):
-            return np.min([number/200* 5,5])+0.2
+            return np.min([number/200*10, 5])+0.2
 
         tra = self._trajectory
         tra.index = np.arange(len(tra))
@@ -2109,7 +2172,7 @@ class Plot(object):
                 df = pd.concat([df, temp_df])
             df.index = np.arange(len(df))
 
-            position = hierarchy_layout(df)
+            position = hierarchy_layout(df, exposure)
             graph = nx.DiGraph()
             for idx in df.index:
                 graph.add_edge(
@@ -2242,15 +2305,18 @@ class Plot(object):
             tau2 = (q-df)/c
             w2 = 1/(np.square(se_lst)+tau2)
             u2 = (np.sum(w2*coef_lst))/(np.sum(w2))
-            seu2 = np.sqrt(1/np.sum(w2))
-            return [u2, seu2]
+            # seu2 = np.sqrt(1/np.sum(w2))
+            return u2
 
         def sys_mean(df):
             sys_dict = {}
             sys_lst = set(df[col_system].values)
             for sys in sys_lst:
-                temp = df.loc[df[col_system]==sys].dropna(subset=[col_coef], how='any')
-                mean = random_effect(temp[col_coef].values,temp[col_se].values)[0]
+                temp = df.loc[df[col_system]==sys]
+                if is_exposure_only:
+                    mean = random_effect(temp[col_exposure].values, temp[col_exposure].values)
+                else:
+                    mean = random_effect(temp[col_coef].values, temp[col_se].values)
                 sys_dict[mean] = sys
             sys_dict_ = [sys_dict[i] for i in sorted([x for x in sys_dict.keys() if not pd.isna(x)])]
             sys_dict_ += [x for x in sys_dict.values() if x not in sys_dict_]
@@ -2265,9 +2331,8 @@ class Plot(object):
         )
         
         cmap = plt.get_cmap("tab20c")
-        max_neg = np.log(0.5)
-        max_pos = np.log(5.0)
-        cmap_neg = plt.get_cmap("Greens")
+        # max_neg = np.log(0.5)
+        # max_pos = np.log(5.0)
         cmap_pos = plt.get_cmap("Reds")
         sys_dict = {
             'neoplasms':'Neoplasms', 
@@ -2288,11 +2353,26 @@ class Plot(object):
             'symptoms':'Symptoms diseases',
             'others':'Others diseases'
         }
-        phe_df = self._phewas.loc[self._phewas[col_coef]>0]
+        if is_exposure_only:
+            phe_df = self._phewas
+        else:
+            phe_df = self._phewas.loc[self._phewas[col_coef]>0]
         phe_df = phe_df.sort_values(by=col_disease)
-        phe_df['color'] = phe_df[col_coef].apply(
-            lambda x: cmap_neg(x/max_neg) if x<0 else cmap_pos(x/max_pos)
+
+        if is_exposure_only:
+            phe_df["col_color"] = phe_df[col_exposure].apply(
+                lambda x: (x - phe_df[col_exposure].min()) / (phe_df[col_exposure].max() - phe_df[col_exposure].min())
+            )
+
+        else:
+            phe_df["col_color"] = phe_df[col_se].apply(
+                lambda x: (x - phe_df[col_se].min()) / (phe_df[col_se].max() - phe_df[col_se].min())
+            )
+
+        phe_df['color'] = phe_df["col_color"].apply(
+            lambda x: cmap_pos(x)
         )
+
         size = 0.1
         edge_width_n = 0.4
         start = 0
@@ -2377,18 +2457,31 @@ class Plot(object):
                     )            
             start = left[-1] + width[0]*(1+edge_width_n)
         sm = cm.ScalarMappable(cmap=cmap_pos)
-        bar = plt.colorbar(
-            sm, 
-            ax=ax,
-            location='bottom', 
-            label='Hazard ratio', 
-            shrink=0.4
-        )
+        if is_exposure_only:
+            bar = plt.colorbar(
+                sm, 
+                ax=ax,
+                location='bottom', 
+                label='Incident number', 
+                shrink=0.4
+            )
+        else:
+            bar = plt.colorbar(
+                sm, 
+                ax=ax,
+                location='bottom', 
+                label='Hazard ratio', 
+                shrink=0.4
+            )
 
         tick_locator = ticker.MaxNLocator(nbins=3)
         bar.locator = tick_locator
         bar.update_ticks()
-        bar.set_ticklabels(['NA', '1.2', '>2.0'])
+        if is_exposure_only:
+            bar.set_ticklabels(['NA', float(phe_df[col_exposure].median()), float(phe_df[col_exposure].max())])
+        else:
+            bar.set_ticklabels(['NA', '1.2', '>2.0'])
+
         ax.set_axis_off()
         plt.savefig(
             path, 
