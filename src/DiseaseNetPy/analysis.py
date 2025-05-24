@@ -177,7 +177,7 @@ def phewas(
     #list of phecode to run
     result_all = []
     if n_process == 1:
-        for phecode in tqdm(phecode_lst_all, miniters=len(phecode_lst_all)/16):
+        for phecode in tqdm(phecode_lst_all, mininterval=15,smoothing=0):
             if data.study_design == 'matched cohort':
                 result_all.append(cox_conditional_wrapper(phecode,data,covariates,n_threshold,log_file_final,lifelines_disable))
             else:
@@ -189,7 +189,8 @@ def phewas(
                     tqdm(
                         p.imap(cox_conditional, phecode_lst_all), 
                         total=len(phecode_lst_all),
-                        miniters=len(phecode_lst_all)/16
+                        mininterval=15,
+                        smoothing=0
                     )
                 )
             else:
@@ -197,7 +198,8 @@ def phewas(
                     tqdm(
                         p.imap(cox_unconditional, phecode_lst_all), 
                         total=len(phecode_lst_all),
-                        miniters=len(phecode_lst_all)/16
+                        mininterval=15,
+                        smoothing=0
                     )
                 )
 
@@ -420,7 +422,7 @@ def comorbidity_strength(
     #list of phecode
     result_all = []
     if n_process == 1:
-        for d1,d2,describe in tqdm(d1d2_pair_lst, miniters=len(d1d2_pair_lst)/16):
+        for d1,d2,describe in tqdm(d1d2_pair_lst, mininterval=15,smoothing=0):
             result_all.append(com_phi_rr_wrapper(trajectory_dict,d1,d2,describe,n_threshold,log_file_final))
     elif n_process > 1:
         parameters_all = []
@@ -432,7 +434,8 @@ def comorbidity_strength(
                 tqdm(
                     p.imap(com_phi_rr, parameters_all),
                     total=len(d1d2_pair_lst),
-                    miniters=len(d1d2_pair_lst)/16
+                    mininterval=15,
+                    smoothing=0
                 )
             )
 
