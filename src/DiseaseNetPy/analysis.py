@@ -464,13 +464,8 @@ def comorbidity_strength(
     return com_df
 
 
-def comorbidity_strength_multipletests(
-    df:pd.DataFrame, 
-    correction_phi:str='bonferroni', 
-    cutoff_phi:float=0.05, 
-    correction_RR:str='bonferroni', 
-    cutoff_RR:float=0.05
-) -> pd.DataFrame:
+def comorbidity_strength_multipletests(df:pd.DataFrame, correction_phi:str='bonferroni', cutoff_phi:float=0.05, 
+                                       correction_RR:str='bonferroni', cutoff_RR:float=0.05) -> pd.DataFrame:
     """
     Adjusts comorbidity strength p-values (phi-correlation and RR) for multiple comparisons using specified correction methods.
 
@@ -713,30 +708,9 @@ def binomial_test(
     #list of disease pair
     result_all = []
 
-    for d1,d2,n_com,n_d1d2,n_d2d1 in tqdm(
-        comorbidity_sig[
-            [
-                phecode_d1_col,
-                phecode_d2_col,
-                n_nontemporal_col,
-                n_temporal_d1d2_col,
-                n_temporal_d2d1_col
-            ]
-        ].values,
-        moothing=0
-    ):
-        result_all.append(
-            binomial(
-                d1,
-                d2,
-                n_com,
-                n_d1d2,
-                n_d2d1,
-                enforce_temporal_order,
-                log_file_final
-            )
-        )
-
+    for d1,d2,n_com,n_d1d2,n_d2d1 in tqdm(comorbidity_sig[[phecode_d1_col,phecode_d2_col,n_nontemporal_col,n_temporal_d1d2_col,n_temporal_d2d1_col]].values,
+        mininterval=15,smoothing=0):
+        result_all.append(binomial(d1,d2,n_com,n_d1d2,n_d2d1,enforce_temporal_order,log_file_final))
     time_end = time.time()
     time_spent = (time_end - time_start)/60
     print(f'Binomial test finished (elapsed {time_spent:.1f} mins)')
