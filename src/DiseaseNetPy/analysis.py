@@ -723,7 +723,7 @@ def binomial_test(
                 n_temporal_d2d1_col
             ]
         ].values,
-        miniters=len(comorbidity_sig)/16
+        moothing=0
     ):
         result_all.append(
             binomial(
@@ -1033,7 +1033,7 @@ def comorbidity_network(
     #list of disease pair
     result_all = []
     if n_process == 1:
-        for d1,d2 in tqdm(comorbidity_sig[[phecode_d1_col,phecode_d2_col]].values, miniters=len(comorbidity_sig)/16):
+        for d1,d2 in tqdm(comorbidity_sig[[phecode_d1_col,phecode_d2_col]].values, miniters=20,mininterval=60,smoothing=0):
             result_all.append(logistic_model_wrapper(d1,d2,phenotype_df_exposed,id_col,trajectory_ineligible,trajectory_eligible_withdate,
                                                      all_diagnosis_level,covariates,all_diseases_lst,log_file_final,parameter_dict))
     elif n_process > 1:
@@ -1046,7 +1046,9 @@ def comorbidity_network(
                 tqdm(
                     p.imap(logistic_model, parameters_all), 
                     total=len(parameters_all),
-                    miniters=len(parameters_all)/16
+                    miniters=20,
+                    mininterval=60,
+                    smoothing=0,
                 )
             )
 
@@ -1421,7 +1423,9 @@ def disease_trajectory(
     if n_process == 1:
         for d1_lst, d2 in tqdm(
             parameters_all,
-            miniters=len(parameters_all)/16
+            miniters=10,
+            mininterval=60,
+            smoothing=0
         ):
             result_all.append(logistic_model_wrapper(d1_lst,d2,phenotype_df_exposed,id_col,end_date_col,trajectory_ineligible,trajectory_temporal,disease_pair_index,
                                                     trajectory_eligible_withdate,all_diagnosis_level,covariates,all_diseases_lst,
@@ -1434,7 +1438,9 @@ def disease_trajectory(
                 tqdm(
                     p.imap(logistic_model, parameters_all), 
                     total=len(parameters_all),
-                    miniters=len(parameters_all)/16
+                    miniters=10,
+                    mininterval=60,
+                    smoothing=0,
                 )
             )
 
