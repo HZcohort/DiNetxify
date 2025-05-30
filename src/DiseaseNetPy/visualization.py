@@ -57,10 +57,10 @@ class Plot(object):
             - Case counts
             - Disease system classifications
         
-        exposure (float, optional): 
-            Phecode identifier for the primary exposure variable of interest.
+        exposure (string, optional): 
+            Name of the exposure of interest.
             Used to highlight exposure-disease relationships in visualizations.
-            Defaults to None, means to exposed-only cohort.
+            Defaults to None, meaning no exposure (i.e., exposed-only cohort study design).
             
         exposure_location (Tuple[float], optional): 
             Custom 3D coordinates (x,y,z) for positioning the exposure node.
@@ -512,7 +512,7 @@ class Plot(object):
             [[1.0, 2.0, "1.0-2.0"], [1.0, 3.0, "1.0-3.0"]] plus original data
         """
         first_layer = df.loc[~df[source].isin(df[target].values)][source].unique()
-        d1_d2 = [[exposure, d, '%f-%f' % (exposure,d)] for d in first_layer]
+        d1_d2 = [[exposure, d, f'{exposure}-{d}'] for d in first_layer]
         d1_d2_df = pd.DataFrame(
             d1_d2,
             columns=[source, target, col_disease_pair]
@@ -1622,10 +1622,10 @@ class Plot(object):
                     showlegend=is_showlegend,
                     lighting=plot_attrs[4],
                     hovertemplate=self._nodes_attrs[node]["name"],
-                    name="%s Disease" % (sys.title()),
+                    name="%s" % (sys.title()),
                     showscale=False,
                     legendgroup="sphere",
-                    legendgrouptitle_text="Disease",
+                    legendgrouptitle_text="Disease Systems",
                     lightposition=plot_attrs[-1]
                 )
                 plot_data.append(data)
@@ -1648,7 +1648,7 @@ class Plot(object):
                 width=line_width
             ),
             mode='lines',
-            legendgrouptitle_text='All Trajectories',
+            legendgrouptitle_text='Types of connections',
             name='Trajectories',
             showlegend=True,
             hoverinfo=None
@@ -1744,8 +1744,8 @@ class Plot(object):
                     size=self._exposure_size,
                     color='black'
                 ),
-                name="Exposure disease",
-                legendgrouptitle_text='Origin of Trajectories',
+                legendgrouptitle_text='Exposure',
+                name=self._exposure,
                 showlegend=True
             )
             plot_data += [exposure_data]
@@ -1770,7 +1770,7 @@ class Plot(object):
         # layout
         layout = go.Layout(
             title=dict(
-                text="Three Dimensional Network", 
+                text="Three Dimensional Disease Network", 
                 font=dict(size=30, family=font_style),
                 x=0.45
             ),
@@ -1785,7 +1785,7 @@ class Plot(object):
             margin=dict(t=100),
             hovermode='closest', 
             legend=dict(
-                title=dict(text='Trace of clusters'),
+                title=dict(text='Figure legend'),
                 font=dict(family=font_style,size=font_size),
                 itemclick=False
             ), 
