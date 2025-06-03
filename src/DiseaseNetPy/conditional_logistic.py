@@ -155,9 +155,9 @@ def logistic_model(args):
         if enforce_time_interval==True:
             d1d2_index = disease_pair_index_[f'{d1}_{d2}']
             #for those with both d1 exposure and d2 outcome, further verify time interval requirement, as specified in disease pair construction
-            d1_d2 = df_analysis[(df_analysis[d2_col]==1) & (df_analysis[d1_col]==1)]
-            d1_d2_eid = [x for x in d1_d2[id_col_].values if d1d2_index not in trajectory_temporal_[x]]
-            d1_d2_index = d1_d2[d1_d2[id_col_].isin(d1_d2_eid)].index
+            d1_d2 = df_analysis[(df_analysis[d2_col]==1) & (df_analysis[d1_col]==1)][id_col_].values
+            d1_d2 = [x for x in d1_d2 if d1d2_index not in trajectory_temporal_[x]]
+            d1_d2_index = df_analysis[df_analysis[id_col_].isin(d1_d2)].index
             df_analysis.loc[d1_d2_index,d2_col] = 0 #invalid cases
         
         #statistics

@@ -892,6 +892,11 @@ def comorbidity_network(
         If None, the log will be written to the temporary files directory with file prefix of DiseaseNet_comorbidity_network_.
     
     **kwargs
+        Analysis option
+            enforce_time_interval : bool, default=True
+                If set to True, applies the specified maximum time interval when determining the D2 outcome among individuals diagnosed with D1. 
+                The maximum time interval requirement have been defined when calling the DiseaseNetPy.DiseaseNetworkData.disease_pair() function.
+
         Additional keyword argument to define the required columns in 'comorbidity_strength_result' and 'binomial_test_result':
             phecode_d1_col : str, default='phecode_d1'
                 Name of the column in 'comorbidity_strength_result' and 'binomial_test_result' that specifies the phecode identifiers for disease 1 of the disease pair.
@@ -980,6 +985,8 @@ def comorbidity_network(
     phecode_info = data.phecode_info
     trajectory_ineligible = data.trajectory['ineligible_disease']
     trajectory_eligible_withdate = data.trajectory['eligible_disease_withdate']
+    comorbidity_pair = data.trajectory('d1d2_com_pair')
+    disease_pair_index = data.trajectory['disease_pair_index']
     all_diagnosis_level = data.trajectory['all_diagnosis_level'] #extract the new history list
     phenotype_df = data.phenotype_df
     exp_col = data.get_attribute('phenotype_info')['phenotype_col_dict']['Exposure']
@@ -1009,13 +1016,15 @@ def comorbidity_network(
     if n_process == 1:
         for d1,d2 in tqdm(comorbidity_sig[[phecode_d1_col,phecode_d2_col]].values, miniters=20,mininterval=60,smoothing=0):
             result_all.append(logistic_model_wrapper(d1,d2,phenotype_df_exposed,id_col,trajectory_ineligible,trajectory_eligible_withdate,
-                                                     all_diagnosis_level,covariates,all_diseases_lst,log_file_final,parameter_dict))
+                                                     all_diagnosis_level,comorbidity_pair,disease_pair_index,covariates,all_diseases_lst,
+                                                     log_file_final,parameter_dict))
     elif n_process > 1:
         parameters_all = []
         for d1,d2 in comorbidity_sig[[phecode_d1_col,phecode_d2_col]].values:
             parameters_all.append([d1,d2])
         with multiprocessing.get_context(start_mehtod).Pool(n_process, initializer=init_worker, initargs=(phenotype_df_exposed,id_col,trajectory_ineligible,trajectory_eligible_withdate,
-                                                                                                            all_diagnosis_level,covariates,all_diseases_lst,log_file_final,parameter_dict)) as p:
+                                                                                                            all_diagnosis_level,comorbidity_pair,disease_pair_index,covariates,all_diseases_lst,
+                                                                                                            log_file_final,parameter_dict)) as p:
             result_all = list(
                 tqdm(
                     p.imap(logistic_model, parameters_all), 
@@ -1245,7 +1254,7 @@ def disease_trajectory(
         Analysis option
             enforce_time_interval : bool, default=True
                 If set to True, applies the specified minimum and maximum time intervals when determining the D2 outcome among individuals diagnosed with D1. 
-                These time interval requirements should be defined using the DiseaseNetPy.DiseaseNetworkData.disease_pair() function.
+                These time interval requirements have been defined when calling the DiseaseNetPy.DiseaseNetworkData.disease_pair() function.
     
         Additional keyword argument to define the required columns in 'comorbidity_strength_result' and 'binomial_test_result':
             phecode_d1_col : str, default='phecode_d1'
