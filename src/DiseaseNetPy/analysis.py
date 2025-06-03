@@ -985,7 +985,7 @@ def comorbidity_network(
     phecode_info = data.phecode_info
     trajectory_ineligible = data.trajectory['ineligible_disease']
     trajectory_eligible_withdate = data.trajectory['eligible_disease_withdate']
-    comorbidity_pair = data.trajectory('d1d2_com_pair')
+    comorbidity_pair = data.trajectory['d1d2_com_pair']
     disease_pair_index = data.trajectory['disease_pair_index']
     all_diagnosis_level = data.trajectory['all_diagnosis_level'] #extract the new history list
     phenotype_df = data.phenotype_df
