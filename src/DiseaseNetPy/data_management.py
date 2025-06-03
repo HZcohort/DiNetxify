@@ -142,6 +142,8 @@ class DiseaseNetworkData:
         self.trajectory = None
         self.__warning_phenotype = []
         self.__warning_medical_records = []
+        self.min_interval_days = 0
+        self.max_interval_days = np.inf
         #variable names placeholder
         self.__varialbe_name_place_holder = list(self.__phenotype_col_dict[self.study_design].values()) #required variables
         self.__varialbe_name_place_holder += ['flag_exl','outcome_date','outcome','time_years'] #variables reserved for cox analysis
@@ -744,8 +746,8 @@ class DiseaseNetworkData:
             Individuals with D1 and D2 diagnoses interval less than or equal to this value are considered to have non-temporal D1-D2 disease pair (without a clear sequence).
         
         max_interval_days : int/float, default=np.inf
-            Maximum allowed time interval (in days) between diagnosis dates when constructing temporal and non-temporal D1-D2 disease pair for each individual.
-            Individuals with D1 and D2 diagnoses interval greater than this value are considered to have either temporal or non-temporal D1-D2 disease pair, although they were diagnosed with both D1 and D2.
+            Maximum allowed time interval (in days) between diagnosis dates when constructing temporal for each individual.
+            Individuals with D1 and D2 diagnoses interval greater than this value are considered to have to have non-temporal D1-D2 disease pair.
 
         force : bool, default=False
             If True, the data will be loaded and existing attributes will be overwritten, even if they contain data. 
@@ -807,6 +809,9 @@ class DiseaseNetworkData:
             raise TypeError("The provided input 'max_interval_days' must be a int")
         if max_interval_days<0 or max_interval_days<=min_interval_days:
             raise ValueError("The provided input 'max_interval_days' is not valide.")
+        #assign to attributes
+        self.min_interval_days = min_interval_days
+        self.max_interval_days = max_interval_days
         
         # Check multiprocessing parameters
         if not isinstance(n_process, int) or n_process < 1:
@@ -845,8 +850,8 @@ class DiseaseNetworkData:
                 self.diagnosis,
                 self.n_diagnosis,
                 self.phecode_info,
-                min_interval_days,
-                max_interval_days,
+                self.min_interval_days,
+                self.max_interval_days,
                 self.min_required_icd_codes,
                 n_process
                 )
@@ -864,8 +869,8 @@ class DiseaseNetworkData:
                 self.diagnosis,
                 self.n_diagnosis,
                 self.phecode_info,
-                min_interval_days,
-                max_interval_days,
+                self.min_interval_days,
+                self.max_interval_days,
                 self.min_required_icd_codes
                 )
 
@@ -911,6 +916,8 @@ class DiseaseNetworkData:
             'phecode_level': self.phecode_level,
             'phecode_version': self.phecode_version,
             'min_required_icd_codes': self.min_required_icd_codes,
+            'min_interval_days': self.min_interval_days,
+            'max_interval_days': self.max_interval_days,
             'phecode_info': self.phecode_info,
             'phenotype_df': self.phenotype_df,
             'diagnosis': self.diagnosis,
@@ -993,6 +1000,8 @@ class DiseaseNetworkData:
             'phecode_level', 
             'phecode_version',
             'min_required_icd_codes',
+            'min_interval_days',
+            'max_interval_days',
             'phecode_info', 
             'diagnosis', 
             'n_diagnosis', 
@@ -1091,7 +1100,9 @@ class DiseaseNetworkData:
             'date_fmt': np.array(self.date_fmt, dtype=object),
             'phecode_level': np.array(self.phecode_level, dtype=object),
             'phecode_version': np.array(self.phecode_version, dtype=object),
-            'min_required_icd_codes': np.array(self.min_required_icd_codes, dtype=object)
+            'min_required_icd_codes': np.array(self.min_required_icd_codes, dtype=object),
+            'min_interval_days': np.array(self.min_interval_days, dtype=object),
+            'max_interval_days': np.array(self.max_interval_days, dtype=object)
         }
         
         # Prepare complete save dictionary
@@ -1192,7 +1203,9 @@ class DiseaseNetworkData:
             'date_fmt': 'date_fmt', 
             'phecode_level': 'phecode_level', 
             'phecode_version': 'phecode_version',
-            'min_required_icd_codes': 'min_required_icd_codes'
+            'min_required_icd_codes': 'min_required_icd_codes',
+            'min_interval_days': 'min_interval_days',
+            'max_interval_days': 'max_interval_days'
         }
         
         for attr, key in primitive_attrs.items():

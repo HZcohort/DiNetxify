@@ -51,8 +51,8 @@ def logistic_model(args):
     global id_col_
     global end_date_col_
     global trajectory_ineligible_
-    global trajectory_temporal_
-    global disease_pair_index_
+    global min_interval_
+    global max_interval_
     global trajectory_eligible_withdate_
     global all_diagnosis_level_
     global covariates_
@@ -150,15 +150,15 @@ def logistic_model(args):
         del df_matched_d1
         gc.collect()
         df_analysis[d1_date_col] = df_analysis[id_col_].apply(lambda x: trajectory_eligible_withdate_[x].get(d1,pd.NaT))
-        df_analysis[d1_col] = df_analysis.apply(lambda row: 1 if row[d1_date_col]<row[outcome_date_col] else 0, axis=1)
-    
-        if enforce_time_interval==True:
-            d1d2_index = disease_pair_index_[f'{d1}_{d2}']
-            #for those with both d1 exposure and d2 outcome, further verify time interval requirement, as specified in disease pair construction
-            d1_d2 = df_analysis[(df_analysis[d2_col]==1) & (df_analysis[d1_col]==1)][id_col_].values
-            d1_d2 = [x for x in d1_d2 if d1d2_index not in trajectory_temporal_[x]]
-            d1_d2_index = df_analysis[df_analysis[id_col_].isin(d1_d2)].index
-            df_analysis.loc[d1_d2_index,d2_col] = 0 #invalid cases
+        if enforce_time_interval==False:
+            df_analysis[d1_col] = df_analysis.apply(lambda row: 1 if row[d1_date_col]<row[outcome_date_col] else 0, axis=1)
+        else:
+            df_analysis[d1_col] = df_analysis.apply(lambda row: 1 if row[d1_date_col]<row[outcome_date_col] and 
+                                                    (row[outcome_date_col]-row[d1_date_col]).days<=max_interval_ else 0, axis=1)
+            #exclude those with d1 date <= min interval date
+            df_analysis['flag']  = df_analysis.apply(lambda row: 1 if (row[outcome_date_col]-row[d1_date_col]).days<=min_interval_ else 0, axis=1)
+            #exclude those with flag=1 and d1_col=1
+            df_analysis = df_analysis[(df_analysis['flag']==0) | (df_analysis[d1_col]==0)]
         
         #statistics
         n = len(df_analysis) #number of individuals in the matched case-control study
@@ -325,17 +325,19 @@ def logistic_model(args):
     return result_all
 
 def logistic_model_wrapper(d1_lst:list,d2:float,phenotype_df_exposed:pd.DataFrame,id_col,end_date_col,trajectory_ineligible:dict,
-                            trajectory_temporal:dict,disease_pair_index:dict,trajectory_eligible_withdate:dict,all_diagnosis_level:dict,covariates:list,
+                            min_interval:int,max_interval:int,trajectory_eligible_withdate:dict,all_diagnosis_level:dict,covariates:list,
                             all_diseases_lst:list,matching_var_dict:dict,matching_n:int,max_n_cases:int,log_file:str,parameters:dict):
     """
     Wrapper for logistic_model that assigns default values to global variables if needed.
 
     Parameters
     ----------
-    d1_lst : list, list of disease 1
-    d2 : float, phecode 2.
     phenotype_df_exposed : pd.DataFrame, phenotypic data for exposed individuals only.
     trajectory_ineligible : dict, trajectory ineligible disease dictionary.
+    id_col : str, id column
+    end_date_col : str, date of end follow-up
+    min_interval : int, minimum interval required for d1-d2 disease pair construction.
+    max_interval : int, maximum interval allowed for d1-d2 disease pair construction
     trajectory_eligible_withdate : dict, trajectory eligible disease (with date) dictionary.
     all_diagnosis_level : list, list of all diagnosed phecodes, with phecode truncated to corresponding level
     covariates : list, list of covariates to be included in the model.
@@ -353,8 +355,8 @@ def logistic_model_wrapper(d1_lst:list,d2:float,phenotype_df_exposed:pd.DataFram
     global id_col_
     global end_date_col_
     global trajectory_ineligible_
-    global trajectory_temporal_
-    global disease_pair_index_
+    global min_interval_
+    global max_interval_
     global trajectory_eligible_withdate_
     global all_diagnosis_level_
     global covariates_
@@ -370,8 +372,8 @@ def logistic_model_wrapper(d1_lst:list,d2:float,phenotype_df_exposed:pd.DataFram
     id_col_ = id_col
     end_date_col_ = end_date_col
     trajectory_ineligible_ = trajectory_ineligible
-    trajectory_temporal_ = trajectory_temporal
-    disease_pair_index_ = disease_pair_index
+    min_interval_ = min_interval
+    max_interval_ = max_interval
     trajectory_eligible_withdate_ = trajectory_eligible_withdate
     all_diagnosis_level_ = all_diagnosis_level
     covariates_ = covariates
@@ -385,7 +387,7 @@ def logistic_model_wrapper(d1_lst:list,d2:float,phenotype_df_exposed:pd.DataFram
     return logistic_model((d1_lst, d2))
 
 def init_worker(phenotype_df_exposed:pd.DataFrame,id_col,end_date_col,trajectory_ineligible:dict,
-                trajectory_temporal:dict,disease_pair_index:dict,trajectory_eligible_withdate:dict,all_diagnosis_level:dict,covariates:list,
+                min_interval:int,max_interval:int,trajectory_eligible_withdate:dict,all_diagnosis_level:dict,covariates:list,
                 all_diseases_lst:list,matching_var_dict:dict,matching_n:int,max_n_cases:int,log_file:str,parameters:dict):
     """
     This function sets up the necessary global variables for a worker process in a multiprocessing environment.
@@ -395,6 +397,10 @@ def init_worker(phenotype_df_exposed:pd.DataFrame,id_col,end_date_col,trajectory
     ----------
     phenotype_df_exposed : pd.DataFrame, phenotypic data for exposed individuals only.
     trajectory_ineligible : dict, trajectory ineligible disease dictionary.
+    id_col : str, id column
+    end_date_col : str, date of end follow-up
+    min_interval : int, minimum interval required for d1-d2 disease pair construction.
+    max_interval : int, maximum interval allowed for d1-d2 disease pair construction
     trajectory_eligible_withdate : dict, trajectory eligible disease (with date) dictionary.
     all_diagnosis_level : list, list of all diagnosed phecodes, with phecode truncated to corresponding level
     covariates : list, list of covariates to be included in the model.
@@ -412,8 +418,8 @@ def init_worker(phenotype_df_exposed:pd.DataFrame,id_col,end_date_col,trajectory
     global id_col_
     global end_date_col_
     global trajectory_ineligible_
-    global trajectory_temporal_
-    global disease_pair_index_
+    global min_interval_
+    global max_interval_
     global trajectory_eligible_withdate_
     global all_diagnosis_level_
     global covariates_
@@ -428,8 +434,8 @@ def init_worker(phenotype_df_exposed:pd.DataFrame,id_col,end_date_col,trajectory
     id_col_ = id_col
     end_date_col_ = end_date_col
     trajectory_ineligible_ = trajectory_ineligible
-    trajectory_temporal_ = trajectory_temporal
-    disease_pair_index_ = disease_pair_index
+    min_interval_ = min_interval
+    max_interval_ = max_interval
     trajectory_eligible_withdate_ = trajectory_eligible_withdate
     all_diagnosis_level_ = all_diagnosis_level
     covariates_ = covariates

@@ -933,6 +933,7 @@ def d1d2_from_diagnosis_history(df:pd.DataFrame, id_col:str, sex_col:str, sex_va
             for d1,d2 in combinations(temp_deligible_dict_withdate,2):
                 date1, date2 = temp_deligible_dict_withdate[d1], temp_deligible_dict_withdate[d2]
                 if abs((date1 - date2).days) > max_interval_days:
+                    temp_dpair_com_lst.append(disease_pair_index[f'{d1}_{d2}']) #order insensitive
                     continue
                 elif abs((date1 - date2).days) <= min_interval_days:
                     temp_dpair_com_lst.append(disease_pair_index[f'{d1}_{d2}']) #order insensitive

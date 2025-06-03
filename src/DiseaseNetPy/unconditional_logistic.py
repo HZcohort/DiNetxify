@@ -46,8 +46,6 @@ def logistic_model(args):
     global trajectory_ineligible_
     global trajectory_eligible_withdate_
     global all_diagnosis_level_
-    global comorbidity_pair_
-    global disease_pair_index_
     global covariates_
     global all_diseases_lst_
     global log_file_
@@ -61,7 +59,6 @@ def logistic_model(args):
     forcedin_vars = [d1_col,constant_col]
 
     #method and parameters
-    enforce_time_interval = parameters_['enforce_time_interval']
     method = parameters_['method']
     if method == 'RPCN':
         #alpha_initial = [1, 10, 20, 30, 40, 50] #alpha starting value range if using auto_penalty
@@ -86,16 +83,7 @@ def logistic_model(args):
     df_analysis[d1_col] = df_analysis[id_col_].apply(lambda x: 1 if d1 in trajectory_eligible_withdate_[x] else 0)
     df_analysis[d2_col] = df_analysis[id_col_].apply(lambda x: 1 if d2 in trajectory_eligible_withdate_[x] else 0)
     df_analysis[constant_col] = 1
-    #if force to use pre-defined time interval limits
-    if enforce_time_interval==True:
-        d1d2_index = disease_pair_index_[f'{d1}_{d2}']
-        d2d1_index = disease_pair_index_[f'{d2}_{d1}']
-        #for those with both d1 exposure and d2 outcome, further verify time interval requirement, as specified in disease pair construction
-        d1_d2 = df_analysis[(df_analysis[d2_col]==1) & (df_analysis[d1_col]==1)][id_col_].values
-        d1_d2 = [x for x in d1_d2 if d1d2_index not in comorbidity_pair_[x] and d2d1_index not in comorbidity_pair_[x]]
-        d1_d2_index = df_analysis[df_analysis[id_col_].isin(d1_d2)].index
-        df_analysis.loc[d1_d2_index,d2_col] = 0 #invalid cases
-
+    #statistics
     n = len(df_analysis) #number of individuals in the matched case-control study
     N_d2 = len(df_analysis[df_analysis[d2_col]==1])
     N_nod2 = len(df_analysis[df_analysis[d2_col]==0])
@@ -240,8 +228,8 @@ def logistic_model(args):
     return result_lst
 
 def logistic_model_wrapper(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,id_col,trajectory_ineligible:dict,
-                            trajectory_eligible_withdate:dict,all_diagnosis_level:dict,comorbidity_pair:dict,
-                            disease_pair_index:dict,covariates:list,all_diseases_lst:list,log_file:str,parameters:dict):
+                            trajectory_eligible_withdate:dict,all_diagnosis_level:dict,covariates:list,
+                            all_diseases_lst:list,log_file:str,parameters:dict):
     """
     Wrapper for logistic_model that assigns default values to global variables if needed.
 
@@ -252,9 +240,7 @@ def logistic_model_wrapper(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,i
     phenotype_df_exposed : pd.DataFrame, phenotypic data for exposed individuals only.
     trajectory_ineligible : dict, trajectory ineligible disease dictionary.
     trajectory_eligible_withdate : dict, trajectory eligible disease (with date) dictionary.
-    all_diagnosis_level : dict, dict of all diagnosed phecodes, with phecode truncated to corresponding level
-    comorbidity_pair : dict, all eligible comorbidity pairs for each individual.
-    disease_pair_index : dict, index of the comorbidity pairs.
+    all_diagnosis_level : list, list of all diagnosed phecodes, with phecode truncated to corresponding level
     covariates : list, list of covariates to be included in the model.
     all_diseases_lst : list, list of other diseases to be included.
     log_file : str, Path and prefix for the log file
@@ -271,8 +257,6 @@ def logistic_model_wrapper(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,i
     global trajectory_ineligible_
     global trajectory_eligible_withdate_
     global all_diagnosis_level_
-    global comorbidity_pair_
-    global disease_pair_index_
     global covariates_
     global all_diseases_lst_
     global log_file_
@@ -283,8 +267,6 @@ def logistic_model_wrapper(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,i
     trajectory_ineligible_ = trajectory_ineligible
     trajectory_eligible_withdate_ = trajectory_eligible_withdate
     all_diagnosis_level_ = all_diagnosis_level
-    comorbidity_pair_ = comorbidity_pair
-    disease_pair_index_ = disease_pair_index
     covariates_ = covariates
     all_diseases_lst_ = all_diseases_lst
     log_file_ = log_file
@@ -293,8 +275,8 @@ def logistic_model_wrapper(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,i
     return logistic_model((d1, d2))
 
 def init_worker(phenotype_df_exposed:pd.DataFrame,id_col,trajectory_ineligible:dict,
-                trajectory_eligible_withdate:dict,all_diagnosis_level:dict,comorbidity_pair:dict,
-                disease_pair_index:dict, covariates:list,all_diseases_lst:list,log_file:str,parameters:dict):
+                trajectory_eligible_withdate:dict,all_diagnosis_level:dict,covariates:list,
+                all_diseases_lst:list,log_file:str,parameters:dict):
     """
     This function sets up the necessary global variables for a worker process in a multiprocessing environment.
     It assigns the provided parameters to global variables that can be accessed by logistic_model function in the worker process.
@@ -304,9 +286,7 @@ def init_worker(phenotype_df_exposed:pd.DataFrame,id_col,trajectory_ineligible:d
     phenotype_df_exposed : pd.DataFrame, phenotypic data for exposed individuals only.
     trajectory_ineligible : dict, trajectory ineligible disease dictionary.
     trajectory_eligible_withdate : dict, trajectory eligible disease (with date) dictionary.
-    all_diagnosis_level : dict, dict of all diagnosed phecodes, with phecode truncated to corresponding level
-    comorbidity_pair : dict, all eligible comorbidity pairs for each individual.
-    disease_pair_index : dict, index of the comorbidity pairs.
+    all_diagnosis_level : list, list of all diagnosed phecodes, with phecode truncated to corresponding level
     covariates : list, list of covariates to be included in the model.
     all_diseases_lst : list, list of other diseases to be included.
     log_file : str, Path and prefix for the log file
@@ -323,8 +303,6 @@ def init_worker(phenotype_df_exposed:pd.DataFrame,id_col,trajectory_ineligible:d
     global trajectory_ineligible_
     global trajectory_eligible_withdate_
     global all_diagnosis_level_
-    global comorbidity_pair_
-    global disease_pair_index_
     global covariates_
     global all_diseases_lst_
     global log_file_
@@ -335,8 +313,6 @@ def init_worker(phenotype_df_exposed:pd.DataFrame,id_col,trajectory_ineligible:d
     trajectory_ineligible_ = trajectory_ineligible
     trajectory_eligible_withdate_ = trajectory_eligible_withdate
     all_diagnosis_level_ = all_diagnosis_level
-    comorbidity_pair_ = comorbidity_pair
-    disease_pair_index_ = disease_pair_index
     covariates_ = covariates
     all_diseases_lst_ = all_diseases_lst
     log_file_ = log_file
