@@ -381,6 +381,13 @@ class Plot(object):
         # concat the trajectory and comorbidity in vertical level
         df = trajectory_result.copy()
         df.columns = comorbidity_result.columns
+        #retain only disease pairs not present in comorbidity_result for concatenation
+        df['temp_name'] = df.apply(lambda row: set(row[[source, target]]), axis=1)
+        comorbidity_result['temp_name'] = comorbidity_result.apply(
+            lambda row: set(row[[source, target]]), axis=1)
+        df = df[~df['temp_name'].isin(comorbidity_result['temp_name'])].drop(columns=['temp_name'])
+        #drop temp_name column from comorbidity_result
+        del comorbidity_result['temp_name']
 
         comorbidity_result = pd.concat(
             [comorbidity_result, df],
