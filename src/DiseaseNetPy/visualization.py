@@ -57,9 +57,13 @@ class Plot(object):
             - Case counts
             - Disease system classifications
         
-        exposure (float, optional): 
+        exposure_phecode (float, optional): 
             Phecode identifier for the primary exposure variable of interest.
             Used to highlight exposure-disease relationships in visualizations.
+            Defaults to None, means to exposed-only cohort or there is a no-phecode exposure.
+        
+        exposure_name (str, optional):
+            Identifier for the primary exposure variable of interest.
             Defaults to None, means to exposed-only cohort.
             
         exposure_location (Tuple[float], optional): 
@@ -156,7 +160,7 @@ class Plot(object):
             phewas_df,
             comorbidity_df,
             trajectory_df,
-            exposure=495.2, 
+            exposure_phecode=495.2, 
             exposure_size=15,
             exposure_location=(0,0,0),
             source: Optional[str]='phecode_d1',
@@ -184,7 +188,8 @@ class Plot(object):
             phewas_df, 
             comorbidity_df, 
             trajectory_df,
-            exposure=None, 
+            exposure_phecode=None,
+            exposure_name=None,
             exposure_size=None,
             exposure_location=None,
             source: Optional[str]='phecode_d1',
@@ -211,7 +216,8 @@ class Plot(object):
         comorbidity_result: Df, 
         trajectory_result: Df,
         disease_system: Optional[List[str]] | None=None,
-        exposure: Optional[float] | None=None,
+        exposure_phecode: Optional[float] | None=None,
+        exposure_name: Optional[str] | None=None,
         exposure_location: Optional[Tuple[float]] | None=None,
         exposure_size: Optional[float] | None=None,
         source: Optional[str]='phecode_d1',
@@ -396,7 +402,8 @@ class Plot(object):
         )
 
         # If there is a exposure, address a first layer (exposure -> disease)
-        if exposure:
+        if exposure_phecode or exposure_name:
+            exposure = 1000
             trajectory_result = self.__sequence(
                 trajectory_result,
                 exposure,
@@ -404,12 +411,15 @@ class Plot(object):
                 target,
                 col_disease_pair
             )
+        else:
+            exposure = None
 
         self.__init_attrs(
             comorbidity = comorbidity_result,
             trajectory = trajectory_result,
             phewas = phewas_result,
             exposure = exposure,
+            exposure_name = exposure_name,
             exposure_location = exposure_location,
             exposure_size = exposure_size,
             source = source,
@@ -1744,7 +1754,7 @@ class Plot(object):
                     size=self._exposure_size,
                     color='black'
                 ),
-                name="Exposure disease",
+                name=self._exposure_name,
                 legendgrouptitle_text='Origin of Trajectories',
                 showlegend=True
             )
