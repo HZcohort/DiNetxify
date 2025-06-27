@@ -256,20 +256,29 @@ class Plot(object):
             else:
                 raise TypeError(f"{name} is NOT a string {type(value)}")
 
-        # check the variables whether in column names(phewas_phecode, phewas_number, system_col, filter_phewas_col) 
-        # of the results(phewas_result, comorbidity_result, trajectory_result)
+        # check the variables whether in column names of the phewas_result
         for col_name in [phewas_phecode, phewas_number, system_col, filter_phewas_col]:
-            for result in [phewas_result, comorbidity_result, trajectory_result]:
-                if col_name not in result.columns:
-                    raise ValueError(f"{col_name} is NOT a column name in the {result} (pandas.DataFrame)")
+            if col_name not in phewas_result.columns:
+                raise ValueError(f"{col_name} is NOT a column name in the phewas_result (pandas.DataFrame)")
+
+        # check the variables whether in column names of the comorbidity_result
+        for col_name in [source, target, col_disease_pair, filter_comorbidity_col]:
+            if col_name not in comorbidity_result.columns:
+                raise ValueError(f"{col_name} is NOT a column name in the comorbidity_result (pandas.DataFrame)")
+
+        # check the variables whether in column names of the trajectory_result
+        for col_name in [source, target, col_disease_pair, filter_trajectory_col]:
+            if col_name not in trajectory_result.columns:
+                raise ValueError(f"{col_name} is NOT a column name in the trajectory_result (pandas.DataFrame)") 
         
-        # all phecodes to analysis in the PheWAS
+        # all phecodes to analysis
         diseases_phewas = phewas_result[phewas_phecode].to_list()
         # check the disesaes of comorbidity result whether are included in phewas result
         diseases_com = comorbidity_result[source].to_list() + comorbidity_result[target].to_list()
         for disease in set(diseases_com):
             if disease not in diseases_phewas:
-                raise ValueError(f"{disease} of comorbidity result is NOT in the phewas_result (pandas.DataFrame)")
+                raise ValueError(f"{disease} of comorbidity result is NOT in the phewas_result (pandas.DataFrame)")    
+
         # check the disesaes of trajectory result whether are included in phewas result
         diseases_tra = trajectory_result[source].to_list() + trajectory_result[target].to_list()
         for disease in set(diseases_tra):
