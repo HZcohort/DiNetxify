@@ -57,11 +57,6 @@ class Plot(object):
             - Case counts
             - Disease system classifications
         
-        exposure_phecode (float, optional): 
-            Phecode identifier for the primary exposure variable of interest.
-            Used to highlight exposure-disease relationships in visualizations.
-            Defaults to None, means to exposed-only cohort or there is a no-phecode exposure.
-        
         exposure_name (str, optional):
             Identifier for the primary exposure variable of interest.
             Defaults to None, means to exposed-only cohort.
@@ -160,7 +155,6 @@ class Plot(object):
             phewas_df,
             comorbidity_df,
             trajectory_df,
-            exposure_phecode=495.2, 
             exposure_size=15,
             exposure_location=(0,0,0),
             source: Optional[str]='phecode_d1',
@@ -188,7 +182,6 @@ class Plot(object):
             phewas_df, 
             comorbidity_df, 
             trajectory_df,
-            exposure_phecode=None,
             exposure_name=None,
             exposure_size=None,
             exposure_location=None,
@@ -216,7 +209,6 @@ class Plot(object):
         comorbidity_result: Df, 
         trajectory_result: Df,
         disease_system: Optional[List[str]] | None=None,
-        exposure_phecode: Optional[float] | None=None,
         exposure_name: Optional[str] | None=None,
         exposure_location: Optional[Tuple[float]] | None=None,
         exposure_size: Optional[float] | None=None,
@@ -238,14 +230,14 @@ class Plot(object):
             'comorbidity_result': comorbidity_result,
             'trajectory_result': trajectory_result
         }
-
-        # Check each variable's type
+        # Check each variable's type whether is pd.DataFrame
         for var_name, var in variables_to_check.items():
             if isinstance(var, pd.DataFrame):
                 continue
             else:
                 raise TypeError(f"{var_name} is NOT a pandas.DataFrame (type: {type(var)})")
 
+        # Dictionary of variables to check (name: value)
         validate_string_params = {
             'source': source,
             'target': target,
@@ -257,43 +249,34 @@ class Plot(object):
             'filter_comorbidity_col': filter_comorbidity_col,
             'filter_trajectory_col': filter_trajectory_col
         }
-
+        # Check each variable's type whether is string
         for name, value in validate_string_params.items():
             if isinstance(value, str):
                 continue
             else:
                 raise TypeError(f"{name} is NOT a string {type(value)}")
 
-        # check the variables whether in column names of the phewas_result
+        # check the variables whether in column names(phewas_phecode, phewas_number, system_col, filter_phewas_col) 
+        # of the results(phewas_result, comorbidity_result, trajectory_result)
         for col_name in [phewas_phecode, phewas_number, system_col, filter_phewas_col]:
-            if col_name not in phewas_result.columns:
-                raise ValueError(f"{col_name} is NOT a column name in the phewas_result (pandas.DataFrame)")
-
-        # check the variables whether in column names of the comorbidity_result
-        for col_name in [source, target, col_disease_pair, filter_comorbidity_col]:
-            if col_name not in comorbidity_result.columns:
-                raise ValueError(f"{col_name} is NOT a column name in the comorbidity_result (pandas.DataFrame)")
-
-        # check the variables whether in column names of the trajectory_result
-        for col_name in [source, target, col_disease_pair, filter_trajectory_col]:
-            if col_name not in trajectory_result.columns:
-                raise ValueError(f"{col_name} is NOT a column name in the trajectory_result (pandas.DataFrame)") 
-                
+            for result in [phewas_result, comorbidity_result, trajectory_result]:
+                if col_name not in result.columns:
+                    raise ValueError(f"{col_name} is NOT a column name in the {result} (pandas.DataFrame)")
+        
+        # all phecodes to analysis in the PheWAS
         diseases_phewas = phewas_result[phewas_phecode].to_list()
-
         # check the disesaes of comorbidity result whether are included in phewas result
         diseases_com = comorbidity_result[source].to_list() + comorbidity_result[target].to_list()
         for disease in set(diseases_com):
             if disease not in diseases_phewas:
-                raise ValueError(f"{disease} of comorbidity result is NOT in the phewas_result (pandas.DataFrame)")    
-
+                raise ValueError(f"{disease} of comorbidity result is NOT in the phewas_result (pandas.DataFrame)")
         # check the disesaes of trajectory result whether are included in phewas result
         diseases_tra = trajectory_result[source].to_list() + trajectory_result[target].to_list()
         for disease in set(diseases_tra):
             if disease not in diseases_phewas:
                 raise ValueError(f"{disease} of trajectory result is NOT in the phewas_result (pandas.DataFrame)")  
 
-        # filter the results
+        # filter the results meeting some rules
         phewas_result, comorbidity_result, trajectory_result = self.__filter_significant(
             phewas_result,
             comorbidity_result,
@@ -409,7 +392,7 @@ class Plot(object):
         )
 
         # If there is a exposure, address a first layer (exposure -> disease)
-        if exposure_phecode or exposure_name:
+        if exposure_name:
             exposure = 1000
             trajectory_result = self.__sequence(
                 trajectory_result,
