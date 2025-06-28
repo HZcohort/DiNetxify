@@ -189,7 +189,8 @@ def convert_column(dataframe, column:str):
             # Convert to binary
             mapping = {value: idx for idx, value in enumerate(unique_vals)}
             print(f"'{column}' converted to binary variable with mapping: {mapping}")
-            return df[[new_column]].map(mapping),'binary'
+            df[new_column] = df[new_column].map(mapping)
+            return df[[new_column]],'binary'
     elif (df[new_column].dtype == float or df[new_column].dtype == int or df[new_column].dtype == object) and n_unique_vals>=10:
         # Treat as continuous
         n_missing_before = df[new_column].isna().sum()
