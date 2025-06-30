@@ -944,7 +944,7 @@ class DiseaseNetworkData:
         #add the columns for each phecode
         from tqdm import tqdm
 
-        for phecode in tqdm(phecode_list, desc='Processing phecodes'):
+        for phecode in tqdm(phecode_list, smoothing=0, desc='Processing phecodes'):
             leaf_phecode = self.phecode_info[phecode]['leaf_list']
             dataframe_out[str(phecode)] = dataframe_out[id_col].apply(lambda x: min((d for d in [self.diagnosis[x].get(d, pd.NaT) for d in leaf_phecode] if pd.notna(d)), default=pd.NaT))
             if medical_history:
