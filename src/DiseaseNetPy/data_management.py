@@ -887,7 +887,7 @@ class DiseaseNetworkData:
         in phecode_list, the DataFrame shows the earliest diagnosis date.
         When medical_history is True, an extra column '<phecode>_history'
         is added to indicate (1 or 0) whether the participant has previous
-        history for that phecode.
+        history for that phecode or related phecodes.
 
         Parameters
         ----------
@@ -939,12 +939,17 @@ class DiseaseNetworkData:
                      self.__phenotype_info['phenotype_col_dict']['Exposure']]
         dataframe_out = self.phenotype_df[col_lst].copy()
         id_col = self.__phenotype_info['phenotype_col_dict']['Participant ID']
+
+        #add the columns for each phecode
         from tqdm import tqdm
+
         for phecode in tqdm(phecode_list, desc='Processing phecodes'):
             leaf_phecode = self.phecode_info[phecode]['leaf_list']
             dataframe_out[str(phecode)] = dataframe_out[id_col].apply(lambda x: min((d for d in [self.diagnosis[x].get(d, pd.NaT) for d in leaf_phecode] if pd.notna(d)), default=pd.NaT))
             if medical_history:
-                dataframe_out[f'{phecode}_history'] = dataframe_out[id_col].apply(lambda x: any(d in self.history[x] for d in leaf_phecode)).astype(int)
+                exl_lst = self.phecode_info[phecode]['exclude_list']
+                exl_lst = [d for lst in exl_lst for d in lst] #flatten the list
+                dataframe_out[f'{phecode}_history'] = dataframe_out[id_col].apply(lambda x: any(d in self.history[x] for d in exl_lst)).astype(int)
 
         return dataframe_out
         
