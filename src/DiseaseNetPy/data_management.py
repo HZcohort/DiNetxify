@@ -93,7 +93,7 @@ class DiseaseNetworkData:
         #medical records data
         self.__diagnosis_code_options = ['ICD-9-CM', 'ICD-9-WHO', 'ICD-10-CM', 'ICD-10-WHO']
         self.__phecode_level_options = [1, 2]
-        self.__phecode_version_options = ['1.2','1.3a']
+        self.__phecode_version_options = ['1.2','1.3a','VL_autism']
         self.__medical_records_cols = ['Participant ID','Diagnosis code','Date of diagnosis']
         self.__medical_records_info = {}
         #default column value
