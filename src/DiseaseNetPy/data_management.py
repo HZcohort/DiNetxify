@@ -113,6 +113,9 @@ class DiseaseNetworkData:
         #check phecode version
         if phecode_version not in self.__phecode_version_options:
             raise ValueError(f"Supported phecode version {self.__phecode_version_options}")
+        #if phecode_version is VL_autism, print a warning
+        if phecode_version == 'VL_autism':
+            print("Warning: The 'VL_autism' version is a variation of the 1.3a version for a specific use case not intended for general-purpose use.")
         #check minimal require ICD code number
         if not isinstance(min_required_icd_codes,int) or min_required_icd_codes<=0:
             raise TypeError("The input 'min_required_icd_codes' must be a int number > 0.")
