@@ -883,7 +883,7 @@ class DiseaseNetworkData:
         Convert stored medical records into a tidy pandas DataFrame.
 
         The result contains one row for each participant and includes columns
-        for 'Participant ID', 'Index date', and 'Exposure'. For every phecode
+        for 'Participant ID', 'Index date', 'Exposure', and 'Sex'. For every phecode
         in phecode_list, the DataFrame shows the earliest diagnosis date.
         When medical_history is True, an extra column '<phecode>_history'
         is added to indicate (1 or 0) whether the participant has previous
@@ -903,7 +903,7 @@ class DiseaseNetworkData:
         pd.DataFrame
             DataFrame summarizing first diagnosis dates and optional history
             for the specified phecodes. Columns always include
-            'Participant ID', 'Index date', and 'Exposure', followed by
+            'Participant ID', 'Index date', 'Exposure', and 'Sex', followed by
             one or more phecode columns.
         """
         #attribute check
@@ -936,7 +936,8 @@ class DiseaseNetworkData:
         #generate the new dataframe
         col_lst = [self.__phenotype_info['phenotype_col_dict']['Participant ID'],
                      self.__phenotype_info['phenotype_col_dict']['Index date'],
-                     self.__phenotype_info['phenotype_col_dict']['Exposure']]
+                     self.__phenotype_info['phenotype_col_dict']['Exposure'],
+                     self.__phenotype_info['phenotype_col_dict']['Sex']]
         dataframe_out = self.phenotype_df[col_lst].copy()
         id_col = self.__phenotype_info['phenotype_col_dict']['Participant ID']
 
