@@ -752,8 +752,8 @@ class DiseaseNetworkData:
             Individuals with D1 and D2 diagnoses interval less than or equal to this value are considered to have non-temporal D1-D2 disease pair (without a clear sequence).
         
         max_interval_days : int/float, default=np.inf
-            Maximum allowed time interval (in days) between diagnosis dates when constructing temporal for each individual.
-            Individuals with D1 and D2 diagnoses interval greater than this value are considered to have to have non-temporal D1-D2 disease pair.
+            Maximum allowed time interval (in days) between diagnosis dates when constructing temporal D1 → D2 disease pair for each individual.
+            Individuals with D1 and D2 diagnoses interval greater than this value are considered to have non-temporal D1-D2 disease pair.
 
         force : bool, default=False
             If True, the data will be loaded and existing attributes will be overwritten, even if they contain data. 
