@@ -559,6 +559,10 @@ def n_process_check(n_process:int,analysis_name:str):
         os.environ["OMP_NUM_THREADS"] = '1'
         os.environ["THREADPOOL_LIMIT"] = '1'
         os.environ["VECLIB_MAXIMUM_THREADS"] = '1'
+        #add missing environment variables
+        os.environ["BLIS_NUM_THREADS"] = '1'
+        os.environ["NUMEXPR_NUM_THREADS"] = '1'
+        os.environ["MKL_DYNAMIC"] = 'FALSE'  # Disable dynamic threading for MKL
         #system information
         max_process = os.cpu_count()
         operation_system = os.name
