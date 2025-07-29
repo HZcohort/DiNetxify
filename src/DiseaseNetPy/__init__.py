@@ -4,6 +4,17 @@ Created on Mon Jul 22 23:48:05 2024
 
 @author: Can Hou/Haowen Liu - Biomedical Big data center of West China Hospital, Sichuan University
 """
+import os
+#close multi-threading
+os.environ["MKL_NUM_THREADS"] = '1'
+os.environ["OPENBLAS_NUM_THREADS"] = '1'
+os.environ["OMP_NUM_THREADS"] = '1'
+os.environ["THREADPOOL_LIMIT"] = '1'
+os.environ["VECLIB_MAXIMUM_THREADS"] = '1'
+#add missing environment variables
+os.environ["BLIS_NUM_THREADS"] = '1'
+os.environ["NUMEXPR_NUM_THREADS"] = '1'
+os.environ["MKL_DYNAMIC"] = 'FALSE'  # Disable dynamic threading for MKL
 from .data_management import DiseaseNetworkData
 from .analysis import (
     phewas,
