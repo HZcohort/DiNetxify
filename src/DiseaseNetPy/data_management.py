@@ -93,7 +93,7 @@ class DiseaseNetworkData:
         #medical records data
         self.__diagnosis_code_options = ['ICD-9-CM', 'ICD-9-WHO', 'ICD-10-CM', 'ICD-10-WHO']
         self.__phecode_level_options = [1, 2]
-        self.__phecode_version_options = ['1.2','1.3a']
+        self.__phecode_version_options = ['1.2','1.3a','VL_autism']
         self.__medical_records_cols = ['Participant ID','Diagnosis code','Date of diagnosis']
         self.__medical_records_info = {}
         #default column value
@@ -113,6 +113,9 @@ class DiseaseNetworkData:
         #check phecode version
         if phecode_version not in self.__phecode_version_options:
             raise ValueError(f"Supported phecode version {self.__phecode_version_options}")
+        #if phecode_version is VL_autism, print a warning
+        if phecode_version == 'VL_autism':
+            print("Warning: The 'VL_autism' version is a variation of the 1.3a version for a specific use case not intended for general-purpose use.")
         #check minimal require ICD code number
         if not isinstance(min_required_icd_codes,int) or min_required_icd_codes<=0:
             raise TypeError("The input 'min_required_icd_codes' must be a int number > 0.")
@@ -608,60 +611,6 @@ class DiseaseNetworkData:
         unexposed_id = self.phenotype_df[self.phenotype_df[self.__exposure_col]==0][self.__id_col].values
         self.__medical_records_statistics['n_phecode_diagnosis_per_unexposed'] = np.mean([len(self.diagnosis[id_]) for id_ in unexposed_id])
         self.__medical_records_statistics['n_phecode_history_per_unexposed'] = np.mean([len(self.history[id_]) for id_ in unexposed_id])
-
-    def Incidence_Table(self, phenotype_groups: dict, stratification_vars: list=None) -> pd.DataFrame:
-        """
-        Compute the cumulative incidence (incidence proportion) of specified phenotype groups
-        from the merged cohort and health records dataset, optionally stratified by exposure
-        or other categorical variables, and return a summary table.
-
-        Parameters
-        ----------
-        phenotype_groups : dict of {str: list of int or str}
-            Mapping from a descriptive phenotype-group name (e.g. "mental_health_cluster") to
-            the list of phecodes that define that group. All phecodes in each list will be
-            treated as a single aggregated phenotype.
-            Example:
-                phenotype_groups = {
-                    "mental_health_cluster": [296, 295, "297.2"],
-                    "T2DM": [250.2]}
-
-        stratification_vars : list of str, optional
-            Names of categorical columns in the data by which to stratify incidence estimates.
-            If None, incidence will be stratified only by the cohort's exposure variable(s).
-            Each variable must exist in the merged DataFrame and be encoded as categorical.
-
-        Returns
-        -------
-        pd.DataFrame
-            A table with one column per phenotype group.
-        """
-        from .utility_summary import incidence_table
-        
-        #attribute check
-        data_attrs = ['phenotype_df','diagnosis']
-        for attr in data_attrs:
-            if getattr(self, attr) is None:
-                raise ValueError(f"Attribute '{attr}' is empty.")
-        
-        #check input
-        if not isinstance(phenotype_groups, dict):
-            raise TypeError("The input 'phenotype_groups' must be a dictionary.")
-        #check whether the keys are strings and values are lists
-        for key, value in phenotype_groups.items():
-            if not isinstance(key, str):
-                raise TypeError(f"The key '{key}' in 'phenotype_groups' must be a string.")
-            if not isinstance(value, list):
-                raise TypeError(f"The value '{value}' in 'phenotype_groups' must be a list.")
-        if not isinstance(stratification_vars, (list, type(None))):
-            raise TypeError("The input 'stratify_by' must be a list or None.")
-
-        #generate all possible phecodes
-        all_phecodes = set()
-        
-        
-        
-        return None
     
     def get_attribute(
         self, 
@@ -736,6 +685,8 @@ class DiseaseNetworkData:
         DiseaseNetworkData
             A new DiseaseNetworkData object containing the combined data from both inputs.
         """
+        #rasise not implemented error for this method
+        raise NotImplementedError("The concat method is not implemented yet.")
 
 
     def modify_phecode_level(
@@ -768,7 +719,8 @@ class DiseaseNetworkData:
             raise ValueError(f"Choose from the following phecode level {self.__phecode_level_options}")
         
         if phecode_level == self.phecode_level:
-            raise ValueError("No modification needed.")
+            # no change and warning
+            print(f'Phecode level is already set to {self.phecode_level}. No changes made.')
         else:
             self.phecode_level = phecode_level
             #load necessary phecode files
@@ -800,8 +752,8 @@ class DiseaseNetworkData:
             Individuals with D1 and D2 diagnoses interval less than or equal to this value are considered to have non-temporal D1-D2 disease pair (without a clear sequence).
         
         max_interval_days : int/float, default=np.inf
-            Maximum allowed time interval (in days) between diagnosis dates when constructing temporal for each individual.
-            Individuals with D1 and D2 diagnoses interval greater than this value are considered to have to have non-temporal D1-D2 disease pair.
+            Maximum allowed time interval (in days) between diagnosis dates when constructing temporal D1 → D2 disease pair for each individual.
+            Individuals with D1 and D2 diagnoses interval greater than this value are considered to have non-temporal D1-D2 disease pair.
 
         force : bool, default=False
             If True, the data will be loaded and existing attributes will be overwritten, even if they contain data. 
@@ -927,7 +879,85 @@ class DiseaseNetworkData:
                 self.max_interval_days,
                 self.min_required_icd_codes
                 )
+    
 
+    def medical_records_to_dataframe(self, phecode_list:list, medical_history:bool=False) -> pd.DataFrame:
+        """
+        Convert stored medical records into a tidy pandas DataFrame.
+
+        The result contains one row for each participant and includes columns
+        for 'Participant ID', 'Index date', 'Exposure', and 'Sex'. For every phecode
+        in phecode_list, the DataFrame shows the earliest diagnosis date.
+        When medical_history is True, an extra column '<phecode>_history'
+        is added to indicate (1 or 0) whether the participant has previous
+        history for that phecode or related phecodes.
+
+        Parameters
+        ----------
+        phecode_list : list
+            List of phecodes to extract from the medical records. Only phecodes
+            valid for the current phecode_level are accepted.
+
+        medical_history : bool, default=False
+            Include a binary history column for each phecode if set to True.
+
+        Returns
+        -------
+        pd.DataFrame
+            DataFrame summarizing first diagnosis dates and optional history
+            for the specified phecodes. Columns always include
+            'Participant ID', 'Index date', 'Exposure', and 'Sex', followed by
+            one or more phecode columns.
+        """
+        #attribute check
+        data_attrs = ['phenotype_df', 'diagnosis', 'history']
+        for attr in data_attrs:
+            if getattr(self, attr) is None:
+                raise ValueError(f"Attribute '{attr}' is empty.")
+        
+        #check medical_history
+        if not isinstance(medical_history, bool):
+            raise TypeError("The input 'medical_history' must be a boolean.")
+        
+        #check phecode_list
+        if not isinstance(phecode_list, list):
+            raise TypeError("The input 'phecode_list' must be a list.")
+        if len(phecode_list) == 0:
+            raise ValueError("The input 'phecode_list' cannot be empty.")
+        #check phecode level
+        all_phecodes = list(self.phecode_info)
+        phecodes_not_in_info = []
+        for phecode in phecode_list:
+            #if phecode itself is hashable, not a string, float or int
+            if not isinstance(phecode, (str, int, float)):
+                raise TypeError(f"The input 'phecode_list' must contain hashable types, found {type(phecode)} instead.")
+            elif phecode not in all_phecodes:
+                phecodes_not_in_info.append(phecode)
+        if len(phecodes_not_in_info) > 0:
+            raise ValueError(f"The following phecodes are not valid for phecode level of {self.phecode_level}: {phecodes_not_in_info}. You may consider modifying the phecode level using the modify_phecode_level method.")
+        
+        #generate the new dataframe
+        col_lst = [self.__phenotype_info['phenotype_col_dict']['Participant ID'],
+                     self.__phenotype_info['phenotype_col_dict']['Index date'],
+                     self.__phenotype_info['phenotype_col_dict']['Exposure'],
+                     self.__phenotype_info['phenotype_col_dict']['Sex']]
+        dataframe_out = self.phenotype_df[col_lst].copy()
+        id_col = self.__phenotype_info['phenotype_col_dict']['Participant ID']
+
+        #add the columns for each phecode
+        from tqdm import tqdm
+
+        for phecode in tqdm(phecode_list, smoothing=0, desc='Processing phecodes'):
+            leaf_phecode = self.phecode_info[phecode]['leaf_list']
+            dataframe_out[str(phecode)] = dataframe_out[id_col].apply(lambda x: min((d for d in [self.diagnosis[x].get(d, pd.NaT) for d in leaf_phecode] if pd.notna(d)), default=pd.NaT))
+            if medical_history:
+                exl_lst = self.phecode_info[phecode]['exclude_list']
+                exl_lst = [d for lst in exl_lst for d in lst] #flatten the list
+                dataframe_out[f'{phecode}_history'] = dataframe_out[id_col].apply(lambda x: any(d in self.history[x] for d in exl_lst)).astype(int)
+
+        return dataframe_out
+        
+    
     def save(
         self,
         file:str

@@ -4,6 +4,7 @@ Created on Mon Jul 22 23:48:05 2024
 
 @author: Can Hou/Haowen Liu - Biomedical Big data center of West China Hospital, Sichuan University
 """
+
 from .data_management import DiseaseNetworkData
 from .analysis import (
     phewas,

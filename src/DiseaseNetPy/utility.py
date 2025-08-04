@@ -189,7 +189,8 @@ def convert_column(dataframe, column:str):
             # Convert to binary
             mapping = {value: idx for idx, value in enumerate(unique_vals)}
             print(f"'{column}' converted to binary variable with mapping: {mapping}")
-            return df[[new_column]].map(mapping),'binary'
+            df[new_column] = df[new_column].map(mapping)
+            return df[[new_column]],'binary'
     elif (df[new_column].dtype == float or df[new_column].dtype == int or df[new_column].dtype == object) and n_unique_vals>=10:
         # Treat as continuous
         n_missing_before = df[new_column].isna().sum()
@@ -558,6 +559,10 @@ def n_process_check(n_process:int,analysis_name:str):
         os.environ["OMP_NUM_THREADS"] = '1'
         os.environ["THREADPOOL_LIMIT"] = '1'
         os.environ["VECLIB_MAXIMUM_THREADS"] = '1'
+        #add missing environment variables
+        os.environ["BLIS_NUM_THREADS"] = '1'
+        os.environ["NUMEXPR_NUM_THREADS"] = '1'
+        os.environ["MKL_DYNAMIC"] = 'FALSE'  # Disable dynamic threading for MKL
         #system information
         max_process = os.cpu_count()
         operation_system = os.name
