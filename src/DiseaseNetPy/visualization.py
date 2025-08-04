@@ -10,6 +10,7 @@ import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 import plotly.offline as py
 import matplotlib.cm as cm
+import matplotlib as mpl
 import networkx as nx
 import pandas as pd
 import numpy as np
@@ -780,6 +781,7 @@ class Plot(object):
             ZeroDivisionError: If total network size is 0
         """
         for cluster, nodes in cluster_nodes.items():
+            print(nodes)
             size = [self._nodes_attrs[x]["size"] for x in nodes]
             sum_size = sum(size)
             cluster_nodes.update({cluster:sum_size})
@@ -876,17 +878,20 @@ class Plot(object):
         """
         if filter_phewas_col:
             phewas_result = phewas_result.loc[
-                phewas_result[filter_phewas_col] == True
+                (phewas_result[filter_phewas_col] == True) 
+                # & (phewas_result['phewas_coef'] > 0)
             ]
         
         if filter_comorbidity_col:
             comorbidity_result = comorbidity_result.loc[
-                comorbidity_result[filter_comorbidity_col] == True
+                (comorbidity_result[filter_comorbidity_col] == True) &
+                (comorbidity_result['comorbidity_beta'] > 0)
             ]
 
         if filter_trajectory_col:
             trajectory_result = trajectory_result.loc[
-                trajectory_result[filter_trajectory_col] == True
+                (trajectory_result[filter_trajectory_col] == True) &
+                (trajectory_result['trajectory_beta'] > 0)
             ]
         
         return phewas_result, comorbidity_result, trajectory_result
@@ -1876,7 +1881,32 @@ class Plot(object):
                 layer_distance,
                 cluster_reduction_ratio
             )
-                
+        
+        phecode = []
+        disease_name = []
+        system = []
+        location = []
+        cluster = []
+
+        for code, attrs in self._nodes_attrs.items():
+            phecode.append(code)
+            disease_name.append(attrs['name'])
+            system.append(attrs['system'])
+            location.append(attrs['location'][:2])
+            cluster.append(attrs['cluster'])
+        
+        cluster_df = pd.DataFrame(
+            {
+                'phecode': phecode,
+                'disease': disease_name,
+                'system': system,
+                'cluster': cluster,
+                'location': location
+            }
+        )
+
+        cluster_df.to_csv("C:/Users/bovin/Desktop/whole_population_pca/figure/cluster.csv")
+
         fig = go.Figure()
         pairs = self._comorbidity[[self._source, self._target]].values
 
@@ -2023,15 +2053,37 @@ class Plot(object):
             else:    
                 return (float(valuex),float(valuey))
         
-        def angle_lst(n):
-            if n%2 == 1:
-                rl_n = int((n-1)/2)
-                return [i*10 for i in range(rl_n,0,-1)] + [0] + [i*-10 for i in range(1,rl_n+1)]
+        def angle_lst(n, angle_step=12):
+            if n <= 1:
+                if n%2 == 1:
+                    rl_n = int((n-1)/2)
+                    return [i*10 for i in range(rl_n,0,-1)] + [0] + [i*-10 for i in range(1,rl_n+1)]
+                else:
+                    rl_n = int(n/2)
+                    return [5+(i-1)*10 for i in range(rl_n,0,-1)] + [(i-1)*-10-5 for i in range(1,rl_n+1)]
             else:
-                rl_n = int(n/2)
-                return [5+(i-1)*10 for i in range(rl_n,0,-1)] + [(i-1)*-10-5 for i in range(1,rl_n+1)]
+                if n % 2 == 1:  
+                    half = (n - 1) // 2
+                    positive = [angle_step * i for i in range(half, 0, -1)]
+                    negative = [-angle_step * i for i in range(1, half+1)]
+                    return positive + [0] + negative
+                else:  
+                    half = n // 2
+                    offset = angle_step / 2 
+                    positive = [offset + angle_step * (i-1) for i in range(half, 0, -1)]
+                    negative = [-offset - angle_step * (i-1) for i in range(1, half+1)]
+                    return positive + negative
 
-        def sort_arc(lst, y, r=300):
+        # def angle_lst(n):
+        #     if n%2 == 1:
+        #         rl_n = int((n-1)/2)
+        #         return [i*10 for i in range(rl_n,0,-1)] + [0] + [i*-10 for i in range(1,rl_n+1)]
+        #     else:
+        #         rl_n = int(n/2)
+        #         return [5+(i-1)*10 for i in range(rl_n,0,-1)] + [(i-1)*-10-5 for i in range(1,rl_n+1)]
+
+        # r = 300
+        def sort_arc(lst, y, r=500):
             n_dots = len(lst)
             x_pos = {}
             for dot in lst:
@@ -2066,7 +2118,7 @@ class Plot(object):
                         comp_layer[neighbor] = current_layer + 1
                         queue.append(neighbor)
             
-            # Map each original node to its component's layer
+            # Map each original node to its component's layer {phecode: number_layer}
             d_lst_layer = {node: comp_layer[node_to_scc[node]] for node in G.nodes() if node_to_scc[node] in comp_layer}
 
             n_layer = max([x for x in d_lst_layer.values()])
@@ -2074,16 +2126,18 @@ class Plot(object):
             if n_layer <= 5:
                 height = 150
             else:
-                height = 1000/(n_layer-1)
-            layer_y = {i:1000-height*(i-1) for i in range(1,n_layer+1)}
+                height = 1500/(n_layer-1)
+
+            layer_y = {i:1500-height*(i-1) for i in range(1, n_layer+1)}
             
             new_pos = {}
-            for l in range(1,n_layer+1):
+            for l in range(1, n_layer+1):
                 if l == 1:
-                    new_pos[start_node] = (500,1000)
+                    new_pos[start_node] = (500, 1500)
                 else:
+                    # find all of nodes in this layer
                     d_lst = [x for x in d_lst_layer.keys() if d_lst_layer[x]==l]
-                    temp_pos = sort_arc(d_lst,layer_y[l])
+                    temp_pos = sort_arc(d_lst, layer_y[l])
                     for d in d_lst:
                         new_pos[d] = temp_pos[d]
             
@@ -2153,7 +2207,7 @@ class Plot(object):
         tra["source_cluster"] = tra[self._source].apply(lambda x: self._nodes_attrs[x]["cluster"])
 
         coef_dict = {
-            (tra.loc[i, self._source],tra.loc[i, self._target]):ratio(tra.loc[i,'n_total']) 
+            (tra.loc[i, self._source], tra.loc[i, self._target]): ratio(tra.loc[i,'n_total']) 
             for i in tra.index
         }
 
@@ -2175,13 +2229,14 @@ class Plot(object):
             source_nodes = df[~df[self._source].isin(df[self._target].values)][self._source].values
             for node in source_nodes:
                 temp_df = pd.DataFrame(
-                    [['%i-%.1f' % (exposure,node), exposure, node]],
+                    [['%i-%.1f' % (exposure, node), exposure, node]],
                     columns=['name', self._source, self._target]
                 )
                 df = pd.concat([df, temp_df])
             df.index = np.arange(len(df))
 
             position = hierarchy_layout(df, exposure)
+            print(position)
             graph = nx.DiGraph()
             for idx in df.index:
                 graph.add_edge(
@@ -2189,7 +2244,7 @@ class Plot(object):
                     df.loc[idx, self._target]
                 )
 
-            fig, ax_nx = plt.subplots(dpi=500,figsize=(7,7))
+            fig, ax_nx = plt.subplots(dpi=600, figsize=(6,4))
             plt.axis("off")
 
             if self._exposure:
@@ -2201,7 +2256,7 @@ class Plot(object):
                 labels = {}
                 for node in nodes:
                     if node==exposure:
-                        labels.update({node:"Exposure disease"})
+                        labels.update({node:self._exposure_name})
                     else:
                         labels.update(
                             {node:self._nodes_attrs[node]["name"]}
@@ -2221,7 +2276,7 @@ class Plot(object):
                         else np.pi*self._nodes_attrs[x]["size"]**(2)
                         for x in nodes
                     ],
-                    font_size=6,
+                    font_size=4,
                     connectionstyle="arc3,rad=0",
                     labels=labels,
                     edge_color=["grey"]*len(edges),
@@ -2243,16 +2298,18 @@ class Plot(object):
                 arrowsize=6,
                 width=[coef_dict[x]**(1/3) for x in edges],
                 node_size=[np.pi*self._nodes_attrs[x]["size"]**(2) for x in nodes],
-                font_size=6,
+                font_size=4,
                 connectionstyle="arc3,rad=0",
                 labels={x:self._nodes_attrs[x]["name"] for x in nodes},
-                edge_color=["grey"]*len(edges),
+                edge_color=["lightgray"]*len(edges),
                 ax=ax_nx,
                 edgelist=edges,
                 nodelist=nodes
             )
 
-            fig.savefig(path+'/cluster_%i.png' % (cluster))
+            fig.savefig(path+'/cluster_%i.png' % (cluster),
+                        bbox_inches='tight'
+                        )
 
     def phewas_plot(
         self,
@@ -2331,7 +2388,7 @@ class Plot(object):
             sys_dict_ += [x for x in sys_dict.values() if x not in sys_dict_]
             return sys_dict_
         
-        _, ax = plt.subplots(
+        fig, ax = plt.subplots(
             subplot_kw=dict(polar=True),
             dpi=500,
             figsize=(20, 20),
@@ -2341,7 +2398,7 @@ class Plot(object):
         
         cmap = plt.get_cmap("tab20c")
         # max_neg = np.log(0.5)
-        # max_pos = np.log(5.0)
+        max_pos = np.log(1.5)
         cmap_pos = plt.get_cmap("Reds")
         sys_dict = {
             'neoplasms':'Neoplasms', 
@@ -2366,16 +2423,17 @@ class Plot(object):
             phe_df = self._phewas
         else:
             phe_df = self._phewas.loc[self._phewas[col_coef]>0]
+
         phe_df = phe_df.sort_values(by=col_disease)
 
         if is_exposure_only:
             phe_df["col_color"] = phe_df[col_exposure].apply(
-                lambda x: (x - phe_df[col_exposure].min()) / (phe_df[col_exposure].max() - phe_df[col_exposure].min())
+                lambda x: x/25000
             )
 
         else:
-            phe_df["col_color"] = phe_df[col_se].apply(
-                lambda x: (x - phe_df[col_se].min()) / (phe_df[col_se].max() - phe_df[col_se].min())
+            phe_df["col_color"] = phe_df[col_coef].apply(
+                lambda x: x/max_pos
             )
 
         phe_df['color'] = phe_df["col_color"].apply(
@@ -2465,19 +2523,27 @@ class Plot(object):
                         fontsize=10
                     )            
             start = left[-1] + width[0]*(1+edge_width_n)
-        sm = cm.ScalarMappable(cmap=cmap_pos)
+
         if is_exposure_only:
+            norm = mpl.colors.Normalize(vmin=2500, vmax=25000)
+            sm = cm.ScalarMappable(norm=norm ,cmap=cmap_pos)
+            cax = fig.add_axes([0.60, -0.05, 0.3, 0.02])
             bar = plt.colorbar(
                 sm, 
                 ax=ax,
+                cax=cax,
                 location='bottom', 
                 label='Incident number', 
                 shrink=0.4
             )
         else:
+            norm = mpl.colors.Normalize(vmin=0, vmax=max_pos)
+            sm = cm.ScalarMappable(norm=norm ,cmap=cmap_pos)
+            cax = fig.add_axes([0.60, -0.05, 0.3, 0.02])
             bar = plt.colorbar(
                 sm, 
                 ax=ax,
+                cax=cax,
                 location='bottom', 
                 label='Hazard ratio', 
                 shrink=0.4
@@ -2487,13 +2553,15 @@ class Plot(object):
         bar.locator = tick_locator
         bar.update_ticks()
         if is_exposure_only:
-            bar.set_ticklabels(['NA', float(phe_df[col_exposure].median()), float(phe_df[col_exposure].max())])
+            bar.set_ticks([2500, 10000, 15000, 25000])
+            bar.set_ticklabels([f'2500', f'10000', f'15000', f'≥25000'])
         else:
-            bar.set_ticklabels(['NA', '1.2', '>2.0'])
+            bar.set_ticks([np.log(1), np.log(1.2), np.log(1.5)])
+            bar.set_ticklabels(['1.0', '1.2', '≥1.5'])
 
         ax.set_axis_off()
         plt.savefig(
             path, 
-            dpi=1200, 
+            dpi=200, 
             bbox_inches='tight'
         )
