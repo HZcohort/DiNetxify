@@ -877,11 +877,16 @@ class Plot(object):
             - Original dataframes are not modified (returns filtered copies
         """
         if filter_phewas_col:
-            phewas_result = phewas_result.loc[
-                (phewas_result[filter_phewas_col] == True) 
-                # & (phewas_result['phewas_coef'] > 0)
-            ]
-        
+            if self._exposure_name:
+                phewas_result = phewas_result.loc[
+                    (phewas_result[filter_phewas_col] == True) 
+                    & (phewas_result['phewas_coef'] > 0)
+                ]
+            else:
+                phewas_result = phewas_result.loc[
+                    (phewas_result[filter_phewas_col] == True)
+                ]
+
         if filter_comorbidity_col:
             comorbidity_result = comorbidity_result.loc[
                 (comorbidity_result[filter_comorbidity_col] == True) &
@@ -1810,7 +1815,10 @@ class Plot(object):
         fig = go.Figure(data=plot_data, layout=layout)
 
         # create the file of the figure
-        py.plot(fig, filename=path)
+        py.plot(
+            fig, 
+            filename=path
+        )
 
     def comorbidity_network_plot(
         self, 
@@ -1881,31 +1889,6 @@ class Plot(object):
                 layer_distance,
                 cluster_reduction_ratio
             )
-        
-        phecode = []
-        disease_name = []
-        system = []
-        location = []
-        cluster = []
-
-        for code, attrs in self._nodes_attrs.items():
-            phecode.append(code)
-            disease_name.append(attrs['name'])
-            system.append(attrs['system'])
-            location.append(attrs['location'][:2])
-            cluster.append(attrs['cluster'])
-        
-        cluster_df = pd.DataFrame(
-            {
-                'phecode': phecode,
-                'disease': disease_name,
-                'system': system,
-                'cluster': cluster,
-                'location': location
-            }
-        )
-
-        cluster_df.to_csv("C:/Users/bovin/Desktop/whole_population_pca/figure/cluster.csv")
 
         fig = go.Figure()
         pairs = self._comorbidity[[self._source, self._target]].values
@@ -1988,6 +1971,7 @@ class Plot(object):
         cluster_weight: Optional[str]="comorbidity_beta",
         source: Optional[str]='phecode_d1',
         target: Optional[str]='phecode_d2',
+        dpi: Optional[float]=500
     ) -> None:
         """Generates and saves trajectory visualizations for each disease cluster.
 
@@ -1998,6 +1982,11 @@ class Plot(object):
         Args:
             path: Directory path to save output images
             cluster_weight: Edge weight metric used for clustering (default: "comorbidity_beta")
+            source: Column name representing source nodes (disease onset points) in trajectory data
+                    (default: 'phecode_d1')
+            target: Column name representing target nodes (subsequent disease points) in trajectory data
+                    (default: 'phecode_d2')
+            dpi: Image resolution in dots per inch for output files (default: 500)
 
         Workflow:
             1. Performs cluster analysis if not already done
@@ -2026,16 +2015,10 @@ class Plot(object):
         if not self.__check_node_attrs("cluster"):
             self.__cluster(cluster_weight)
 
-        # sig_trajectory = self.__sig_nodes()
-
         if self._exposure:
             exposure = self._exposure
         else:
             exposure = 0
-
-        # if not sig_trajectory:
-        #     raise TypeError("There is no significant trajectory\
-        #                     of network, please try other method of plot")
         
         def rotate(angle_,valuex,valuey,pointx,pointy):
             valuex = np.array(valuex)
@@ -2074,15 +2057,6 @@ class Plot(object):
                     negative = [-offset - angle_step * (i-1) for i in range(1, half+1)]
                     return positive + negative
 
-        # def angle_lst(n):
-        #     if n%2 == 1:
-        #         rl_n = int((n-1)/2)
-        #         return [i*10 for i in range(rl_n,0,-1)] + [0] + [i*-10 for i in range(1,rl_n+1)]
-        #     else:
-        #         rl_n = int(n/2)
-        #         return [5+(i-1)*10 for i in range(rl_n,0,-1)] + [(i-1)*-10-5 for i in range(1,rl_n+1)]
-
-        # r = 300
         def sort_arc(lst, y, r=500):
             n_dots = len(lst)
             x_pos = {}
@@ -2307,19 +2281,24 @@ class Plot(object):
                 nodelist=nodes
             )
 
-            fig.savefig(path+'/cluster_%i.png' % (cluster),
-                        bbox_inches='tight'
-                        )
+            fig.savefig(
+                path+'/cluster_%i.png' % (cluster),
+                bbox_inches='tight',
+                dpi=dpi
+                )
 
     def phewas_plot(
         self,
         path: str,
+        system_font_size: Optional[float]=17,
+        disese_font_size: Optional[float]=10,
         col_coef: Optional[str]="phewas_coef",
         col_system: Optional[str]="system",
         col_se: Optional[str]="phewas_se",
         col_disease: Optional[str]="disease",
         is_exposure_only: Optional[bool]=False,
-        col_exposure: Optional[str]='N_cases_exposed'
+        col_exposure: Optional[str]='N_cases_exposed',
+        dpi: Optional[float]=200
     ) -> None:
         """Generates a circular PheWAS (Phenome-Wide Association Study) plot.
 
@@ -2332,12 +2311,15 @@ class Plot(object):
 
         Args:
             path: Output file path for saving the plot
+            system_font_size: Font size for disease system/category labels (default: 17)
+            disease_font_size: Font size for disease labels (default: 10)
             col_coef: Column name for effect size coefficients (default: "phewas_coef")
             col_system: Column name for disease system/category (default: "system")
             col_se: Column name for standard errors (default: "phewas_se")
             col_disease: Column name for disease names (default: "disease")
             is_exposure_only: Identifier of exposure (default: False)
             col_exposure: Column name for exposure number (default: "N_cases_exposed")
+            dpi: Image resolution in dots per inch for output files (default: 200)
 
         Example:
             >>> network.phewas_plot(
@@ -2388,16 +2370,14 @@ class Plot(object):
             sys_dict_ += [x for x in sys_dict.values() if x not in sys_dict_]
             return sys_dict_
         
-        fig, ax = plt.subplots(
+        _, ax = plt.subplots(
             subplot_kw=dict(polar=True),
-            dpi=500,
             figsize=(20, 20),
             nrows=1,
             ncols=1
         )
         
         cmap = plt.get_cmap("tab20c")
-        # max_neg = np.log(0.5)
         max_pos = np.log(1.5)
         cmap_pos = plt.get_cmap("Reds")
         sys_dict = {
@@ -2427,8 +2407,10 @@ class Plot(object):
         phe_df = phe_df.sort_values(by=col_disease)
 
         if is_exposure_only:
+            incident_number_max = phe_df[col_exposure].max()
+            incident_number_min = phe_df[col_exposure].min()
             phe_df["col_color"] = phe_df[col_exposure].apply(
-                lambda x: x/25000
+                lambda x: x/incident_number_max
             )
 
         else:
@@ -2483,7 +2465,7 @@ class Plot(object):
                     va='center',
                     rotation=np.rad2deg(x_system),
                     rotation_mode="anchor",
-                    fontsize=17
+                    fontsize=system_font_size
                 )
             else:
                 ax.text(
@@ -2494,7 +2476,7 @@ class Plot(object):
                     va='center',
                     rotation=np.rad2deg(x_system)+180,
                     rotation_mode="anchor",
-                    fontsize=17
+                    fontsize=system_font_size
                 )       
             left_text = left + width/2
             rotations = np.rad2deg(left_text)
@@ -2509,7 +2491,7 @@ class Plot(object):
                         va='center', 
                         rotation=rotation, 
                         rotation_mode="anchor",
-                        fontsize=10
+                        fontsize=disese_font_size
                     )
                 else:
                     ax.text(
@@ -2520,18 +2502,20 @@ class Plot(object):
                         va='center', 
                         rotation=rotation+180, 
                         rotation_mode="anchor",
-                        fontsize=10
-                    )            
+                        fontsize=disese_font_size
+                    )
             start = left[-1] + width[0]*(1+edge_width_n)
 
         if is_exposure_only:
-            norm = mpl.colors.Normalize(vmin=2500, vmax=25000)
+            norm = mpl.colors.Normalize(
+                vmin=incident_number_min, 
+                vmax=incident_number_max
+            )
+
             sm = cm.ScalarMappable(norm=norm ,cmap=cmap_pos)
-            cax = fig.add_axes([0.60, -0.05, 0.3, 0.02])
             bar = plt.colorbar(
                 sm, 
                 ax=ax,
-                cax=cax,
                 location='bottom', 
                 label='Incident number', 
                 shrink=0.4
@@ -2539,11 +2523,9 @@ class Plot(object):
         else:
             norm = mpl.colors.Normalize(vmin=0, vmax=max_pos)
             sm = cm.ScalarMappable(norm=norm ,cmap=cmap_pos)
-            cax = fig.add_axes([0.60, -0.05, 0.3, 0.02])
             bar = plt.colorbar(
                 sm, 
                 ax=ax,
-                cax=cax,
                 location='bottom', 
                 label='Hazard ratio', 
                 shrink=0.4
@@ -2553,8 +2535,20 @@ class Plot(object):
         bar.locator = tick_locator
         bar.update_ticks()
         if is_exposure_only:
-            bar.set_ticks([2500, 10000, 15000, 25000])
-            bar.set_ticklabels([f'2500', f'10000', f'15000', f'≥25000'])
+            bar.set_ticks(
+                [
+                    incident_number_min,
+                    (incident_number_min+incident_number_max)/2,
+                    incident_number_max
+                ]
+            )
+            bar.set_ticklabels(
+                [
+                    f'{incident_number_min}', 
+                    f'{(incident_number_min+incident_number_max)/2}',
+                    f'{incident_number_max}'
+                ]
+            )
         else:
             bar.set_ticks([np.log(1), np.log(1.2), np.log(1.5)])
             bar.set_ticklabels(['1.0', '1.2', '≥1.5'])
@@ -2562,6 +2556,6 @@ class Plot(object):
         ax.set_axis_off()
         plt.savefig(
             path, 
-            dpi=200, 
+            dpi=dpi, 
             bbox_inches='tight'
         )

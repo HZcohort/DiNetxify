@@ -66,7 +66,7 @@ def disease_network_pipeline(
         and disease pairs with positive correlations from the comorbidity strength estimation.
 
     save_intermediate_data : bool, default=False
-        If True, intermediate DiseaseNetworkData objects created by the `DiseaseNetPy.DiseaseNetworkData.disease_pair` function are saved to disk.
+        If True, intermediate DiseaseNetworkData objects created by the `DiNetxify.DiseaseNetworkData.disease_pair` function are saved to disk.
     
     system_exl : list, default=None
         List of phecode systems to exclude from the analysis. 
@@ -97,7 +97,7 @@ def disease_network_pipeline(
     covariates : list, default=None
         List of covariates to adjust for in the PheWAS, comorbidity network and disease trajectory analysis.
         To include the required variable sex as a covariate, always use 'sex' instead of its original column name.
-        For other covariates specified in the 'DiseaseNetPy.DiseaseNetworkData.phenotype_data()' function, use their original column names.
+        For other covariates specified in the 'DiNetxify.DiseaseNetworkData.phenotype_data()' function, use their original column names.
         This parameter will be passed to the phewas, comorbidity_network and disease_trajectory function.
         See these three functions for more information.
     
@@ -116,12 +116,12 @@ def disease_network_pipeline(
     
     min_interval_days : int/float, default=0
         Minimum required time interval (in days) between diagnosis dates when constructing temporal D1 → D2 disease pair for each individual.
-        This parameter will be passed to the DiseaseNetPy.DiseaseNetworkData.disease_pair function.
+        This parameter will be passed to the DiNetxify.DiseaseNetworkData.disease_pair function.
         See the disease_pair function for more information.
 
     max_interval_days : int/float, default=np.inf
         Maximum allowed time interval (in days) between diagnosis dates when constructing temporal and non-temporal D1-D2 disease pair for each individual.
-        This parameter will be passed to the DiseaseNetPy.DiseaseNetworkData.disease_pair function.
+        This parameter will be passed to the DiNetxify.DiseaseNetworkData.disease_pair function.
         See the disease_pair function for more information.
     
     enforce_temporal_order : bool, default=False

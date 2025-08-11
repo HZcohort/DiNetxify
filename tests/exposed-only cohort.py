@@ -1,4 +1,4 @@
-import diseasenetpy as dnt
+import DiNetxify as dnt
 import os
 
 path = os.path.dirname(__file__)

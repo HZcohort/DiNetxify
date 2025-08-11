@@ -3,13 +3,13 @@ requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "DiseaseNetPy"
+name = "DiNetxify"
 version = "0.0.11"
 authors = [
   { name="Can Hou", email="houcan@wchscu.cn" },
   { name="Haowen Liu", email="haowenliu81@gmail.com" },
 ]
-description = "DiseaseNetPy"
+description = "DiNetxify"
 readme = "README.md"
 requires-python = ">=3.7"
 dependencies = [
@@ -23,7 +23,7 @@ dependencies = [
     "python_louvain==0.16",
     "scikit_learn==1.6.1",
     "scipy==1.15.1",
-    "statsmodels==0.14.4"
+    "statsmodels==0.14.5"
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -32,14 +32,14 @@ classifiers = [
 license = {file="LICENSE"}
 
 [project.urls]
-Homepage = "https://github.com/HZcohort/DiseaseNet/tree/package"
-Issues = "https://github.com/HZcohort/DiseaseNet/issues"
+Homepage = "https://github.com/HZcohort/DiNetxify/tree/package"
+Issues = "https://github.com/HZcohort/DiNetxify/issues"
 
 [tool.setuptools]
 include-package-data = true
 
 [tool.setuptools.package-data]
-DiseaseNetPy = [
+DiNetxify = [
     "data/phecode_1.2/ICD-9-WHO.npy",
     "data/phecode_1.2/ICD-10-CM.npy",
     "data/phecode_1.2/ICD-10-WHO.npy",
