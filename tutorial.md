@@ -31,7 +31,7 @@
     - [Table1](#table1)  
     - [merge_medical_records](#merge_medical_records)  
     - [get_attribute](#get_attribute)  
-    - [concat](#concat)  
+    - [medical_records_to_dataframe](#medical_records_to_dataframe)  
     - [modify_phecode_level](#modify_phecode_level)  
     - [disease_pair](#disease_pair) 
     - [save](#save)
@@ -1285,7 +1285,7 @@ result_plot.trajectory_plot(
 
 - **source** - D1 disease column. Default is `'phecode_d1'`.
 - **target** - D2 disease column. Default is `'phecode_d2'`.
-- **dpi** - image resolution in dots per inch for output files. Default is `200`.
+- **dpi** - image resolution in dots per inch for output files. Default is `500`.
 - **cluster_weight** specifies the edge weight metric used for network clustering calculations. Default is `'comorbidity_beta'`.
 
 #### After disease trajectory plot:
@@ -1436,29 +1436,22 @@ Retrieve the value of a private or protected attribute.
 
 ---
 
-##### `concat` (classmethod)
+##### `medical_records_to_dataframe`
 ```python
-@classmethod
 concat(
-    cls,
-    first_data: DiseaseNetworkData,
-    second_data: DiseaseNetworkData,
-    duplicates: str = 'raise'
+    self, 
+    phecode_list: list,
+    medical_history: bool=False
 ) -> DiseaseNetworkData
 ```
-Concatenate two `DiseaseNetworkData` objects.
+Convert stored medical records into a tidy pandas DataFrame.
 
 **Parameters:**
-- `first_data` (`DiseaseNetworkData`): First object to concatenate.
-- `second_data` (`DiseaseNetworkData`): Second object to concatenate.
-- `duplicates` (`str`): Duplicate handling. Choices:
-  - `raise`: Error on duplicates.
-  - `first`: Keep first object’s records.
-  - `second`: Keep second object’s records.
-  Defaults to `'raise'`.
-
+- `phecode_list` (`list`): List of phecodes to extract from the medical records. Only phecodes valid for the current phecode_level are accepted.
+- `medical_history` (`bool`): Include a binary history column for each phecode if set to True. Default to `False`
+      
 **Returns:**
-- `DiseaseNetworkData`
+- `pd.DataFrame`
 
 ---
 
