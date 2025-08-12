@@ -40,25 +40,9 @@ Commands to install DiNetxify via pip
 pip install DiNetxify
 ```
 
-#### Python Version
-- **Python ≥ 3.7**
-
-#### Dependencies
-Install all dependencies (recommended in a virtual environment):
-```bash
-pip install \
-  python-louvain \
-  lifelines==0.30.0 \
-  matplotlib==3.10.0 \
-  networkx==3.4.2 \
-  numpy==2.2.2 \
-  pandas==2.2.3 \
-  plotly==5.24.1 \
-  python_louvain==0.16 \
-  scikit_learn==1.6.1 \
-  scipy==1.15.1 \
-  statsmodels==0.14.5
-```
+#### Python version and other dependencies
+- **Python >= 3.10**
+- **statsmodels >= 0.14.4**
 
 ### Quick start
 To begin using DiNetxify immediately, follow these essential steps:
