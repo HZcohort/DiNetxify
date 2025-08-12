@@ -5,18 +5,6 @@
 </div>
 
 --------------------------------------------------------------------------------
-<!-- toc -->
-
-- [More About DiNetxify](#more-about-DiNetxify)
-  - [Workflow](#Workflow)
-  - [Modular architecture](#Modular-architecture)
-- [Installation and quick start](#installation-and-quick-start)
-  - [Installation](#installation)
-  - [Quick start](#quick-start)
-- [Citation](#citation)
-- [Contact](#contact)
-
-<!-- tocstop -->
 DiNetxify is a Python package that provides two high-level features:
 - DiNetxify provides comprehensive insights into multimorbidity patterns and disease progression pathways using EHR data
 - DiNetxify emphasizes user-friendliness by integrating the entire analytical pipeline, from data harmonization and analysis to visualization
