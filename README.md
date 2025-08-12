@@ -1,4 +1,4 @@
-![DiNetxify Logo](https://github.com/DiNetxify/source/img/DiNetxify-logo.png)
+![DiNetxify Logo](./source/img/DiNetxify-logo.png)
 
 --------------------------------------------------------------------------------
 
@@ -21,7 +21,7 @@ DiNetxify is a Python package that provides two high-level features:
 
 ## More About DiNetxify
 
-[Learn the basics of DiNetxify](https://github.com/DiNetxify/tutorial.md)
+[Learn the basics of DiNetxify](./tutorial.md)
 Usually, DiNetxify is used for:
 
 - Research on comprehensive 3D disease network analyses using large-scale EHR data
@@ -30,7 +30,7 @@ Elaborating Further:
 
 ### Workflow
 DiNetxify is an open-source Python package designed for end-to-end, comprehensive disease network analysis of large-scale EHR datasets. The below figure is analytical framework of DiNetxify.
-![analytical framework](https://github.com/DiNetxify/source/img/framework.png)
+![analytical framework](./source/img/framework.png)
 
 ### Modular architecture
 At a granular level, DiNetxify is a library that consists of the following components:
@@ -41,7 +41,7 @@ At a granular level, DiNetxify is a library that consists of the following compo
 | [**DiNetxify.visualization.Plot**] | A class integrates and visualizes disease relationships from three complementary analyses |
 
 The core of the DiNetxify architecture is shown below:
-![architecture](https://github.com/DiNetxify/source/img/architecture.png)
+![architecture](./source/img/architecture.png)
 
 ## Installation and quick start
 
