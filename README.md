@@ -52,7 +52,11 @@ pip install DiNetxify
 ```
 
 ### Quick start
-
+To begin using DiNetxify immediately, follow these essential steps:
+1. Install the package via pip
+2. Load our pre-trained model with just 2 lines of Python code
+3. Run inference on your medical data using our streamlined API
+For a comprehensive step-by-step tutorial with executable code samples, dummy data examples, and visual demonstrations, refer to our detailed Tutorial Guide ![tutorial](./tutorial.md). 
 
 ## Citation
 If you use this software in your research, please cite:
