@@ -1,4 +1,4 @@
-![DiNetxify Logo](./source/img/DiNetxify-logo.png){: width="50%"}
+<img src="./source/img/DiNetxify-logo.png" alt="DiNetxify Logo" width="300">
 
 --------------------------------------------------------------------------------
 <!-- toc -->
