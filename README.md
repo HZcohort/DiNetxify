@@ -1,4 +1,8 @@
-<img src="./source/img/DiNetxify-logo.png" alt="DiNetxify Logo" width="300">
+<div align="center">
+  <img src="./source/img/DiNetxify-logo.png" 
+       alt="DiNetxify Logo" 
+       width="300">
+</div>
 
 --------------------------------------------------------------------------------
 <!-- toc -->
