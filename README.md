@@ -1,12 +1,6 @@
-![DiNetxify Logo](./source/img/DiNetxify-logo.png)
+![DiNetxify Logo](./source/img/DiNetxify-logo.png){: width="50%"}
 
 --------------------------------------------------------------------------------
-DiNetxify has a GNU General Public License, as found in the [LICENSE](LICENSE) file.
-
-DiNetxify is a Python package that provides two high-level features:
-- DiNetxify provides comprehensive insights into multimorbidity patterns and disease progression pathways using EHR data
-- DiNetxify emphasizes user-friendliness by integrating the entire analytical pipeline, from data harmonization and analysis to visualization
-
 <!-- toc -->
 
 - [More About DiNetxify](#more-about-DiNetxify)
@@ -19,16 +13,18 @@ DiNetxify is a Python package that provides two high-level features:
 - [Contact](#contact)
 
 <!-- tocstop -->
-
+DiNetxify is a Python package that provides two high-level features:
+- DiNetxify provides comprehensive insights into multimorbidity patterns and disease progression pathways using EHR data
+- DiNetxify emphasizes user-friendliness by integrating the entire analytical pipeline, from data harmonization and analysis to visualization
 ## More About DiNetxify
 
 [Learn the basics of DiNetxify](./tutorial.md)
 
 - Usually, DiNetxify is used for:
   - Research on comprehensive 3D disease network analyses using large-scale EHR data
+- DiNetxify has a GNU General Public License, as found in the [LICENSE](LICENSE) file.
 
 Elaborating Further:
-
 ### Workflow
 DiNetxify is an open-source Python package designed for end-to-end, comprehensive disease network analysis of large-scale EHR datasets. The below figure is analytical framework of DiNetxify.
 ![analytical framework](./source/img/framework.png)
