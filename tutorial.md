@@ -2056,7 +2056,7 @@ class Plot(
     comorbidity_result: pd.DataFrame,
     trajectory_result: pd.DataFrame,
     phewas_result: pd.DataFrame,
-    exposure: float = None,
+    exposure_name: str = None,
     exposure_location: Tuple[float, float, float] = None,
     exposure_size: float = None,
     source: str = 'phecode_d1',
@@ -2068,8 +2068,6 @@ class Plot(
     filter_phewas_col: str = 'phewas_p_significance',
     filter_comorbidity_col: str = 'comorbidity_p_significance',
     filter_trajectory_col: str = 'trajectory_p_significance',
-    SYSTEM: List[str] = None,
-    COLOR: List[str] = None
 )
 ```
 
@@ -2079,20 +2077,21 @@ A class for integrating and visualizing disease relationships from PHEWAS, comor
 - `comorbidity_result` (`pd.DataFrame`): Non-temporal disease pairs with association metrics and significance flag.
 - `trajectory_result` (`pd.DataFrame`): Temporal disease pairs (source→target) with metrics and significance flag.
 - `phewas_result` (`pd.DataFrame`): PheWAS results including phecode, effect sizes, case counts, and system classifications.
-- `exposure` (`float`, optional): Phecode for primary exposure; highlights exposure node. Defaults to `None`.
+- `exposure_name` (`float`, optional): Name of exposure. Default is `None`. If `None`, it means that this is an exposed-only cohort study.
 - `exposure_location` (`Tuple[float, float, float]`, optional): 3D coordinates for exposure node. Defaults to origin if `None`.
 - `exposure_size` (`float`, optional): Scaling factor for exposure node size. Defaults to automatic.
-- `source` (`str`): Column name for source disease (default `'phecode_d1'`).
-- `target` (`str`): Column name for target disease (default `'phecode_d2'`).
-- `phewas_phecode` (`str`): Column for phecode in PHEWAS results (default `'phecode'`).
-- `phewas_number` (`str`): Column for case counts (default `'N_cases_exposed'`).
-- `system_col` (`str`): Column for disease system (default `'system'`).
+- `source` (`str`): Column name for source disease (default: `'phecode_d1'`).
+- `target` (`str`): Column name for target disease (default: `'phecode_d2'`).
+- `phewas_phecode` (`str`): Column for phecode in PHEWAS results (default: `'phecode'`).
+- `phewas_number` (`str`): Column for case counts (default: `'N_cases_exposed'`).
+- `system_col` (`str`): Column for disease system (default: `'system'`).
 - `col_disease_pair` (`str`): Column for pair identifier (default `'name_disease_pair'`).
 - `filter_phewas_col` (`str`): Column for PHEWAS significance filter.
 - `filter_comorbidity_col` (`str`): Column for comorbidity significance filter.
 - `filter_trajectory_col` (`str`): Column for trajectory significance filter.
-- `SYSTEM` (`List[str]`, optional): List of systems to visualize; defaults to all from PHEWAS if `None`.
-- `COLOR` (`List[str]`, optional): Colors corresponding to systems; default palette used if `None`.
+- `**kwargs`  
+  - `SYSTEM` (`List[str]`, optional): List of systems to visualize; defaults to all from PHEWAS if `None`.
+  - `COLOR` (`List[str]`, optional): Colors corresponding to systems; default palette used if `None`.
 
 ---
 
@@ -2123,18 +2122,18 @@ Generate and save a 3D interactive HTML visualization.
 
 **Parameters:**
 - `path`: File path to save the HTML visualization
-- `max_radius`: Maximum radial distance for node placement (default: 180.0)
-- `min_radius`: Minimum radial distance for node placement (default: 35.0)
-- `line_color`: Color for trajectory lines (default: "black")
-- `line_width`: Width for trajectory lines (default: 1.0)
-- `size_reduction`: Scaling factor for node sizes (default: 0.5)
-- `cluster_reduction_ratio`: Cluster compression factor for layout (default: 0.4)
-- `cluster_weight`: Edge weight metric used for clustering (default: "comorbidity_beta")
-- `layer_distance`: Vertical distance between layers (default: 40.0)
-- `layout_width`: Figure width in pixels (default: 900.0)
-- `layout_height`: Figure height in pixels (default: 900.0)
-- `font_style`: Font family for text elements (default: 'Times New Roman')
-- `font_size`: Base font size in points (default: 15.0)
+- `max_radius`: Maximum radial distance for node placement (default: `180.0`)
+- `min_radius`: Minimum radial distance for node placement (default: `35.0`)
+- `line_color`: Color for trajectory lines (default: `"black"`)
+- `line_width`: Width for trajectory lines (default: `1.0`)
+- `size_reduction`: Scaling factor for node sizes (default: `0.5`)
+- `cluster_reduction_ratio`: Cluster compression factor for layout (default: `0.4`)
+- `cluster_weight`: Edge weight metric used for clustering (default: `"comorbidity_beta"`)
+- `layer_distance`: Vertical distance between layers (default: `40.0`)
+- `layout_width`: Figure width in pixels (default: `900.0`)
+- `layout_height`: Figure height in pixels (default: `900.0`)
+- `font_style`: Font family for text elements (default: `'Times New Roman'`)
+- `font_size`: Base font size in points (default: `15.0`)
 
 ---
 
@@ -2160,15 +2159,15 @@ Generate and save a 2D HTML visualization of the comorbidity network.
 
 **Parameters:**
 - `path`: Output file path for saving HTML visualization
-- `max_radius`: Maximum radial position for nodes (default: 90.0)
-- `min_radius`: Minimum radial position for nodes (default: 35.0)
-- `size_reduction`: Scaling factor for node sizes (default: 0.5)
-- `cluster_reduction_ratio`: Compression factor for cluster layout (default: 0.4)
-- `cluster_weight`: Edge weight metric for clustering (default: "comorbidity_beta")
-- `line_width`: Width of comorbidity lines (default: 1.0)
-- `line_color`: Color of comorbidity lines (default: "black")
-- `layer_distance`: Distance between concentric circles (default: 40.0)
-- `font_style`: Font family for text elements (default: "Times New Roman")
+- `max_radius`: Maximum radial position for nodes (default: `90.0`)
+- `min_radius`: Minimum radial position for nodes (default: `35.0`)
+- `size_reduction`: Scaling factor for node sizes (default: `0.5`)
+- `cluster_reduction_ratio`: Compression factor for cluster layout (default: `0.4`)
+- `cluster_weight`: Edge weight metric for clustering (default: `"comorbidity_beta"`)
+- `line_width`: Width of comorbidity lines (default: `1.0`)
+- `line_color`: Color of comorbidity lines (default: `"black"`)
+- `layer_distance`: Distance between concentric circles (default: `40.0`)
+- `font_style`: Font family for text elements (default: `"Times New Roman"`)
 
 ---
 
@@ -2189,12 +2188,10 @@ Generate and save trajectory plots per cluster as (.png files).
 
 **Parameters:**
 - `path`: Directory path to save output images
-- `cluster_weight`: Edge weight metric used for clustering (default: "comorbidity_beta")
-- `source`: Column name representing source nodes (disease onset points) in trajectory data
-        (default: 'phecode_d1')
-- `target`: Column name representing target nodes (subsequent disease points) in trajectory data
-        (default: 'phecode_d2')
-- `dpi`: Image resolution in dots per inch for output files (default: 500)
+- `cluster_weight`: Edge weight metric used for clustering (default: `"comorbidity_beta"`)
+- `source`: Column name representing source nodes (disease onset points) in trajectory data (default: `'phecode_d1'`)
+- `target`: Column name representing target nodes (subsequent disease points) in trajectory data (default: `'phecode_d2'`)
+- `dpi`: Image resolution in dots per inch for output files (default: `500`)
 ---
 
 ##### `phewas_plot`
@@ -2219,12 +2216,12 @@ Creates a polar bar plot visualizing disease associations across different disea
 
 **Parameters:**
 - `path`: Output file path for saving the plot
-- `system_font_size`: Font size for disease system/category labels (default: 17)
-- `disease_font_size`: Font size for disease labels (default: 10)
-- `col_coef`: Column name for effect size coefficients (default: "phewas_coef")
-- `col_system`: Column name for disease system/category (default: "system")
-- `col_se`: Column name for standard errors (default: "phewas_se")
-- `col_disease`: Column name for disease names (default: "disease")
-- `is_exposure_only`: Identifier of exposure (default: False)
-- `col_exposure`: Column name for exposure number (default: "N_cases_exposed")
-- `dpi`: Image resolution in dots per inch for output files (default: 200)
+- `system_font_size`: Font size for disease system/category labels (default: `17`)
+- `disease_font_size`: Font size for disease labels (default: `10`)
+- `col_coef`: Column name for effect size coefficients (default: `"phewas_coef"`)
+- `col_system`: Column name for disease system/category (default: `"system"`)
+- `col_se`: Column name for standard errors (default: `"phewas_se"`)
+- `col_disease`: Column name for disease names (default: `"disease"`)
+- `is_exposure_only`: Identifier of exposure (default: `False`)
+- `col_exposure`: Column name for exposure number (default: `"N_cases_exposed"`)
+- `dpi`: Image resolution in dots per inch for output files (default: `200`)
