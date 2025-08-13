@@ -31,7 +31,7 @@ If you use this software in your research, please cite the following papers:
 
 ```{toctree}
 :maxdepth: 2
-:caption: Contents
+:caption: Documentation
 
 data_prep
 data_harm

@@ -1,6 +1,6 @@
 # Data harmonization
 
-Data harmonization involves loading and merging the **phenotype data** and **medical records data** into a single `DiseaseNetworkData` object for analysis. During this process, the software ensures consistent coding (e.g., converting diagnosis codes to phecodes) and standardized formatting (e.g., datetime parsing for diagnosis and follow-up periods).
+Data harmonization involves loading and merging the **phenotype data** and **medical record data** into a single `DiseaseNetworkData` object for analysis. During this process, the software ensures consistent coding (e.g., converting diagnosis codes to phecodes) and standardized formatting (e.g., datetime parsing for diagnosis and follow-up periods).
 
 ## Initializing the data object
 
@@ -158,7 +158,7 @@ data.merge_medical_records(
     }  
 )  
 
-# Merge the second medical records file (dummy_EHR_ICD9.csv)  
+# Merge the second medical record file (dummy_EHR_ICD9.csv)  
 data.merge_medical_records(  
     medical_records_data_path=r"/test/data/dummy_EHR_ICD9.csv",  
     diagnosis_code="ICD-9-WHO",  
@@ -171,7 +171,7 @@ data.merge_medical_records(
 
 ```
 
-- **medical_records_data_path** – Path to a medical records data file (CSV or TSV).
+- **medical_records_data_path** – Path to a medical record data file (CSV or TSV).
 - **diagnosis_code** – The diagnosis coding system used in that file. Options include `'ICD-9-CM'`, `'ICD-9-WHO'`, `'ICD-10-CM'`, `'ICD-10-WHO'` (case-sensitive).
 - **column_names** – Dictionary mapping the required column names (`'Participant ID'`, `'Diagnosis code'`, `'Date of diagnosis'`) to your file’s column headers.
 
@@ -182,7 +182,7 @@ data.merge_medical_records(
 
 **During data loading:**
 
-As each medical records file is processed, ***DiNetxify*** will output progress messages and basic stats. For example:
+As each medical record file is processed, ***DiNetxify*** will output progress messages and basic stats. For example:
 
 ```python
 """
@@ -210,7 +210,7 @@ From these logs, you can see how many records were read and included, how many w
 
 **After loading medical record data:**
 
-After merging all medical records files, you can print the `data` object again to see a summary of the combined dataset:
+After merging all medical record files, you can print the `data` object again to see a summary of the combined dataset:
 
 ```python
 print(data)  
@@ -232,7 +232,7 @@ This output confirms the number of diagnosis records merged and provides average
 
 ## Save DiseaseNetworkData object
 
-At this stage, after loading phenotype and medical records data, you may want to save the `DiseaseNetworkData` object for later use. Saving allows you to reuse the prepared data without re-reading and processing raw files each time, facilitating reproducibility and easy sharing of the processed data. ***DiNetxify*** provides two methods: `save()` (which uses Python’s pickle serialization, saving to a compressed `.pkl.gz` file) and `save_npz()` (which saves to a compressed NumPy `.npz` file). You can use either or both depending on your needs. For example:
+At this stage, after loading phenotype and medical record data, you may want to save the `DiseaseNetworkData` object for later use. Saving allows you to reuse the prepared data without re-reading and processing raw files each time, facilitating reproducibility and easy sharing of the processed data. ***DiNetxify*** provides two methods: `save()` (which uses Python’s pickle serialization, saving to a compressed `.pkl.gz` file) and `save_npz()` (which saves to a compressed NumPy `.npz` file). You can use either or both depending on your needs. For example:
 
 ```python
 # Save the data object to a gzipped pickle file  

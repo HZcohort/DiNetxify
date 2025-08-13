@@ -42,7 +42,7 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Input data preparation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#requirements-for-input-data">Requirements for input data</a></li>
@@ -86,7 +86,7 @@
 <section id="requirements-for-input-data">
 <h2>Requirements for input data<a class="headerlink" href="#requirements-for-input-data" title="Permalink to this heading"></a></h2>
 <p><em><strong>DiNetxify</strong></em> enables 3D disease network analysis on cohort data from electronic health records (EHR) and offers three study designs: the <strong>standard cohort</strong>, which compares individuals with a specific disease or exposure (e.g., depression or smoking) against the general population; the <strong>matched cohort</strong>, which pairs subjects on key characteristics to reduce confounding; and the <strong>exposed-only cohort</strong>, which examines disease networks within a defined group (e.g., older adults) without an unexposed comparison group.</p>
-<p>To begin using <em><strong>DiNetxify</strong></em>, two datasets are required: a <strong>phenotype data</strong> file containing each participant’s baseline information, and one or more <strong>medical records data</strong> files extracted from an EHR database that list diagnoses (codes and dates) for all cohort individuals over the study period. The specific requirements for these datasets are:</p>
+<p>To begin using <em><strong>DiNetxify</strong></em>, two datasets are required: a <strong>phenotype data</strong> file containing each participant’s baseline information, and one or more <strong>medical record data</strong> files extracted from an EHR database that list diagnoses (codes and dates) for all cohort individuals over the study period. The specific requirements for these datasets are:</p>
 <ul class="simple">
 <li><p><strong>Phenotype data:</strong> A CSV (or TSV) file with a header row, where each row represents a participant. Required columns are:</p>
 <ul>
@@ -108,7 +108,7 @@
 <li><p><strong>Diagnosis code</strong> – A diagnosis code (e.g., ICD-10 or ICD-9 code).</p></li>
 <li><p><strong>Date of diagnosis</strong> – The date of that diagnosis/event (format consistent with the phenotype dates, e.g., <code class="docutils literal notranslate"><span class="pre">YYYY-MM-DD</span></code>).</p></li>
 </ul>
-<p>The <strong>medical records data</strong> should be in a “long” format (multiple rows per participant if they have multiple diagnoses). <em><strong>DiNetxify</strong></em> will automatically filter these records to include only those within each individual’s follow-up period (from index date up to end date). <strong>Do not pre-filter</strong> the medical records by date or by first occurrence — provide the complete set of diagnoses for each participant, and let the software handle the filtering and mapping. Each medical records file should use a single coding system for diagnoses. Currently supported code versions are ICD-9 (WHO and CM) and ICD-10 (WHO and CM). If your data uses a different coding system, you will need to map it to one of the supported formats beforehand.</p>
+<p>The <strong>medical record data</strong> should be in a “long” format (multiple rows per participant if they have multiple diagnoses). <em><strong>DiNetxify</strong></em> will automatically filter these records to include only those within each individual’s follow-up period (from index date up to end date). <strong>Do not pre-filter</strong> the medical record by date or by first occurrence — provide the complete set of diagnoses for each participant, and let the software handle the filtering and mapping. Each medical record file should use a single coding system for diagnoses. Currently supported code versions are ICD-9 (WHO and CM) and ICD-10 (WHO and CM). If your data uses a different coding system, you will need to map it to one of the supported formats beforehand.</p>
 </li>
 </ul>
 </section>

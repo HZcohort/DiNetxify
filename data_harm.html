@@ -42,7 +42,7 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="data_prep.html">Input data preparation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Data harmonization</a><ul>
@@ -86,7 +86,7 @@
              
   <section id="data-harmonization">
 <h1>Data harmonization<a class="headerlink" href="#data-harmonization" title="Permalink to this heading"></a></h1>
-<p>Data harmonization involves loading and merging the <strong>phenotype data</strong> and <strong>medical records data</strong> into a single <code class="docutils literal notranslate"><span class="pre">DiseaseNetworkData</span></code> object for analysis. During this process, the software ensures consistent coding (e.g., converting diagnosis codes to phecodes) and standardized formatting (e.g., datetime parsing for diagnosis and follow-up periods).</p>
+<p>Data harmonization involves loading and merging the <strong>phenotype data</strong> and <strong>medical record data</strong> into a single <code class="docutils literal notranslate"><span class="pre">DiseaseNetworkData</span></code> object for analysis. During this process, the software ensures consistent coding (e.g., converting diagnosis codes to phecodes) and standardized formatting (e.g., datetime parsing for diagnosis and follow-up periods).</p>
 <section id="initializing-the-data-object">
 <h2>Initializing the data object<a class="headerlink" href="#initializing-the-data-object" title="Permalink to this heading"></a></h2>
 <p>First, import the <em><strong>DiNetxify</strong></em> package and instantiate a <code class="docutils literal notranslate"><span class="pre">DiseaseNetworkData</span></code> object with your chosen study design, phecode level, and any optional parameters. For example:</p>
@@ -233,7 +233,7 @@
     <span class="p">}</span>  
 <span class="p">)</span>  
 
-<span class="c1"># Merge the second medical records file (dummy_EHR_ICD9.csv)  </span>
+<span class="c1"># Merge the second medical record file (dummy_EHR_ICD9.csv)  </span>
 <span class="n">data</span><span class="o">.</span><span class="n">merge_medical_records</span><span class="p">(</span>  
     <span class="n">medical_records_data_path</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;/test/data/dummy_EHR_ICD9.csv&quot;</span><span class="p">,</span>  
     <span class="n">diagnosis_code</span><span class="o">=</span><span class="s2">&quot;ICD-9-WHO&quot;</span><span class="p">,</span>  
@@ -247,7 +247,7 @@
 </pre></div>
 </div>
 <ul class="simple">
-<li><p><strong>medical_records_data_path</strong> – Path to a medical records data file (CSV or TSV).</p></li>
+<li><p><strong>medical_records_data_path</strong> – Path to a medical record data file (CSV or TSV).</p></li>
 <li><p><strong>diagnosis_code</strong> – The diagnosis coding system used in that file. Options include <code class="docutils literal notranslate"><span class="pre">'ICD-9-CM'</span></code>, <code class="docutils literal notranslate"><span class="pre">'ICD-9-WHO'</span></code>, <code class="docutils literal notranslate"><span class="pre">'ICD-10-CM'</span></code>, <code class="docutils literal notranslate"><span class="pre">'ICD-10-WHO'</span></code> (case-sensitive).</p></li>
 <li><p><strong>column_names</strong> – Dictionary mapping the required column names (<code class="docutils literal notranslate"><span class="pre">'Participant</span> <span class="pre">ID'</span></code>, <code class="docutils literal notranslate"><span class="pre">'Diagnosis</span> <span class="pre">code'</span></code>, <code class="docutils literal notranslate"><span class="pre">'Date</span> <span class="pre">of</span> <span class="pre">diagnosis'</span></code>) to your file’s column headers.</p></li>
 </ul>
@@ -257,7 +257,7 @@
 <li><p><strong>chunksize</strong> – If the file is very large, you can specify a number of rows to read per chunk (the function will stream through the file in chunks to manage memory usage). <em>(Default: 1,000,000 rows per chunk.)</em></p></li>
 </ul>
 <p><strong>During data loading:</strong></p>
-<p>As each medical records file is processed, <em><strong>DiNetxify</strong></em> will output progress messages and basic stats. For example:</p>
+<p>As each medical record file is processed, <em><strong>DiNetxify</strong></em> will output progress messages and basic stats. For example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">1,000,000 records read (1,000,000 included after filtering on participant ID), 0 records with missing values excluded.  </span>
 <span class="sd">1,668,795 records read (1,668,795 included after filtering on participant ID), 0 records with missing values excluded.  </span>
@@ -281,7 +281,7 @@
 </div>
 <p>From these logs, you can see how many records were read and included, how many were excluded (e.g., missing values or out-of-follow-up-range dates), and how many diagnosis codes were successfully mapped to phecodes versus not mapped. The logs also indicate when multiple files are being merged sequentially.</p>
 <p><strong>After loading medical record data:</strong></p>
-<p>After merging all medical records files, you can print the <code class="docutils literal notranslate"><span class="pre">data</span></code> object again to see a summary of the combined dataset:</p>
+<p>After merging all medical record files, you can print the <code class="docutils literal notranslate"><span class="pre">data</span></code> object again to see a summary of the combined dataset:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>  
 <span class="c1"># Example output (matched cohort study):  </span>
 <span class="sd">&quot;&quot;&quot;  </span>
@@ -301,7 +301,7 @@
 </section>
 <section id="save-diseasenetworkdata-object">
 <h2>Save DiseaseNetworkData object<a class="headerlink" href="#save-diseasenetworkdata-object" title="Permalink to this heading"></a></h2>
-<p>At this stage, after loading phenotype and medical records data, you may want to save the <code class="docutils literal notranslate"><span class="pre">DiseaseNetworkData</span></code> object for later use. Saving allows you to reuse the prepared data without re-reading and processing raw files each time, facilitating reproducibility and easy sharing of the processed data. <em><strong>DiNetxify</strong></em> provides two methods: <code class="docutils literal notranslate"><span class="pre">save()</span></code> (which uses Python’s pickle serialization, saving to a compressed <code class="docutils literal notranslate"><span class="pre">.pkl.gz</span></code> file) and <code class="docutils literal notranslate"><span class="pre">save_npz()</span></code> (which saves to a compressed NumPy <code class="docutils literal notranslate"><span class="pre">.npz</span></code> file). You can use either or both depending on your needs. For example:</p>
+<p>At this stage, after loading phenotype and medical record data, you may want to save the <code class="docutils literal notranslate"><span class="pre">DiseaseNetworkData</span></code> object for later use. Saving allows you to reuse the prepared data without re-reading and processing raw files each time, facilitating reproducibility and easy sharing of the processed data. <em><strong>DiNetxify</strong></em> provides two methods: <code class="docutils literal notranslate"><span class="pre">save()</span></code> (which uses Python’s pickle serialization, saving to a compressed <code class="docutils literal notranslate"><span class="pre">.pkl.gz</span></code> file) and <code class="docutils literal notranslate"><span class="pre">save_npz()</span></code> (which saves to a compressed NumPy <code class="docutils literal notranslate"><span class="pre">.npz</span></code> file). You can use either or both depending on your needs. For example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Save the data object to a gzipped pickle file  </span>
 <span class="n">data</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;/your/project/path/cohort_data&#39;</span><span class="p">)</span>  
 <span class="c1"># (This will produce a file named &quot;cohort_data.pkl.gz&quot;)  </span>

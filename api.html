@@ -42,7 +42,7 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="data_prep.html">Input data preparation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data_harm.html">Data harmonization</a></li>
@@ -139,8 +139,8 @@
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">study_design</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Specify the type of study design, either “cohort”, “matched cohort”, or “exposed-only cohort”. Defaults to <code class="docutils literal notranslate"><span class="pre">'cohort'</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">phecode_level</span></code> (<code class="docutils literal notranslate"><span class="pre">int</span></code>): The level of phecode to use for analysis, where level 1 (with a total of 585 medical conditions) corresponds to 3-digit ICD-10 codes and level 2 (with a total of 1257 medical conditions) to 4-digit ICD-10 codes. Level 2 phecodes offer a more granular analysis with potentially smaller sample sizes per disease category. For larger studies, level 2 phecodes may enhance result interpretation. For smaller studies, level 1 is recommended to maintain statistical power. Defaults to <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">min_required_icd_codes</span></code> (<code class="docutils literal notranslate"><span class="pre">int</span></code>): The minimum number of ICD codes mapping to a specific phecode required for the phecode to be considered valid. For example, if set to 2, a single diagnosis record will not be sufficient to count as an occurrence. Ensure that your medical records are complete (i.e., not limited to only the first occurrence for each code) when using this parameter. Defaults to <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">date_fmt</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): The format of the date fields in your phenotype and medical records data. Defaults to <code class="docutils literal notranslate"><span class="pre">'%Y-%m-%d'</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">min_required_icd_codes</span></code> (<code class="docutils literal notranslate"><span class="pre">int</span></code>): The minimum number of ICD codes mapping to a specific phecode required for the phecode to be considered valid. For example, if set to 2, a single diagnosis record will not be sufficient to count as an occurrence. Ensure that your medical record are complete (i.e., not limited to only the first occurrence for each code) when using this parameter. Defaults to <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">date_fmt</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): The format of the date fields in your phenotype and medical record data. Defaults to <code class="docutils literal notranslate"><span class="pre">'%Y-%m-%d'</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">phecode_version</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): The version of the phecode system used for converting diagnosis codes. Version 1.2 is the official version of the phecode system, with mapping files available for ICD-9-CM, ICD-9-WHO, ICD-10-CM, and ICD-10-WHO codes. While option 1.3a is provided, it’s an unofficial version and not recommended for general use. Defaults to <code class="docutils literal notranslate"><span class="pre">'1.2'</span></code>.</p></li>
 </ul>
 <hr class="docutils" />
@@ -211,10 +211,10 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
-<p>Load one or more medical records datasets.</p>
+<p>Load one or more medical record datasets.</p>
 <p><strong>Parameters:</strong></p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">medical_records_data_path</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Path to CSV/TSV medical records file.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">medical_records_data_path</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Path to CSV/TSV medical record file.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">diagnosis_code</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Code type: <code class="docutils literal notranslate"><span class="pre">'ICD-9-CM'</span></code>, <code class="docutils literal notranslate"><span class="pre">'ICD-9-WHO'</span></code>, <code class="docutils literal notranslate"><span class="pre">'ICD-10-CM'</span></code>, or <code class="docutils literal notranslate"><span class="pre">'ICD-10-WHO'</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">column_names</span></code> (<code class="docutils literal notranslate"><span class="pre">dict</span></code>): Mapping for dataset columns. Required keys: <code class="docutils literal notranslate"><span class="pre">'Participant</span> <span class="pre">ID'</span></code>, <code class="docutils literal notranslate"><span class="pre">'Diagnosis</span> <span class="pre">code'</span></code>, <code class="docutils literal notranslate"><span class="pre">'Date</span> <span class="pre">of</span> <span class="pre">diagnosis'</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">date_fmt</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Date format (defaults to phenotype data format). Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
@@ -254,10 +254,10 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DiseaseNetworkData</span>
 </pre></div>
 </div>
-<p>Convert stored medical records into a tidy pandas DataFrame.</p>
+<p>Convert stored medical record into a tidy pandas DataFrame.</p>
 <p><strong>Parameters:</strong></p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">phecode_list</span></code> (<code class="docutils literal notranslate"><span class="pre">list</span></code>): List of phecodes to extract from the medical records. Only phecodes valid for the current phecode_level are accepted.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phecode_list</span></code> (<code class="docutils literal notranslate"><span class="pre">list</span></code>): List of phecodes to extract from the medical record. Only phecodes valid for the current phecode_level are accepted.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">medical_history</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): Include a binary history column for each phecode if set to True. Default to <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
 </ul>
 <p><strong>Returns:</strong></p>

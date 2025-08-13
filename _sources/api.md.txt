@@ -20,8 +20,8 @@ A class for handling disease network data creation and operations, for use in **
 
 - `study_design` (`str`): Specify the type of study design, either "cohort", "matched cohort", or "exposed-only cohort". Defaults to `'cohort'`.
 - `phecode_level` (`int`): The level of phecode to use for analysis, where level 1 (with a total of 585 medical conditions) corresponds to 3-digit ICD-10 codes and level 2 (with a total of 1257 medical conditions) to 4-digit ICD-10 codes. Level 2 phecodes offer a more granular analysis with potentially smaller sample sizes per disease category. For larger studies, level 2 phecodes may enhance result interpretation. For smaller studies, level 1 is recommended to maintain statistical power. Defaults to `1`.
-- `min_required_icd_codes` (`int`): The minimum number of ICD codes mapping to a specific phecode required for the phecode to be considered valid. For example, if set to 2, a single diagnosis record will not be sufficient to count as an occurrence. Ensure that your medical records are complete (i.e., not limited to only the first occurrence for each code) when using this parameter. Defaults to `1`.
-- `date_fmt` (`str`): The format of the date fields in your phenotype and medical records data. Defaults to `'%Y-%m-%d'`.
+- `min_required_icd_codes` (`int`): The minimum number of ICD codes mapping to a specific phecode required for the phecode to be considered valid. For example, if set to 2, a single diagnosis record will not be sufficient to count as an occurrence. Ensure that your medical record are complete (i.e., not limited to only the first occurrence for each code) when using this parameter. Defaults to `1`.
+- `date_fmt` (`str`): The format of the date fields in your phenotype and medical record data. Defaults to `'%Y-%m-%d'`.
 - `phecode_version` (`str`): The version of the phecode system used for converting diagnosis codes. Version 1.2 is the official version of the phecode system, with mapping files available for ICD-9-CM, ICD-9-WHO, ICD-10-CM, and ICD-10-WHO codes. While option 1.3a is provided, it’s an unofficial version and not recommended for general use. Defaults to `'1.2'`.
 
 ---
@@ -95,11 +95,11 @@ merge_medical_records(
 ) -> None
 ```
 
-Load one or more medical records datasets.
+Load one or more medical record datasets.
 
 **Parameters:**
 
-- `medical_records_data_path` (`str`): Path to CSV/TSV medical records file.
+- `medical_records_data_path` (`str`): Path to CSV/TSV medical record file.
 - `diagnosis_code` (`str`): Code type: `'ICD-9-CM'`, `'ICD-9-WHO'`, `'ICD-10-CM'`, or `'ICD-10-WHO'`.
 - `column_names` (`dict`): Mapping for dataset columns. Required keys: `'Participant ID'`, `'Diagnosis code'`, `'Date of diagnosis'`.
 - `date_fmt` (`str`): Date format (defaults to phenotype data format). Defaults to `None`.
@@ -142,11 +142,11 @@ concat(
 ) -> DiseaseNetworkData
 ```
 
-Convert stored medical records into a tidy pandas DataFrame.
+Convert stored medical record into a tidy pandas DataFrame.
 
 **Parameters:**
 
-- `phecode_list` (`list`): List of phecodes to extract from the medical records. Only phecodes valid for the current phecode_level are accepted.
+- `phecode_list` (`list`): List of phecodes to extract from the medical record. Only phecodes valid for the current phecode_level are accepted.
 - `medical_history` (`bool`): Include a binary history column for each phecode if set to True. Default to `False`
       
 
