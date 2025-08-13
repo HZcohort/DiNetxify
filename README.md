@@ -1,14 +1,15 @@
 <div align="center">
-  <img src="./source/img/DiNetxify-logo.png" 
+  <img src="./docs/img/DiNetxify-logo.png" 
        alt="DiNetxify Logo" 
        width="300">
 </div>
+
 
 --------------------------------------------------------------------------------
 ## About *DiNetxify*
 
 ***DiNetxify*** is an open-source Python package for comprehensive three-dimensional (3D) disease network analysis of large-scale electronic health record (EHR) data. It integrates data harmonization, analysis, and visualization into a user-friendly package to uncover multimorbidity patterns and disease progression pathways. ***DiNetxify*** is optimized for efficiency (capable of handling cohorts of hundreds of thousands of patients within hours on standard hardware) and supports multiple study designs with customizable parameters and parallel computing. ***DiNetxify*** is released under GPL-3.0 license. 
-![analytical framework](./source/img/framework.png)
+![analytical framework](./docs/img/framework.png)
 
 ***DiNetxify*** provides an end-to-end solution for 3D disease network analysis, featuring:
 
@@ -18,7 +19,7 @@
 - **Comprehensive Analyses:** Combines phenome-wide association studies (PheWAS), comorbidity network analysis, and disease trajectory analysis to identify meaningful disease clusters and temporal sequences concurrently.
 - **Visualization:** Built-in plotting tools generate interactive 3D network visualizations and static plots for PheWAS results, comorbidity networks, and disease trajectories, facilitating intuitive exploration of findings.
 
-![architecture](./source/img/architecture.png)
+![architecture](./docs/img/architecture.png)
 
 
 
