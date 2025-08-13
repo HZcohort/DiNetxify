@@ -41,12 +41,12 @@ To begin using ***DiNetxify***:
 
    ```python
    import DiNetxify as dnt
-   
+
    # Define required columns and other covariates columns
    col_dict = {'Participant ID': 'ID','Exposure': 'exposure','Sex': 'sex','Index date': 'date_start','End date': 'date_end'}
    vars_lst = ['age', 'BMI']
    # Initialize the data object with study design and phecode level
-   data = dnt.DiseaseNetworkData(study_design="dummy_phenotype",phecode_level=1,date_fmt="%Y-%m-%d")
+   data = dnt.DiseaseNetworkData(study_design="cohort",phecode_level=1,date_fmt="%Y-%m-%d")
    # Load the phenotype CSV file into the data object
    data.phenotype_data(phenotype_data_path="dummy_cohort.csv",column_names=col_dict,covariates=vars_lst)
    # Merge with the first medical records file (CSV)
