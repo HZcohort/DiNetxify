@@ -28,17 +28,8 @@
 ***DiNetxify*** requires **Python 3.10+**. Install the latest release from PyPI using pip:
 
 ```bash
-<<<<<<< HEAD
 pip install dinetxify
 ```
-=======
-pip install DiNetxify
-```
-
-#### Python version and other dependencies
-- **Python >= 3.10**
-- **statsmodels >= 0.14.4**
->>>>>>> 9e8e287a553edbef4c6f87bd39f564e03bbebaac
 
 This will install ***DiNetxify*** along with its dependencies. The required dependencies include: numpy, pandas, matplotlib, plotly, python_louvain, networkx, scikit_learn, scipy, statsmodels (>=0.14.4), and lifelines (optional).
 ### Quick start
@@ -58,12 +49,11 @@ To begin using ***DiNetxify***:
    # Load the phenotype CSV file into the data object
    data.phenotype_data(phenotype_data_path="dummy_cohort.csv",column_names=col_dict,covariates=vars_lst)
    # Merge with the first medical records file (CSV)
-   data.merge_medical_records(medical_records_data_path="dummy_EHR_ICD9.csv",diagnosis_code="ICD-9-WHO",
-                              column_names={'Participant ID':'ID','Diagnosis code':'diag_icd9','Date of diagnosis':'dia_date'})
+   data.merge_medical_records(medical_records_data_path="dummy_EHR_ICD9.csv",diagnosis_code="ICD-9-WHO",column_names={'Participant ID':'ID','Diagnosis ode':'diag_icd9','Date of diagnosis':'dia_date'})
    ```
-
    
-
+   
+   
 3. **Run the analysis:** Utilize the high-level pipeline function to perform the entire 3D network analysis on your `DiseaseNetworkData`:
 
    ```python
@@ -72,8 +62,11 @@ To begin using ***DiNetxify***:
    # When using multiprocessing, ensure that the code is enclosed within the following block.
    # This prevents entering a never ending loop of new process creation.
    if __name__ == "__main__":
-       results = disease_network_pipeline(data=data, n_process=4, n_threshold_phewas=100, n_threshold_comorbidity=100,
-                                          output_dir="./results/", project_prefix="my_analysis")
+       results = disease_network_pipeline(data=data, n_process=4,
+                                          n_threshold_phewas=100,
+                                          n_threshold_comorbidity=100,
+                                          output_dir="./results/",
+                                          project_prefix="my_analysis")
    ```
 
 > **Note:** When using multiprocessing, multi-threading may not always close successfully, which can cause conflicts that significantly affect performance. We recommend disabling multi-threading with the following code (Linux):
