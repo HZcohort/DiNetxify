@@ -26,7 +26,7 @@ def disease_network_pipeline(
     method:str='RPCN',
     covariates:list=None,
     matching_var_dict:dict={'sex':'exact'},
-    matching_n:str=2,
+    matching_n:int=2,
     min_interval_days:int=0,
     max_interval_days:int=np.inf,
     enforce_temporal_order:bool=False,
@@ -214,8 +214,10 @@ def disease_network_pipeline(
     #method and kwargs check
     if kwargs:
         parameter_dict = validate_method_specific_kwargs(method,**kwargs)
+        if kwargs:
+            raise ValueError(f"Unexpected keyword arguments provided: {kwargs.keys()}")
     else:
-        parameter_dict = []
+        parameter_dict = {}
     #check covariates
     # covariates = covariates_check(covariates,data.get_attribute('phenotype_info'))
     #check matching_var_dict
