@@ -1,0 +1,187 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Input data preparation &mdash; DiNetxify  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=b3ba4146"></script>
+      <script src="_static/doctools.js?v=888ff710"></script>
+      <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Data harmonization" href="data_harm.html" />
+    <link rel="prev" title="DiNetxify" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            DiNetxify
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Input data preparation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#requirements-for-input-data">Requirements for input data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dummy-dataset-overview">Dummy dataset overview</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="data_harm.html">Data harmonization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="3d_analysis.html">Three-dimensional disease network analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="visual.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="table.html">Result tables description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="log.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">DiNetxify</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Input data preparation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/data_prep.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="input-data-preparation">
+<h1>Input data preparation<a class="headerlink" href="#input-data-preparation" title="Permalink to this heading"></a></h1>
+<section id="requirements-for-input-data">
+<h2>Requirements for input data<a class="headerlink" href="#requirements-for-input-data" title="Permalink to this heading"></a></h2>
+<p><em><strong>DiNetxify</strong></em> enables 3D disease network analysis on cohort data from electronic health records (EHR) and offers three study designs: the <strong>standard cohort</strong>, which compares individuals with a specific disease or exposure (e.g., depression or smoking) against the general population; the <strong>matched cohort</strong>, which pairs subjects on key characteristics to reduce confounding; and the <strong>exposed-only cohort</strong>, which examines disease networks within a defined group (e.g., older adults) without an unexposed comparison group.</p>
+<p>To begin using <em><strong>DiNetxify</strong></em>, two datasets are required: a <strong>phenotype data</strong> file containing each participant’s baseline information, and one or more <strong>medical records data</strong> files extracted from an EHR database that list diagnoses (codes and dates) for all cohort individuals over the study period. The specific requirements for these datasets are:</p>
+<ul class="simple">
+<li><p><strong>Phenotype data:</strong> A CSV (or TSV) file with a header row, where each row represents a participant. Required columns are:</p>
+<ul>
+<li><p><strong>Participant ID</strong> – Unique identifier for each individual.</p></li>
+<li><p><strong>Index date</strong> – Start of follow-up (e.g., date of exposure or baseline).</p></li>
+<li><p><strong>End date</strong> – End of follow-up (e.g., last visit, death, or study completion).</p></li>
+<li><p><strong>Exposure</strong> – Binary indicator (1 = exposed, 0 = unexposed) for standard and matched cohorts (omit for exposed-only cohorts).</p></li>
+<li><p><strong>Match ID</strong> – Identifier for matched sets (only for matched cohort designs).</p></li>
+<li><p><strong>Sex</strong> – Biological sex (1 = female, 0 = male).</p></li>
+<li><p><strong>Additional covariates (optional)</strong> – Any number of extra variables for adjustment or matching (e.g., age, BMI, education).</p></li>
+</ul>
+</li>
+</ul>
+<p>For all required columns, missing values are not permitted and dates must follow a consistent format (default <code class="docutils literal notranslate"><span class="pre">YYYY-MM-DD</span></code>). The <strong>Sex</strong> and <strong>Exposure</strong> fields must use the specified 1/0 coding. You may include unlimited additional covariates; their types (binary, categorical, or continuous) will be auto-detected and processed accordingly (e.g., one-hot encoding for categorical variables). Missing values in continuous covariates are dropped, whereas missing categorical values are treated as a separate “NA” category.</p>
+<ul>
+<li><p><strong>Medical records data</strong>: One or more CSV/TSV files (each with a header row), listing diagnosis events for the participants. Each record (row) must include:</p>
+<ul class="simple">
+<li><p>**Participant ID **– The same unique ID used in the phenotype data, linking each record to an individual.</p></li>
+<li><p><strong>Diagnosis code</strong> – A diagnosis code (e.g., ICD-10 or ICD-9 code).</p></li>
+<li><p><strong>Date of diagnosis</strong> – The date of that diagnosis/event (format consistent with the phenotype dates, e.g., <code class="docutils literal notranslate"><span class="pre">YYYY-MM-DD</span></code>).</p></li>
+</ul>
+<p>The <strong>medical records data</strong> should be in a “long” format (multiple rows per participant if they have multiple diagnoses). <em><strong>DiNetxify</strong></em> will automatically filter these records to include only those within each individual’s follow-up period (from index date up to end date). <strong>Do not pre-filter</strong> the medical records by date or by first occurrence — provide the complete set of diagnoses for each participant, and let the software handle the filtering and mapping. Each medical records file should use a single coding system for diagnoses. Currently supported code versions are ICD-9 (WHO and CM) and ICD-10 (WHO and CM). If your data uses a different coding system, you will need to map it to one of the supported formats beforehand.</p>
+</li>
+</ul>
+</section>
+<section id="dummy-dataset-overview">
+<h2>Dummy dataset overview<a class="headerlink" href="#dummy-dataset-overview" title="Permalink to this heading"></a></h2>
+<p>A <a class="reference external" href="https://github.com/HZcohort/DiNetxify/tree/main/tests/data">dummy dataset</a> is provided to help you become familiar with the input format and to allow you to run through the full analysis workflow before using your own data. It simulates a matched-cohort study of 10,000 exposed individuals and 50,000 matched unexposed individuals, along with their entire follow-up EHR records.</p>
+<blockquote>
+<div><p><strong>Note:</strong> All participant characteristics and diagnoses in this dummy dataset are randomly generated. The ICD-9 and ICD-10 codes correspond to real classifications, and the analysis may yield seemingly significant associations, but these results do <strong>not</strong> reflect true medical findings. They are for instructional purposes only.</p>
+</div></blockquote>
+<ul class="simple">
+<li><p>The dummy dataset consists of three CSV files:</p>
+<ul>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">dummy_phenotype.csv</span></code></strong> – Simulated baseline characteristics for 60,000 individuals, containing:</p>
+<ul>
+<li><p><strong>ID</strong> – Unique participant identifier.</p></li>
+<li><p><strong>date_start</strong>, <strong>date_end</strong> – Follow-up start and end dates.</p></li>
+<li><p><strong>exposure</strong> – Exposure status (0 = unexposed, 1 = exposed).</p></li>
+<li><p><strong>group_id</strong> – Matching group identifier (each exposed is matched with unexposed in groups).</p></li>
+<li><p><strong>sex</strong> – Biological sex (1 = female, 0 = male).</p></li>
+<li><p><strong>age</strong> – Baseline age (years).</p></li>
+<li><p><strong>BMI</strong> – Body mass index category.</p></li>
+</ul>
+</li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">dummy_EHR_ICD9.csv</span></code></strong> – Simulated EHR diagnoses coded in ICD-9 (10,188 records). Columns:</p>
+<ul>
+<li><p><strong>ID</strong> – Participant ID (matches the phenotype file).</p></li>
+<li><p><strong>dia_date</strong> – Diagnosis date.</p></li>
+<li><p><strong>diag_icd9</strong> – ICD-9 diagnosis code.</p></li>
+</ul>
+</li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">dummy_EHR_ICD10.csv</span></code></strong> – Simulated EHR diagnoses coded in ICD-10 (1,048,576 records). Columns:</p>
+<ul>
+<li><p><strong>ID</strong> – Participant ID.</p></li>
+<li><p><strong>dia_date</strong> – Diagnosis date.</p></li>
+<li><p><strong>diag_icd10</strong> – ICD-10 diagnosis code.</p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>Using this dummy dataset, you can practice the workflow and verify that the tool runs correctly. In the following sections, we will demonstrate the analysis steps using the dummy data.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="DiNetxify" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="data_harm.html" class="btn btn-neutral float-right" title="Data harmonization" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
