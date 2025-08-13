@@ -7,7 +7,7 @@ from .analysis import (
 from .data_management import DiseaseNetworkData
 import numpy as np
 import os
-from .utility import n_process_check,threshold_check,filter_phecodes,validate_method_specific_kwargs,covariates_check,matching_var_check
+from .utility import n_process_check,threshold_check,validate_method_specific_kwargs,matching_var_check
 from .utility import correction_method_check
 import time
 import pandas as pd
@@ -26,7 +26,7 @@ def disease_network_pipeline(
     method:str='RPCN',
     covariates:list=None,
     matching_var_dict:dict={'sex':'exact'},
-    matching_n:str=2,
+    matching_n:int=2,
     min_interval_days:int=0,
     max_interval_days:int=np.inf,
     enforce_temporal_order:bool=False,
@@ -169,9 +169,10 @@ def disease_network_pipeline(
     
     Returns
     -------
-    dict
-        A dictionary containing the number of significant diseases/disease pairs identified in each step of the pipeline.
+    tuple
+        A tuple of DataFrames for result of PheWAS, comorbidity strength estimation, comorbidity network analysis, binomial test, and disease trajectory analysis.
     """
+    
     # --------check each parameter--------
     #data type check
     if not isinstance(data,DiseaseNetworkData):
@@ -213,8 +214,10 @@ def disease_network_pipeline(
     #method and kwargs check
     if kwargs:
         parameter_dict = validate_method_specific_kwargs(method,**kwargs)
+        if kwargs:
+            raise ValueError(f"Unexpected keyword arguments provided: {kwargs.keys()}")
     else:
-        parameter_dict = []
+        parameter_dict = {}
     #check covariates
     # covariates = covariates_check(covariates,data.get_attribute('phenotype_info'))
     #check matching_var_dict
@@ -261,7 +264,6 @@ def disease_network_pipeline(
     data.disease_pair(phewas_result=phewas_result,
                       min_interval_days=min_interval_days,
                       max_interval_days=max_interval_days,
-                      enforce_temporal_order=enforce_temporal_order,
                       force=True)
     if save_intermediate_data:
         data_intermediate_file = os.path.join(output_dir,f'{project_prefix}_data_withtra')
