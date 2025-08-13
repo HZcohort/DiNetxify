@@ -60,408 +60,402 @@
 
 ### 1.1 Requirements for input data
 
-DiNetxify enables 3D disease network analysis on cohort data from electronic health records (EHR) and offers three study designs: the standard cohort, which compares individuals with a specific disease (e.g., depression) or exposure (e.g., smoking) against the general population; the matched cohort, which pairs subjects on key characteristics to reduce bias; and the exposed-only cohort, which examines disease networks within a defined subgroup (e.g., older adults) without a comparison group.
+***DiNetxify*** enables 3D disease network analysis on cohort data from electronic health records (EHR) and offers three study designs: the **standard cohort**, which compares individuals with a specific disease or exposure (e.g., depression or smoking) against the general population; the **matched cohort**, which pairs subjects on key characteristics to reduce confounding; and the **exposed-only cohort**, which examines disease networks within a defined group (e.g., older adults) without an unexposed comparison group.
 
-To begin using DiNetxify, two datasets are required: a **phenotype data** file recording each individual's basic and additional characteristics, and one or more **medical records data** files extracted from an EHR database that stores diagnosis codes and dates for all cohort individuals over the study period. Specific requirements for these datasets are as follows:
+To begin using ***DiNetxify***, two datasets are required: a **phenotype data** file containing each participant’s baseline information, and one or more **medical records data** files extracted from an EHR database that list diagnoses (codes and dates) for all cohort individuals over the study period. The specific requirements for these datasets are:
 
-- **Phenotype data**: An on-disk CSV (or TSV) file with headers, listing each participant with the following required and optional columns:
+- **Phenotype data:** A CSV (or TSV) file with a header row, where each row represents a participant. Required columns are:
 
-  - **Participant ID**: Unique identifier for each individual.  
-  - **Index date**: Start of follow-up (e.g., date of exposure or baseline).  
-  - **End date**: End of follow-up (e.g., last visit, death, or study completion).  
-  - **Exposure**: Binary indicator (1 = exposed, 0 = unexposed) for standard and matched cohort designs (omit for exposed-only cohorts).  
-  - **Match ID**: Identifier for matched sets (only for matched cohort designs).  
-  - **Sex**: Biological sex (1 = female, 0 = male).  
-  - **Additional covariates (optional)**: Any number of extra variables for adjustment or matching (e.g., age, BMI, education).  
+  - **Participant ID** – Unique identifier for each individual.
 
-  For all required columns, missing values are not permitted and dates must follow the datetime formats (e.g., “%Y-%m-%d”); the **Sex** and **Exposure** fields must use the specified 1/0 coding, and you may include an unlimited number of additional covariates. Column types—binary, categorical, or continuous—are detected automatically and transformed as needed (e.g., one-hot encoding), with missing categorical values assigned to a separate “NA” category.
+  - **Index date** – Start of follow-up (e.g., date of exposure or baseline).
 
-- **Medical records data**: One or more CSV or TSV files (with a header row), each listing diagnosis events for study participants. Every record must include:  
+  - **End date** – End of follow-up (e.g., last visit, death, or study completion).
 
-  - **Participant ID**: The unique identifier matching the phenotype dataset.  
-  - **Diagnosis code**: A standardized code (e.g., ICD-10, ICD-9).  
-  - **Date of diagnosis**: Date of diagnosis or event in datetime formats (e.g., “%Y-%m-%d”).
-  
-  Unlike the **phenotype data**, the **medical records data** should be in a record-per-row format, allowing multiple rows per participant. Records matching **participant ID** in the **phenotype data** and occurring within the specified follow-up period (i.e., before the end date) are loaded. Therefore, there is **no need** to pre-filter medical records - you should provide complete diagnosis information for all cohort individuals. Specifically, it is **not recommended** to filter data based on first occurrence of each code or diagnosis date.
+  - **Exposure** – Binary indicator (1 = exposed, 0 = unexposed) for standard and matched cohorts (omit for exposed-only cohorts).
 
-  Each **medical records data** must use a single diagnosis code version; currently supported versions are WHO or CM versions of ICD-9 and ICD-10. Other code systems must be converted to a supported format.
+  - **Match ID** – Identifier for matched sets (only for matched cohort designs).
+
+  - **Sex** – Biological sex (1 = female, 0 = male).
+
+  - **Additional covariates (optional)** – Any number of extra variables for adjustment or matching (e.g., age, BMI, education).
+
+For all required columns, missing values are not permitted and dates must follow a consistent format (default `YYYY-MM-DD`). The **Sex** and **Exposure** fields must use the specified 1/0 coding. You may include unlimited additional covariates; their types (binary, categorical, or continuous) will be auto-detected and processed accordingly (e.g., one-hot encoding for categorical variables). Missing values in continuous covariates are dropped, whereas missing categorical values are treated as a separate “NA” category.
+
+- **Medical records data**: One or more CSV/TSV files (each with a header row), listing diagnosis events for the participants. Each record (row) must include:
+
+  - **Participant ID **– The same unique ID used in the phenotype data, linking each record to an individual.
+  - **Diagnosis code** – A diagnosis code (e.g., ICD-10 or ICD-9 code).
+  - **Date of diagnosis** – The date of that diagnosis/event (format consistent with the phenotype dates, e.g., `YYYY-MM-DD`).
+
+  The **medical records data** should be in a “long” format (multiple rows per participant if they have multiple diagnoses). ***DiNetxify*** will automatically filter these records to include only those within each individual’s follow-up period (from index date up to end date). **Do not pre-filter** the medical records by date or by first occurrence — provide the complete set of diagnoses for each participant, and let the software handle the filtering and mapping. Each medical records file should use a single coding system for diagnoses. Currently supported code versions are ICD-9 (WHO and CM) and ICD-10 (WHO and CM). If your data uses a different coding system, you will need to map it to one of the supported formats beforehand.
 
 ### 1.2 Dummy dataset overview
 
-A dummy dataset is provided to help you become familiar with the required input format and to run through the full analysis workflow before applying it to your own cohort. It simulates a matched‐cohort study of 10 000 exposed individuals and 50 000 matched unexposed individuals, together with their entire follow-up EHR data.
+A [dummy dataset](https://github.com/HZcohort/DiNetxify/tree/main/tests/data) is provided to help you become familiar with the input format and to allow you to run through the full analysis workflow before using your own data. It simulates a matched-cohort study of 10,000 exposed individuals and 50,000 matched unexposed individuals, along with their entire follow-up EHR records.
 
-**Caution:** All participant characteristics and diagnosis records in this dataset are randomly generated. Although the ICD-9 and ICD-10 codes correspond to real‐world classifications, and the analysis may produce apparently significant associations based on that, these results do **not** reflect any true medical findings.
+> **Note:** All participant characteristics and diagnoses in this dummy dataset are randomly generated. The ICD-9 and ICD-10 codes correspond to real classifications, and the analysis may yield seemingly significant associations, but these results do **not** reflect true medical findings. They are for instructional purposes only.
 
-- The dataset consists of three CSV files, located in the `tests/data` directory:
-  - **`dummy_phenotype.csv`**
-     Baseline characteristics for all 60 000 individuals, containing:
-    - **ID**: unique participant identifier
-    - **date_start**, **date_end**: follow-up start and end dates
-    - **exposure**: exposure status (0 = unexposed, 1 = exposed)
-    - **group_id**: matching group identifier
-    - **sex**: biological sex (1 for female and 0 for male)
-    - **age**: baseline age (years)
-    - **BMI**: body‐mass index category
-  - **`dummy_EHR_ICD9.csv`**
-     Simulated EHR diagnoses coded using ICD-9 (n = 10,188 records), with columns:
-    - **ID**: participant identifier
-    - **dia_date**: diagnosis date
-    - **diag_icd9**: ICD-9 diagnosis code
-  - **`dummy_EHR_ICD10.csv`**
-     Simulated EHR diagnoses coded using ICD-10 (n = 1,048,576 records), with columns:
-    - **ID**: participant identifier
-    - **dia_date**: diagnosis date
-    - **diag_icd10**: ICD-10 diagnosis code
+- The dummy dataset consists of three CSV files:
+  - **`dummy_phenotype.csv`** – Simulated baseline characteristics for 60,000 individuals, containing:
+    - **ID** – Unique participant identifier.
+    - **date_start**, **date_end** – Follow-up start and end dates.
+    - **exposure** – Exposure status (0 = unexposed, 1 = exposed).
+    - **group_id** – Matching group identifier (each exposed is matched with unexposed in groups).
+    - **sex** – Biological sex (1 = female, 0 = male).
+    - **age** – Baseline age (years).
+    - **BMI** – Body mass index category.
+  - **`dummy_EHR_ICD9.csv`** – Simulated EHR diagnoses coded in ICD-9 (10,188 records). Columns:
+    - **ID** – Participant ID (matches the phenotype file).
+    - **dia_date** – Diagnosis date.
+    - **diag_icd9** – ICD-9 diagnosis code.
+  - **`dummy_EHR_ICD10.csv`** – Simulated EHR diagnoses coded in ICD-10 (1,048,576 records). Columns:
+    - **ID** – Participant ID.
+    - **dia_date** – Diagnosis date.
+    - **diag_icd10** – ICD-10 diagnosis code.
+
+Using this dummy dataset, you can practice the workflow and verify that the tool runs correctly. In the following sections, we will demonstrate the analysis steps using the dummy data.
 
 ## 2. Data harmonization
 
-Data harmonization loads and merges **phenotype data** and **medical records data** into a single `DiseaseNetworkData` object for subsequent analysis, ensuring consistent coding (e.g., mapping diagnosis codes to phecodes) and standardized formatting (e.g., date time of diagnosis, and follow-up).
+Data harmonization involves loading and merging the **phenotype data** and **medical records data** into a single `DiseaseNetworkData` object for analysis. During this process, the software ensures consistent coding (e.g., converting diagnosis codes to phecodes) and standardized formatting (e.g., datetime parsing for diagnosis and follow-up periods).
 
 ### 2.1 Initializing the data object
 
-First, import `DiNetxify` package and instantiate `DiseaseNetworkData` with your chosen study design, phecode level, and any optional parameters to create a variable (i.e., `data`) which is an object of type `DiseaseNetworkData`.
+First, import the ***DiNetxify*** package and instantiate a `DiseaseNetworkData` object with your chosen study design, phecode level, and any optional parameters. For example:
 
 ```python
-import DiNetxify as dnt
+import DiNetxify as dnt  
 
-# For a standard cohort study
-data = dnt.DiseaseNetworkData(
-    study_design='cohort',     
-    phecode_level=1,
-)
+# For a standard cohort study  
+data = dnt.DiseaseNetworkData(  
+    study_design='cohort',  
+    phecode_level=1,  
+)  
 
-# For a matched cohort study
-data = dnt.DiseaseNetworkData(
-    study_design='matched cohort',
-    phecode_level=1,
-)
+# For a matched cohort study  
+data = dnt.DiseaseNetworkData(  
+    study_design='matched cohort',  
+    phecode_level=1,  
+)  
 
-# For an exposed-only cohort study
-data = dnt.DiseaseNetworkData(
-    study_design='exposed-only cohort',
-    phecode_level=1,
-)
+# For an exposed-only cohort study  
+data = dnt.DiseaseNetworkData(  
+    study_design='exposed-only cohort',  
+    phecode_level=1,  
+)  
 ```
 
-- **study_design** – the type of study design. Options: `'cohort'`, `'matched cohort'`, or `'exposed-only cohort'`. Default is `'cohort'`.
-- **phecode_level** – the level of phecode used for analysis; level 1 provides broader categories (~585 conditions), while level 2 offers more details (~1257 conditions). Level 1 is recommended for smaller datasets to maintain statistical power. Options: `1`, or `2`. Default is `1`.
+- **study_design** – Type of study design. Options: `'cohort'`, `'matched cohort'`, or `'exposed-only cohort'`. *(Default: 'cohort')*.
+- **phecode_level** – Level of phecode to use for grouping diagnoses. Level 1 provides broader categories (~585 conditions) while level 2 offers more detailed categories (~1257 conditions). For smaller datasets, level 1 is recommended to maintain statistical power; for larger datasets, level 2 can provide finer granularity. *(Options: 1 or 2; Default: 1)*.
 
 **Optional parameters:**
 
-- **min_required_icd_codes** – the minimum number of ICD codes mapping to a phecode required for it to be considered valid. For example, setting it to 2 requires at least two records mapping to phecode 250.2 (Type 2 diabetes) for a participant to be considered diagnosed. Ensure your medical records include complete data (not limited to first occurrences) when using this parameter. Default is `1`.
-- **date_fmt** – format of date fields (**Index date** and **End date**) in the **phenotype data**. Default is `'%Y-%m-%d'` (year-month-day, e.g., 2005-12-01).
-- **phecode_version** – the version of the phecode system used for converting diagnosis codes. Currently only `1.2` is supported. Default is `1.2`.
+- **min_required_icd_codes** – Minimum number of ICD diagnosis records mapping to the same phecode for that phecode to be considered “present” in an individual. For example, `min_required_icd_codes=2` means a single occurrence of a code isn’t enough to count the person as having that phecode; at least two occurrences are required. Ensure your medical record are comprehensive (not limited to first occurrences) if using this parameter. *(Default: 1)*.
+- **date_fmt** – Date format of the **Index date** and **End date** columns in your phenotype data. *(Default: '%Y-%m-%d', i.e. YYYY-MM-DD)*.
+- **phecode_version** – Phecode version for mapping diagnosis codes. Currently, version `'1.2'` is the recommended official version (with mapping files for ICD-9-CM/WHO and ICD-10-CM/WHO). An unofficial `'1.3a'` is available in the package for special use cases but is **not** recommended for general use. *(Default: '1.2')*.
 
 ### 2.2 Load phenotype data
 
-After initializing the data object, use the `phenotype_data()` method to load your one **phenotype data** file by providing the file path, a dictionary mapping required columns, and a list of additional covariate names.
+After initializing the `DiseaseNetworkData` object, use the `phenotype_data()` method to load your phenotype data file. You need to provide the file path, a dictionary mapping the required column names to your file’s column headers, and a list of any additional covariate column names.
 
-The following example codes show how to load the **dummy_phenotype.csv** under different study designs. Although the file (**dummy_phenotype.csv**) is originally formatted for a matched cohort study, you can adapt it for other designs: omitting the **Match ID** column loads it as a standard cohort study (ignoring the matching), while omitting both **Match ID** and **Exposure** columns loads it as an exposed‑only cohort study - treating all participants as exposed (i.e., representing the entire population).
+Below are examples demonstrating how to load the dummy phenotype dataset under different study designs. The dummy file is structured for a matched cohort study, but it can be adapted for other designs by dropping certain columns when mapping: if you omit the **Match ID** column in the mapping, the data will be treated as a standard cohort (ignoring the matching groups); if you omit both **Match ID** and **Exposure**, it will be treated as an exposed-only cohort (all individuals considered “exposed”).
 
 ```python
-# Load phenotype data for a matched cohort study
-col_dict = {
-    'Participant ID': 'ID',        
-    'Exposure': 'exposure',        
-    'Sex': 'sex',                  
-    'Index date': 'date_start',    
-    'End date': 'date_end',        
-    'Match ID': 'group_id'         
-}
-vars_lst = ['age', 'BMI']  
-data.phenotype_data(
-    phenotype_data_path=r"/test/data/dummy_phenotype.csv",
-    column_names=col_dict,
-    covariates=vars_lst
-)
+# Load phenotype data for a matched cohort study  
+col_dict = {  
+    'Participant ID': 'ID',  
+    'Exposure': 'exposure',  
+    'Sex': 'sex',  
+    'Index date': 'date_start',  
+    'End date': 'date_end',  
+    'Match ID': 'group_id'  
+}  
+covariates_list = ['age', 'BMI']  
+data.phenotype_data(  
+    phenotype_data_path=r"/test/data/dummy_phenotype.csv",  
+    column_names=col_dict,  
+    covariates=covariates_list  
+)  
 
-# Load phenotype data for a traditional cohort study
-col_dict = {
-    'Participant ID': 'ID',
-    'Exposure': 'exposure',
-    'Sex': 'sex',
-    'Index date': 'date_start',
-    'End date': 'date_end'
-}
-vars_lst = ['age', 'BMI']
-data.phenotype_data(
-    phenotype_data_path=r"/test/data/dummy_phenotype.csv",
-    column_names=col_dict,
-    covariates=vars_lst
-)
+# Load phenotype data for a standard cohort study (no matching)  
+col_dict = {  
+    'Participant ID': 'ID',  
+    'Exposure': 'exposure',  
+    'Sex': 'sex',  
+    'Index date': 'date_start',  
+    'End date': 'date_end'  
+}  
+covariates_list = ['age', 'BMI']  
+data.phenotype_data(  
+    phenotype_data_path=r"/test/data/dummy_phenotype.csv",  
+    column_names=col_dict,  
+    covariates=covariates_list  
+)  
 
-# Load phenotype data for an exposed-only cohort study
-col_dict = {
-    'Participant ID': 'ID',
-    'Sex': 'sex',
-    'Index date': 'date_start',
-    'End date': 'date_end'
-}
-vars_lst = ['age', 'BMI']
-data.phenotype_data(
-    phenotype_data_path=r"/test/data/dummy_phenotype.csv",
-    column_names=col_dict,
-    covariates=vars_lst
-)
+# Load phenotype data for an exposed-only cohort study (only exposed group, no comparator)  
+col_dict = {  
+    'Participant ID': 'ID',  
+    'Sex': 'sex',  
+    'Index date': 'date_start',  
+    'End date': 'date_end'  
+}  
+covariates_list = ['age', 'BMI']  
+data.phenotype_data(  
+    phenotype_data_path=r"/test/data/dummy_phenotype.csv",  
+    column_names=col_dict,  
+    covariates=covariates_list  
+)  
 ```
 
-- **phenotype_data_path** – path to your one **Phenotype data** file (CSV or TSV).
-- **column_names** – dictionary mapping the required variable names (e.g., `'Participant ID'`, `'Index date'`, `'End date'`, `'Sex'`) to the corresponding headers in your file. Include `'Exposure'` for cohort and matched cohort designs, and `'Match ID'` for matched cohort designs.
-- **covariates** – list of additional covariate names. Provide an empty list if none. The method automatically detects and converts variable types. Records with missing values in continuous variables are removed, while missing values in categorical variables form an `NA` category.
+- **phenotype_data_path** – Path to your phenotype data file (CSV or TSV).
+- **column_names** – Dictionary mapping the required column names (`'Participant ID'`, `'Index date'`, `'End date'`, `'Sex'`, and depending on design `'Exposure'` and `'Match ID'`) to the corresponding column headers in your file. Include `'Exposure'` for cohort and matched cohort designs, and include `'Match ID'` only for matched cohorts.
+- **covariates** – List of additional covariate column names to load (if any). Use an empty list `[]` if there are none. The function will automatically detect each covariate’s type and process it appropriately (e.g., encode categorical variables). For continuous covariates, any rows with missing values will be dropped; for categorical covariates, missing values will be categorized as "NA".
 
 **Optional parameters:**
 
-- **is_single_sex** – set to `True` if the dataset contains only one sex. Default is `False`.
-- **force** – set to `True` to overwrite existing data in the object. Default is `False`, which raises an error if data already exist.
+- **is_single_sex** – If your cohort contains only one sex (all male or all female), set this to `True` so the software knows to treat the Sex column accordingly. *(Default: False)*.
+- **force** – If `False`, the method will raise an error if phenotype data has already been loaded into this `DiseaseNetworkData` object (to prevent accidental overwrite). Setting `force=True` will overwrite any existing data in the object with the new data. *(Default: False)*.
 
-**After loading data:**
+**After loading phenotype data:**
 
-After loading **phenotype data**, you can inspect basic information (e.g., number of individuals, average follow-up time) by printing the `data` object:
+Once the phenotype data is loaded, you can inspect the basic characteristics by printing the `data` object:
 
 ```python
-print(data)
-# This will output something like (e.g., for a matched cohort study):
-"""
-DiNetxify.DiseaseNetworkData
+print(data)  
+# Example output (for a matched cohort study):  
+"""  
+DiNetxify.DiseaseNetworkData  
 
-Study design: matched cohort
+Study design: matched cohort  
 
-Phentype data
-Total number of individuals: 60,000 (10,000 exposed and 50,000 unexposed)
-The average group size is: 6.00
-Average follow-up years: 10.44 (exposed) and 10.46 (unexposed)
+Phenotype data  
+Total number of individuals: 60,000 (10,000 exposed and 50,000 unexposed)  
+The average group size is: 6.00  
+Average follow-up years: 10.44 (exposed) and 10.46 (unexposed)  
 
-Warning: 102 exposed individuals and 440 unexposed individuals have negative or zero follow-up time.
-Consider removing them before merge.
-"""
+Warning: 102 exposed individuals and 440 unexposed individuals have negative or zero follow-up time.  
+Consider removing them before merge.  
+"""  
+
 ```
 
-Additionally, you can generate a basic descriptive table 1 (`pd.DataFrame`) for all variables in your **phenotype data** using the `Table1()` method and save it to multiple formats (e.g., .csv/.tsv/.xlsx):
+The printed summary confirms the number of individuals, breakdown by exposure, average matching group size (for matched cohorts), and average follow-up times. Warnings are provided if any participants have non-positive follow-up lengths, which you may want to address (e.g., by removing those individuals) before proceeding.
+
+Additionally, you can generate a basic descriptive table (Table 1) of the phenotype data using the `Table1()` method. This returns a pandas DataFrame summarizing each variable (e.g., medians/IQRs for continuous variables, counts/percentages for categorical variables) and performing simple statistical comparisons between exposed and unexposed groups:
 
 ```python
-table_1 = data.Table1()
-print(table_1)
-# Example output (e.g., for a matched cohort study):
-"""
-                   Variable exposure=1 (n=10,000) exposure=0 (n=50,000)                       Test and p-value
-0        _age (median, IQR)   57.08 (48.91-65.32)   57.05 (48.87-65.35)  Mann-Whitney U test p-value=9.824e-01      
-1   follow_up (median, IQR)     9.18 (5.77-13.70)     9.22 (5.80-13.75)  Mann-Whitney U test p-value=6.806e-01      
-2                sex (n, %)
-3                sex=Female        5,045 (50.45%)       25,225 (50.45%)
-4                  sex=Male        4,955 (49.55%)       24,775 (49.55%)     Chi-squared test p-value=1.000e+00      
-5                BMI (n, %)
-6                    BMI=c2        1,945 (19.45%)       10,170 (20.34%)
-7                    BMI=c4        2,022 (20.22%)       10,022 (20.04%)
-8                    BMI=c5        2,002 (20.02%)       10,031 (20.06%)
-9                    BMI=c1        1,999 (19.99%)        9,952 (19.90%)
-10                   BMI=c3        2,032 (20.32%)        9,825 (19.65%)     Chi-squared test p-value=2.552e-01 
-"""
-# For example: save Table 1 to an Excel file
-table_1.to_excel(r"/test/data/Table1.xlsx")  
+table1_df = data.Table1()  
+print(table1_df)  
+# Example (truncated) output:  
+"""  
+                   Variable        exposure=1 (n=10,000)   exposure=0 (n=50,000)            Test and p-value  
+0        age (median, IQR)       57.08 (48.91–65.32)       57.05 (48.87–65.35)    Mann-Whitney U p=0.9824  
+1   follow_up (median, IQR)       9.18 (5.77–13.70)         9.22 (5.80–13.75)    Mann-Whitney U p=0.6806  
+2                sex (n, %)  
+3                sex=Female          5,045 (50.45%)           25,225 (50.45%)   …  
+...  
+"""  
 ```
 
-### 2.3 Load medical records data
+This Table 1 gives a quick overview of how the exposed and unexposed groups compare on key variables. You can save this `DataFrame` to a CSV/TSV/Excel file using pandas if needed.
 
-After loading the **phenotypic data**, use the `merge_medical_records()` method to load your one or more medical records files by providing the file path, a format of ICD code, and mapping required columns, and a dictionary mapping required columns. The following example code show how to load the dummy EHR ICD9/ICD10 dataset.
+### 2.3 Load medical record data
+
+After loading the phenotype data, use the `merge_medical_records()` method to load and merge each medical records file. You will call this method for each separate file (e.g., one for ICD-10 and one for ICD-9 in our dummy data). Provide the file path, specify the ICD coding standard used in that file, and a dictionary mapping required columns. The following example code shows how to load the dummy EHR ICD-10 and ICD-9 files:
 
 ```python
-# Merge with the first medical records file (dummy_EHR_ICD10.csv)
-data.merge_medical_records(
-    medical_records_data_path=r"/test/data/dummy_EHR_ICD10.csv", 
-    diagnosis_code='ICD-10-WHO',                                  
-    column_names={
-        'Participant ID': 'ID',                                   
-        'Diagnosis code': 'diag_icd10',                           
-        'Date of diagnosis': 'dia_date'        
-    }
-)
+# Merge the first medical record file (dummy_EHR_ICD10.csv)  
+data.merge_medical_records(  
+    medical_records_data_path=r"/test/data/dummy_EHR_ICD10.csv",  
+    diagnosis_code='ICD-10-WHO',  
+    column_names={  
+        'Participant ID': 'ID',  
+        'Diagnosis code': 'diag_icd10',  
+        'Date of diagnosis': 'dia_date'  
+    }  
+)  
 
-# Merge with the second medical records file (dummy_EHR_ICD9.csv)
-data.merge_medical_records(
+# Merge the second medical records file (dummy_EHR_ICD9.csv)  
+data.merge_medical_records(  
     medical_records_data_path=r"/test/data/dummy_EHR_ICD9.csv",  
-    diagnosis_code="ICD-9-WHO",                                  
-    column_names={
-        'Participant ID': 'ID',                                   
-        'Diagnosis code': 'diag_icd9',                            
-        'Date of diagnosis': 'dia_date'                           
-    }
-)
+    diagnosis_code="ICD-9-WHO",  
+    column_names={  
+        'Participant ID': 'ID',  
+        'Diagnosis code': 'diag_icd9',  
+        'Date of diagnosis': 'dia_date'  
+    }  
+)  
+
 ```
 
-- **medical_records_data_path** – path to your one **medical records data** file (CSV or TSV).
-- **diagnosis_code** – diagnosis ICD code type used in the medical records data (e.g., `'ICD-9-CM'`, `'ICD-9-WHO'`, `'ICD-10-CM'`, `'ICD-10-WHO'`).
-- **column_names** – dictionary mapping the required variable names (e.g., `Participant ID`, `Diagnosis code`, `Date of diagnosis`) to the corresponding headers in your file.
+- **medical_records_data_path** – Path to a medical records data file (CSV or TSV).
+- **diagnosis_code** – The diagnosis coding system used in that file. Options include `'ICD-9-CM'`, `'ICD-9-WHO'`, `'ICD-10-CM'`, `'ICD-10-WHO'` (case-sensitive).
+- **column_names** – Dictionary mapping the required column names (`'Participant ID'`, `'Diagnosis code'`, `'Date of diagnosis'`) to your file’s column headers.
 
 **Optional parameters:**
 
-- **date_fmt** – the format of the date fields in your medical records data. Defaults to the same format as phenotype data if not specified.
-- **chunksize** – number of rows per chunk to read, useful for large datasets. Default is `1 000 000`.
+- **date_fmt** – Date format of the **Date of diagnosis** column in this file. If not provided, it defaults to the same format used for phenotype dates (`date_fmt` specified in the `DiseaseNetworkData` initialization).
+- **chunksize** – If the file is very large, you can specify a number of rows to read per chunk (the function will stream through the file in chunks to manage memory usage). *(Default: 1,000,000 rows per chunk.)*
 
 **During data loading:**
 
-During loading data, you can get basic information (e.g., number of records, number of phecode mapping):
+As each medical records file is processed, ***DiNetxify*** will output progress messages and basic stats. For example:
 
 ```python
 """
-1,000,000 records read (1,000,000 included after filltering on participant ID), 0 records with missing values excluded.
-1,668,795 records read (1,668,795 included after filltering on participant ID), 0 records with missing values excluded.
-Total: 1,668,795 diagnosis records processed, 0 records with missing values were excluded.
-1,286,386 diagnosis records mapped to phecode without truncating.
-0 diagnosis records mapped to phecode after truncating to 4 digits.
-72,073 diagnosis records mapped to phecode after truncating to 3 digits.
-302,908 diagnosis records not mapped to any phecode.
-Phecode diagnosis records successfully merged (18,486 invalid records were not merged, typically with diagnosis date later than date of follow-up end)
+1,000,000 records read (1,000,000 included after filtering on participant ID), 0 records with missing values excluded.  
+1,668,795 records read (1,668,795 included after filtering on participant ID), 0 records with missing values excluded.  
+Total: 1,668,795 diagnosis records processed, 0 records with missing values were excluded.  
+1,286,386 diagnosis records mapped to phecode without truncating.  
+0 diagnosis records mapped to phecode after truncating to 4 digits.  
+72,073 diagnosis records mapped to phecode after truncating to 3 digits.  
+302,908 diagnosis records not mapped to any phecode.  
+Phecode diagnosis records successfully merged (18,486 invalid records were not merged, typically due to diagnosis date beyond follow-up end).  
 
-1 medical records data already merged, merging with a new one.
-10,188 records read (10,188 included after filltering on participant ID), 0 records with missing values excluded.
-Total: 10,188 diagnosis records processed, 0 records with missing values were excluded.
-9,711 diagnosis records mapped to phecode without truncating.
-0 diagnosis records mapped to phecode after truncating to 4 digits.
-266 diagnosis records mapped to phecode after truncating to 3 digits.
-211 diagnosis records not mapped to any phecode.
-Phecode diagnosis records successfully merged (0 invalid records were not merged, typically with diagnosis date later than date of follow-up end)
+1 medical record file already merged, merging with a new one.  
+10,188 records read (10,188 included after filtering on participant ID), 0 records with missing values excluded.  
+Total: 10,188 diagnosis records processed, 0 records with missing values were excluded.  
+9,711 diagnosis records mapped to phecode without truncating.  
+0 diagnosis records mapped to phecode after truncating to 4 digits.  
+266 diagnosis records mapped to phecode after truncating to 3 digits.  
+211 diagnosis records not mapped to any phecode.  
+Phecode diagnosis records successfully merged (0 invalid records were not merged).  
 """
 ```
 
-**After loading data:**
+From these logs, you can see how many records were read and included, how many were excluded (e.g., missing values or out-of-follow-up-range dates), and how many diagnosis codes were successfully mapped to phecodes versus not mapped. The logs also indicate when multiple files are being merged sequentially.
 
-After loading data, you can inspect basic information of **medical records data** (e.g., number of ICD code mapped to phecodes, average number of disease diagnosis) by printing the `data` object.
+**After loading medical record data:**
+
+After merging all medical records files, you can print the `data` object again to see a summary of the combined dataset:
 
 ```python
-print(data)
-# This will output something like (e.g., for a matched cohort study):
-"""
-Merged Medical records
-2 medical records data with 1,678,983 diagnosis records were merged (0 with missing values).
-Average number of disease diagnosis during follow-up: 18.99 (exposed) and 7.31 (unexposed)
-Average number of disease diagnosis before follow-up: 8.40 (exposed) and 3.46 (unexposed)
+print(data)  
+# Example output (matched cohort study):  
+"""  
+Merged Medical records  
+2 medical record files with 1,678,983 diagnosis records were merged (0 with missing values).  
+Average number of disease diagnoses during follow-up: 18.99 (exposed) and 7.31 (unexposed)  
+Average number of disease diagnoses before follow-up: 8.40 (exposed) and 3.46 (unexposed)  
 
-Warning: 102 exposed individuals and 440 unexposed individuals have negative or zero follow-up time.
-Consider removing them before merge.
-Warning: 18.15% of ICD-10-WHO codes were not mapped to phecodes for file d:\GitHubWarehouse\test\src/data/dummy_EHR_ICD10.csv.
-Warning: 2.07% of ICD-9-WHO codes were not mapped to phecodes for file d:\GitHubWarehouse\test\src/data/dummy_EHR_ICD9.csv.
-"""
+Warning: 102 exposed individuals and 440 unexposed individuals have negative or zero follow-up time.  
+Consider removing them before merge.  
+Warning: 18.15% of ICD-10-WHO codes were not mapped to phecodes for file /test/data/dummy_EHR_ICD10.csv.  
+Warning: 2.07% of ICD-9-WHO codes were not mapped to phecodes for file /test/data/dummy_EHR_ICD9.csv.  
+"""  
 ```
+
+This output confirms the number of diagnosis records merged and provides average counts of diagnoses per person (during and before follow-up, by exposure group). Warnings indicate the percentage of codes that could not be mapped to a phecode for each file, so you’re aware of any unmapped codes.
 
 ### 2.4 Save DiseaseNetworkData object
 
-After loading the **phenotype data** and **medical records data**, the `DiseaseNetworkData` object is saved in a compressed file format (e.g., .npz for NumPy-based storage or .pkl.gz for gzipped Python object persistence) to facilitate cross-platform data transfer and reproducibility of experimental results. The following code shows how to use `save()` function (for .pkl.gz files) and `save_npz()` function (for .npz files).
+At this stage, after loading phenotype and medical records data, you may want to save the `DiseaseNetworkData` object for later use. Saving allows you to reuse the prepared data without re-reading and processing raw files each time, facilitating reproducibility and easy sharing of the processed data. ***DiNetxify*** provides two methods: `save()` (which uses Python’s pickle serialization, saving to a compressed `.pkl.gz` file) and `save_npz()` (which saves to a compressed NumPy `.npz` file). You can use either or both depending on your needs. For example:
 
 ```python
-# For example: save the data object to a .pkl.gz file
-data.save('/your/project/path/dep_withtra')
+# Save the data object to a gzipped pickle file  
+data.save('/your/project/path/cohort_data')  
+# (This will produce a file named "cohort_data.pkl.gz")  
 
-# For example: save the data object to a .npz file
-data.save_npz('/your/project/path/dep_withtra')
+# Save the data object to a NumPy .npz file  
+data.save_npz('/your/project/path/cohort_data')  
+# (This will produce a file named "cohort_data.npz")
 ```
+
+You do not need to add the file extension in the path; the functions will append `.pkl.gz` or `.npz` automatically. Make sure to choose a directory where you have write permissions and enough storage space (the files can be large if your dataset is large).
 
 ### 2.5 Reload DiseaseNetworkData object
 
-After the `DiseaseNetworkData` object has been saved as a .pkl.gz or .npz file, you can reload it using the `load()` function or the `load_npz()` function if you wish to perform further analyses based on the original data. The following code shows how to use `load()` function (for .pkl.gz files) and `load_npz()` function (for .npz files).
+If you have previously saved a `DiseaseNetworkData` object, you can reload it instead of re-reading all input files. This is especially useful for large datasets or when sharing the processed object with collaborators. To reload, first instantiate a new `DiseaseNetworkData` object with the same `study_design` and `phecode_level` that the data was created with, then call the corresponding load function (`load()` or `load_npz()`). For example:
 
 ```python
-import DiNetxify as dnt
+import DiNetxify as dnt  
 
-# For a standard cohort study
-data = dnt.DiseaseNetworkData(
-    study_design='cohort',     
-    phecode_level=1,
-)
+# Create a new DiseaseNetworkData object with the same design/parameters  
+data = dnt.DiseaseNetworkData(  
+    study_design='cohort',  
+    phecode_level=1,  
+)  
 
-# For example: load a .pkl.gz file to the DiseaseNetworkData object
-data.load('/your/project/path/dep_withtra')
+# Load from a .pkl.gz file  
+data.load('/your/project/path/cohort_data')  
 
-# For example: load a .npz file to the DiseaseNetworkData object
-data.load_npz('/your/project/path/dep_withtra')
+# Or load from a .npz file  
+data.load_npz('/your/project/path/cohort_data')  
 ```
 
 ## 3. Data Analysis
 
-The DiseaseNetworkData object supports two distinct analytical approaches in disease network research: (1) a comprehensive **one-step analysis** that sequentially performs **PheWAS analysis**, **disease pair generation**, **comorbidity strength estimation**, **binomial testing**, **comorbidity network analysis**, and **disease trajectory analysis**; or (2) a flexible **step-by-step** analysis that allows researchers to execute and examine each component individually for greater methodological control.
+Once the data is prepared and stored in a `DiseaseNetworkData` object, DiNetxify offers two approaches to perform the disease network analysis:
 
-Both **step-by-step analysis** and **one-step analysis** return results as `pandas.DataFrames`, which can be exported to any file format supported by `pandas.DataFrame`. Compared to **step-by-step analysis**, the **one-step analysis** reduces code requirements and eliminates redundant operations. However, **one-step analysis** does not allow for precise control over the parameter details of each analysis step. 
+1. **One-step analysis:** a comprehensive pipeline that automates the entire sequence of analyses (PheWAS → disease pair generation → comorbidity strength estimation → binomial test → comorbidity network analysis → disease trajectory analysis) with one function call. This is convenient and ensures all steps are performed in the correct order with default or specified parameters.
+2. **Step-by-step analysis:** individual functions for each analysis component, allowing you to run and inspect each step separately. This approach offers more control and flexibility (e.g., to tweak parameters at each step or to examine intermediate results), at the expense of writing a bit more code.
+
+Both approaches output their results as pandas DataFrames, which you can further analyze or export (to CSV/Excel, etc.) using pandas. The one-step pipeline minimizes redundant computations and code, but does not allow modifying certain internal parameters beyond what its arguments expose. The step-by-step approach is more verbose but lets you adjust and understand each phase of the analysis in detail. We’ll demonstrate both.
 
 ### 3.1 One-step analysis
 
-Based on the `DiseaseNetworkData` object, you can use the `disease_network_pipeline()` function to complete the entire disease network analysis. The following code shows how to use `disease_network_pipeline()` function and it applies to three study designs.
+With your `DiseaseNetworkData` ready (let’s call it `data`), you can perform the entire analysis in one go using the `disease_network_pipeline()` function. This function returns all major result DataFrames and can also save output files. The example below illustrates using `disease_network_pipeline()`; it is applicable to any of the three study designs (the function internally adapts to the design specified in `data`):
 
 ```python
 # Reminder:
 # When using multiprocessing, ensure that the code is enclosed within the following block.
 # This prevents entering a never ending loop of new process creation.
-from DiNetxify import disease_network_pipeline
+from DiNetxify import disease_network_pipeline  
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # Required when using multiprocessing on Windows/Mac  
     phewas_result, com_strength_result, com_network_result, binomial_result, trajectory_result = disease_network_pipeline(
-        data=data,                               
-        n_process=2,                            
-        n_threshold_phewas=100,                  
-        n_threshold_comorbidity=100,             
-        output_dir="/your/project/path",          
-        project_prefix="disease network",         
+        data=data, n_process=2,
+        n_threshold_phewas=100,
+        n_threshold_comorbidity=100, 
+        comorbidity analysis,
+        output_dir="/your/project/path/results/",
+        project_prefix="disease_network",
         keep_positive_associations=False,
         save_intermediate_data=False,
-        system_exl=['symptoms', 'others', 'injuries & poisonings'],                                      
-        pipeline_mode="v1",                     
-        method="RPCN",                        
-        covariates=['BMI', 'age'],                                     
-        matching_var_dict={'sex':'exact'},                                  
-        matching_n=2,                          
-        min_interval_days=0,                    
-        max_interval_days=np.inf,               
-        enforce_temporal_order=False,           
-        correction='bonferroni',                
-        cutoff=0.05                      
-    )
+        system_exl=['symptoms', 'others', 'injuries & poisonings'],
+        pipeline_mode="v1",
+        method="RPCN",
+        covariates=['BMI', 'age'],
+        matching_var_dict={'sex': 'exact'},
+        matching_n=2,
+        min_interval_days=0,
+        max_interval_days=float('inf'),
+        enforce_temporal_order=False,
+        correction='bonferroni',
+        cutoff=0.05) 
 ```
 
-- **data** – the `DiseaseNetworkData` object.
-- **n_process** – specifies the number of parallel processes to use for the disease network analysis. Multiprocessing is enabled when `n_process` is set to a value greater than 1.
-- **n_threshold_phewas** – the minimum number of cases within the exposed group required for a phecode disease to be included in the **PheWAS analysis**. See the `DiNetxify.phewas()` function for more information.
-- **n_threshold_comorbidity** – the minimum number of individuals in the exposed group in which a disease pair must co-occur (temporal or non-temporal) to be included in the comorbidity strength estimation. See the `DiNetxify.comorbidity_strength()` function for more information.
-- **output_dir** - directory path to store output files generated by the pipeline.
-- **project_prefix** – prefix for naming output files and intermediate data.
-- **keep_positive_associations** – set to `True` if retains only diseases with hazard ratio (HR) > 1 from the PheWAS analysis. Default is `False`.
-- **save_intermediate_data** – set to `True` to intermediate `DiseaseNetworkData` objects created by the `DiNetxify.DiseaseNetworkData.disease_pair()` function are saved to disk. Default is `False`.
-- **system_exl** – list of phecode disease systems to exclude from the analysis. Default is `None`.
-- **pipeline_mode** – specifies the analysis order. 
-  - Options: 
-    - **v1**: PheWAS analysis → comorbidity strength analysis → binomial test analysis → (comorbidity network analysis/disease trajectory analysis) 
-    - **v2**: PheWAS analysis → comorbidity strength analysis → comorbidity network analysis → binomial test analysis → disease trajectory analysis. 
-  - In **v1**, the binomial test does not depend on results from the comorbidity network analysis; thus, disease trajectory and comorbidity network analyses can be conducted independently. In **v2**, the binomial test is performed only on disease pairs identified as significant by the comorbidity network analysis, making the disease trajectory analysis dependent on these results.
-- **method** – the method to use for the comorbidity network analysis and disease trajectory analysis. 
-  - The correlation network (CN) represents the most straightforward approach, utilizing a logistic regression model with user-defined covariates to assess pairwise disease associations. Building upon this foundation, the regularized partial correlation network (RPCN) (Epskamp et al., 2016) employs a regularized logistic regression framework that integrates both user-specified covariates and other diseases covariates. Notably, we further develop the regularized partial correlation network with principal component analysis (RPCNPCA) variant by incorporating principal component analysis (PCA) for covariate (other diseases) dimensionality reduction prior to network construction.
-  - Options: 
-    - **RPCN**: regularized partial correlation network. There are four `**Kwarg` parameters.
-      - **alpha** – the weight multiplying the l1 penalty term for other diseases covariates. Ignored if **auto_penalty** is enabled.
-      - **auto_penalty** – if `True`, automatically determines the best **alpha** based on model AIC value. Default is `True`.
-      - **alpha_range** – when **auto_penalty** is True, search the optimal **alpha** in this range. Default is `(1,15)`.
-      - **scaling_factor** – the scaling factor for the **alpha** when **auto_penalty** is True. Default is `1`.
-    - **PCN_PCA**: partial correlation network with principal component analysis. There are two `**Kwarg` parameters.
-      - **n_PC** – fixed number of principal components to include in each model. Default is `5`.
-      - **explained_variance** – cumulative explained variance threshold to determine the number of principal components. Overrides `n_PC` if specified.
-    - **CN**: correlation network. This parameter will be passed to the `DiNetxify.comorbidity_network()` and `DiNetxify.disease_trajectory()` function. See the these two functions for more information.
-- **covariates** – list of covariates to adjust for in the **PheWAS analysis**, **comorbidity network analysis** and **disease trajectory analysis**. Default is `None`.
-- **matching_var_dict** – specifies the matching variables and the criteria used for incidence density sampling. Default is `{'sex':'exact'}`. For categorical and binary variables, the matching criteria should always be 'exact'. For continuous variables, provide a scalar greater than 0 as the matching criterion, indicating the maximum allowed difference when matching. To include the required variable sex as a matching variable, always use 'sex' instead of its original column name. For other covariates specified in the `DiNetxify.DiseaseNetworkData.phenotype_data()` function, use their original column names.
-- **matching_n** – specifies the maximum number of matched controls for each case. This parameter will be passed to the `DiNetxify.disease_trajectory()` function. Default is `2`.
-- **min_interval_days** – minimum required time interval (in days) between diagnosis dates when constructing temporal disease pair (D1→D2) for each individual. This parameter will be passed to the `DiNetxify.DiseaseNetworkData.disease_pair()` function. See the `disease_pair()` function for more information. Default is `0`.
-- **max_interval_days** – maximum allowed time interval (in days) between diagnosis dates when constructing temporal and non-temporal disease pair (D1↔D2) for each individual. This parameter will be passed to the `DiNetxify.DiseaseNetworkData.disease_pair()` function. See the `DiNetxify.DiseaseNetworkData.disease_pair()` function for more information. Default is `np.inf`.
-- **enforce_temporal_order** – set to `True` to exclude individuals with non-temporal disease pair (D1-D2) when performing the binomial test; also applies the specified minimum and maximum time intervals when performing disease trajectory analysis. See **enforce_temporal_order** parameter in `DiNetxify.binomial_test()` function and **enforce_time_interval** parameter in `DiNetxify.disease_trajectory()` function. Default is `False`.
-- **correction** – method for p-value correction from the `statsmodels.stats.multitest.multipletests`.
-    - Options: 
-      - none : no correction
-      - bonferroni : one-step correction
-      - sidak : one-step correction
-      - holm-sidak : step down method using Sidak adjustments
-      - holm : step-down method using Bonferroni adjustments
-      - simes-hochberg : step-up method (independent)
-      - hommel : closed method based on Simes tests (non-negative)
-      - fdr_bh : Benjamini/Hochberg (non-negative)
-      - fdr_by : Benjamini/Yekutieli (negative)
-      - fdr_tsbh : two stage fdr correction (non-negative)
-      - fdr_tsbky : two stage fdr correction (non-negative)
-    - See https://www.statsmodels.org/dev/generated/statsmodels.stats.multitest.multipletests.html for more details. Default is `bonferroni`.
-- **cutoff** – the significance threshold for adjusted p-values. Default is `0.05`.
+- **Parameters (key arguments in `disease_network_pipeline`):**
+
+    - **data** – The `DiseaseNetworkData` object containing your loaded cohort data.
+    - **n_process** – Number of parallel processes for computation. Use `1` for single-threaded execution, or higher to speed up analysis with multiprocessing (especially beneficial for large datasets). *(No default; you must specify this.)*
+    - **n_threshold_phewas** – Minimum number of exposed cases required for a disease (phecode) to be included in the PheWAS analysis. This filters out very rare outcomes. (This value is passed to the internal `phewas()` function.)
+    - **n_threshold_comorbidity** – Minimum number of exposed individuals in whom a given disease pair co-occurs (considering both temporal and non-temporal occurrences) to include that pair in the comorbidity strength analysis. (Passed to `comorbidity_strength()`.)
+    - **output_dir** – Directory path for saving output files. The pipeline will create result files here (e.g., CSVs of significant results, log files, etc.). Use an absolute path or a path relative to your working directory.
+    - **project_prefix** – A string prefix for naming output files. For example, if `project_prefix="disease_network"`, output files might be named like `disease_network_phewas_results.csv`, etc.
+    - **keep_positive_associations** – If set to `True`, the pipeline will filter results to retain only “positive” associations: diseases with hazard ratio (HR) > 1 in the PheWAS and disease pairs with positive correlation in comorbidity analysis. *(Default: False – retains all significant associations regardless of direction.)*
+    - **save_intermediate_data** – If `True`, intermediate `DiseaseNetworkData` objects (specifically those created during disease pair generation) will be saved to disk. This can be useful for debugging or inspecting intermediate steps, but will consume additional disk space. *(Default: False)*.
+    - **system_exl** – A list of phecode disease *systems* to exclude from all analyses. If certain categories of diseases (systems) are not of interest or should be filtered out (e.g., ‘symptoms’ or ‘injuries & poisonings’), list them here. If set to None or an empty list, no system is excluded. *(Default: None)*. Valid system names include: *circulatory system, congenital anomalies, dermatologic, digestive, endocrine/metabolic, genitourinary, hematopoietic, infectious diseases, injuries & poisonings, mental disorders, musculoskeletal, neoplasms, neurological, pregnancy complications, respiratory, sense organs, symptoms, others*.
+    - **pipeline_mode** – Specifies the order of analyses. Two modes are available:
+      - **'v1'**: PheWAS → comorbidity strength → binomial test → *then parallel/complementary*: comorbidity network analysis and disease trajectory analysis. (In this mode, the binomial test is run on all eligible disease pairs without considering network results, so trajectory and network analyses can be done independently.)
+      - **'v2'**: PheWAS → comorbidity strength → comorbidity network analysis → binomial test → disease trajectory analysis. (In this mode, only the disease pairs deemed significant in the network analysis are subjected to the binomial test and subsequently used for trajectory analysis. This means the trajectory analysis focuses on a subset defined by network results.)
+         *(Default: 'v1')*. Choose 'v2' if you want a more stringent approach where trajectory analysis is conditional on network significance; otherwise, 'v1' covers all pairs passing earlier filters.
+    - **method** – The method used for comorbidity network and disease trajectory analyses. Options are:
+      - **'RPCN'** – *Regularized Partial Correlation Network*. This method uses a regularized logistic regression framework including all other diseases as covariates (with L1 penalty) to evaluate direct disease-disease associations, adjusting for covariates. *(This is the default and our recommended approach.)*
+      - **'PCN_PCA'** – *Partial Correlation Network with PCA*. Similar to RPCN but applies principal component analysis to reduce dimensionality of the “other diseases” covariates before computing the network. This can simplify the model when there are many diseases.
+      - **'CN'** – *Correlation Network*. A simpler approach using standard logistic regression for each disease pair (plus covariates) without partialling out other diseases. Essentially assesses correlation of each pair independently.
+         *(Default: 'RPCN')*. The choice of method will affect how comorbidity networks and trajectories are inferred.
+    - **covariates** – List of covariate names to adjust for in the PheWAS, network, and trajectory analyses (in addition to the required *sex* variable, which is always adjusted for). These should match the covariate names you provided in `phenotype_data()`. For example, `['BMI', 'age']` as shown above. *(Default: None, meaning adjust for sex only along with any default adjustments like matching factors in matched cohorts.)*
+    - **matching_var_dict** – A dictionary specifying how controls are matched to cases for the trajectory analysis (which uses an incidence density sampling approach). Keys are variable names to match on, and values specify matching criteria: for categorical or binary variables use `'exact'`; for continuous variables, provide a numeric tolerance. **Important:** use `'sex'` (literally) to match on sex (even if your original column name was different) because the data object uses a standardized 'sex' field. Other covariates should be referred to by their original names. *(Default: {'sex': 'exact'}, meaning match controls to cases by sex.)*.
+    - **matching_n** – Maximum number of matched controls to select for each case in the trajectory analysis. For example, `matching_n=2` tries to find up to 2 controls per case. *(Default: 2)*.
+    - **min_interval_days** – Minimum time interval in days required between two diagnoses to consider one occurring *before* the other for temporal (trajectory) analysis. If the time between D1 and D2 diagnoses in an individual is less than or equal to this threshold, the pair is treated as effectively simultaneous (and thus not counted as a temporal sequence). *(Default: 0 days)*. Setting a positive number here can exclude very closely timed diagnoses from being considered as one preceding the other.
+    - **max_interval_days** – Maximum time interval in days to consider for disease pairs. If the gap between two diagnoses is larger than this, that pair occurrence might be ignored for certain analyses. This applies to both temporal (ordered) and non-temporal pair considerations. *(Default: infinity, i.e., no maximum gap applied.)*.
+    - **enforce_temporal_order** – If `True`, the pipeline will enforce strict temporal ordering in the trajectory analyses and related significance testing: any individual who has a disease pair in the opposite order (D2 before D1) may be excluded from certain calculations, and the binomial test will only consider pairs where a clear ordering can be established. In practice, setting this to True means the binomial test will ignore individuals who have the diseases in both orders, and the trajectory analysis will also respect the specified `min_interval_days` and `max_interval_days` strictly. *(Default: False)*.
+    - **correction** – The multiple hypothesis testing correction method to apply to p-values (where applicable). This uses methods from `statsmodels.stats.multitest.multipletests`. Options include `'bonferroni'`, `'holm'`, `'fdr_bh'`, etc. *(Default: 'bonferroni')*.
+    - **cutoff** – Significance cutoff for adjusted p-values. *(Default: 0.05)*. Any results with adjusted p-value above this threshold will be considered non-significant and typically filtered out from the final results.
+
+    The `disease_network_pipeline` will return a tuple of DataFrames: in order, these correspond to **phewas_result**, **com_strength_result** (comorbidity strength), **com_network_result** (comorbidity network), **binomial_result**, and **trajectory_result**. In addition to returning these, the function writes out certain results and logs to files in `output_dir` for your records. You can adjust which results to focus on based on your research question (for instance, the comorbidity network and trajectory analyses might produce quite a lot of output; you could choose pipeline_mode ‘v1’ to consider them separately).
 
 #### After one-step analysis:
 
@@ -1450,6 +1444,7 @@ Convert stored medical records into a tidy pandas DataFrame.
 - `phecode_list` (`list`): List of phecodes to extract from the medical records. Only phecodes valid for the current phecode_level are accepted.
 - `medical_history` (`bool`): Include a binary history column for each phecode if set to True. Default to `False`
       
+
 **Returns:**
 - `pd.DataFrame`
 

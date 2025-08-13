@@ -5,79 +5,99 @@
 </div>
 
 --------------------------------------------------------------------------------
-DiNetxify is a Python package that provides two high-level features:
-- DiNetxify provides comprehensive insights into multimorbidity patterns and disease progression pathways using EHR data
-- DiNetxify emphasizes user-friendliness by integrating the entire analytical pipeline, from data harmonization and analysis to visualization
-## More About DiNetxify
+## About *DiNetxify*
 
-[Learn the basics of DiNetxify](./tutorial.md)
-
-- Usually, DiNetxify is used for:
-  - Research on comprehensive 3D disease network analyses using large-scale EHR data
-- DiNetxify has a GNU General Public License, as found in the [LICENSE](LICENSE) file.
-
-Elaborating Further:
-### Workflow
-DiNetxify is an open-source Python package designed for end-to-end, comprehensive disease network analysis of large-scale EHR datasets. The below figure is analytical framework of DiNetxify.
+***DiNetxify*** is an open-source Python package for comprehensive three-dimensional (3D) disease network analysis of large-scale electronic health record (EHR) data. It integrates data harmonization, analysis, and visualization into a user-friendly package to uncover multimorbidity patterns and disease progression pathways. ***DiNetxify*** is optimized for efficiency (capable of handling cohorts of hundreds of thousands of patients within hours on standard hardware) and supports multiple study designs with customizable parameters and parallel computing. ***DiNetxify*** is released under GPL-3.0 license. 
 ![analytical framework](./source/img/framework.png)
 
-### Modular architecture
-At a granular level, DiNetxify is a library that consists of the following components:
+***DiNetxify*** provides an end-to-end solution for 3D disease network analysis, featuring:
 
-| Component | Description |
-| ---- | --- |
-| [**DiNetxify.DiseaseNetworkData**] | A class for handling disease network data creation and operations |
-| [**DiNetxify.visualization.Plot**] | A class integrates and visualizes disease relationships from three complementary analyses |
+- **Integrated Workflow:** From raw EHR data to results and plots. ***DiNetxify*** guides you through data preprocessing, sequential analyses, and interactive visualizations in one coherent framework.
+- **Flexibility:** Supports various cohort study designs, including standard cohort, matched cohort, and exposed-only cohort, and offers numerous parameters to tailor the analysis (e.g. significance thresholds, methods for network construction, etc.).
+- **User-Friendly API:** High-level functions (e.g. a one-step pipeline) reduce coding overhead, while modular components allow fine-grained control. A dedicated data class handles data loading, cleaning, and ICD code mapping (to phecodes) automatically.
+- **Comprehensive Analyses:** Combines phenome-wide association studies (PheWAS), comorbidity network analysis, and disease trajectory analysis to identify meaningful disease clusters and temporal sequences concurrently.
+- **Visualization:** Built-in plotting tools generate interactive 3D network visualizations and static plots for PheWAS results, comorbidity networks, and disease trajectories, facilitating intuitive exploration of findings.
 
-The core of the DiNetxify architecture is shown below:
 ![architecture](./source/img/architecture.png)
 
-## Installation and quick start
+
+
+## Installation and Quick Start
 
 ### Installation
-Commands to install DiNetxify via pip
+***DiNetxify*** requires **Python 3.10+**. Install the latest release from PyPI using pip:
+
 ```bash
-pip install DiNetxify
+pip install dinetxify
 ```
 
-#### Python Version
-- **Python ≥ 3.7**
-
-#### Dependencies
-Install all dependencies (recommended in a virtual environment):
-```bash
-pip install \
-  python-louvain \
-  lifelines==0.30.0 \
-  matplotlib==3.10.0 \
-  networkx==3.4.2 \
-  numpy==2.2.2 \
-  pandas==2.2.3 \
-  plotly==5.24.1 \
-  python_louvain==0.16 \
-  scikit_learn==1.6.1 \
-  scipy==1.15.1 \
-  statsmodels==0.14.5
-```
-
+This will install ***DiNetxify*** along with its dependencies. The required dependencies include: numpy, pandas, matplotlib, plotly, python_louvain, networkx, scikit_learn, scipy, statsmodels (>=0.14.4), and lifelines (optional).
 ### Quick start
-To begin using DiNetxify immediately, follow these essential steps:
-1. Install the package via pip
-2. Load our pre-trained model with just 2 lines of Python code
-3. Run inference on your medical data using our streamlined API
-For a comprehensive step-by-step tutorial with executable code samples, dummy data examples, and visual demonstrations, refer to our detailed [Tutorial Guide](./tutorial.md). 
+To begin using ***DiNetxify***:
+1. **Install the package:** Use the pip command above to install ***DiNetxify*** in your environment (Linux or Windows).
+
+2. **Initialize and load data:** Import ***DiNetxify*** and create a `DiseaseNetworkData` object with your chosen study design. Then load your cohort’s phenotype and medical records data into this object. The package will handle data validation and ICD-to-phecode mapping for you. You can download our test [dummy data](https://github.com/HZcohort/DiNetxify/tree/main/tests/data) and run the following code:
+
+   ```python
+   import DiNetxify as dnt
+   
+   # Define required columns and other covariates columns
+   col_dict = {'Participant ID': 'ID','Exposure': 'exposure','Sex': 'sex','Index date': 'date_start','End date': 'date_end'}
+   vars_lst = ['age', 'BMI']
+   # Initialize the data object with study design and phecode level
+   data = dnt.DiseaseNetworkData(study_design="cohort",phecode_level=1,date_fmt="%Y-%m-%d")
+   # Load the phenotype CSV file into the data object
+   data.phenotype_data(phenotype_data_path="dummy_cohort.csv",column_names=col_dict,covariates=vars_lst)
+   # Merge with the first medical records file (CSV)
+   data.merge_medical_records(medical_records_data_path="dummy_EHR_ICD9.csv",diagnosis_code="ICD-9-WHO",
+                              column_names={'Participant ID':'ID','Diagnosis code':'diag_icd9','Date of diagnosis':'dia_date'})
+   ```
+
+   
+
+3. **Run the analysis:** Utilize the high-level pipeline function to perform the entire 3D network analysis on your `DiseaseNetworkData`:
+
+   ```python
+   from DiNetxify import disease_network_pipeline
+   
+   # When using multiprocessing, ensure that the code is enclosed within the following block.
+   # This prevents entering a never ending loop of new process creation.
+   if __name__ == "__main__":
+       results = disease_network_pipeline(data=data, n_process=4, n_threshold_phewas=100, n_threshold_comorbidity=100,
+                                          output_dir="./results/", project_prefix="my_analysis")
+   ```
+
+> **Note:** When using multiprocessing, multi-threading may not always close successfully, which can cause conflicts that significantly affect performance. We recommend disabling multi-threading with the following code (Linux):
+>
+> ```shell
+> export OPENBLAS_NUM_THREADS=1
+> export MKL_NUM_THREADS=1
+> export BLIS_NUM_THREADS=1
+> export OMP_NUM_THREADS=1
+> export NUMEXPR_NUM_THREADS=1
+> ```
+>
+> or the following code in Windows:
+>
+> ```powershell
+> set OPENBLAS_NUM_THREADS=1
+> set MKL_NUM_THREADS=1
+> set BLIS_NUM_THREADS=1
+> set OMP_NUM_THREADS=1
+> set NUMEXPR_NUM_THREADS=1
+> ```
+
+
 
 ## Citation
-If you use this software in your research, please cite:
-```bibtex
-@misc{DiNetxify,
-  author = {Hou, Can and Liu, Haowen and Ahlqvist, Viktor H. and Gisladottir, Elisabet Unnur and Yang, Yao and Yang, Huazhen and Fang, Fang and Valdimarsdóttir, Unnur A. and Song, Huan},
-  title = {{DiNetxify}},
-  year = {2025},
-  howpublished = {\url{https://github.com/HZcohort/DiNetxify}},
-}
-```
+
+If you use this software in your research, please cite the following papers:
+
+1. [Disease clusters and their genetic determinants following a diagnosis of depression: analyses based on a novel three-dimensional disease network approach](https://www.nature.com/articles/s41380-025-03120-y#citeas) ([PMID: 40681841](https://pubmed.ncbi.nlm.nih.gov/40681841/))
+
+
 
 ## Contact
+
 - Can Hou: [houcan@wchscu.cn](mailto:houcan@wchscu.cn)
 - Haowen Liu: [haowenliu81@gmail.com](mailto:haowenliu81@gmail.com)
