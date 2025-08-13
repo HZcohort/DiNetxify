@@ -28,8 +28,17 @@
 ***DiNetxify*** requires **Python 3.10+**. Install the latest release from PyPI using pip:
 
 ```bash
+<<<<<<< HEAD
 pip install dinetxify
 ```
+=======
+pip install DiNetxify
+```
+
+#### Python version and other dependencies
+- **Python >= 3.10**
+- **statsmodels >= 0.14.4**
+>>>>>>> 9e8e287a553edbef4c6f87bd39f564e03bbebaac
 
 This will install ***DiNetxify*** along with its dependencies. The required dependencies include: numpy, pandas, matplotlib, plotly, python_louvain, networkx, scikit_learn, scipy, statsmodels (>=0.14.4), and lifelines (optional).
 ### Quick start

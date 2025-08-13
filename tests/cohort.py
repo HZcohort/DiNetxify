@@ -1,4 +1,5 @@
 import DiNetxify as dnt
+import os
 
 path = os.path.dirname(__file__)
 
