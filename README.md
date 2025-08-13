@@ -92,6 +92,8 @@ To begin using ***DiNetxify***:
 
 
 
+For a detailed tutorial on using ***DiNetxify***, see our documentation at [https://hzcohort.github.io/DiNetxify/](https://hzcohort.github.io/DiNetxify/)
+
 ## Citation
 
 If you use this software in your research, please cite the following papers:
