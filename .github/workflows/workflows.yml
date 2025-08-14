@@ -1,0 +1,68 @@
+# .github/workflows/python-publish.yml
+ 
+name: DiNetxify
+ 
+on:
+  release:
+    types: [published]
+ 
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+ 
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+ 
+      - name: Set up Python 3.10.0
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10.0'
+ 
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install setuptools wheel twine
+ 
+      - name: Build package
+        run: python setup.py sdist bdist_wheel
+ 
+      - name: Publish package to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
+ 
+      - name: Generate Release Notes
+        id: generate_release_notes
+        run: |
+          TAG_NAME=${GITHUB_REF#refs/*/}
+          PREVIOUS_TAG=$(git describe --abbrev=0 --tags $TAG_NAME^)
+          echo "PREVIOUS_TAG=$PREVIOUS_TAG" >> $GITHUB_ENV
+          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
+ 
+          CHANGELOG=$(git log --pretty=format:"- %s" ${PREVIOUS_TAG}..${TAG_NAME})
+          echo "changelog<<EOF" >> $GITHUB_ENV
+          echo "$CHANGELOG" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+ 
+      - name: Update Release with Changelog
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const github = require('@actions/github')
+            const {PREVIOUS_TAG, TAG_NAME, changelog} = process.env
+            const release_body = `## Release Notes for ${TAG_NAME}\n\nCommits since ${PREVIOUS_TAG}:\n${changelog}`
+ 
+            const { owner, repo } = github.context.repo;
+            const { data: release } = await github.getOctokit().rest.repos.getReleaseByTag({
+                owner, repo, tag: TAG_NAME,
+            });
+ 
+            await github.getOctokit().rest.repos.updateRelease({
+                owner, repo, release_id: release.id,
+                body: release_body
+            });
