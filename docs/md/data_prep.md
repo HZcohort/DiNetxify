@@ -26,7 +26,7 @@ For all required columns, missing values are not permitted and dates must follow
 
 - **Medical records data**: One or more CSV/TSV files (each with a header row), listing diagnosis events for the participants. Each record (row) must include:
 
-  - **Participant ID **– The same unique ID used in the phenotype data, linking each record to an individual.
+  - **Participant ID**– The same unique ID used in the phenotype data, linking each record to an individual.
   - **Diagnosis code** – A diagnosis code (e.g., ICD-10 or ICD-9 code).
   - **Date of diagnosis** – The date of that diagnosis/event (format consistent with the phenotype dates, e.g., `YYYY-MM-DD`).
 
@@ -47,11 +47,15 @@ A [dummy dataset](https://github.com/HZcohort/DiNetxify/tree/main/tests/data) is
     - **sex** – Biological sex (1 = female, 0 = male).
     - **age** – Baseline age (years).
     - **BMI** – Body mass index category.
-  - **`dummy_EHR_ICD9.csv`** – Simulated EHR diagnoses coded in ICD-9 (10,188 records). Columns:
+  - **`dummy_EHR_ICD9.csv`** – Simulated EHR diagnoses coded in ICD-9 (10,188 records).
+  
+  Columns:
     - **ID** – Participant ID (matches the phenotype file).
     - **dia_date** – Diagnosis date.
     - **diag_icd9** – ICD-9 diagnosis code.
-  - **`dummy_EHR_ICD10.csv`** – Simulated EHR diagnoses coded in ICD-10 (1,048,576 records). Columns:
+  - **`dummy_EHR_ICD10.csv`** – Simulated EHR diagnoses coded in ICD-10 (1,048,576 records). 
+  
+  Columns:
     - **ID** – Participant ID.
     - **dia_date** – Diagnosis date.
     - **diag_icd10** – ICD-10 diagnosis code.

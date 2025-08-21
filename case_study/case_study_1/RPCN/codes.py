@@ -1,14 +1,13 @@
 import pandas as pd
-import sys
 import time
-sys.path.append(r'/public/home/houcan/project/case_study/DiNetxify-main/src')
 import DiNetxify as dnt
+
 n_cores = 40
 min_interval_days = 30
 max_interval_days = 5*365
 
-path_case = r'/public/home/houcan/project/case_study/data'
-path_result = r'/public/home/houcan/project/case_study/result/ltl_rpcn'
+path_case = r'/your/data/path'
+path_result = r'/your/result/path'
 
 if __name__ == "__main__":
     data = dnt.DiseaseNetworkData(study_design='cohort',phecode_level=2,
