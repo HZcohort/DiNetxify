@@ -21,8 +21,7 @@ if __name__ == "__main__":  # Required when using multiprocessing on Windows/Mac
     phewas_result, com_strength_result, com_network_result, binomial_result, trajectory_result = disease_network_pipeline(
         data=data, n_process=2,
         n_threshold_phewas=100,
-        n_threshold_comorbidity=100, 
-        comorbidity analysis,
+        n_threshold_comorbidity=100,
         output_dir="/your/project/path/results/",
         project_prefix="disease_network",
         keep_positive_associations=False,
@@ -157,7 +156,7 @@ The `disease_pair()` method requires the PheWAS result DataFrame to know which d
 
 ```python
 # Generate disease pairs for further analysis  
-pair_data = data.disease_pair(  
+data.disease_pair(  
     phewas_result=phewas_result,     # DataFrame from PheWAS (to get the list of diseases)  
     min_interval_days=0,             # minimum days between diagnoses for D1->D2 (0 = no minimum)  
     max_interval_days=float('inf'),  # maximum days between diagnoses to consider (inf = no limit)  
@@ -169,7 +168,7 @@ pair_data = data.disease_pair(
 - **min_interval_days**, **max_interval_days** – these define the time window for considering temporal relationships. As defined earlier, here we’ve left them at 0 and infinity which means we include all occurrences and do not impose a maximum gap. If you wanted to only consider, say, disease pairs where events occur within 5 years of each other, you could set `max_interval_days=1825` (approximately 5*365).
 - **force** – similar to earlier methods, if False it will not recompute pairs if they were already computed before for this data object (to avoid unnecessary re-processing). Use True to force regeneration.
 
-The result `pair_data` (if returned, or it might store internally and return None – consult the actual function’s behavior) would contain information about each disease pair found in each person’s data. Typically, however, you won’t directly use this raw list; instead, the subsequent function `comorbidity_strength()` will use the `data` object which now has the disease pair info to calculate metrics.
+This will generate a new attribute in the  `data` that contains information about each disease pair found in each person. Typically, however, you won’t directly use this raw attribute; instead, the subsequent function `comorbidity_strength()` will use the updated `data` object which now has the disease pair info to calculate metrics.
 
 > Note: In the one-step pipeline, disease_pair generation is handled internally; here we are making it explicit
 
@@ -215,18 +214,18 @@ For each disease pair, if we want to determine if there is a **preferred tempora
 The function `dnt.binomial_test()` performs this analysis. It uses the pair information in `data` (so again ensure `disease_pair()` was run). We can call it as:
 
 ```python
-binomial_result = dnt.binomial_test(  
-    data=data,  
-    enforce_temporal_order=False,  # If True, exclude individuals with ties/non-temporal occurrences  
-    min_interval_days=0,          # (same as before)  
-    max_interval_days=float('inf'),  
-    correction='bonferroni',      # p-value correction method  
+
+binomial_result = dnt.binomial_test(
+    data=data,
+    comorbidity_strength_result=com_strength_result, # the result of comorbidity strength estimation
+    enforce_temporal_order=False,  # If True, exclude individuals with ties/non-temporal occurrences
+    correction='bonferroni',      # p-value correction method
     cutoff=0.05                   # significance threshold  
-)  
+)
+
 ```
 
 - **enforce_temporal_order** – If True, the function will exclude any “non-temporal” pairs (i.e., individuals where the two diseases occurred on the same day or essentially simultaneously, as defined by min_interval_days) from the counts. It also will ensure that if an individual has both orders of occurrence (e.g., D1 then D2 and later D2 then D1 due to multiple episodes), those might be handled to not bias the test. Since we set it False here, we’re being more permissive (which is fine given our min_interval_days=0, meaning simultaneous is allowed and counted in whichever order they happened first).
-- **min_interval_days, max_interval_days** – These should match what was used in `disease_pair()` to ensure consistency in what “temporal” means.
 - **correction, cutoff** – Correction for multiple tests (there’s one binomial test per disease pair) and significance threshold for the adjusted p-value.
 
 The `binomial_result` DataFrame will list disease pairs (likely identified by some code or name) with the number of individuals where D1 happened first vs D2 first, the binomial p-value and adjusted p-value, and possibly an indication of which order is predominant. Typically, one might filter this to pairs where p < 0.05, indicating a significant temporal bias, and also note the direction (e.g., D1 -> D2 is the more frequent sequence). This information will be used in building trajectories and in the next network analysis.
@@ -242,7 +241,8 @@ The function `dnt.comorbidity_network()` carries out this analysis. Depending on
 
 com_network_result = dnt.comorbidity_network(  
     data=data,  
-    method="RPCN",           # or "PCN_PCA" or "CN"  
+    comorbidity_strength_result=com_strength_result, # the result of comorbidity strength estimation
+    method="RPCN",                    # or "PCN_PCA" or "CN"  
     covariates=['BMI', 'age'],        # adjust for these covariates (plus sex) in each model  
     correction='bonferroni',          # correction for multiple testing of edges  
     cutoff=0.05,                      # significance threshold  
@@ -278,6 +278,8 @@ The function `dnt.disease_trajectory()` performs this analysis. We will call it 
 
 trajectory_result = dnt.disease_trajectory(  
     data=data,  
+    comorbidity_strength_result=com_strength_result, # the result of comorbidity strength estimation
+    binomial_test_result=binomial_result, # the result of binomial test
     covariates=['BMI', 'age'],         # adjust for these covariates (and sex implicitly)  
     matching_var_dict={'sex': 'exact'}, # matching variables and criteria (as used earlier)  
     matching_n=2,                      # number of matched controls per case  

@@ -92,15 +92,15 @@
 <p>First, import the <em><strong>DiNetxify</strong></em> package and instantiate a <code class="docutils literal notranslate"><span class="pre">DiseaseNetworkData</span></code> object with your chosen study design, phecode level, and any optional parameters. For example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">DiNetxify</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dnt</span>  
 
-<span class="c1"># For a standard cohort study  </span>
-<span class="n">data</span> <span class="o">=</span> <span class="n">dnt</span><span class="o">.</span><span class="n">DiseaseNetworkData</span><span class="p">(</span>  
-    <span class="n">study_design</span><span class="o">=</span><span class="s1">&#39;cohort&#39;</span><span class="p">,</span>  
-    <span class="n">phecode_level</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>  
-<span class="p">)</span>  
-
 <span class="c1"># For a matched cohort study  </span>
 <span class="n">data</span> <span class="o">=</span> <span class="n">dnt</span><span class="o">.</span><span class="n">DiseaseNetworkData</span><span class="p">(</span>  
     <span class="n">study_design</span><span class="o">=</span><span class="s1">&#39;matched cohort&#39;</span><span class="p">,</span>  
+    <span class="n">phecode_level</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>  
+<span class="p">)</span>  
+
+<span class="c1"># For a standard cohort study  </span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">dnt</span><span class="o">.</span><span class="n">DiseaseNetworkData</span><span class="p">(</span>  
+    <span class="n">study_design</span><span class="o">=</span><span class="s1">&#39;cohort&#39;</span><span class="p">,</span>  
     <span class="n">phecode_level</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>  
 <span class="p">)</span>  
 
@@ -208,12 +208,18 @@
 <span class="nb">print</span><span class="p">(</span><span class="n">table1_df</span><span class="p">)</span>  
 <span class="c1"># Example (truncated) output:  </span>
 <span class="sd">&quot;&quot;&quot;  </span>
-<span class="sd">                   Variable        exposure=1 (n=10,000)   exposure=0 (n=50,000)            Test and p-value  </span>
-<span class="sd">0        age (median, IQR)       57.08 (48.91–65.32)       57.05 (48.87–65.35)    Mann-Whitney U p=0.9824  </span>
-<span class="sd">1   follow_up (median, IQR)       9.18 (5.77–13.70)         9.22 (5.80–13.75)    Mann-Whitney U p=0.6806  </span>
-<span class="sd">2                sex (n, %)  </span>
-<span class="sd">3                sex=Female          5,045 (50.45%)           25,225 (50.45%)   …  </span>
-<span class="sd">...  </span>
+<span class="sd">                   Variable exposure=1 (n=10,000) exposure=0 (n=50,000)  Test and p-value</span>
+<span class="sd">0        _age (median, IQR)   57.08 (48.91-65.32)   57.05 (48.87-65.35)  Mann-Whitney U test p-value=9.824e-01</span>
+<span class="sd">1   follow_up (median, IQR)     9.18 (5.77-13.70)     9.22 (5.80-13.75)  Mann-Whitney U test p-value=6.806e-01</span>
+<span class="sd">2                sex (n, %)                                               </span>
+<span class="sd">3                sex=Female        5,045 (50.45%)       25,225 (50.45%)   </span>
+<span class="sd">4                  sex=Male        4,955 (49.55%)       24,775 (49.55%)  Chi-squared test p-value=1.000e+00 </span>
+<span class="sd">5                BMI (n, %)                                              ...</span>
+<span class="sd">6                    BMI=c2        1,945 (19.45%)       10,170 (20.34%)   </span>
+<span class="sd">7                    BMI=c4        2,022 (20.22%)       10,022 (20.04%)   </span>
+<span class="sd">8                    BMI=c5        2,002 (20.02%)       10,031 (20.06%)   </span>
+<span class="sd">9                    BMI=c1        1,999 (19.99%)        9,952 (19.90%)   </span>
+<span class="sd">10                   BMI=c3        2,032 (20.32%)        9,825 (19.65%)  Chi-squared test p-value=2.552e-01     </span>
 <span class="sd">&quot;&quot;&quot;</span>  
 </pre></div>
 </div>
@@ -259,23 +265,23 @@
 <p><strong>During data loading:</strong></p>
 <p>As each medical record file is processed, <em><strong>DiNetxify</strong></em> will output progress messages and basic stats. For example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">1,000,000 records read (1,000,000 included after filtering on participant ID), 0 records with missing values excluded.  </span>
-<span class="sd">1,668,795 records read (1,668,795 included after filtering on participant ID), 0 records with missing values excluded.  </span>
-<span class="sd">Total: 1,668,795 diagnosis records processed, 0 records with missing values were excluded.  </span>
-<span class="sd">1,286,386 diagnosis records mapped to phecode without truncating.  </span>
-<span class="sd">0 diagnosis records mapped to phecode after truncating to 4 digits.  </span>
-<span class="sd">72,073 diagnosis records mapped to phecode after truncating to 3 digits.  </span>
-<span class="sd">302,908 diagnosis records not mapped to any phecode.  </span>
-<span class="sd">Phecode diagnosis records successfully merged (18,486 invalid records were not merged, typically due to diagnosis date beyond follow-up end).  </span>
+<span class="sd">1,000,000 records read, 1,000,000 left after filltering on participant ID/exclusion list of diagnosis codes, 0 records with missing values excluded.</span>
+<span class="sd">1,668,795 records read, 1,668,795 left after filltering on participant ID/exclusion list of diagnosis codes, 0 records with missing values excluded.</span>
+<span class="sd">Total: 1,668,795 diagnosis records processed, 0 records with missing values were excluded.</span>
+<span class="sd">1,286,386 diagnosis records mapped to phecode without truncating.</span>
+<span class="sd">0 diagnosis records mapped to phecode after truncating to 4 digits.</span>
+<span class="sd">72,073 diagnosis records mapped to phecode after truncating to 3 digits.</span>
+<span class="sd">302,908 diagnosis records not mapped to any phecode.</span>
+<span class="sd">Phecode diagnosis records successfully merged (18,486 invalid records were not merged, typically with diagnosis date later than date of follow-up end)</span>
 
-<span class="sd">1 medical record file already merged, merging with a new one.  </span>
-<span class="sd">10,188 records read (10,188 included after filtering on participant ID), 0 records with missing values excluded.  </span>
-<span class="sd">Total: 10,188 diagnosis records processed, 0 records with missing values were excluded.  </span>
-<span class="sd">9,711 diagnosis records mapped to phecode without truncating.  </span>
-<span class="sd">0 diagnosis records mapped to phecode after truncating to 4 digits.  </span>
-<span class="sd">266 diagnosis records mapped to phecode after truncating to 3 digits.  </span>
-<span class="sd">211 diagnosis records not mapped to any phecode.  </span>
-<span class="sd">Phecode diagnosis records successfully merged (0 invalid records were not merged).  </span>
+<span class="sd">1 medical records data already merged, merging with a new one.</span>
+<span class="sd">10,188 records read, 10,188 left after filltering on participant ID/exclusion list of diagnosis codes, 0 records with missing values excluded.</span>
+<span class="sd">Total: 10,188 diagnosis records processed, 0 records with missing values were excluded.</span>
+<span class="sd">9,711 diagnosis records mapped to phecode without truncating.</span>
+<span class="sd">0 diagnosis records mapped to phecode after truncating to 4 digits.</span>
+<span class="sd">266 diagnosis records mapped to phecode after truncating to 3 digits.</span>
+<span class="sd">211 diagnosis records not mapped to any phecode.</span>
+<span class="sd">Phecode diagnosis records successfully merged (0 invalid records were not merged, typically with diagnosis date later than date of follow-up end)</span>
 <span class="sd">&quot;&quot;&quot;</span>
 </pre></div>
 </div>

@@ -9,15 +9,15 @@ First, import the ***DiNetxify*** package and instantiate a `DiseaseNetworkData`
 ```python
 import DiNetxify as dnt  
 
-# For a standard cohort study  
-data = dnt.DiseaseNetworkData(  
-    study_design='cohort',  
-    phecode_level=1,  
-)  
-
 # For a matched cohort study  
 data = dnt.DiseaseNetworkData(  
     study_design='matched cohort',  
+    phecode_level=1,  
+)  
+
+# For a standard cohort study  
+data = dnt.DiseaseNetworkData(  
+    study_design='cohort',  
     phecode_level=1,  
 )  
 
@@ -131,12 +131,18 @@ table1_df = data.Table1()
 print(table1_df)  
 # Example (truncated) output:  
 """  
-                   Variable        exposure=1 (n=10,000)   exposure=0 (n=50,000)            Test and p-value  
-0        age (median, IQR)       57.08 (48.91–65.32)       57.05 (48.87–65.35)    Mann-Whitney U p=0.9824  
-1   follow_up (median, IQR)       9.18 (5.77–13.70)         9.22 (5.80–13.75)    Mann-Whitney U p=0.6806  
-2                sex (n, %)  
-3                sex=Female          5,045 (50.45%)           25,225 (50.45%)   …  
-...  
+                   Variable exposure=1 (n=10,000) exposure=0 (n=50,000)  Test and p-value
+0        _age (median, IQR)   57.08 (48.91-65.32)   57.05 (48.87-65.35)  Mann-Whitney U test p-value=9.824e-01
+1   follow_up (median, IQR)     9.18 (5.77-13.70)     9.22 (5.80-13.75)  Mann-Whitney U test p-value=6.806e-01
+2                sex (n, %)                                               
+3                sex=Female        5,045 (50.45%)       25,225 (50.45%)   
+4                  sex=Male        4,955 (49.55%)       24,775 (49.55%)  Chi-squared test p-value=1.000e+00 
+5                BMI (n, %)                                              ...
+6                    BMI=c2        1,945 (19.45%)       10,170 (20.34%)   
+7                    BMI=c4        2,022 (20.22%)       10,022 (20.04%)   
+8                    BMI=c5        2,002 (20.02%)       10,031 (20.06%)   
+9                    BMI=c1        1,999 (19.99%)        9,952 (19.90%)   
+10                   BMI=c3        2,032 (20.32%)        9,825 (19.65%)  Chi-squared test p-value=2.552e-01     
 """  
 ```
 
@@ -186,23 +192,23 @@ As each medical record file is processed, ***DiNetxify*** will output progress m
 
 ```python
 """
-1,000,000 records read (1,000,000 included after filtering on participant ID), 0 records with missing values excluded.  
-1,668,795 records read (1,668,795 included after filtering on participant ID), 0 records with missing values excluded.  
-Total: 1,668,795 diagnosis records processed, 0 records with missing values were excluded.  
-1,286,386 diagnosis records mapped to phecode without truncating.  
-0 diagnosis records mapped to phecode after truncating to 4 digits.  
-72,073 diagnosis records mapped to phecode after truncating to 3 digits.  
-302,908 diagnosis records not mapped to any phecode.  
-Phecode diagnosis records successfully merged (18,486 invalid records were not merged, typically due to diagnosis date beyond follow-up end).  
+1,000,000 records read, 1,000,000 left after filltering on participant ID/exclusion list of diagnosis codes, 0 records with missing values excluded.
+1,668,795 records read, 1,668,795 left after filltering on participant ID/exclusion list of diagnosis codes, 0 records with missing values excluded.
+Total: 1,668,795 diagnosis records processed, 0 records with missing values were excluded.
+1,286,386 diagnosis records mapped to phecode without truncating.
+0 diagnosis records mapped to phecode after truncating to 4 digits.
+72,073 diagnosis records mapped to phecode after truncating to 3 digits.
+302,908 diagnosis records not mapped to any phecode.
+Phecode diagnosis records successfully merged (18,486 invalid records were not merged, typically with diagnosis date later than date of follow-up end)
 
-1 medical record file already merged, merging with a new one.  
-10,188 records read (10,188 included after filtering on participant ID), 0 records with missing values excluded.  
-Total: 10,188 diagnosis records processed, 0 records with missing values were excluded.  
-9,711 diagnosis records mapped to phecode without truncating.  
-0 diagnosis records mapped to phecode after truncating to 4 digits.  
-266 diagnosis records mapped to phecode after truncating to 3 digits.  
-211 diagnosis records not mapped to any phecode.  
-Phecode diagnosis records successfully merged (0 invalid records were not merged).  
+1 medical records data already merged, merging with a new one.
+10,188 records read, 10,188 left after filltering on participant ID/exclusion list of diagnosis codes, 0 records with missing values excluded.
+Total: 10,188 diagnosis records processed, 0 records with missing values were excluded.
+9,711 diagnosis records mapped to phecode without truncating.
+0 diagnosis records mapped to phecode after truncating to 4 digits.
+266 diagnosis records mapped to phecode after truncating to 3 digits.
+211 diagnosis records not mapped to any phecode.
+Phecode diagnosis records successfully merged (0 invalid records were not merged, typically with diagnosis date later than date of follow-up end)
 """
 ```
 
