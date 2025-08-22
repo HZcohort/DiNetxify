@@ -156,7 +156,7 @@ The `disease_pair()` method requires the PheWAS result DataFrame to know which d
 
 ```python
 # Generate disease pairs for further analysis  
-pair_data = data.disease_pair(  
+data.disease_pair(  
     phewas_result=phewas_result,     # DataFrame from PheWAS (to get the list of diseases)  
     min_interval_days=0,             # minimum days between diagnoses for D1->D2 (0 = no minimum)  
     max_interval_days=float('inf'),  # maximum days between diagnoses to consider (inf = no limit)  
@@ -168,7 +168,7 @@ pair_data = data.disease_pair(
 - **min_interval_days**, **max_interval_days** – these define the time window for considering temporal relationships. As defined earlier, here we’ve left them at 0 and infinity which means we include all occurrences and do not impose a maximum gap. If you wanted to only consider, say, disease pairs where events occur within 5 years of each other, you could set `max_interval_days=1825` (approximately 5*365).
 - **force** – similar to earlier methods, if False it will not recompute pairs if they were already computed before for this data object (to avoid unnecessary re-processing). Use True to force regeneration.
 
-The result `pair_data` (if returned, or it might store internally and return None – consult the actual function’s behavior) would contain information about each disease pair found in each person’s data. Typically, however, you won’t directly use this raw list; instead, the subsequent function `comorbidity_strength()` will use the `pair_data` object which now has the disease pair info to calculate metrics.
+This will generate a new attribute in the  `data` that contains information about each disease pair found in each person. Typically, however, you won’t directly use this raw attribute; instead, the subsequent function `comorbidity_strength()` will use the updated `data` object which now has the disease pair info to calculate metrics.
 
 > Note: In the one-step pipeline, disease_pair generation is handled internally; here we are making it explicit
 
@@ -176,12 +176,12 @@ The result `pair_data` (if returned, or it might store internally and return Non
 
 The next step is to assess the **comorbidity strength** of each disease pair – essentially measuring how strongly the two diseases are associated with each other in a cross-sectional sense (regardless of time order). ***DiNetxify***’s `comorbidity_strength()` function calculates statistics like **relative risk (RR)** and **Phi coefficient (Φ)** for each pair, and can perform filtering and significance testing.
 
-Using the `pair_data` object (which now has disease pairs from the previous step), we can run:
+Using the `data` object (which now has disease pairs from the previous step), we can run:
 
 ```python
 # Reminder: if using n_process > 1, wrap calls in if __name__ == "__main__":
 com_strength_result = dnt.comorbidity_strength(  
-    data=pair_data,  
+    data=data,  
     proportion_threshold=None,    # Alternatively, could require a certain prevalence  
     n_threshold=100,             # Only consider pairs that co-occur in at least 100 exposed individuals (same as we used above)  
     n_process=1,                 # Single process (this function is usually fast; can set >1 if needed)  
@@ -196,7 +196,7 @@ com_strength_result = dnt.comorbidity_strength(
 
 Important points about `comorbidity_strength()`:
 
-- It uses the disease pairs present in `pair_data` (so ensure you called `disease_pair()` first).
+- It uses the disease pairs present in `data` (so ensure you called `disease_pair()` first).
 - It focuses typically on the *exposed group* for calculations (since the design is cohort-based; if an exposed-only design, then it’s just that group).
 - **n_threshold** here serves to filter out infrequent pairs (at least 100 co-occurrences as we set). This is analogous to `n_threshold_comorbidity` in the pipeline.
 - It will compute metrics like:
@@ -215,7 +215,7 @@ The function `dnt.binomial_test()` performs this analysis. It uses the pair info
 
 ```python
 binomial_result = dnt.binomial_test(  
-    data=pair_data,  
+    data=data,  
     comorbidity_strength_result=com_strength_result，# the result of comorbidity strength estimation
     enforce_temporal_order=False,  # If True, exclude individuals with ties/non-temporal occurrences  
     min_interval_days=0,          # (same as before)  
@@ -241,7 +241,7 @@ The function `dnt.comorbidity_network()` carries out this analysis. Depending on
 # Reminder: if using n_process > 1, wrap calls in if __name__ == "__main__":
 
 com_network_result = dnt.comorbidity_network(  
-    data=pair_data,  
+    data=data,  
     comorbidity_strength_result=com_strength_result，# the result of comorbidity strength estimation
     method="RPCN",                    # or "PCN_PCA" or "CN"  
     covariates=['BMI', 'age'],        # adjust for these covariates (plus sex) in each model  
@@ -278,7 +278,7 @@ The function `dnt.disease_trajectory()` performs this analysis. We will call it 
 # Reminder: if using n_process > 1, wrap calls in if __name__ == "__main__":
 
 trajectory_result = dnt.disease_trajectory(  
-    data=pair_data,  
+    data=data,  
     comorbidity_strength_result=com_strength_result，# the result of comorbidity strength estimation
     binomial_test_result=binomial_result, # the result of binomial test
     covariates=['BMI', 'age'],         # adjust for these covariates (and sex implicitly)  

@@ -23,6 +23,7 @@ Available on Github, [HZcohort/DiNetxify](https://github.com/HZcohort/DiNetxify)
 If you use this software in your research, please cite the following papers:
 
 1. [Disease clusters and their genetic determinants following a diagnosis of depression: analyses based on a novel three-dimensional disease network approach](https://www.nature.com/articles/s41380-025-03120-y) ([PMID: 40681841](https://pubmed.ncbi.nlm.nih.gov/40681841/))
+1. [DiNetxify: a Python package for three-dimensional disease network analysis based on electronic health record data](https://www.medrxiv.org/content/10.1101/2025.08.19.25333629v1)
 
 ## Contact
 
