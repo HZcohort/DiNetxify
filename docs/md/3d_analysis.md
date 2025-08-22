@@ -214,19 +214,18 @@ For each disease pair, if we want to determine if there is a **preferred tempora
 The function `dnt.binomial_test()` performs this analysis. It uses the pair information in `data` (so again ensure `disease_pair()` was run). We can call it as:
 
 ```python
-binomial_result = dnt.binomial_test(  
-    data=data,  
-    comorbidity_strength_result=com_strength_result，# the result of comorbidity strength estimation
-    enforce_temporal_order=False,  # If True, exclude individuals with ties/non-temporal occurrences  
-    min_interval_days=0,          # (same as before)  
-    max_interval_days=float('inf'),  
-    correction='bonferroni',      # p-value correction method  
+
+binomial_result = dnt.binomial_test(
+    data=data,
+    comorbidity_strength_result=com_strength_result, # the result of comorbidity strength estimation
+    enforce_temporal_order=False,  # If True, exclude individuals with ties/non-temporal occurrences
+    correction='bonferroni',      # p-value correction method
     cutoff=0.05                   # significance threshold  
-)  
+)
+
 ```
 
 - **enforce_temporal_order** – If True, the function will exclude any “non-temporal” pairs (i.e., individuals where the two diseases occurred on the same day or essentially simultaneously, as defined by min_interval_days) from the counts. It also will ensure that if an individual has both orders of occurrence (e.g., D1 then D2 and later D2 then D1 due to multiple episodes), those might be handled to not bias the test. Since we set it False here, we’re being more permissive (which is fine given our min_interval_days=0, meaning simultaneous is allowed and counted in whichever order they happened first).
-- **min_interval_days, max_interval_days** – These should match what was used in `disease_pair()` to ensure consistency in what “temporal” means.
 - **correction, cutoff** – Correction for multiple tests (there’s one binomial test per disease pair) and significance threshold for the adjusted p-value.
 
 The `binomial_result` DataFrame will list disease pairs (likely identified by some code or name) with the number of individuals where D1 happened first vs D2 first, the binomial p-value and adjusted p-value, and possibly an indication of which order is predominant. Typically, one might filter this to pairs where p < 0.05, indicating a significant temporal bias, and also note the direction (e.g., D1 -> D2 is the more frequent sequence). This information will be used in building trajectories and in the next network analysis.
@@ -242,7 +241,7 @@ The function `dnt.comorbidity_network()` carries out this analysis. Depending on
 
 com_network_result = dnt.comorbidity_network(  
     data=data,  
-    comorbidity_strength_result=com_strength_result，# the result of comorbidity strength estimation
+    comorbidity_strength_result=com_strength_result, # the result of comorbidity strength estimation
     method="RPCN",                    # or "PCN_PCA" or "CN"  
     covariates=['BMI', 'age'],        # adjust for these covariates (plus sex) in each model  
     correction='bonferroni',          # correction for multiple testing of edges  
@@ -279,7 +278,7 @@ The function `dnt.disease_trajectory()` performs this analysis. We will call it 
 
 trajectory_result = dnt.disease_trajectory(  
     data=data,  
-    comorbidity_strength_result=com_strength_result，# the result of comorbidity strength estimation
+    comorbidity_strength_result=com_strength_result, # the result of comorbidity strength estimation
     binomial_test_result=binomial_result, # the result of binomial test
     covariates=['BMI', 'age'],         # adjust for these covariates (and sex implicitly)  
     matching_var_dict={'sex': 'exact'}, # matching variables and criteria (as used earlier)  
