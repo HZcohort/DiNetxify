@@ -222,10 +222,10 @@ After merging all medical record files, you can print the `data` object again to
 print(data)  
 # Example output (matched cohort study):  
 """  
-Merged Medical records  
-2 medical record files with 1,678,983 diagnosis records were merged (0 with missing values).  
-Average number of disease diagnoses during follow-up: 18.99 (exposed) and 7.31 (unexposed)  
-Average number of disease diagnoses before follow-up: 8.40 (exposed) and 3.46 (unexposed)  
+Merged Medical records
+1,678,983 diagnosis records from 2 medical records file were merged (0 with missing values).
+Average number of disease diagnosis during follow-up: 18.99 (exposed) and 7.31 (unexposed)
+Average number of disease diagnosis before follow-up: 8.40 (exposed) and 3.46 (unexposed)
 
 Warning: 102 exposed individuals and 440 unexposed individuals have negative or zero follow-up time.  
 Consider removing them before merge.  
@@ -261,13 +261,13 @@ import DiNetxify as dnt
 
 # Create a new DiseaseNetworkData object with the same design/parameters  
 data = dnt.DiseaseNetworkData(  
-    study_design='cohort',  
+    study_design='matched cohort',  
     phecode_level=1,  
 )  
 
 # Load from a .pkl.gz file  
-data.load('/your/project/path/cohort_data')  
+data.load('/your/project/path/cohort_data', force=True)  
 
 # Or load from a .npz file  
-data.load_npz('/your/project/path/cohort_data')  
+data.load_npz('/your/project/path/cohort_data', force=True)  
 ```

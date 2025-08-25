@@ -43,7 +43,7 @@ Now that `result_plot` is created, we can generate specific plots. The `Plot` cl
 
 ## PheWAS plot
 
-The `result_plot.phewas_plot()` function creates a summary plot of the PheWAS results – essentially a visual depiction of which diseases were associated with the exposure. In a standard or matched cohort study, this is typically a Manhattan-style plot or bar plot showing hazard ratios (HRs) for each significant disease. In an exposed-only cohort, since we don’t have HRs, the plot might show the number of cases of each disease (to highlight which are most frequent). The plot also differentiates diseases by their category/system (often using color coding).
+The `result_plot.phewas_plot()` function creates a summary plot of the PheWAS results – essentially a visual depiction of which diseases were associated with the exposure. In a standard or matched cohort study, a Manhattan-style plot or bar chart is commonly used to display hazard ratios (HRs) for each significant disease outcome. In an exposed-only cohort, where HRs are not available, the plot may instead represent the number of cases for each disease to emphasize the most frequently occurring conditions. Additionally, diseases are often categorized by category/system, typically distinguished through color coding in the visualization.
 
 For example:
 

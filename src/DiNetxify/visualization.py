@@ -291,6 +291,7 @@ class Plot(object):
             phewas_result,
             comorbidity_result,
             trajectory_result,
+            exposure_name,
             filter_phewas_col,
             filter_comorbidity_col,
             filter_trajectory_col
@@ -781,7 +782,6 @@ class Plot(object):
             ZeroDivisionError: If total network size is 0
         """
         for cluster, nodes in cluster_nodes.items():
-            print(nodes)
             size = [self._nodes_attrs[x]["size"] for x in nodes]
             sum_size = sum(size)
             cluster_nodes.update({cluster:sum_size})
@@ -833,6 +833,7 @@ class Plot(object):
         phewas_result: Df,
         comorbidity_result: Df,
         trajectory_result: Df,
+        exposure_name: str,
         filter_phewas_col: str,
         filter_comorbidity_col: str,
         filter_trajectory_col: str
@@ -847,6 +848,9 @@ class Plot(object):
             phewas_result: DataFrame containing PheWAS analysis results
             comorbidity_result: DataFrame containing comorbidity analysis results
             trajectory_result: DataFrame containing disease trajectory results
+            exposure_name (str, optional):
+                Identifier for the primary exposure variable of interest.
+                Defaults to None, means to exposed-only cohort.
             filter_phewas_col: Column name in phewas_result indicating significance.
                             If None, no filtering is applied.
             filter_comorbidity_col: Column name in comorbidity_result indicating significance.
@@ -877,7 +881,7 @@ class Plot(object):
             - Original dataframes are not modified (returns filtered copies
         """
         if filter_phewas_col:
-            if self._exposure_name:
+            if exposure_name:
                 phewas_result = phewas_result.loc[
                     (phewas_result[filter_phewas_col] == True) 
                     & (phewas_result['phewas_coef'] > 0)
@@ -2014,7 +2018,6 @@ class Plot(object):
         """
         if not self.__check_node_attrs("cluster"):
             self.__cluster(cluster_weight)
-
         if self._exposure:
             exposure = self._exposure
         else:
@@ -2167,7 +2170,7 @@ class Plot(object):
         def ratio(number: float):
             return np.min([number/200*10, 5])+0.2
 
-        tra = self._trajectory
+        tra = self._trajectory.copy()
         tra.index = np.arange(len(tra))
         for idx in tra.index:
             if tra.loc[idx, self._source] == exposure:
@@ -2210,7 +2213,6 @@ class Plot(object):
             df.index = np.arange(len(df))
 
             position = hierarchy_layout(df, exposure)
-            print(position)
             graph = nx.DiGraph()
             for idx in df.index:
                 graph.add_edge(
@@ -2397,7 +2399,8 @@ class Plot(object):
             'injuries & poisonings': 'Injuries & poisonings',
             'congenital anomalies': 'Congenital anomalies diseases',
             'symptoms':'Symptoms diseases',
-            'others':'Others diseases'
+            'others':'Others diseases',
+            'pregnancy complications':'Pregnancy complications diseases'
         }
         if is_exposure_only:
             phe_df = self._phewas
