@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "DiNetxify"
-version = "0.1.2"
+version = "0.1.3"
 authors = [
   { name="Can Hou", email="houcan@wchscu.cn" },
   { name="Haowen Liu", email="haowenliu81@gmail.com" },
