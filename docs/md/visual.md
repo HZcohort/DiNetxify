@@ -11,12 +11,12 @@ from DiNetxify.visualization import Plot
 
 # Suppose phewas_result, com_network_result, trajectory_result are obtained from above  
 result_plot = Plot(  
-    phewas_result=phewas_result,  
-    comorbidity_result=com_network_result,  
-    trajectory_result=trajectory_result,  
-    exposure_name='Short LTL',    # Name of the exposure (for labeling the exposure node). Use None for exposed-only cohorts.  
-    exposure_size=15,            # Relative size scaling for the exposure node (to make it prominent). None for exposed-only cohorts.  
-    exposure_location=(0, 0, 0)  # 3D coordinates for the exposure node. If None, it defaults to (0,0,0).  
+    phewas_result=phewas_result,           # Results of PheWAS analysis
+    comorbidity_result=com_network_result, # Results of comorbidity network analysis
+    trajectory_result=trajectory_result,   # Results of disease trajectory analysis
+    exposure_name='Short LTL',             # Name of the exposure (for labeling the exposure node). Use None for exposed-only cohorts.  
+    exposure_size=15,                      # Relative size scaling for the exposure node (to make it prominent). None for exposed-only cohorts.  
+    exposure_location=(0, 0, 0)            # 3D coordinates for the exposure node. If None, it defaults to (0,0,0).  
 )  
 
 # If this were an exposed-only cohort (no explicit exposure variable), you would set:  
@@ -24,15 +24,15 @@ result_plot = Plot(
     phewas_result=phewas_result,  
     comorbidity_result=com_network_result,  
     trajectory_result=trajectory_result,  
-    exposure_name=None,     # No separate exposure node  
-    exposure_size=None,  
-    exposure_location=None  
+    exposure_name=None,
+    exposure_size=None,
+    exposure_location=None                
 )  
 ```
 
-- **phewas_result** – DataFrame from the PheWAS analysis (must include columns for phecode identifier, disease name/system, case counts, significance etc.).
-- **comorbidity_result** – DataFrame from the comorbidity network analysis. It should include columns for disease pairs (D1, D2 identifiers), some unique pair name or ID, the association metrics (like beta or correlation), and a significance indicator (True/False for whether that pair is significant in the network).
-- **trajectory_result** – DataFrame from the disease trajectory analysis. It should have columns for the disease pairs (D1, D2, typically oriented as source -> target), the effect sizes (like OR or HR), and a significance indicator for temporal association (True/False for adjusted p-value significance).
+- **phewas_result** – Result (pandas.DataFrame) from the PheWAS analysis (must include columns for phecode identifier, disease name/system, case counts, significance etc).
+- **comorbidity_result** – Result (pandas.DataFrame) from the comorbidity network analysis. It should include columns for disease pairs (D1, D2 identifiers), some unique pair name or ID, the association metrics (like beta or correlation), and a significance indicator (True/False for whether that pair is significant in the network).
+- **trajectory_result** – Result (pandas.DataFrame) from the disease trajectory analysis. It should have columns for the disease pairs (D1, D2, typically oriented as source -> target), the effect sizes (like OR or HR), and a significance indicator for temporal association (True/False for adjusted p-value significance).
 - **exposure_name** – A label for the exposure of interest (the factor that defines exposed vs unexposed in the cohort). In our examples, the exposure was “Short LTL” (short leukocyte telomere length) in one of the case studies, hence the example. If you are analyzing something like “smoking” or “diabetes” as the exposure, you’d put that. For an exposed-only study, use None (because there isn’t a separate exposure node to highlight).
 - **exposure_location** – The (x, y, z) coordinates where the exposure node should be placed in the 3D plot. By default, if None, the exposure node will be placed at the origin (0,0,0). This is relevant only for 3D plotting; if exposure is None, this is ignored.
 - **exposure_size** – A scaling factor for the exposure node’s size in the network visualization. Increase this to make the exposure node larger relative to disease nodes (to emphasize it). If None, in an exposed-only design, the exposure node is not present.
@@ -51,7 +51,7 @@ For example:
 # Generate a PheWAS plot  
 result_plot.phewas_plot(  
     path="/your/project/path/phewas_plot.png",  # output file path (supports .png, .svg, .jpg)  
-    is_exposure_only=False                     # False for cohort/matched designs; True if this is an exposed-only cohort  
+    is_exposure_only=False                      # False for cohort/matched designs; True if this is an exposed-only cohort  
 )  
 ```
 
@@ -73,7 +73,7 @@ Parameters for `phewas_plot()` include:
 - **system_font_size** – Font size for the disease system labels on the plot. *(Default: 17)*.
 - **dpi** – Resolution of the output image (dots per inch). Higher DPI gives a higher resolution image. *(Default: 200)*.
 
-Using these, the PheWAS plot will highlight which diseases came out as significantly associated. Typically, you’ll see something like a scatter of points or bars, colored by system, maybe labeled for the top hits. In our dummy data, since everything is random, the plot isn’t meaningful medically, but with real data this can quickly show you the pattern of associations.
+Using these, the plot will highlight which diseases came out as significantly associated. In the polt, you’ll see something like a scatter of points or bars, colored by system, maybe labeled for the top hits. In our dummy data, since everything is random, the plot isn’t meaningful medically, but with real data this can quickly show you the pattern of associations.
 
 ## Comorbidity network plot
 
@@ -88,22 +88,22 @@ result_plot.comorbidity_network_plot(
 )  
 ```
 
-This will save an HTML file which you can open in a web browser to explore. Each node (disease) might be labeled or have tooltip info (like disease name, maybe prevalence), and edges might have tooltips for correlation values. Nodes within the same community are grouped together. This visualization helps identify clusters of diseases that frequently co-occur beyond what would be expected.
+This will save an HTML file which you can open in a web browser to explore. Each node (disease) might be labeled or have tooltip info (like disease name, maybe prevalence), and edges might have tooltips for correlation values. Nodes within the same community are grouped together. This plot helps identify clusters of diseases that frequently co-occur beyond what would be expected.
 
 Optional parameters for `comorbidity_network_plot()` include layout and styling options:
 
 - **max_radius** – Maximum radial distance (in pixels) from the center that nodes can be placed. This essentially controls the size of the outer circle of the plot. *(Default: 90.0)*.
-- **min_radius** – Minimum radial distance (pixels) from center for node placement (the inner boundary of the network). *(Default: 35.0)*.
+- **min_radius** – Minimum radial distance (in pixels) from center for node placement (the inner boundary of the network). *(Default: 35.0)*.
 - **layer_distance** – Radial distance between concentric layers of nodes (if nodes are layered by some criteria, e.g., significance or degree). *(Default: 40.0)*.
 - **size_reduction** – A scaling factor (0 to 1) for node sizes to ensure they fit nicely (smaller values make nodes proportionally smaller). *(Default: 0.5)*.
 - **line_width** – Width (pixels) of the lines (edges) connecting nodes. *(Default: 1.0)*.
-- **line_color** – Color of the edges. Can specify a named color (e.g., `'steelblue'`), hex code (`'#4682B4'`), or RGB tuple. *(Default: 'black')*.
+- **line_color** – Color of the edges. Specify a named color (e.g., `'steelblue'`), hex code (`'#4682B4'`), or RGB tuple. *(Default: 'black')*.
 
 These parameters allow fine-tuning the appearance if needed (for example, if node labels overlap, you might reduce node sizes or adjust radii). Usually, the defaults produce a clear separation of communities.
 
 ## Disease trajectory plot
 
-The `result_plot.trajectory_plot()` function generates visualizations for disease trajectories. Typically, it will produce one plot per community of diseases (as identified in the network analysis) to show how diseases progress within that community. For each significant disease pair (temporal relationship), an arrow or directed edge is drawn from the antecedent disease to the consequent disease. The output is often a set of static image files (e.g., one PNG per community) because it might be easier to print or inspect individually.
+The `result_plot.trajectory_plot()` function generates a plot for disease trajectories. Typically, it will produce one plot per community of diseases (as identified in the network analysis) to show how diseases progress within that community. For each significant disease pair (temporal relationship), an arrow or directed edge is drawn from the antecedent disease to the consequent disease. The output is often a set of static image files (e.g., one PNG per community) because it might be easier to print or inspect individually.
 
 For example:
 
@@ -131,7 +131,7 @@ After running this, check the output directory for files. For instance, you migh
 
 ## Three-dimensional plot
 
-The `result_plot.three_dimension_plot()` function is a special visualization that combines the comorbidity network and trajectory information into a single 3D interactive figure. It essentially places the comorbidity network on one plane (say, the horizontal plane) and the trajectory connections on a vertical plane, giving a three-dimensional view where you can see both types of relationships simultaneously. The exposure node (if any) is usually at the center, and disease nodes are arranged around. This plot is typically an interactive HTML as well, since you’d want to rotate and zoom in 3D.
+The `result_plot.three_dimension_plot()` function is a special plot that combines the comorbidity network and trajectory information into a single 3D interactive figure. It essentially places the comorbidity network on one plane (say, the horizontal plane) and the trajectory connections on a vertical plane, giving a three-dimensional view where you can see both types of relationships simultaneously. The exposure node (if any) is usually at the center, and disease nodes are arranged around. This plot is an interactive HTML as well, since you’d want to rotate and zoom in 3D.
 
 Example usage:
 
@@ -154,7 +154,7 @@ Optional parameters for `three_dimension_plot()` include various layout settings
 - **line_color** – Color for trajectory lines (since in 3D plot, maybe comorbidity edges are one style and trajectory edges another). *(Default: 'black')*.
 - **line_width** – Width of trajectory lines. *(Default: 1.0)*.
 - **size_reduction** – Node size scaling factor (0.1–1.0). *(Default: 0.5)*.
-- **cluster_reduction_ratio** – A factor (0.1–1.0) to compress or spread out clusters in the 3D space. Lower means clusters are more tightly grouped. *(Default: 0.4)*.
+- **cluster_reduction_ratio** – A factor (0.1–1.0) to compress or spread out clusters in the 3D space. Lower means clusters are more tightly grouped. *(Default: 1.0)*.
 - **cluster_weight** – Which weight to use for determining cluster layout (as in trajectory_plot, usually 'comorbidity_beta'). *(Default: 'comorbidity_beta')*.
 - **font_style** – Font family for text elements (node labels, etc.). *(Default: 'Times New Roman')*.
 - **font_size** – Base font size for text. *(Default: 15.0)*.
