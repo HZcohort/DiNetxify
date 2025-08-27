@@ -4,7 +4,7 @@ Following three-dimensional disease network analysis, ***DiNetxify*** provides v
 
 ## Initializing the Plot object
 
-To create visualizations, you must initialize a `DiNetxify.visualization.Plot` object with your analysis results. You will pass in the PheWAS, comorbidity network, and disease trajectory results `pandas.DataFrame`, and optionally specify how the “exposure” (the primary risk factor and cohort definition) should appear in the plots.
+To create visualizations, you must initialize a `DiNetxify.visualization.Plot` object with your analysis results. You should pass in the PheWAS, comorbidity network, and disease trajectory results `pandas.DataFrame`, and optionally specify how the “exposure” (the primary risk factor and cohort definition) appear in the plots.
 
 For example:
 
@@ -33,19 +33,19 @@ result_plot = Plot(
 ```
 
 - **phewas_result** – Result (pandas.DataFrame) from the PheWAS analysis (must include columns for phecode identifier, disease system identifier, case counts identifier, significance identifier).
-- **comorbidity_result** – Result (pandas.DataFrame) from the comorbidity network analysis. It should include columns for disease (D1, D2) identifiers, non-temporal pairs name identifier, the association metrics (beta or correlation) identifier, and significance identifier.
-- **trajectory_result** – Result (pandas.DataFrame) from the disease trajectory analysis. It should have columns for the disease (D1, D2) identifiers, temporal pairs name identifier, the association metrics (beta or correlation), and significance identifier.
+- **comorbidity_result** – Result (pandas.DataFrame) from the comorbidity network analysis. It must include columns for disease (D1, D2) identifiers, non-temporal pairs name identifier, the association metrics (beta or correlation) identifier, and significance identifier.
+- **trajectory_result** – Result (pandas.DataFrame) from the disease trajectory analysis. It must have columns for the disease (D1, D2) identifiers, temporal pairs name identifier, the association metrics (beta or correlation), and significance identifier.
 - **exposure_name** – Name for the exposure (the factor that defines exposed vs unexposed in the cohort). In our examples, the exposure was “Short LTL” (short leukocyte telomere length) in case study 1, hence the example. If you are analyzing something like “smoking” or “diabetes” as the exposure, you’d put that. For an exposed-only study, use None (because there isn’t a separate exposure node to highlight).
 - **exposure_location** – The (x, y, z) coordinates where the exposure node should be placed in the plots. By default, if None, the exposure node will be placed at the origin (0,0,0). This is relevant only for 3D plotting; if exposure is None, this is ignored.
 - **exposure_size** – A scaling factor for the exposure node’s size in the plots. Increase this to make the exposure node larger relative to disease nodes (to emphasize it). If None, in an exposed-only design, the exposure node is not present.
 
 The `DiNetxify.visualization.Plot` class will internally verify that the required columns exist in the input `pandas.DataFrame` (for example, it expects certain default column names like `'phecode_d1'`, `'phecode_d2'` for pair identifiers, `'phecode'` for disease codes in results of PheWAS analysis, `'system'` for disease system category, `'name_disease_pair'` for a unique pair name, `'..._significance'` for significance identifier, etc. If you did not change column names, it uses these defaults). You can override these defaults by passing optional parameters if your DataFrame uses different column names (we’ll mention those as needed in each plot function below).
 
-Now that `result_plot` is created, we can generate specific plots. The `DiNetxify.visualization.Plot` class provides multiple methods for different visualizations. Each produces either an interactive HTML file or a static image, as noted.
+Now that `DiNetxify.visualization.Plot` (`result_plot`) is created, we can generate specific plots. Each plot either an interactive HTML file or a static image, as noted.
 
 ## PheWAS plot
 
-The `DiNetxify.visualization.Plot.phewas_plot()` function generates a summary plot of the PheWAS results, essentially visualizing the diseases that occur significantly. In a standard or matched cohort study, this function will create a circular heatmap plot to show hazard ratios (HRs) for each significant disease outcome with the exposure. In an exposure-only group, this function will also generate a circular heatmap plot, but it is used to display the occurrence count of each disease. Additionally, diseases are classified by category/system, and the shade of color in the plots represent the relative size of the data.
+The `DiNetxify.visualization.Plot.phewas_plot()` function generates a summary plot of the PheWAS results, essentially visualizing the diseases that occur significantly. In a standard or matched cohort study, this function will create a circular heatmap plot to show hazard ratios (HRs) for each significant disease outcome with the exposure. In an exposure-only group, this function will also generate a circular heatmap plot, but it is used to display the case count for each disease. Additionally, diseases are classified by category/system, and the shade of color in the plots represent the relative size of HRs or case count.
 
 For example:
 
@@ -57,7 +57,7 @@ result_plot.phewas_plot(
 )  
 ```
 
-This function saves the plot to the specified file path. Supported formats include `.png` for static images (suitable for publications) and `.svg` for scalable vector graphics, among others
+This function will save the plot to the specified file path. Supported formats include `.png` for static images (suitable for publications) and `.svg` for scalable vector graphics, among others
 
 Parameters for `phewas_plot()` include:
 
@@ -75,11 +75,9 @@ Parameters for `phewas_plot()` include:
 - **system_font_size** - Font size for the disease system labels in the plot. *(Default: 17)*.
 - **dpi** – Resolution of the output image (dots per inch). *(Default: 200)*.
 
-After using this function, the generated plot will show the diseases that have occurred significantly. In our dummy data, since everything is random, this chart has no practical medical significance.
-
 ## Comorbidity network plot
 
-The `DiNetxify.visualization.Plot.comorbidity_network_plot()` function creates an interactive network visualization of the comorbidity network. It clusters diseases into communities based on their network connections (using the Louvain community detection algorithm), often in a circular layout where each community occupies a sector. The nodes (diseases) are colored by their disease system, and edges represent significant associations from the comorbidity network analysis. This plot is output as an HTML file, and you can hover to see details, zoom, etc.
+The `DiNetxify.visualization.Plot.comorbidity_network_plot()` function creates an interactive network visualization for the comorbidity network. It clusters diseases into communities based on their network connections (using the Louvain community detection algorithm), often in a circular layout where each community occupies a sector. The nodes (diseases) are colored by their disease system, and edges represent significant associations from the comorbidity network analysis. This plot is output as an HTML file, and you can hover to see details, zoom, etc.
 
 For example:
 
@@ -109,14 +107,14 @@ These parameters allow fine-tuning the appearance if needed (for example, if nod
 
 ## Disease trajectory plot
 
-The `DiNetxify.visualization.Plot.trajectory_plot()` function generates individual plots for each identified community, visualizing the disease trajectories contained within a single community. For each significant temporal disease pair, an arrow or directed edge is drawn from the antecedent disease to the consequent disease. The output is often a set of static image files (e.g., one PNG per community) because it might be easier to print or inspect individually.
+The `DiNetxify.visualization.Plot.trajectory_plot()` function generates individual plots for each identified community, visualizing the disease trajectories contained within a single community. For each significant temporal disease pair, an arrow or directed edge is drawn from the antecedent disease to the consequent disease. The output is a set of static image files (one `.png` file per community) because it might be easier to print or inspect individually.
 
 For example:
 
 ```python
 # Generate disease trajectory plots (one per community)  
 result_plot.trajectory_plot(
-    path="/your/project/path/trajectory_plots/"  # output file path (just need a folder path)
+    path="/your/project/path/trajectory_plots/"  # output file path (just need a folder path and "/")
 )
 ```
 
@@ -124,7 +122,7 @@ result_plot.trajectory_plot(
 
 Parameters for `trajectory_plot()` include:
 
-- **path** – File path (just need a folder path).
+- **path** – File path (just need a folder path and "/").
 
 **Optional parameters:**
 
@@ -150,7 +148,7 @@ result_plot.three_dimension_plot(
 )  
 ```
 
-This saves an HTML file with the interactive 3D visualization. When you open it, you can drag to rotate the network in 3D space. One plane (e.g., viewed from top-down) will show the clusters and connections akin to the comorbidity network, and the other plane (viewed from the side) will show the directed trajectories. Where they intersect, you get a full picture of how diseases group and progress.
+This function will save an HTML file with the interactive 3D visualization. When you open it, you can drag to rotate the network in 3D space. One plane (e.g., viewed from top-down) will show the clusters and connections akin to the comorbidity network, and the other plane (viewed from the side) will show the directed trajectories. Where they intersect, you get a full picture of how diseases group and progress.
 
 Parameters for `three_dimension_plot()` include:
 
