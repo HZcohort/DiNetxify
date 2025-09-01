@@ -16,9 +16,9 @@ result_plot = Plot(
     phewas_result=phewas_result,           # Results of PheWAS analysis
     comorbidity_result=com_network_result, # Results of comorbidity network analysis
     trajectory_result=trajectory_result,   # Results of disease trajectory analysis
-    exposure_name='Short LTL',             # Name of the exposure (for labeling the exposure node). Use None for exposed-only cohorts.
-    exposure_size=15,                      # Relative size scaling for the exposure node (to make it prominent). None for exposed-only cohorts.
-    exposure_location=(0, 0, 0)            # 3D coordinates for the exposure node. If None, it defaults to (0,0,0).
+    exposure_name='exposure',              # Name of the exposure (for labeling the exposure node). Use None for exposed-only cohorts
+    exposure_size=15,                      # Relative size scaling for the exposure node (to make it prominent). None for exposed-only cohorts
+    exposure_location=(0, 0, 0)            # 3D coordinates for the exposure node. If None, it defaults to (0,0,0)
 )
 
 # If this were an exposed-only cohort (no explicit exposure variable), you would set:
@@ -26,7 +26,7 @@ result_plot = Plot(
     phewas_result=phewas_result,  
     comorbidity_result=com_network_result,  
     trajectory_result=trajectory_result,  
-    exposure_name=None,
+    exposure_name=None,                    # No exposure for exposed-only cohorts
     exposure_size=None,
     exposure_location=None                
 )  
@@ -35,17 +35,17 @@ result_plot = Plot(
 - **phewas_result** – Result (pandas.DataFrame) from the PheWAS analysis (must include columns for phecode identifier, disease system identifier, case counts identifier, significance identifier).
 - **comorbidity_result** – Result (pandas.DataFrame) from the comorbidity network analysis. It must include columns for disease (D1, D2) identifiers, non-temporal pairs name identifier, the association metrics (beta or correlation) identifier, and significance identifier.
 - **trajectory_result** – Result (pandas.DataFrame) from the disease trajectory analysis. It must have columns for the disease (D1, D2) identifiers, temporal pairs name identifier, the association metrics (beta or correlation), and significance identifier.
-- **exposure_name** – Name for the exposure (the factor that defines exposed vs unexposed in the cohort). In our examples, the exposure was “Short LTL” (short leukocyte telomere length) in case study 1, hence the example. If you are analyzing something like “smoking” or “diabetes” as the exposure, you’d put that. For an exposed-only study, use None (because there isn’t a separate exposure node to highlight).
+- **exposure_name** – Name for the exposure (the factor that defines exposed vs unexposed in the cohort). If you want to analysis something like “smoking” or “diabetes” as the exposure, you will change it to `“smoking”` or `“diabetes”`. For an exposed-only study, use `None`.
 - **exposure_location** – The (x, y, z) coordinates where the exposure node should be placed in the plots. By default, if None, the exposure node will be placed at the origin (0,0,0). This is relevant only for 3D plotting; if exposure is None, this is ignored.
 - **exposure_size** – A scaling factor for the exposure node’s size in the plots. Increase this to make the exposure node larger relative to disease nodes (to emphasize it). If None, in an exposed-only design, the exposure node is not present.
 
 The `DiNetxify.visualization.Plot` class will internally verify that the required columns exist in the input `pandas.DataFrame` (for example, it expects certain default column names like `'phecode_d1'`, `'phecode_d2'` for pair identifiers, `'phecode'` for disease codes in results of PheWAS analysis, `'system'` for disease system category, `'name_disease_pair'` for a unique pair name, `'..._significance'` for significance identifier, etc. If you did not change column names, it uses these defaults). You can override these defaults by passing optional parameters if your DataFrame uses different column names (we’ll mention those as needed in each plot function below).
 
-Now that `DiNetxify.visualization.Plot` (`result_plot`) is created, we can generate specific plots. Each plot either an interactive HTML file or a static image, as noted.
+After initializing `DiNetxify.visualization.Plot`, you can generate all visualizations based on `result_plot`.
 
 ## PheWAS plot
 
-The `DiNetxify.visualization.Plot.phewas_plot()` function generates a summary plot of the PheWAS results, essentially visualizing the diseases that occur significantly. In a standard or matched cohort study, this function will create a circular heatmap plot to show hazard ratios (HRs) for each significant disease outcome with the exposure. In an exposure-only group, this function will also generate a circular heatmap plot, but it is used to display the case count for each disease. Additionally, diseases are classified by category/system, and the shade of color in the plots represent the relative size of HRs or case count.
+The `DiNetxify.visualization.Plot.phewas_plot()` function generates a summary plot of the PheWAS results. In a standard or matched cohort study, this function will create a circular heatmap plot to show hazard ratios (HRs) for each significant disease outcome with the exposure. In an exposure-only group, this function will also generate a circular heatmap plot, but it is used to display the incident number of each disease. Additionally, diseases are classified by category/system, and the shade of color in the plots represent the relative size of HRs or incident number.
 
 For example:
 
@@ -54,7 +54,7 @@ For example:
 result_plot.phewas_plot(  
     path="/your/project/path/phewas_plot.png",  # output file path (supports .png, .svg, .jpg)  
     is_exposure_only=False                      # False for cohort/matched designs; True if this is an exposed-only cohort  
-)  
+)
 ```
 
 This function will save the plot to the specified file path. Supported formats include `.png` for static images (suitable for publications) and `.svg` for scalable vector graphics, among others
@@ -62,7 +62,7 @@ This function will save the plot to the specified file path. Supported formats i
 Parameters for `phewas_plot()` include:
 
 - **path** – File path including filename and extension. Ensure the extension is one of the supported image types.
-- **is_exposure_only** – Boolean flag; set to `True` if your study is an exposed-only cohort. For our example (standard/matched cohort), it’s `False`.
+- **is_exposure_only** – Boolean flag; set to `True` if your study is an exposed-only cohort. For a standard/matched cohort, it’s `False`.
 
 **Optional parameters:** (if your analysis results `pandas.DataFrame` columns differ from defaults or if you want to adjust aesthetics)
 
@@ -77,7 +77,7 @@ Parameters for `phewas_plot()` include:
 
 ## Comorbidity network plot
 
-The `DiNetxify.visualization.Plot.comorbidity_network_plot()` function creates an interactive network visualization for the comorbidity network. It clusters diseases into communities based on their network connections (using the Louvain community detection algorithm), often in a circular layout where each community occupies a sector. The nodes (diseases) are colored by their disease system, and edges represent significant associations from the comorbidity network analysis. This plot is output as an HTML file, and you can hover to see details, zoom, etc.
+The `DiNetxify.visualization.Plot.comorbidity_network_plot()` function creates an network visualization for the comorbidity network. It clusters diseases into communities based on their network connections (using the Louvain community detection algorithm), often in a circular layout where each community occupies a sector. The nodes (diseases) are colored by their disease system, and edges represent significant associations from the comorbidity network analysis. This plot is output as an HTML file, and you can hover to see details, zoom, etc.
 
 For example:
 
@@ -88,7 +88,7 @@ result_plot.comorbidity_network_plot(
 )  
 ```
 
-This function will generate an HTML file, which you can open with a web browser for viewing. In this plot, the nodes within the same community will cluster together, and you can view the relevant information of each node by hovering. This plot is helpful in identifying disease groups that occur frequently together beyond the expected frequency.
+This function will generate an HTML file, which you can open with a web browser for viewing. In this plot, the nodes within the same community will cluster together.
 
 Parameters for `comorbidity_network_plot()` include:
 
@@ -129,11 +129,11 @@ Parameters for `trajectory_plot()` include:
 - **source** – Column name in the DataFrames for the source disease (D1). *(Default: 'phecode_d1')*.
 - **target** – Column name for the target disease (D2). *(Default: 'phecode_d2')*.
 - **dpi** – Resolution of the output image (dots per inch). *(Default: 500 for these plots, to ensure high clarity since many arrows/labels might be present.)*
-- **cluster_weight** – This parameter specifies which edge weight from the network to use when arranging the layout. *(Default: 'comorbidity_beta')*
+- **cluster_weight** – Edge weight metric used for clustering. *(Default: 'comorbidity_beta')*
 
 The plots will illustrate the progression of diseases. Within each community, you might see something like a directed acyclic graph (hopefully acyclic if the data suggests a direction). The arrow from disease A to B indicates A tends to precede B. By generating one plot per community, it keeps the graphs manageable and interpretable. If a community has no significant trajectories, it is empty.
 
-After running this, check the output directory for files. For instance, you might find files like `community_1.png`, `community_2.png`, etc., each showing the disease trajectory for that community of diseases.
+After running this, check the output directory for files. For instance, you might find files like `cluster_0.png`, `cluster_1.png`, etc., each showing the disease trajectory for that community of diseases.
 
 ## Three-dimensional plot
 
