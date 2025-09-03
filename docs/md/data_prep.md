@@ -66,4 +66,4 @@ A [dummy dataset](https://github.com/HZcohort/DiNetxify/tree/main/tests/data) is
       - **diag_icd10** – ICD-10 diagnosis code.
   
 
-Using this dummy dataset, you can practice the workflow and verify that the tool runs correctly. In the following sections, we will demonstrate the analysis steps using the dummy data.
+Using this dummy dataset, you can practice the workflow and verify that the tool runs correctly. In the following sections, we will demonstrate the analysis and visualization steps using the dummy data.
