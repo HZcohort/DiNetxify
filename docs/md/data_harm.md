@@ -33,15 +33,15 @@ data = dnt.DiseaseNetworkData(
 
 **Optional parameters:**
 
-- **min_required_icd_codes** – Minimum number of ICD diagnosis records mapping to the same phecode for that phecode to be considered “present” in an individual. For example, `min_required_icd_codes=2` means a single occurrence of a code isn’t enough to count the person as having that phecode; at least two occurrences are required. Ensure your medical record are comprehensive (not limited to first occurrences) if using this parameter. *(Default: 1)*.
+- **min_required_icd_codes** – Minimum number of ICD diagnosis records mapping to the same phecode for that phecode to be considered "present" in an individual. For example, `min_required_icd_codes=2` means a single occurrence of a code isn't enough to count the person as having that phecode; at least two occurrences are required. Ensure your medical record are comprehensive (not limited to first occurrences) if using this parameter. *(Default: 1)*.
 - **date_fmt** – Date format of the **Index date** and **End date** columns in your phenotype data. *(Default: '%Y-%m-%d', i.e. YYYY-MM-DD)*.
-- **phecode_version** – Phecode version for mapping diagnosis codes. Currently, version `'1.2'` is the recommended official version (with mapping files for ICD-9-CM/WHO and ICD-10-CM/WHO). An unofficial `'1.3a'` is available in the package for special use cases but is **not** recommended for general use. *(Default: '1.2')*.
+- **phecode_version** – Phecode version for mapping diagnosis codes. Currently, version `'1.2'` is the recommended official version (with mapping files for ICD-9-CM/WHO and ICD-10-CM/WHO). An unofficial `'1.3a'` is available in the package for special use cases but **is not** recommended for general use. *(Default: '1.2')*.
 
 ## Load phenotype data
 
-After initializing the `DiseaseNetworkData` object, use the `phenotype_data()` method to load your phenotype data file. You need to provide the file path, a dictionary mapping the required column names to your file’s column headers, and a list of any additional covariate column names.
+After initializing the `DiseaseNetworkData` object, use the `phenotype_data()` method to load your phenotype data file. You need to provide the file path, a dictionary mapping the required column names to your file's column headers, and a list of any additional covariate column names.
 
-Below are examples demonstrating how to load the dummy phenotype dataset under different study designs. The dummy file is structured for a matched cohort study, but it can be adapted for other designs by dropping certain columns when mapping: if you omit the **Match ID** column in the mapping, the data will be treated as a standard cohort (ignoring the matching groups); if you omit both **Match ID** and **Exposure**, it will be treated as an exposed-only cohort (all individuals considered “exposed”).
+Below are examples demonstrating how to load the dummy phenotype dataset under different study designs. The dummy file is structured for a matched cohort study, but it can be adapted for other designs by dropping certain columns when mapping: if you omit the **Match ID** column in the mapping, the data will be treated as a standard cohort (ignoring the matching groups); if you omit both **Match ID** and **Exposure**, it will be treated as an exposed-only cohort (all individuals considered as "exposed").
 
 ```python
 # Load phenotype data for a matched cohort study  
@@ -92,7 +92,7 @@ data.phenotype_data(
 
 - **phenotype_data_path** – Path to your phenotype data file (CSV or TSV).
 - **column_names** – Dictionary mapping the required column names (`'Participant ID'`, `'Index date'`, `'End date'`, `'Sex'`, and depending on design `'Exposure'` and `'Match ID'`) to the corresponding column headers in your file. Include `'Exposure'` for cohort and matched cohort designs, and include `'Match ID'` only for matched cohorts.
-- **covariates** – List of additional covariate column names to load (if any). Use an empty list `[]` if there are none. The function will automatically detect each covariate’s type and process it appropriately (e.g., encode categorical variables). For continuous covariates, any rows with missing values will be dropped; for categorical covariates, missing values will be categorized as "NA".
+- **covariates** – List of additional covariate column names to load (if any). Use an empty list `[]` if there are none. The function will automatically detect each covariate's type and process it appropriately (e.g., encode categorical variables). For continuous covariates, any rows with missing values will be dropped; for categorical covariates, missing values will be categorized as "NA".
 
 **Optional parameters:**
 
@@ -179,7 +179,7 @@ data.merge_medical_records(
 
 - **medical_records_data_path** – Path to a medical record data file (CSV or TSV).
 - **diagnosis_code** – The diagnosis coding system used in that file. Options include `'ICD-9-CM'`, `'ICD-9-WHO'`, `'ICD-10-CM'`, `'ICD-10-WHO'` (case-sensitive).
-- **column_names** – Dictionary mapping the required column names (`'Participant ID'`, `'Diagnosis code'`, `'Date of diagnosis'`) to your file’s column headers.
+- **column_names** – Dictionary mapping the required column names (`'Participant ID'`, `'Diagnosis code'`, `'Date of diagnosis'`) to your file's column headers.
 
 **Optional parameters:**
 
@@ -234,11 +234,11 @@ Warning: 2.07% of ICD-9-WHO codes were not mapped to phecodes for file /test/dat
 """  
 ```
 
-This output confirms the number of diagnosis records merged and provides average counts of diagnoses per person (during and before follow-up, by exposure group). Warnings indicate the percentage of codes that could not be mapped to a phecode for each file, so you’re aware of any unmapped codes.
+This output confirms the number of diagnosis records merged and provides average counts of diagnoses per person (during and before follow-up, by exposure group). Warnings indicate the percentage of codes that could not be mapped to a phecode for each file, so you're aware of any unmapped codes.
 
 ## Save DiseaseNetworkData object
 
-At this stage, after loading phenotype and medical record data, you may want to save the `DiseaseNetworkData` object for later use. Saving allows you to reuse the prepared data without re-reading and processing raw files each time, facilitating reproducibility and easy sharing of the processed data. ***DiNetxify*** provides two methods: `save()` (which uses Python’s pickle serialization, saving to a compressed `.pkl.gz` file) and `save_npz()` (which saves to a compressed NumPy `.npz` file). You can use either or both depending on your needs. For example:
+At this stage, after loading phenotype and medical record data, you may want to save the `DiseaseNetworkData` object for later use. Saving allows you to reuse the prepared data without re-reading and processing raw files each time, facilitating reproducibility and easy sharing of the processed data. ***DiNetxify*** provides two methods: `save()` (which uses Python's pickle serialization, saving to a compressed `.pkl.gz` file) and `save_npz()` (which saves to a compressed NumPy `.npz` file). You can use either or both depending on your needs. For example:
 
 ```python
 # Save the data object to a gzipped pickle file  
@@ -254,16 +254,13 @@ You do not need to add the file extension in the path; the functions will append
 
 ## Reload DiseaseNetworkData object
 
-If you have previously saved a `DiseaseNetworkData` object, you can reload it instead of re-reading all input files. This is especially useful for large datasets or when sharing the processed object with collaborators. To reload, first instantiate a new `DiseaseNetworkData` object with the same `study_design` and `phecode_level` that the data was created with, then call the corresponding load function (`load()` or `load_npz()`). For example:
+If you have previously saved a `DiseaseNetworkData` object, you can reload it instead of re-reading all input files. This is especially useful for large datasets or when sharing the processed object with collaborators. To reload, first instantiate a new empty `DiseaseNetworkData` object, then call the corresponding load function (`load()` or `load_npz()`). For example:
 
 ```python
 import DiNetxify as dnt  
 
 # Create a new DiseaseNetworkData object with the same design/parameters  
-data = dnt.DiseaseNetworkData(  
-    study_design='matched cohort',  
-    phecode_level=1,  
-)  
+data = dnt.DiseaseNetworkData()
 
 # Load from a .pkl.gz file  
 data.load('/your/project/path/cohort_data', force=True)  
