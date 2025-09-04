@@ -1,7 +1,7 @@
 
 
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
@@ -13,9 +13,9 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=b3ba4146"></script>
-      <script src="_static/doctools.js?v=888ff710"></script>
-      <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -121,10 +121,10 @@
            <div itemprop="articleBody">
              
   <section id="api-reference">
-<h1>API Reference<a class="headerlink" href="#api-reference" title="Permalink to this heading"></a></h1>
+<h1>API Reference<a class="headerlink" href="#api-reference" title="Link to this heading"></a></h1>
 <p>Below is a concise reference for <em><strong>DiNetxify</strong></em>’s classes and functions, summarizing their signatures and parameters. This is useful when writing your own scripts or if you need to quickly recall how to call a function.</p>
 <section id="class-diseasenetworkdata">
-<h2>Class <code class="docutils literal notranslate"><span class="pre">DiseaseNetworkData</span></code><a class="headerlink" href="#class-diseasenetworkdata" title="Permalink to this heading"></a></h2>
+<h2>Class <code class="docutils literal notranslate"><span class="pre">DiseaseNetworkData</span></code><a class="headerlink" href="#class-diseasenetworkdata" title="Link to this heading"></a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">DiseaseNetworkData</span><span class="p">(</span>  
     <span class="n">study_design</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;cohort&#39;</span><span class="p">,</span>  
     <span class="n">phecode_level</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>  
@@ -145,9 +145,9 @@
 </ul>
 <hr class="docutils" />
 <section id="instance-methods">
-<h3>Instance Methods<a class="headerlink" href="#instance-methods" title="Permalink to this heading"></a></h3>
+<h3>Instance Methods<a class="headerlink" href="#instance-methods" title="Link to this heading"></a></h3>
 <section id="phenotype-data">
-<h4><code class="docutils literal notranslate"><span class="pre">phenotype_data</span></code><a class="headerlink" href="#phenotype-data" title="Permalink to this heading"></a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">phenotype_data</span></code><a class="headerlink" href="#phenotype-data" title="Link to this heading"></a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phenotype_data</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">phenotype_data_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -174,7 +174,7 @@
 </section>
 <hr class="docutils" />
 <section id="table1">
-<h4><code class="docutils literal notranslate"><span class="pre">Table1</span></code><a class="headerlink" href="#table1" title="Permalink to this heading"></a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">Table1</span></code><a class="headerlink" href="#table1" title="Link to this heading"></a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">Table1</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">continuous_stat_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;auto&#39;</span>
@@ -200,7 +200,7 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
 </section>
 <hr class="docutils" />
 <section id="merge-medical-records">
-<h4><code class="docutils literal notranslate"><span class="pre">merge_medical_records</span></code><a class="headerlink" href="#merge-medical-records" title="Permalink to this heading"></a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">merge_medical_records</span></code><a class="headerlink" href="#merge-medical-records" title="Link to this heading"></a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">merge_medical_records</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">medical_records_data_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -227,7 +227,7 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
 </section>
 <hr class="docutils" />
 <section id="get-attribute">
-<h4><code class="docutils literal notranslate"><span class="pre">get_attribute</span></code><a class="headerlink" href="#get-attribute" title="Permalink to this heading"></a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">get_attribute</span></code><a class="headerlink" href="#get-attribute" title="Link to this heading"></a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">get_attribute</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">attr_name</span><span class="p">:</span> <span class="nb">str</span>
@@ -246,7 +246,7 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
 </section>
 <hr class="docutils" />
 <section id="medical-records-to-dataframe">
-<h4><code class="docutils literal notranslate"><span class="pre">medical_records_to_dataframe</span></code><a class="headerlink" href="#medical-records-to-dataframe" title="Permalink to this heading"></a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">medical_records_to_dataframe</span></code><a class="headerlink" href="#medical-records-to-dataframe" title="Link to this heading"></a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">concat</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span> 
     <span class="n">phecode_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
@@ -267,7 +267,7 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
 </section>
 <hr class="docutils" />
 <section id="modify-phecode-level">
-<h4><code class="docutils literal notranslate"><span class="pre">modify_phecode_level</span></code><a class="headerlink" href="#modify-phecode-level" title="Permalink to this heading"></a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">modify_phecode_level</span></code><a class="headerlink" href="#modify-phecode-level" title="Link to this heading"></a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">modify_phecode_level</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">phecode_level</span><span class="p">:</span> <span class="nb">int</span>
@@ -286,7 +286,7 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
 </section>
 <hr class="docutils" />
 <section id="disease-pair">
-<h4><code class="docutils literal notranslate"><span class="pre">disease_pair</span></code><a class="headerlink" href="#disease-pair" title="Permalink to this heading"></a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">disease_pair</span></code><a class="headerlink" href="#disease-pair" title="Link to this heading"></a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">disease_pair</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">phewas_result</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
@@ -320,7 +320,7 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
 </section>
 <hr class="docutils" />
 <section id="save">
-<h4><code class="docutils literal notranslate"><span class="pre">save</span></code><a class="headerlink" href="#save" title="Permalink to this heading"></a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">save</span></code><a class="headerlink" href="#save" title="Link to this heading"></a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">save</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">file</span><span class="p">:</span> <span class="nb">str</span>
@@ -339,7 +339,7 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
 </section>
 <hr class="docutils" />
 <section id="load">
-<h4><code class="docutils literal notranslate"><span class="pre">load</span></code><a class="headerlink" href="#load" title="Permalink to this heading"></a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">load</span></code><a class="headerlink" href="#load" title="Link to this heading"></a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">load</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -360,7 +360,7 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
 </section>
 <hr class="docutils" />
 <section id="save-npz">
-<h4><code class="docutils literal notranslate"><span class="pre">save_npz</span></code><a class="headerlink" href="#save-npz" title="Permalink to this heading"></a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">save_npz</span></code><a class="headerlink" href="#save-npz" title="Link to this heading"></a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">save_npz</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">file</span><span class="p">:</span> <span class="nb">str</span>
@@ -379,7 +379,7 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
 </section>
 <hr class="docutils" />
 <section id="load-npz">
-<h4><code class="docutils literal notranslate"><span class="pre">load_npz</span></code><a class="headerlink" href="#load-npz" title="Permalink to this heading"></a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">load_npz</span></code><a class="headerlink" href="#load-npz" title="Link to this heading"></a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">load_npz</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -401,9 +401,9 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
 </section>
 </section>
 <section id="analysis-functions">
-<h2>Analysis Functions<a class="headerlink" href="#analysis-functions" title="Permalink to this heading"></a></h2>
+<h2>Analysis Functions<a class="headerlink" href="#analysis-functions" title="Link to this heading"></a></h2>
 <section id="function-disease-network-pipeline">
-<h3>Function: <code class="docutils literal notranslate"><span class="pre">disease_network_pipeline</span></code><a class="headerlink" href="#function-disease-network-pipeline" title="Permalink to this heading"></a></h3>
+<h3>Function: <code class="docutils literal notranslate"><span class="pre">disease_network_pipeline</span></code><a class="headerlink" href="#function-disease-network-pipeline" title="Link to this heading"></a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">disease_network_pipeline</span><span class="p">(</span>
     <span class="n">data</span><span class="p">:</span> <span class="n">DiseaseNetworkData</span><span class="p">,</span>
     <span class="n">n_process</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -467,7 +467,7 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
 </section>
 <hr class="docutils" />
 <section id="function-phewas">
-<h3>Function: <code class="docutils literal notranslate"><span class="pre">phewas</span></code><a class="headerlink" href="#function-phewas" title="Permalink to this heading"></a></h3>
+<h3>Function: <code class="docutils literal notranslate"><span class="pre">phewas</span></code><a class="headerlink" href="#function-phewas" title="Link to this heading"></a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phewas</span><span class="p">(</span>
     <span class="n">data</span><span class="p">:</span> <span class="n">DiseaseNetworkData</span><span class="p">,</span>
     <span class="n">covariates</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -508,7 +508,7 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
 </section>
 <hr class="docutils" />
 <section id="function-phewas-multipletests">
-<h3>Function: <code class="docutils literal notranslate"><span class="pre">phewas_multipletests</span></code><a class="headerlink" href="#function-phewas-multipletests" title="Permalink to this heading"></a></h3>
+<h3>Function: <code class="docutils literal notranslate"><span class="pre">phewas_multipletests</span></code><a class="headerlink" href="#function-phewas-multipletests" title="Link to this heading"></a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phewas_multipletests</span><span class="p">(</span>
     <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
     <span class="n">correction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;bonferroni&#39;</span><span class="p">,</span>
@@ -528,7 +528,7 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
 </ul>
 </section>
 <section id="function-comorbidity-strength">
-<h3>Function: <code class="docutils literal notranslate"><span class="pre">comorbidity_strength</span></code><a class="headerlink" href="#function-comorbidity-strength" title="Permalink to this heading"></a></h3>
+<h3>Function: <code class="docutils literal notranslate"><span class="pre">comorbidity_strength</span></code><a class="headerlink" href="#function-comorbidity-strength" title="Link to this heading"></a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">comorbidity_strength</span><span class="p">(</span>
     <span class="n">data</span><span class="p">:</span> <span class="n">DiseaseNetworkData</span><span class="p">,</span>
     <span class="n">proportion_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -592,7 +592,7 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
 </ul>
 </section>
 <section id="function-comorbidity-strength-multipletests">
-<h3>Function: <code class="docutils literal notranslate"><span class="pre">comorbidity_strength_multipletests</span></code><a class="headerlink" href="#function-comorbidity-strength-multipletests" title="Permalink to this heading"></a></h3>
+<h3>Function: <code class="docutils literal notranslate"><span class="pre">comorbidity_strength_multipletests</span></code><a class="headerlink" href="#function-comorbidity-strength-multipletests" title="Link to this heading"></a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">comorbidity_strength_multipletests</span><span class="p">(</span>
     <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
     <span class="n">correction_phi</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;bonferroni&#39;</span><span class="p">,</span>
@@ -648,7 +648,7 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
 </ul>
 </section>
 <section id="function-binomial-test">
-<h3>Function: <code class="docutils literal notranslate"><span class="pre">binomial_test</span></code><a class="headerlink" href="#function-binomial-test" title="Permalink to this heading"></a></h3>
+<h3>Function: <code class="docutils literal notranslate"><span class="pre">binomial_test</span></code><a class="headerlink" href="#function-binomial-test" title="Link to this heading"></a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">binomial_test</span><span class="p">(</span>
     <span class="n">data</span><span class="p">:</span> <span class="n">DiseaseNetworkData</span><span class="p">,</span>
     <span class="n">comorbidity_strength_result</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
@@ -705,7 +705,7 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
 </ul>
 </section>
 <section id="function-binomial-multipletests">
-<h3>Function: <code class="docutils literal notranslate"><span class="pre">binomial_multipletests</span></code><a class="headerlink" href="#function-binomial-multipletests" title="Permalink to this heading"></a></h3>
+<h3>Function: <code class="docutils literal notranslate"><span class="pre">binomial_multipletests</span></code><a class="headerlink" href="#function-binomial-multipletests" title="Link to this heading"></a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">binomial_multipletests</span><span class="p">(</span>
     <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
     <span class="n">correction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;bonferroni&#39;</span><span class="p">,</span>
@@ -739,7 +739,7 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
 </ul>
 </section>
 <section id="function-comorbidity-network">
-<h3>Function: <code class="docutils literal notranslate"><span class="pre">comorbidity_network</span></code><a class="headerlink" href="#function-comorbidity-network" title="Permalink to this heading"></a></h3>
+<h3>Function: <code class="docutils literal notranslate"><span class="pre">comorbidity_network</span></code><a class="headerlink" href="#function-comorbidity-network" title="Link to this heading"></a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">comorbidity_network</span><span class="p">(</span>
     <span class="n">data</span><span class="p">:</span> <span class="n">DiseaseNetworkData</span><span class="p">,</span>
     <span class="n">comorbidity_strength_result</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
@@ -801,7 +801,7 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
 </ul>
 </section>
 <section id="function-comorbidity-multipletests">
-<h3>Function: <code class="docutils literal notranslate"><span class="pre">comorbidity_multipletests</span></code><a class="headerlink" href="#function-comorbidity-multipletests" title="Permalink to this heading"></a></h3>
+<h3>Function: <code class="docutils literal notranslate"><span class="pre">comorbidity_multipletests</span></code><a class="headerlink" href="#function-comorbidity-multipletests" title="Link to this heading"></a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">comorbidity_multipletests</span><span class="p">(</span>
     <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
     <span class="n">correction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;bonferroni&#39;</span><span class="p">,</span>
@@ -835,7 +835,7 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
 </ul>
 </section>
 <section id="function-disease-trajectory">
-<h3>Function: <code class="docutils literal notranslate"><span class="pre">disease_trajectory</span></code><a class="headerlink" href="#function-disease-trajectory" title="Permalink to this heading"></a></h3>
+<h3>Function: <code class="docutils literal notranslate"><span class="pre">disease_trajectory</span></code><a class="headerlink" href="#function-disease-trajectory" title="Link to this heading"></a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">disease_trajectory</span><span class="p">(</span>
     <span class="n">data</span><span class="p">:</span> <span class="n">DiseaseNetworkData</span><span class="p">,</span>
     <span class="n">comorbidity_strength_result</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
@@ -912,7 +912,7 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
 </ul>
 </section>
 <section id="function-trajectory-multipletests">
-<h3>Function: <code class="docutils literal notranslate"><span class="pre">trajectory_multipletests</span></code><a class="headerlink" href="#function-trajectory-multipletests" title="Permalink to this heading"></a></h3>
+<h3>Function: <code class="docutils literal notranslate"><span class="pre">trajectory_multipletests</span></code><a class="headerlink" href="#function-trajectory-multipletests" title="Link to this heading"></a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">trajectory_multipletests</span><span class="p">(</span>
     <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
     <span class="n">correction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;bonferroni&#39;</span><span class="p">,</span>
@@ -947,7 +947,7 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
 </section>
 </section>
 <section id="class-plot">
-<h2>Class <code class="docutils literal notranslate"><span class="pre">Plot</span></code><a class="headerlink" href="#class-plot" title="Permalink to this heading"></a></h2>
+<h2>Class <code class="docutils literal notranslate"><span class="pre">Plot</span></code><a class="headerlink" href="#class-plot" title="Link to this heading"></a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Plot</span><span class="p">(</span>
     <span class="n">comorbidity_result</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
     <span class="n">trajectory_result</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
@@ -994,9 +994,9 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
 </ul>
 <hr class="docutils" />
 <section id="id1">
-<h3>Instance Methods<a class="headerlink" href="#id1" title="Permalink to this heading"></a></h3>
+<h3>Instance Methods<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
 <section id="three-dimension-plot">
-<h4><code class="docutils literal notranslate"><span class="pre">three_dimension_plot</span></code><a class="headerlink" href="#three-dimension-plot" title="Permalink to this heading"></a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">three_dimension_plot</span></code><a class="headerlink" href="#three-dimension-plot" title="Link to this heading"></a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">three_dimension_plot</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -1035,7 +1035,7 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
 </section>
 <hr class="docutils" />
 <section id="comorbidity-network-plot">
-<h4><code class="docutils literal notranslate"><span class="pre">comorbidity_network_plot</span></code><a class="headerlink" href="#comorbidity-network-plot" title="Permalink to this heading"></a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">comorbidity_network_plot</span></code><a class="headerlink" href="#comorbidity-network-plot" title="Link to this heading"></a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">comorbidity_network_plot</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -1068,7 +1068,7 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
 </section>
 <hr class="docutils" />
 <section id="trajectory-plot">
-<h4><code class="docutils literal notranslate"><span class="pre">trajectory_plot</span></code><a class="headerlink" href="#trajectory-plot" title="Permalink to this heading"></a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">trajectory_plot</span></code><a class="headerlink" href="#trajectory-plot" title="Link to this heading"></a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">trajectory_plot</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -1091,7 +1091,7 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
 </section>
 <hr class="docutils" />
 <section id="phewas-plot">
-<h4><code class="docutils literal notranslate"><span class="pre">phewas_plot</span></code><a class="headerlink" href="#phewas-plot" title="Permalink to this heading"></a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">phewas_plot</span></code><a class="headerlink" href="#phewas-plot" title="Link to this heading"></a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phewas_plot</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>

@@ -36,7 +36,7 @@ For all required columns, missing values are not permitted and dates must follow
 
 A [dummy dataset](https://github.com/HZcohort/DiNetxify/tree/main/tests/data) is provided to help you become familiar with the input format and to allow you to run through the full analysis workflow before using your own data. It simulates a matched-cohort study of 10,000 exposed individuals and 50,000 matched unexposed individuals, along with their entire follow-up EHR records.
 
-> **Note:** All participant characteristics and diagnoses in this dummy dataset are randomly generated. The ICD-9 and ICD-10 codes correspond to real classifications, and the analysis may yield seemingly significant associations, but these results do **not** reflect true medical findings. They are for instructional purposes only.
+> **Note:** All participant characteristics and diagnoses in this dummy dataset are randomly generated. The ICD-9 and ICD-10 codes correspond to real classifications, and the analysis may yield seemingly significant associations, but these results **do not** reflect true medical findings! They are for instructional purposes only.
 
 - The dummy dataset consists of three CSV files:
   - **`dummy_phenotype.csv`** – Simulated baseline characteristics for 60,000 individuals, containing:
@@ -66,4 +66,4 @@ A [dummy dataset](https://github.com/HZcohort/DiNetxify/tree/main/tests/data) is
       - **diag_icd10** – ICD-10 diagnosis code.
   
 
-Using this dummy dataset, you can practice the workflow and verify that the tool runs correctly. In the following sections, we will demonstrate the analysis steps using the dummy data.
+Using this dummy dataset, you can practice the workflow and verify that the tool runs correctly. In the following sections, we will demonstrate the analysis and visualization steps using the dummy data.

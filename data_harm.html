@@ -1,7 +1,7 @@
 
 
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
@@ -13,9 +13,9 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=b3ba4146"></script>
-      <script src="_static/doctools.js?v=888ff710"></script>
-      <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -85,10 +85,10 @@
            <div itemprop="articleBody">
              
   <section id="data-harmonization">
-<h1>Data harmonization<a class="headerlink" href="#data-harmonization" title="Permalink to this heading"></a></h1>
+<h1>Data harmonization<a class="headerlink" href="#data-harmonization" title="Link to this heading"></a></h1>
 <p>Data harmonization involves loading and merging the <strong>phenotype data</strong> and <strong>medical record data</strong> into a single <code class="docutils literal notranslate"><span class="pre">DiseaseNetworkData</span></code> object for analysis. During this process, the software ensures consistent coding (e.g., converting diagnosis codes to phecodes) and standardized formatting (e.g., datetime parsing for diagnosis and follow-up periods).</p>
 <section id="initializing-the-data-object">
-<h2>Initializing the data object<a class="headerlink" href="#initializing-the-data-object" title="Permalink to this heading"></a></h2>
+<h2>Initializing the data object<a class="headerlink" href="#initializing-the-data-object" title="Link to this heading"></a></h2>
 <p>First, import the <em><strong>DiNetxify</strong></em> package and instantiate a <code class="docutils literal notranslate"><span class="pre">DiseaseNetworkData</span></code> object with your chosen study design, phecode level, and any optional parameters. For example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">DiNetxify</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dnt</span>  
 
@@ -119,13 +119,13 @@
 <ul class="simple">
 <li><p><strong>min_required_icd_codes</strong> – Minimum number of ICD diagnosis records mapping to the same phecode for that phecode to be considered “present” in an individual. For example, <code class="docutils literal notranslate"><span class="pre">min_required_icd_codes=2</span></code> means a single occurrence of a code isn’t enough to count the person as having that phecode; at least two occurrences are required. Ensure your medical record are comprehensive (not limited to first occurrences) if using this parameter. <em>(Default: 1)</em>.</p></li>
 <li><p><strong>date_fmt</strong> – Date format of the <strong>Index date</strong> and <strong>End date</strong> columns in your phenotype data. <em>(Default: ‘%Y-%m-%d’, i.e. YYYY-MM-DD)</em>.</p></li>
-<li><p><strong>phecode_version</strong> – Phecode version for mapping diagnosis codes. Currently, version <code class="docutils literal notranslate"><span class="pre">'1.2'</span></code> is the recommended official version (with mapping files for ICD-9-CM/WHO and ICD-10-CM/WHO). An unofficial <code class="docutils literal notranslate"><span class="pre">'1.3a'</span></code> is available in the package for special use cases but is <strong>not</strong> recommended for general use. <em>(Default: ‘1.2’)</em>.</p></li>
+<li><p><strong>phecode_version</strong> – Phecode version for mapping diagnosis codes. Currently, version <code class="docutils literal notranslate"><span class="pre">'1.2'</span></code> is the recommended official version (with mapping files for ICD-9-CM/WHO and ICD-10-CM/WHO). An unofficial <code class="docutils literal notranslate"><span class="pre">'1.3a'</span></code> is available in the package for special use cases but <strong>is not</strong> recommended for general use. <em>(Default: ‘1.2’)</em>.</p></li>
 </ul>
 </section>
 <section id="load-phenotype-data">
-<h2>Load phenotype data<a class="headerlink" href="#load-phenotype-data" title="Permalink to this heading"></a></h2>
+<h2>Load phenotype data<a class="headerlink" href="#load-phenotype-data" title="Link to this heading"></a></h2>
 <p>After initializing the <code class="docutils literal notranslate"><span class="pre">DiseaseNetworkData</span></code> object, use the <code class="docutils literal notranslate"><span class="pre">phenotype_data()</span></code> method to load your phenotype data file. You need to provide the file path, a dictionary mapping the required column names to your file’s column headers, and a list of any additional covariate column names.</p>
-<p>Below are examples demonstrating how to load the dummy phenotype dataset under different study designs. The dummy file is structured for a matched cohort study, but it can be adapted for other designs by dropping certain columns when mapping: if you omit the <strong>Match ID</strong> column in the mapping, the data will be treated as a standard cohort (ignoring the matching groups); if you omit both <strong>Match ID</strong> and <strong>Exposure</strong>, it will be treated as an exposed-only cohort (all individuals considered “exposed”).</p>
+<p>Below are examples demonstrating how to load the dummy phenotype dataset under different study designs. The dummy file is structured for a matched cohort study, but it can be adapted for other designs by dropping certain columns when mapping: if you omit the <strong>Match ID</strong> column in the mapping, the data will be treated as a standard cohort (ignoring the matching groups); if you omit both <strong>Match ID</strong> and <strong>Exposure</strong>, it will be treated as an exposed-only cohort (all individuals considered as “exposed”).</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load phenotype data for a matched cohort study  </span>
 <span class="n">col_dict</span> <span class="o">=</span> <span class="p">{</span>  
     <span class="s1">&#39;Participant ID&#39;</span><span class="p">:</span> <span class="s1">&#39;ID&#39;</span><span class="p">,</span>  
@@ -226,7 +226,7 @@
 <p>This Table 1 gives a quick overview of how the exposed and unexposed groups compare on key variables. You can save this <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> to a CSV/TSV/Excel file using pandas if needed.</p>
 </section>
 <section id="load-medical-record-data">
-<h2>Load medical record data<a class="headerlink" href="#load-medical-record-data" title="Permalink to this heading"></a></h2>
+<h2>Load medical record data<a class="headerlink" href="#load-medical-record-data" title="Link to this heading"></a></h2>
 <p>After loading the phenotype data, use the <code class="docutils literal notranslate"><span class="pre">merge_medical_records()</span></code> method to load and merge each medical record file. You will call this method for each separate file (e.g., one for ICD-10 and one for ICD-9 in our dummy data). Provide the file path, specify the ICD coding standard used in that file, and a dictionary mapping required columns. The following example code shows how to load the dummy EHR ICD-10 and ICD-9 files:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Merge the first medical record file (dummy_EHR_ICD10.csv)  </span>
 <span class="n">data</span><span class="o">.</span><span class="n">merge_medical_records</span><span class="p">(</span>  
@@ -291,10 +291,10 @@
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>  
 <span class="c1"># Example output (matched cohort study):  </span>
 <span class="sd">&quot;&quot;&quot;  </span>
-<span class="sd">Merged Medical records  </span>
-<span class="sd">2 medical record files with 1,678,983 diagnosis records were merged (0 with missing values).  </span>
-<span class="sd">Average number of disease diagnoses during follow-up: 18.99 (exposed) and 7.31 (unexposed)  </span>
-<span class="sd">Average number of disease diagnoses before follow-up: 8.40 (exposed) and 3.46 (unexposed)  </span>
+<span class="sd">Merged Medical records</span>
+<span class="sd">1,678,983 diagnosis records from 2 medical records file were merged (0 with missing values).</span>
+<span class="sd">Average number of disease diagnosis during follow-up: 18.99 (exposed) and 7.31 (unexposed)</span>
+<span class="sd">Average number of disease diagnosis before follow-up: 8.40 (exposed) and 3.46 (unexposed)</span>
 
 <span class="sd">Warning: 102 exposed individuals and 440 unexposed individuals have negative or zero follow-up time.  </span>
 <span class="sd">Consider removing them before merge.  </span>
@@ -306,7 +306,7 @@
 <p>This output confirms the number of diagnosis records merged and provides average counts of diagnoses per person (during and before follow-up, by exposure group). Warnings indicate the percentage of codes that could not be mapped to a phecode for each file, so you’re aware of any unmapped codes.</p>
 </section>
 <section id="save-diseasenetworkdata-object">
-<h2>Save DiseaseNetworkData object<a class="headerlink" href="#save-diseasenetworkdata-object" title="Permalink to this heading"></a></h2>
+<h2>Save DiseaseNetworkData object<a class="headerlink" href="#save-diseasenetworkdata-object" title="Link to this heading"></a></h2>
 <p>At this stage, after loading phenotype and medical record data, you may want to save the <code class="docutils literal notranslate"><span class="pre">DiseaseNetworkData</span></code> object for later use. Saving allows you to reuse the prepared data without re-reading and processing raw files each time, facilitating reproducibility and easy sharing of the processed data. <em><strong>DiNetxify</strong></em> provides two methods: <code class="docutils literal notranslate"><span class="pre">save()</span></code> (which uses Python’s pickle serialization, saving to a compressed <code class="docutils literal notranslate"><span class="pre">.pkl.gz</span></code> file) and <code class="docutils literal notranslate"><span class="pre">save_npz()</span></code> (which saves to a compressed NumPy <code class="docutils literal notranslate"><span class="pre">.npz</span></code> file). You can use either or both depending on your needs. For example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Save the data object to a gzipped pickle file  </span>
 <span class="n">data</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;/your/project/path/cohort_data&#39;</span><span class="p">)</span>  
@@ -320,21 +320,18 @@
 <p>You do not need to add the file extension in the path; the functions will append <code class="docutils literal notranslate"><span class="pre">.pkl.gz</span></code> or <code class="docutils literal notranslate"><span class="pre">.npz</span></code> automatically. Make sure to choose a directory where you have write permissions and enough storage space (the files can be large if your dataset is large).</p>
 </section>
 <section id="reload-diseasenetworkdata-object">
-<h2>Reload DiseaseNetworkData object<a class="headerlink" href="#reload-diseasenetworkdata-object" title="Permalink to this heading"></a></h2>
-<p>If you have previously saved a <code class="docutils literal notranslate"><span class="pre">DiseaseNetworkData</span></code> object, you can reload it instead of re-reading all input files. This is especially useful for large datasets or when sharing the processed object with collaborators. To reload, first instantiate a new <code class="docutils literal notranslate"><span class="pre">DiseaseNetworkData</span></code> object with the same <code class="docutils literal notranslate"><span class="pre">study_design</span></code> and <code class="docutils literal notranslate"><span class="pre">phecode_level</span></code> that the data was created with, then call the corresponding load function (<code class="docutils literal notranslate"><span class="pre">load()</span></code> or <code class="docutils literal notranslate"><span class="pre">load_npz()</span></code>). For example:</p>
+<h2>Reload DiseaseNetworkData object<a class="headerlink" href="#reload-diseasenetworkdata-object" title="Link to this heading"></a></h2>
+<p>If you have previously saved a <code class="docutils literal notranslate"><span class="pre">DiseaseNetworkData</span></code> object, you can reload it instead of re-reading all input files. This is especially useful for large datasets or when sharing the processed object with collaborators. To reload, first instantiate a new empty <code class="docutils literal notranslate"><span class="pre">DiseaseNetworkData</span></code> object, then call the corresponding load function (<code class="docutils literal notranslate"><span class="pre">load()</span></code> or <code class="docutils literal notranslate"><span class="pre">load_npz()</span></code>). For example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">DiNetxify</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dnt</span>  
 
 <span class="c1"># Create a new DiseaseNetworkData object with the same design/parameters  </span>
-<span class="n">data</span> <span class="o">=</span> <span class="n">dnt</span><span class="o">.</span><span class="n">DiseaseNetworkData</span><span class="p">(</span>  
-    <span class="n">study_design</span><span class="o">=</span><span class="s1">&#39;cohort&#39;</span><span class="p">,</span>  
-    <span class="n">phecode_level</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>  
-<span class="p">)</span>  
+<span class="n">data</span> <span class="o">=</span> <span class="n">dnt</span><span class="o">.</span><span class="n">DiseaseNetworkData</span><span class="p">()</span>
 
 <span class="c1"># Load from a .pkl.gz file  </span>
-<span class="n">data</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;/your/project/path/cohort_data&#39;</span><span class="p">)</span>  
+<span class="n">data</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;/your/project/path/cohort_data&#39;</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  
 
 <span class="c1"># Or load from a .npz file  </span>
-<span class="n">data</span><span class="o">.</span><span class="n">load_npz</span><span class="p">(</span><span class="s1">&#39;/your/project/path/cohort_data&#39;</span><span class="p">)</span>  
+<span class="n">data</span><span class="o">.</span><span class="n">load_npz</span><span class="p">(</span><span class="s1">&#39;/your/project/path/cohort_data&#39;</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  
 </pre></div>
 </div>
 </section>
