@@ -401,9 +401,9 @@ def comorbidity_strength(
     n_process,start_mehtod = n_process_check(n_process,'comorbidity_strength')
     if n_process>1:
         import multiprocessing
-        from .comorbidity_strength import com_phi_rr, init_worker #use original function as main function and init_worker to initialize global variables
+        from .com_strength import com_phi_rr, init_worker #use original function as main function and init_worker to initialize global variables
     else:
-        from .comorbidity_strength import com_phi_rr_wrapper #use wrapper function as main function
+        from .com_strength import com_phi_rr_wrapper #use wrapper function as main function
     
     #get all significant phecodes
     phecodes_sig = data.get_attribute('significant_phecodes')

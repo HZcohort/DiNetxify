@@ -111,10 +111,12 @@ def com_phi_rr(args) -> list:
     
     #get number of individuals
     N = len(ineligible_d_dict) #total number of exposed individuals
-    n = sum([d1 not in x and d2 not in x for x in ineligible_d_dict.values()]) #total number of sub-cohort
+    sub_individual = [id_ for id_,x in ineligible_d_dict.items() if d1 not in x and d2 not in x]
+    n = len(sub_individual) #total number of sub-cohort
+    #filter eligible_d_dict_withdate
     n_p1p2 = sum([d1 in x and d2 in x for x in eligible_d_dict_withdate.values()]) #number of individuals with both d1 and d2 diagnosis.
-    p1 = sum([d1 in x for x in eligible_d_dict_withdate.values()]) #number of individuals with d1 diagnosis.
-    p2 = sum([d2 in x for x in eligible_d_dict_withdate.values()]) #number of individuals with d2 diagnosis.
+    p1 = sum([d1 in eligible_d_dict_withdate[id_] for id_ in sub_individual]) #number of individuals with d1 diagnosis.
+    p2 = sum([d2 in eligible_d_dict_withdate[id_] for id_ in sub_individual]) #number of individuals with d2 diagnosis.
     n_com = sum([d1d2_index in x or d2d1_index in x for x in com_pair_dict.values()]) #number of individuals with non-temporal d1-d2 disease pair
     n_tra_d1_d2 = sum([d1d2_index in x for x in temporal_pair_dict.values()]) #number of individuals with temporal d1->d2 disease pair
     n_tra_d2_d1 = sum([d2d1_index in x for x in temporal_pair_dict.values()]) #number of individuals with temporal d2->d1 disease pair
