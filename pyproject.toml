@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "DiNetxify"
-version = "0.1.4"
+version = "0.1.5"
 authors = [
   { name="Can Hou", email="houcan@wchscu.cn" },
   { name="Haowen Liu", email="haowenliu81@gmail.com" },
@@ -45,11 +45,14 @@ DiNetxify = [
     "data/phecode_1.2/ICD-10-WHO.npy",
     "data/phecode_1.2/level1_info.npy",
     "data/phecode_1.2/level2_info.npy",
-    "data/phecode_1.2/phecode_info.csv",
-    "data/phecode_1.2/phecode_map_cm.csv",
-    "data/phecode_1.2/phecode_map_v1_2_icd10_beta.csv",
-    "data/phecode_1.2/phecode_map_who_icd9.csv",
-    "data/phecode_1.2/phecode_map_who_icd10.csv"
+    "data/phecode_1.3a/ICD-9-WHO.npy",
+    "data/phecode_1.3a/ICD-10-WHO.npy",
+    "data/phecode_1.3a/level1_info.npy",
+    "data/phecode_1.3a/level2_info.npy",
+    "data/phecode_VL_autism/ICD-9-WHO.npy",
+    "data/phecode_VL_autism/ICD-10-WHO.npy",
+    "data/phecode_VL_autism/level1_info.npy",
+    "data/phecode_VL_autism/level2_info.npy",
 ]
 
 [tool.setuptools.packages.find]
