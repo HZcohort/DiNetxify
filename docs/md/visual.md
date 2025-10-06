@@ -39,7 +39,7 @@ result_plot = Plot(
 - **exposure_location** – The (x, y, z) coordinates where the exposure node should be placed in the plots. By default, if None, the exposure node will be placed at the origin (0,0,0). This is relevant only for 3D plotting; if exposure is None, this is ignored.
 - **exposure_size** – A scaling factor for the exposure node's size in the plots. Increase this to make the exposure node larger relative to disease nodes (to emphasize it). If None, in an exposed-only design, the exposure node is not present.
 
-The `DiNetxify.visualization.Plot` class will internally verify that the required columns exist in the input `pandas.DataFrame` (for example, it expects certain default column names like `'phecode_d1'`, `'phecode_d2'` for pair identifiers, `'phecode'` for disease codes in results of PheWAS analysis, `'system'` for disease system category, `'name_disease_pair'` for a unique pair name, `'..._significance'` for significance identifier, etc. If you did not change column names, it uses these defaults). You can override these defaults by passing optional parameters if your DataFrame uses different column names.
+The `DiNetxify.visualization.Plot` class will internally verify that the required columns exist in the input `pandas.DataFrame` (for example, it expects certain default column names like `'phecode_d1'`, `'phecode_d2'` for pair identifiers, `'phecode'` for disease codes in results of PheWAS analysis, `'system'` for disease system category, `'name_disease_pair'` for a unique pair name, `'..._significance'` for significance identifier, etc.) If you did not change column names, simply keep them as defaults. You can override these defaults by passing optional parameters if your DataFrame uses different column names.
 
 After initializing `DiNetxify.visualization.Plot`, you can generate all visualizations based on `result_plot`.
 
@@ -64,16 +64,13 @@ Parameters for `phewas_plot()` include:
 - **path** – File path including filename and extension. Ensure the extension is one of the supported image types.
 - **is_exposure_only** – Boolean flag; set to `True` if your study is an exposed-only cohort. For a standard/matched cohort, it's `False`.
 
-**Optional parameters:** (if your analysis results `pandas.DataFrame` columns differ from defaults or if you want to adjust aesthetics)
+**Optional parameters:**
 
-- **col_coef** – Name of the column in `phewas_result` that means effect size coefficients. *(Default: 'phewas_coef')*.
-- **col_se** – Name of the column for standard error of the effect size. *(Default: 'phewas_se')*.
-- **col_system** – Column name for the disease system/category. *(Default: 'system')*.
-- **col_disease** – Column name for the disease name. *(Default: 'disease')*.
-- **col_exposure** – Column name for number of cases in exposed group (used in an exposed-only cohort study). *(Default: 'N_cases_exposed')*.
 - **disease_font_size** - Font size for disease labels in the plot. *(Default: 10)*.
 - **system_font_size** - Font size for the disease system labels in the plot. *(Default: 17)*.
 - **dpi** – Resolution of the output image (dots per inch). *(Default: 200)*.
+- **HR_max** - Upper bound for the HR heatmap. Values greater than or equal to this render as the same red. Affects color only. *(Default: 2)*.
+- **incident_number_max** - Upper bound for the incident count heatmap for exposed-only cohort. Values greater than or equal to this render as the same red. None means auto scale to the max observed count. *(Default: None)*.
 
 ## Comorbidity network plot
 
@@ -126,10 +123,7 @@ Parameters for `trajectory_plot()` include:
 
 **Optional parameters:**
 
-- **source** – Column name in the DataFrames for the source disease (D1). *(Default: 'phecode_d1')*.
-- **target** – Column name for the target disease (D2). *(Default: 'phecode_d2')*.
 - **dpi** – Resolution of the output image (dots per inch). *(Default: 500 for these plots, to ensure high clarity since many arrows/labels might be present.)*
-- **cluster_weight** – Edge weight metric used for clustering. *(Default: 'comorbidity_beta')*
 
 The plots will illustrate the progression of diseases. Within each community, you can see sa directed acyclic graph suggesting the temporal direction. The arrow from disease A to B indicates A tends to precede B. If a community has no significant trajectories, it is empty.
 
@@ -164,8 +158,9 @@ Parameters for `three_dimension_plot()` include:
 - **line_width** – Width of trajectory lines. *(Default: 1.0)*.
 - **size_reduction** – Node size scaling factor (0.1–1.0). *(Default: 0.5)*.
 - **cluster_reduction_ratio** – A factor (0.1–1.0) to compress or spread out clusters in the 3D space. Lower means clusters are more tightly grouped. *(Default: 1.0)*.
-- **cluster_weight** – Which weight to use for determining cluster layout (as in trajectory_plot, usually 'comorbidity_beta'). *(Default: 'comorbidity_beta')*.
 - **font_style** – Font family for text elements (node labels, etc.). *(Default: 'Times New Roman')*.
 - **font_size** – Base font size for text. *(Default: 15.0)*.
 
-With all these visualization tools, even a beginner user can not only run the analysis with ***DiNetxify*** but also see the results in intuitive forms, which can greatly aid interpretation and presentation. Next, we provide a quick reference to the API of the main classes and functions for convenience.
+These basic visualization functions quickly turn results into intuitive plots, aiding interpretation and presentation.
+
+Next, we provide a quick reference to the API of the main classes and functions for convenience.

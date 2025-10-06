@@ -778,46 +778,62 @@ trajectory_multipletests(
 
 ```python
 class Plot(
+    phewas_result: pd.DataFrame,
     comorbidity_result: pd.DataFrame,
     trajectory_result: pd.DataFrame,
-    phewas_result: pd.DataFrame,
     exposure_name: str = None,
     exposure_location: Tuple[float, float, float] = None,
     exposure_size: float = None,
-    source: str = 'phecode_d1',
-    target: str = 'phecode_d2',
-    phewas_phecode: str = 'phecode',
-    phewas_number: str = 'N_cases_exposed',
+    phecode_col: str = 'phecode',
+    disease_col: str = 'disease',
     system_col: str = 'system',
-    col_disease_pair: str = 'name_disease_pair',
-    filter_phewas_col: str = 'phewas_p_significance',
-    filter_comorbidity_col: str = 'comorbidity_p_significance',
-    filter_trajectory_col: str = 'trajectory_p_significance',
+    phewas_number_col: str = 'N_cases_exposed',
+    phewas_coef_col: str = 'phewas_coef',
+    phewas_se_col: str = 'phewas_se',
+    source_col: str = 'phecode_d1',
+    target_col: str = 'phecode_d2',
+    disease_pair_col: str = 'name_disease_pair',
+    comorbidity_beta_col: str = 'comorbidity_beta',
+    trajectory_beta_col: str = 'trajectory_beta',
+    phewas_significance_col: str = 'phewas_p_significance',
+    comorbidity_significance_col: str = 'comorbidity_p_significance',
+    trajectory_significance_col: str = 'trajectory_p_significance',
+    **kwargs
 )
 ```
 
-A class for integrating and visualizing disease relationships from PHEWAS, comorbidity network, and trajectory analyses.
+A class for integrating and visualizing disease relationships from PheWAS, comorbidity network, and trajectory analyses.
 
-**Constructor Parameters:**
+**Parameters:**
 
-- `comorbidity_result` (`pd.DataFrame`): Non-temporal disease pairs with association metrics and significance flag.
-- `trajectory_result` (`pd.DataFrame`): Temporal disease pairs (source→target) with metrics and significance flag.
-- `phewas_result` (`pd.DataFrame`): PheWAS results including phecode, effect sizes, case counts, and system classifications.
-- `exposure_name` (`float`, optional): Name of exposure. Default is `None`. If `None`, it means that this is an exposed-only cohort study.
-- `exposure_location` (`Tuple[float, float, float]`, optional): 3D coordinates for exposure node. Defaults to origin if `None`.
-- `exposure_size` (`float`, optional): Scaling factor for exposure node size. Defaults to automatic.
-- `source` (`str`): Column name for source disease (default: `'phecode_d1'`).
-- `target` (`str`): Column name for target disease (default: `'phecode_d2'`).
-- `phewas_phecode` (`str`): Column for phecode in PHEWAS results (default: `'phecode'`).
-- `phewas_number` (`str`): Column for case counts (default: `'N_cases_exposed'`).
-- `system_col` (`str`): Column for disease system (default: `'system'`).
-- `col_disease_pair` (`str`): Column for pair identifier (default `'name_disease_pair'`).
-- `filter_phewas_col` (`str`): Column for PHEWAS significance filter.
-- `filter_comorbidity_col` (`str`): Column for comorbidity significance filter.
-- `filter_trajectory_col` (`str`): Column for trajectory significance filter.
+- `comorbidity_result` (`pd.DataFrame`): Result DataFrame from comorbidity network analysis, includes non temporal disease pairs (D1, D2), association metrics for example beta coefficients and p values, and a boolean significance flag.
+- `trajectory_result` (`pd.DataFrame`): Result DataFrame from temporal trajectory analysis, includes temporal disease pairs (source -> target), temporal association metrics for example beta coefficients and p values, and a boolean significance flag.
+- `phewas_result` (`pd.DataFrame`): PheWAS results, includes phecode, effect sizes for example hazard ratios, case counts, and disease system classifications.
+- `exposure_name` (`str`, optional): Identifier for the primary exposure. Set to `None` for exposed only cohort studies.
+- `exposure_location` (`Tuple[float, float, float]`, optional): Custom 3D coordinates x, y, z for the exposure node. Defaults to `(0, 0, 0)` if `None`. Ignored when `exposure_name` is `None`.
+- `exposure_size` (`float`, optional): Relative size scaling for the exposure node. Ignored when `exposure_name` is `None`.
+
+*If your result DataFrames use the default column names, keep these parameters as is.*
+- `phecode_col` (`str`, optional): Column in `phewas_result` with phecodes, default `'phecode'`.
+- `disease_col` (`str`, optional): Column in `phewas_result` with disease names, default `'disease'`.
+- `system_col` (`str`): Column in `phewas_result` with disease system labels, default `'system'`.
+- `phewas_number_col` (`str`, optional): Column in `phewas_result` with case counts, default `'N_cases_exposed'`.
+- `phewas_coef_col` (`str`, optional): Column in `phewas_result` with effect sizes, default `'phewas_coef'`.
+- `phewas_se_col` (`str`, optional): Column in `phewas_result` with standard errors, default `'phewas_se'`.
+- `source_col` (`str`, optional): Column in `comorbidity_result` and `trajectory_result` for source or antecedent diseases, default `'phecode_d1'`.
+- `target_col` (`str`, optional): Column in `comorbidity_result` and `trajectory_result` for target or consequent diseases, default `'phecode_d2'`.
+- `disease_pair_col` (`str`): Column in `comorbidity_result` and `trajectory_result` with disease pair identifiers, default `'name_disease_pair'`.
+- `comorbidity_beta_col` (`str`, optional): Column in `comorbidity_result` with effect sizes, default `'comorbidity_beta'`.
+- `trajectory_beta_col` (`str`, optional): Column in `trajectory_result` with effect sizes, default `'trajectory_beta'`.
+- `phewas_significance_col` (`str`): Column in `phewas_result` used for significance filtering, default `'phewas_p_significance'`.
+- `comorbidity_significance_col` (`str`): Column in `comorbidity_result` used for significance filtering, default `'comorbidity_p_significance'`.
+- `trajectory_significance_col` (`str`): Column in `trajectory_result` used for significance filtering, default `'trajectory_p_significance'`.
+
 - `**kwargs`  
-  - `SYSTEM` (`List[str]`, optional): List of systems to visualize; defaults to all from PHEWAS if `None`.
-  - `COLOR` (`List[str]`, optional): Colors corresponding to systems; default palette used if `None`.
+  - `SYSTEM` (`List[str]`, optional): Use with `COLOR` to assign colors by phecode system. If not provided, systems and their order are inferred from `phewas_result`. Default order:  
+    `['neoplasms', 'genitourinary', 'digestive', 'respiratory', 'infectious diseases', 'mental disorders', 'musculoskeletal', 'hematopoietic', 'dermatologic', 'circulatory system', 'neurological', 'endocrine/metabolic', 'sense organs', 'injuries & poisonings', 'congenital anomalies', 'symptoms', 'others']`
+  - `COLOR` (`List[str]`, optional): Colors corresponding to `SYSTEM`, one to one. Length of `COLOR` must be at least the length of `SYSTEM`. Supported formats include `'red'`, `'#ED9A8D'`, and `'rgb(255, 0, 0)'`. Default palette:  
+    `['#F46D5A', '#5DA5DA', '#5EBCD1', '#C1D37F', '#CE5A57', '#A5C5D9', '#F5B36D', '#7FCDBB', '#ED9A8D', '#94B447', '#8C564B', '#E7CB94', '#8C9EB2', '#E0E0E0', '#F1C40F', '#9B59B6', '#4ECDC4', '#6A5ACD']`
 
 ---
 
@@ -835,7 +851,6 @@ three_dimension_plot(
     line_width: float = 1.0,
     size_reduction: float = 0.5,
     cluster_reduction_ratio: float = 0.4,
-    cluster_weight: str = 'comorbidity_beta',
     layer_distance: float = 40.0,
     layout_width: float = 900.0,
     layout_height: float = 900.0,
@@ -855,7 +870,6 @@ Generate and save a 3D interactive HTML visualization.
 - `line_width`: Width for trajectory lines (default: `1.0`)
 - `size_reduction`: Scaling factor for node sizes (default: `0.5`)
 - `cluster_reduction_ratio`: Cluster compression factor for layout (default: `0.4`)
-- `cluster_weight`: Edge weight metric used for clustering (default: `"comorbidity_beta"`)
 - `layer_distance`: Vertical distance between layers (default: `40.0`)
 - `layout_width`: Figure width in pixels (default: `900.0`)
 - `layout_height`: Figure height in pixels (default: `900.0`)
@@ -874,7 +888,6 @@ comorbidity_network_plot(
     min_radius: float = 35.0,
     size_reduction: float = 0.5,
     cluster_reduction_ratio: float = 0.4,
-    cluster_weight: str = 'comorbidity_beta',
     line_width: float = 1.0,
     line_color: str = 'black',
     layer_distance: float = 40.0,
@@ -891,7 +904,6 @@ Generate and save a 2D HTML visualization of the comorbidity network.
 - `min_radius`: Minimum radial position for nodes (default: `35.0`)
 - `size_reduction`: Scaling factor for node sizes (default: `0.5`)
 - `cluster_reduction_ratio`: Compression factor for cluster layout (default: `0.4`)
-- `cluster_weight`: Edge weight metric for clustering (default: `"comorbidity_beta"`)
 - `line_width`: Width of comorbidity lines (default: `1.0`)
 - `line_color`: Color of comorbidity lines (default: `"black"`)
 - `layer_distance`: Distance between concentric circles (default: `40.0`)
@@ -905,21 +917,15 @@ Generate and save a 2D HTML visualization of the comorbidity network.
 trajectory_plot(
     self,
     path: str,
-    cluster_weight: str = 'comorbidity_beta',
-    source: str='phecode_d1',
-    target: str='phecode_d2',
     dpi: float=500
 ) -> None
 ```
 
-Generate and save trajectory plots per cluster as (.png files).
+Generate and save trajectory plots per cluster as .png file.
 
 **Parameters:**
 
 - `path`: Directory path to save output images
-- `cluster_weight`: Edge weight metric used for clustering (default: `"comorbidity_beta"`)
-- `source`: Column name representing source nodes (disease onset points) in trajectory data (default: `'phecode_d1'`)
-- `target`: Column name representing target nodes (subsequent disease points) in trajectory data (default: `'phecode_d2'`)
 - `dpi`: Image resolution in dots per inch for output files (default: `500`)
 
 ---
@@ -930,29 +936,23 @@ Generate and save trajectory plots per cluster as (.png files).
 phewas_plot(
     self,
     path: str,
-    system_font_size: float=17,
-    disese_font_size: float=10,
-    col_coef: str = 'phewas_coef',
-    col_system: str = 'system',
-    col_se: str = 'phewas_se',
-    col_disease: str = 'disease',
+    system_font_size: float = 17,
+    disease_font_size: float = 10,
+    HR_max: float = 2,
+    incident_number_max: int = None,
     is_exposure_only: bool = False,
-    col_exposure: str = 'N_cases_exposed',
-    dpi: float=200
+    dpi: float = 200
 ) -> None
 ```
 
-Creates a polar bar plot visualizing disease associations across different disease categories (systems)
+Creates a circular PheWAS polar bar plot across disease systems, outer ring shows individual diseases, inner segments group by system, color gradient encodes hazard ratio, text rotates automatically for readability.
 
 **Parameters:**
 
 - `path`: Output file path for saving the plot
-- `system_font_size`: Font size for disease system/category labels (default: `17`)
+- `system_font_size`: Font size for disease system or category labels (default: `17`)
 - `disease_font_size`: Font size for disease labels (default: `10`)
-- `col_coef`: Column name for effect size coefficients (default: `"phewas_coef"`)
-- `col_system`: Column name for disease system/category (default: `"system"`)
-- `col_se`: Column name for standard errors (default: `"phewas_se"`)
-- `col_disease`: Column name for disease names (default: `"disease"`)
-- `is_exposure_only`: Identifier of exposure (default: `False`)
-- `col_exposure`: Column name for exposure number (default: `"N_cases_exposed"`)
+- `HR_max`: Upper bound for the HR heatmap, values greater than or equal to this render as the same red, affects color only (default: `2`)
+- `incident_number_max`: Upper bound for the incident count heatmap for exposure only cohorts, values greater than or equal to this render as the same red, `None` auto scales to the maximum observed count (default: `None`)
+- `is_exposure_only`: Flag for exposure only cohort, set to `True` for exposure only, `False` for standard or matched cohort (default: `False`)
 - `dpi`: Image resolution in dots per inch for output files (default: `200`)

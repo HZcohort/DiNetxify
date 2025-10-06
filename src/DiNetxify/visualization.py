@@ -60,132 +60,123 @@ class Plot(object):
         
         exposure_name (str, optional):
             Identifier for the primary exposure variable of interest.
-            Defaults to None, means to exposed-only cohort.
+            Set to None if the study design is exposed-only cohort.
             
         exposure_location (Tuple[float], optional): 
             Custom 3D coordinates (x,y,z) for positioning the exposure node.
             If None, will be automatically positioned at (0,0,0).
-            Defaults to None, means to exposed-only cohort
+            If exposure_name is None, this parameter is ignored.
             
         exposure_size (float, optional): 
-            Relative size scaling factor for the exposure node in visualizations.
-            Defaults to None, means to exposed-only cohort.
+            Relative size scaling factor for the exposure node in the plot.
+            If exposure_name is None, this parameter is ignored.
         
-        Additional Parameters:
-        If there are no changes of column name of pd.DataFrame of results of data analysis module, 
-        you will retain the default values.
-        ---------------------
-        phecode_col (str, optional): 
-            Column name of pd.DataFrame for phecode in the PHEWAS result.
-            Defaults to 'phecode'.
-        
+        Additional parameters:
+        If your result DataFrames use the default column names, keep these parameters as is.
+
+        phecode_col (str, optional):
+            Column in the PheWAS DataFrame that stores phecodes.
+            Default 'phecode'.
+
         disease_col (str, optional):
-            Column name of pd.DataFrame for disease name in the PHEWAS result.
-            Defaults to 'disease'.
-        
-        system_col (str): 
-            Column name of pd.DataFrame for disease system classifications in the PHEWAS result.
-            Defaults to 'system'.
-        
+            Column in the PheWAS DataFrame with disease names.
+            Default 'disease'.
+
+        system_col (str):
+            Column in the PheWAS DataFrame with disease system labels.
+            Default 'system'.
+
         phewas_number_col (str, optional):
-            Column name of pd.DataFrame for case counts in the PHEWAS result.
-            Defaults to 'N_cases_exposed'.
-        
+            Column in the PheWAS DataFrame with case counts.
+            Default 'N_cases_exposed'.
+
         phewas_coef_col (str, optional):
-            Column name of pd.DataFrame for effect sizes in the PHEWAS result.
-            Defaults to 'phewas_coef'.
-        
+            Column in the PheWAS DataFrame with effect sizes.
+            Default 'phewas_coef'.
+
         phewas_se_col (str, optional):
-            Column name of pd.DataFrame for standard errors in the PHEWAS result.
-            Defaults to 'phewas_se'.
-    
-        source_col (str, optional): 
-            Column name indicating source/antecedent diseases in the comorbidity_result and trajectory_result.
-            Defaults to 'phecode_d1'.
-            
-        target_col (str, optional): 
-            Column name indicating target/consequent diseases in the comorbidity_result and trajectory_result.
-            Defaults to 'phecode_d2'.
+            Column in the PheWAS DataFrame with standard errors.
+            Default 'phewas_se'.
 
-        disease_pair_col (str): 
-            Column name of pd.DataFrame for disease pair identifiers in the comorbidity_result and trajectory_result.
-            Defaults to 'name_disease_pair'.
-        
+        source_col (str, optional):
+            Column in comorbidity_result and trajectory_result for source or antecedent diseases.
+            Default 'phecode_d1'.
+
+        target_col (str, optional):
+            Column in comorbidity_result and trajectory_result for target or consequent diseases.
+            Default 'phecode_d2'.
+
+        disease_pair_col (str):
+            Column in comorbidity_result and trajectory_result with disease pair identifiers.
+            Default 'name_disease_pair'.
+
         comorbidity_beta_col (str, optional):
-            Column name of pd.DataFrame for effect sizes in the comorbidity_result.
-            Defaults to 'comorbidity_beta'.
-        
+            Column in comorbidity_result with effect sizes.
+            Default 'comorbidity_beta'.
+
         trajectory_beta_col (str, optional):
-            Column name of pd.DataFrame for effect sizes in the trajectory_result.
-            Defaults to 'trajectory_beta'.
-        
-        phewas_significance_col (str): 
-            Column name of pd.DataFrame for PHEWAS significance filter.
-            Defaults to 'phewas_p_significance'.
+            Column in trajectory_result with effect sizes.
+            Default 'trajectory_beta'.
 
-        comorbidity_significance_col (str): 
-            Column name of pd.DataFrame for comorbidity significance filter.
-            Defaults to 'comorbidity_p_significance'.
+        phewas_significance_col (str):
+            Column in the PheWAS DataFrame used for significance filtering.
+            Default 'phewas_p_significance'.
 
-        trajectory_significance_col (str): 
-            Column name of pd.DataFrame for trajectory significance filter.
-            Defaults to 'trajectory_p_significance'.
+        comorbidity_significance_col (str):
+            Column in comorbidity_result used for significance filtering.
+            Default 'comorbidity_p_significance'.
+
+        trajectory_significance_col (str):
+            Column in trajectory_result used for significance filtering.
+            Default 'trajectory_p_significance'.
 
         **kwargs:
-        SYSTEM (List[str]): 
-            All phecode disease systems to be analysed. If you want to visualize a part of
-            system of results form data analysis module, you will add a parameter like 
-            that SYSTEM=['neoplasms']. All phecode disease systems (17 kinds of systems) are shown below.
-            If there no SYSTEM, the phecode disease systems will be based on the result of PheWAS analysis.
+        SYSTEM (List[str]):
+            Use together with COLOR to assign colors by phecode system. If not provided, systems and their order are inferred from the PheWAS results. Default order:
+            ['neoplasms',
+            'genitourinary',
+            'digestive',
+            'respiratory',
+            'infectious diseases',
+            'mental disorders',
+            'musculoskeletal',
+            'hematopoietic',
+            'dermatologic',
+            'circulatory system',
+            'neurological',
+            'endocrine/metabolic',
+            'sense organs',
+            'injuries & poisonings',
+            'congenital anomalies',
+            'symptoms',
+            'others']
 
-        ['neoplasms'
-        'genitourinary', 
-        'digestive', 
-        'respiratory',
-        'infectious diseases', 
-        'mental disorders', 
-        'musculoskeletal',
-        'hematopoietic', 
-        'dermatologic', 
-        'circulatory system',
-        'neurological',
-        'endocrine/metabolic', 
-        'sense organs',
-        'injuries & poisonings',
-        'congenital anomalies',
-        'symptoms',
-        'others']
+        COLOR (List[str]):
+            Use together with SYSTEM to map systems to colors, one to one. The length of COLOR must be at least the length of SYSTEM. Supported formats include 'red', '#ED9A8D', or 'rgb(255, 0, 0)'. Default order:
+            ['#F46D5A',
+            '#5DA5DA',
+            '#5EBCD1',
+            '#C1D37F',
+            '#CE5A57',
+            '#A5C5D9',
+            '#F5B36D',
+            '#7FCDBB',
+            '#ED9A8D',
+            '#94B447',
+            '#8C564B',
+            '#E7CB94',
+            '#8C9EB2',
+            '#E0E0E0',
+            '#F1C40F',
+            '#9B59B6',
+            '#4ECDC4',
+            '#6A5ACD']
 
-        COLOR (List[str]): 
-            One color presents a phecode disease system. If you want to change the color of phecode 
-            disease system, you will add a parameter like that COLOR=['red'] or COLOR=['#ED9A8D']
-            or [(255, 0, 0)]. The elements of SYSTEM and COLOR are in a one-to-one correspondence.
-            Defaults to below.
-
-        ['#F46D5A',
-        '#5DA5DA',
-        '#5EBCD1',
-        '#C1D37F',
-        '#CE5A57',
-        '#A5C5D9',
-        '#F5B36D',
-        '#7FCDBB',
-        '#ED9A8D',
-        '#94B447',
-        '#8C564B',
-        '#E7CB94',
-        '#8C9EB2',
-        '#E0E0E0',
-        "#F1C40F",
-        '#9B59B6',
-        '#4ECDC4',
-        '#6A5ACD']
-
-    Notes:
-        - All input dataframes should use consistent phecode disease identifiers
-        - Significant results will be filtered using the specified significance columns
-        - Node sizes are proportional to case counts by default
-        - Color schemes are automatically assigned by disease system
+        Notes:
+        - All input DataFrames should use consistent phecode identifiers.
+        - Comorbidity network and disease trajectory results are filtered based on significance identifier and effect size (keep positive effects).
+        - Node sizes default to case counts.
+        - By default, colors are assigned by disease system.
 
     Example:
         1. cohort/matched cohort study
@@ -2352,8 +2343,8 @@ class Plot(object):
             path: Output file path for saving the plot
             system_font_size: Font size for disease system/category labels (default: 17)
             disease_font_size: Font size for disease labels (default: 10)
-            HR_max: Maximum hazard ratio to display (default: 2)
-            incident_number_max: Maximum incident number for exposure-only plots (default: None)
+            HR_max: MUpper bound for the HR heatmap. Values greater than or equal to this render as the same red. Affects color only. (default: 2)
+            incident_number_max: Upper bound for the incident count heatmap for exposed-only cohort. Values greater than or equal to this render as the same red. None means auto scale to the max observed count. (default: None)
             is_exposure_only: Identifier of exposure (default: False)
             dpi: Image resolution in dots per inch for output files (default: 200)
 
