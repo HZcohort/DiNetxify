@@ -816,18 +816,18 @@ A class for integrating and visualizing disease relationships from PheWAS, comor
 *If your result DataFrames use the default column names, keep these parameters as is.*
 - `phecode_col` (`str`, optional): Column in `phewas_result` with phecodes, default `'phecode'`.
 - `disease_col` (`str`, optional): Column in `phewas_result` with disease names, default `'disease'`.
-- `system_col` (`str`): Column in `phewas_result` with disease system labels, default `'system'`.
+- `system_col` (`str`, optional): Column in `phewas_result` with disease system labels, default `'system'`.
 - `phewas_number_col` (`str`, optional): Column in `phewas_result` with case counts, default `'N_cases_exposed'`.
 - `phewas_coef_col` (`str`, optional): Column in `phewas_result` with effect sizes, default `'phewas_coef'`.
 - `phewas_se_col` (`str`, optional): Column in `phewas_result` with standard errors, default `'phewas_se'`.
 - `source_col` (`str`, optional): Column in `comorbidity_result` and `trajectory_result` for source or antecedent diseases, default `'phecode_d1'`.
 - `target_col` (`str`, optional): Column in `comorbidity_result` and `trajectory_result` for target or consequent diseases, default `'phecode_d2'`.
-- `disease_pair_col` (`str`): Column in `comorbidity_result` and `trajectory_result` with disease pair identifiers, default `'name_disease_pair'`.
+- `disease_pair_col` (`str`, optional): Column in `comorbidity_result` and `trajectory_result` with disease pair identifiers, default `'name_disease_pair'`.
 - `comorbidity_beta_col` (`str`, optional): Column in `comorbidity_result` with effect sizes, default `'comorbidity_beta'`.
 - `trajectory_beta_col` (`str`, optional): Column in `trajectory_result` with effect sizes, default `'trajectory_beta'`.
-- `phewas_significance_col` (`str`): Column in `phewas_result` used for significance filtering, default `'phewas_p_significance'`.
-- `comorbidity_significance_col` (`str`): Column in `comorbidity_result` used for significance filtering, default `'comorbidity_p_significance'`.
-- `trajectory_significance_col` (`str`): Column in `trajectory_result` used for significance filtering, default `'trajectory_p_significance'`.
+- `phewas_significance_col` (`str`, optional): Column in `phewas_result` used for significance filtering, default `'phewas_p_significance'`.
+- `comorbidity_significance_col` (`str`, optional): Column in `comorbidity_result` used for significance filtering, default `'comorbidity_p_significance'`.
+- `trajectory_significance_col` (`str`, optional): Column in `trajectory_result` used for significance filtering, default `'trajectory_p_significance'`.
 
 - `**kwargs`  
   - `SYSTEM` (`List[str]`, optional): Use with `COLOR` to assign colors by phecode system. If not provided, systems and their order are inferred from `phewas_result`. Default order:  
