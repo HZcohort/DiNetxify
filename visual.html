@@ -7,14 +7,14 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Visualization &mdash; DiNetxify  documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=92fd9be5" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -91,7 +91,7 @@
 <h2>Initializing the Plot object<a class="headerlink" href="#initializing-the-plot-object" title="Link to this heading"></a></h2>
 <p>To create visualizations, you must initialize a <code class="docutils literal notranslate"><span class="pre">DiNetxify.visualization.Plot</span></code> object with your analysis results. You should pass in the PheWAS, comorbidity network, and disease trajectory results <code class="docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code>, and optionally specify how the “exposure” appear in the plots.</p>
 <p>For example:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">DiNetxify.visualization</span><span class="w"> </span><span class="kn">import</span> <span class="n">Plot</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">DiNetxify.visualization</span> <span class="kn">import</span> <span class="n">Plot</span>
 
 <span class="c1"># Suppose phewas_result, com_network_result, trajectory_result are obtained from three-dimensional disease network analysis</span>
 <span class="n">result_plot</span> <span class="o">=</span> <span class="n">Plot</span><span class="p">(</span>
@@ -122,7 +122,7 @@
 <li><p><strong>exposure_location</strong> – The (x, y, z) coordinates where the exposure node should be placed in the plots. By default, if None, the exposure node will be placed at the origin (0,0,0). This is relevant only for 3D plotting; if exposure is None, this is ignored.</p></li>
 <li><p><strong>exposure_size</strong> – A scaling factor for the exposure node’s size in the plots. Increase this to make the exposure node larger relative to disease nodes (to emphasize it). If None, in an exposed-only design, the exposure node is not present.</p></li>
 </ul>
-<p>The <code class="docutils literal notranslate"><span class="pre">DiNetxify.visualization.Plot</span></code> class will internally verify that the required columns exist in the input <code class="docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code> (for example, it expects certain default column names like <code class="docutils literal notranslate"><span class="pre">'phecode_d1'</span></code>, <code class="docutils literal notranslate"><span class="pre">'phecode_d2'</span></code> for pair identifiers, <code class="docutils literal notranslate"><span class="pre">'phecode'</span></code> for disease codes in results of PheWAS analysis, <code class="docutils literal notranslate"><span class="pre">'system'</span></code> for disease system category, <code class="docutils literal notranslate"><span class="pre">'name_disease_pair'</span></code> for a unique pair name, <code class="docutils literal notranslate"><span class="pre">'..._significance'</span></code> for significance identifier, etc. If you did not change column names, it uses these defaults). You can override these defaults by passing optional parameters if your DataFrame uses different column names.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">DiNetxify.visualization.Plot</span></code> class will internally verify that the required columns exist in the input <code class="docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code> (for example, it expects certain default column names like <code class="docutils literal notranslate"><span class="pre">'phecode_d1'</span></code>, <code class="docutils literal notranslate"><span class="pre">'phecode_d2'</span></code> for pair identifiers, <code class="docutils literal notranslate"><span class="pre">'phecode'</span></code> for disease codes in results of PheWAS analysis, <code class="docutils literal notranslate"><span class="pre">'system'</span></code> for disease system category, <code class="docutils literal notranslate"><span class="pre">'name_disease_pair'</span></code> for a unique pair name, <code class="docutils literal notranslate"><span class="pre">'..._significance'</span></code> for significance identifier, etc.) If you did not change column names, simply keep them as defaults. You can override these defaults by passing optional parameters if your DataFrame uses different column names.</p>
 <p>After initializing <code class="docutils literal notranslate"><span class="pre">DiNetxify.visualization.Plot</span></code>, you can generate all visualizations based on <code class="docutils literal notranslate"><span class="pre">result_plot</span></code>.</p>
 </section>
 <section id="phewas-plot">
@@ -142,16 +142,13 @@
 <li><p><strong>path</strong> – File path including filename and extension. Ensure the extension is one of the supported image types.</p></li>
 <li><p><strong>is_exposure_only</strong> – Boolean flag; set to <code class="docutils literal notranslate"><span class="pre">True</span></code> if your study is an exposed-only cohort. For a standard/matched cohort, it’s <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
 </ul>
-<p><strong>Optional parameters:</strong> (if your analysis results <code class="docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code> columns differ from defaults or if you want to adjust aesthetics)</p>
+<p><strong>Optional parameters:</strong></p>
 <ul class="simple">
-<li><p><strong>col_coef</strong> – Name of the column in <code class="docutils literal notranslate"><span class="pre">phewas_result</span></code> that means effect size coefficients. <em>(Default: ‘phewas_coef’)</em>.</p></li>
-<li><p><strong>col_se</strong> – Name of the column for standard error of the effect size. <em>(Default: ‘phewas_se’)</em>.</p></li>
-<li><p><strong>col_system</strong> – Column name for the disease system/category. <em>(Default: ‘system’)</em>.</p></li>
-<li><p><strong>col_disease</strong> – Column name for the disease name. <em>(Default: ‘disease’)</em>.</p></li>
-<li><p><strong>col_exposure</strong> – Column name for number of cases in exposed group (used in an exposed-only cohort study). <em>(Default: ‘N_cases_exposed’)</em>.</p></li>
 <li><p><strong>disease_font_size</strong> - Font size for disease labels in the plot. <em>(Default: 10)</em>.</p></li>
 <li><p><strong>system_font_size</strong> - Font size for the disease system labels in the plot. <em>(Default: 17)</em>.</p></li>
 <li><p><strong>dpi</strong> – Resolution of the output image (dots per inch). <em>(Default: 200)</em>.</p></li>
+<li><p><strong>HR_max</strong> - Upper bound for the HR heatmap. Values greater than or equal to this render as the same red. Affects color only. <em>(Default: 2)</em>.</p></li>
+<li><p><strong>incident_number_max</strong> - Upper bound for the incident count heatmap for exposed-only cohort. Values greater than or equal to this render as the same red. None means auto scale to the max observed count. <em>(Default: None)</em>.</p></li>
 </ul>
 </section>
 <section id="comorbidity-network-plot">
@@ -199,10 +196,7 @@
 </ul>
 <p><strong>Optional parameters:</strong></p>
 <ul class="simple">
-<li><p><strong>source</strong> – Column name in the DataFrames for the source disease (D1). <em>(Default: ‘phecode_d1’)</em>.</p></li>
-<li><p><strong>target</strong> – Column name for the target disease (D2). <em>(Default: ‘phecode_d2’)</em>.</p></li>
 <li><p><strong>dpi</strong> – Resolution of the output image (dots per inch). <em>(Default: 500 for these plots, to ensure high clarity since many arrows/labels might be present.)</em></p></li>
-<li><p><strong>cluster_weight</strong> – Edge weight metric used for clustering. <em>(Default: ‘comorbidity_beta’)</em></p></li>
 </ul>
 <p>The plots will illustrate the progression of diseases. Within each community, you can see sa directed acyclic graph suggesting the temporal direction. The arrow from disease A to B indicates A tends to precede B. If a community has no significant trajectories, it is empty.</p>
 </section>
@@ -232,11 +226,11 @@
 <li><p><strong>line_width</strong> – Width of trajectory lines. <em>(Default: 1.0)</em>.</p></li>
 <li><p><strong>size_reduction</strong> – Node size scaling factor (0.1–1.0). <em>(Default: 0.5)</em>.</p></li>
 <li><p><strong>cluster_reduction_ratio</strong> – A factor (0.1–1.0) to compress or spread out clusters in the 3D space. Lower means clusters are more tightly grouped. <em>(Default: 1.0)</em>.</p></li>
-<li><p><strong>cluster_weight</strong> – Which weight to use for determining cluster layout (as in trajectory_plot, usually ‘comorbidity_beta’). <em>(Default: ‘comorbidity_beta’)</em>.</p></li>
 <li><p><strong>font_style</strong> – Font family for text elements (node labels, etc.). <em>(Default: ‘Times New Roman’)</em>.</p></li>
 <li><p><strong>font_size</strong> – Base font size for text. <em>(Default: 15.0)</em>.</p></li>
 </ul>
-<p>With all these visualization tools, even a beginner user can not only run the analysis with <em><strong>DiNetxify</strong></em> but also see the results in intuitive forms, which can greatly aid interpretation and presentation. Next, we provide a quick reference to the API of the main classes and functions for convenience.</p>
+<p>These basic visualization functions quickly turn results into intuitive plots, aiding interpretation and presentation.</p>
+<p>Next, we provide a quick reference to the API of the main classes and functions for convenience.</p>
 </section>
 </section>
 

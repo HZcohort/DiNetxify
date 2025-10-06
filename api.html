@@ -7,14 +7,14 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>API Reference &mdash; DiNetxify  documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=92fd9be5" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -125,7 +125,7 @@
 <p>Below is a concise reference for <em><strong>DiNetxify</strong></em>’s classes and functions, summarizing their signatures and parameters. This is useful when writing your own scripts or if you need to quickly recall how to call a function.</p>
 <section id="class-diseasenetworkdata">
 <h2>Class <code class="docutils literal notranslate"><span class="pre">DiseaseNetworkData</span></code><a class="headerlink" href="#class-diseasenetworkdata" title="Link to this heading"></a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">DiseaseNetworkData</span><span class="p">(</span>  
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">DiseaseNetworkData</span><span class="p">(</span>  
     <span class="n">study_design</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;cohort&#39;</span><span class="p">,</span>  
     <span class="n">phecode_level</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>  
     <span class="n">min_required_icd_codes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>  
@@ -948,47 +948,63 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
 </section>
 <section id="class-plot">
 <h2>Class <code class="docutils literal notranslate"><span class="pre">Plot</span></code><a class="headerlink" href="#class-plot" title="Link to this heading"></a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Plot</span><span class="p">(</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Plot</span><span class="p">(</span>
+    <span class="n">phewas_result</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
     <span class="n">comorbidity_result</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
     <span class="n">trajectory_result</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
-    <span class="n">phewas_result</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
     <span class="n">exposure_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">exposure_location</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">exposure_size</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">source</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;phecode_d1&#39;</span><span class="p">,</span>
-    <span class="n">target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;phecode_d2&#39;</span><span class="p">,</span>
-    <span class="n">phewas_phecode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;phecode&#39;</span><span class="p">,</span>
-    <span class="n">phewas_number</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;N_cases_exposed&#39;</span><span class="p">,</span>
+    <span class="n">phecode_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;phecode&#39;</span><span class="p">,</span>
+    <span class="n">disease_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;disease&#39;</span><span class="p">,</span>
     <span class="n">system_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;system&#39;</span><span class="p">,</span>
-    <span class="n">col_disease_pair</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;name_disease_pair&#39;</span><span class="p">,</span>
-    <span class="n">filter_phewas_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;phewas_p_significance&#39;</span><span class="p">,</span>
-    <span class="n">filter_comorbidity_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;comorbidity_p_significance&#39;</span><span class="p">,</span>
-    <span class="n">filter_trajectory_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;trajectory_p_significance&#39;</span><span class="p">,</span>
+    <span class="n">phewas_number_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;N_cases_exposed&#39;</span><span class="p">,</span>
+    <span class="n">phewas_coef_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;phewas_coef&#39;</span><span class="p">,</span>
+    <span class="n">phewas_se_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;phewas_se&#39;</span><span class="p">,</span>
+    <span class="n">source_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;phecode_d1&#39;</span><span class="p">,</span>
+    <span class="n">target_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;phecode_d2&#39;</span><span class="p">,</span>
+    <span class="n">disease_pair_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;name_disease_pair&#39;</span><span class="p">,</span>
+    <span class="n">comorbidity_beta_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;comorbidity_beta&#39;</span><span class="p">,</span>
+    <span class="n">trajectory_beta_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;trajectory_beta&#39;</span><span class="p">,</span>
+    <span class="n">phewas_significance_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;phewas_p_significance&#39;</span><span class="p">,</span>
+    <span class="n">comorbidity_significance_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;comorbidity_p_significance&#39;</span><span class="p">,</span>
+    <span class="n">trajectory_significance_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;trajectory_p_significance&#39;</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span>
 <span class="p">)</span>
 </pre></div>
 </div>
-<p>A class for integrating and visualizing disease relationships from PHEWAS, comorbidity network, and trajectory analyses.</p>
-<p><strong>Constructor Parameters:</strong></p>
+<p>A class for integrating and visualizing disease relationships from PheWAS, comorbidity network, and trajectory analyses.</p>
+<p><strong>Parameters:</strong></p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">comorbidity_result</span></code> (<code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code>): Non-temporal disease pairs with association metrics and significance flag.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">trajectory_result</span></code> (<code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code>): Temporal disease pairs (source→target) with metrics and significance flag.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">phewas_result</span></code> (<code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code>): PheWAS results including phecode, effect sizes, case counts, and system classifications.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">exposure_name</span></code> (<code class="docutils literal notranslate"><span class="pre">float</span></code>, optional): Name of exposure. Default is <code class="docutils literal notranslate"><span class="pre">None</span></code>. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, it means that this is an exposed-only cohort study.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">exposure_location</span></code> (<code class="docutils literal notranslate"><span class="pre">Tuple[float,</span> <span class="pre">float,</span> <span class="pre">float]</span></code>, optional): 3D coordinates for exposure node. Defaults to origin if <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">exposure_size</span></code> (<code class="docutils literal notranslate"><span class="pre">float</span></code>, optional): Scaling factor for exposure node size. Defaults to automatic.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">source</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Column name for source disease (default: <code class="docutils literal notranslate"><span class="pre">'phecode_d1'</span></code>).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">target</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Column name for target disease (default: <code class="docutils literal notranslate"><span class="pre">'phecode_d2'</span></code>).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">phewas_phecode</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Column for phecode in PHEWAS results (default: <code class="docutils literal notranslate"><span class="pre">'phecode'</span></code>).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">phewas_number</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Column for case counts (default: <code class="docutils literal notranslate"><span class="pre">'N_cases_exposed'</span></code>).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">system_col</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Column for disease system (default: <code class="docutils literal notranslate"><span class="pre">'system'</span></code>).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">col_disease_pair</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Column for pair identifier (default <code class="docutils literal notranslate"><span class="pre">'name_disease_pair'</span></code>).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">filter_phewas_col</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Column for PHEWAS significance filter.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">filter_comorbidity_col</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Column for comorbidity significance filter.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">filter_trajectory_col</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Column for trajectory significance filter.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">comorbidity_result</span></code> (<code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code>): Result DataFrame from comorbidity network analysis, includes non temporal disease pairs (D1, D2), association metrics for example beta coefficients and p values, and a boolean significance flag.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">trajectory_result</span></code> (<code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code>): Result DataFrame from temporal trajectory analysis, includes temporal disease pairs (source -&gt; target), temporal association metrics for example beta coefficients and p values, and a boolean significance flag.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phewas_result</span></code> (<code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code>): PheWAS results, includes phecode, effect sizes for example hazard ratios, case counts, and disease system classifications.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">exposure_name</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>, optional): Identifier for the primary exposure. Set to <code class="docutils literal notranslate"><span class="pre">None</span></code> for exposed only cohort studies.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">exposure_location</span></code> (<code class="docutils literal notranslate"><span class="pre">Tuple[float,</span> <span class="pre">float,</span> <span class="pre">float]</span></code>, optional): Custom 3D coordinates x, y, z for the exposure node. Defaults to <code class="docutils literal notranslate"><span class="pre">(0,</span> <span class="pre">0,</span> <span class="pre">0)</span></code> if <code class="docutils literal notranslate"><span class="pre">None</span></code>. Ignored when <code class="docutils literal notranslate"><span class="pre">exposure_name</span></code> is <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">exposure_size</span></code> (<code class="docutils literal notranslate"><span class="pre">float</span></code>, optional): Relative size scaling for the exposure node. Ignored when <code class="docutils literal notranslate"><span class="pre">exposure_name</span></code> is <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+</ul>
+<p><em>If your result DataFrames use the default column names, keep these parameters as is.</em></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">phecode_col</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>, optional): Column in <code class="docutils literal notranslate"><span class="pre">phewas_result</span></code> with phecodes, default <code class="docutils literal notranslate"><span class="pre">'phecode'</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">disease_col</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>, optional): Column in <code class="docutils literal notranslate"><span class="pre">phewas_result</span></code> with disease names, default <code class="docutils literal notranslate"><span class="pre">'disease'</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">system_col</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Column in <code class="docutils literal notranslate"><span class="pre">phewas_result</span></code> with disease system labels, default <code class="docutils literal notranslate"><span class="pre">'system'</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phewas_number_col</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>, optional): Column in <code class="docutils literal notranslate"><span class="pre">phewas_result</span></code> with case counts, default <code class="docutils literal notranslate"><span class="pre">'N_cases_exposed'</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phewas_coef_col</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>, optional): Column in <code class="docutils literal notranslate"><span class="pre">phewas_result</span></code> with effect sizes, default <code class="docutils literal notranslate"><span class="pre">'phewas_coef'</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phewas_se_col</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>, optional): Column in <code class="docutils literal notranslate"><span class="pre">phewas_result</span></code> with standard errors, default <code class="docutils literal notranslate"><span class="pre">'phewas_se'</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">source_col</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>, optional): Column in <code class="docutils literal notranslate"><span class="pre">comorbidity_result</span></code> and <code class="docutils literal notranslate"><span class="pre">trajectory_result</span></code> for source or antecedent diseases, default <code class="docutils literal notranslate"><span class="pre">'phecode_d1'</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">target_col</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>, optional): Column in <code class="docutils literal notranslate"><span class="pre">comorbidity_result</span></code> and <code class="docutils literal notranslate"><span class="pre">trajectory_result</span></code> for target or consequent diseases, default <code class="docutils literal notranslate"><span class="pre">'phecode_d2'</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">disease_pair_col</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Column in <code class="docutils literal notranslate"><span class="pre">comorbidity_result</span></code> and <code class="docutils literal notranslate"><span class="pre">trajectory_result</span></code> with disease pair identifiers, default <code class="docutils literal notranslate"><span class="pre">'name_disease_pair'</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">comorbidity_beta_col</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>, optional): Column in <code class="docutils literal notranslate"><span class="pre">comorbidity_result</span></code> with effect sizes, default <code class="docutils literal notranslate"><span class="pre">'comorbidity_beta'</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">trajectory_beta_col</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>, optional): Column in <code class="docutils literal notranslate"><span class="pre">trajectory_result</span></code> with effect sizes, default <code class="docutils literal notranslate"><span class="pre">'trajectory_beta'</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phewas_significance_col</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Column in <code class="docutils literal notranslate"><span class="pre">phewas_result</span></code> used for significance filtering, default <code class="docutils literal notranslate"><span class="pre">'phewas_p_significance'</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">comorbidity_significance_col</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Column in <code class="docutils literal notranslate"><span class="pre">comorbidity_result</span></code> used for significance filtering, default <code class="docutils literal notranslate"><span class="pre">'comorbidity_p_significance'</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">trajectory_significance_col</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Column in <code class="docutils literal notranslate"><span class="pre">trajectory_result</span></code> used for significance filtering, default <code class="docutils literal notranslate"><span class="pre">'trajectory_p_significance'</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">**kwargs</span></code></p>
 <ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">SYSTEM</span></code> (<code class="docutils literal notranslate"><span class="pre">List[str]</span></code>, optional): List of systems to visualize; defaults to all from PHEWAS if <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">COLOR</span></code> (<code class="docutils literal notranslate"><span class="pre">List[str]</span></code>, optional): Colors corresponding to systems; default palette used if <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SYSTEM</span></code> (<code class="docutils literal notranslate"><span class="pre">List[str]</span></code>, optional): Use with <code class="docutils literal notranslate"><span class="pre">COLOR</span></code> to assign colors by phecode system. If not provided, systems and their order are inferred from <code class="docutils literal notranslate"><span class="pre">phewas_result</span></code>. Default order:<br />
+<code class="docutils literal notranslate"><span class="pre">['neoplasms',</span> <span class="pre">'genitourinary',</span> <span class="pre">'digestive',</span> <span class="pre">'respiratory',</span> <span class="pre">'infectious</span> <span class="pre">diseases',</span> <span class="pre">'mental</span> <span class="pre">disorders',</span> <span class="pre">'musculoskeletal',</span> <span class="pre">'hematopoietic',</span> <span class="pre">'dermatologic',</span> <span class="pre">'circulatory</span> <span class="pre">system',</span> <span class="pre">'neurological',</span> <span class="pre">'endocrine/metabolic',</span> <span class="pre">'sense</span> <span class="pre">organs',</span> <span class="pre">'injuries</span> <span class="pre">&amp;</span> <span class="pre">poisonings',</span> <span class="pre">'congenital</span> <span class="pre">anomalies',</span> <span class="pre">'symptoms',</span> <span class="pre">'others']</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">COLOR</span></code> (<code class="docutils literal notranslate"><span class="pre">List[str]</span></code>, optional): Colors corresponding to <code class="docutils literal notranslate"><span class="pre">SYSTEM</span></code>, one to one. Length of <code class="docutils literal notranslate"><span class="pre">COLOR</span></code> must be at least the length of <code class="docutils literal notranslate"><span class="pre">SYSTEM</span></code>. Supported formats include <code class="docutils literal notranslate"><span class="pre">'red'</span></code>, <code class="docutils literal notranslate"><span class="pre">'#ED9A8D'</span></code>, and <code class="docutils literal notranslate"><span class="pre">'rgb(255,</span> <span class="pre">0,</span> <span class="pre">0)'</span></code>. Default palette:<br />
+<code class="docutils literal notranslate"><span class="pre">['#F46D5A',</span> <span class="pre">'#5DA5DA',</span> <span class="pre">'#5EBCD1',</span> <span class="pre">'#C1D37F',</span> <span class="pre">'#CE5A57',</span> <span class="pre">'#A5C5D9',</span> <span class="pre">'#F5B36D',</span> <span class="pre">'#7FCDBB',</span> <span class="pre">'#ED9A8D',</span> <span class="pre">'#94B447',</span> <span class="pre">'#8C564B',</span> <span class="pre">'#E7CB94',</span> <span class="pre">'#8C9EB2',</span> <span class="pre">'#E0E0E0',</span> <span class="pre">'#F1C40F',</span> <span class="pre">'#9B59B6',</span> <span class="pre">'#4ECDC4',</span> <span class="pre">'#6A5ACD']</span></code></p></li>
 </ul>
 </li>
 </ul>
@@ -1006,7 +1022,6 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
     <span class="n">line_width</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
     <span class="n">size_reduction</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
     <span class="n">cluster_reduction_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.4</span><span class="p">,</span>
-    <span class="n">cluster_weight</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;comorbidity_beta&#39;</span><span class="p">,</span>
     <span class="n">layer_distance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">40.0</span><span class="p">,</span>
     <span class="n">layout_width</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">900.0</span><span class="p">,</span>
     <span class="n">layout_height</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">900.0</span><span class="p">,</span>
@@ -1025,7 +1040,6 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
 <li><p><code class="docutils literal notranslate"><span class="pre">line_width</span></code>: Width for trajectory lines (default: <code class="docutils literal notranslate"><span class="pre">1.0</span></code>)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">size_reduction</span></code>: Scaling factor for node sizes (default: <code class="docutils literal notranslate"><span class="pre">0.5</span></code>)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">cluster_reduction_ratio</span></code>: Cluster compression factor for layout (default: <code class="docutils literal notranslate"><span class="pre">0.4</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">cluster_weight</span></code>: Edge weight metric used for clustering (default: <code class="docutils literal notranslate"><span class="pre">&quot;comorbidity_beta&quot;</span></code>)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">layer_distance</span></code>: Vertical distance between layers (default: <code class="docutils literal notranslate"><span class="pre">40.0</span></code>)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">layout_width</span></code>: Figure width in pixels (default: <code class="docutils literal notranslate"><span class="pre">900.0</span></code>)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">layout_height</span></code>: Figure height in pixels (default: <code class="docutils literal notranslate"><span class="pre">900.0</span></code>)</p></li>
@@ -1043,7 +1057,6 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
     <span class="n">min_radius</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">35.0</span><span class="p">,</span>
     <span class="n">size_reduction</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
     <span class="n">cluster_reduction_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.4</span><span class="p">,</span>
-    <span class="n">cluster_weight</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;comorbidity_beta&#39;</span><span class="p">,</span>
     <span class="n">line_width</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
     <span class="n">line_color</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;black&#39;</span><span class="p">,</span>
     <span class="n">layer_distance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">40.0</span><span class="p">,</span>
@@ -1059,7 +1072,6 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
 <li><p><code class="docutils literal notranslate"><span class="pre">min_radius</span></code>: Minimum radial position for nodes (default: <code class="docutils literal notranslate"><span class="pre">35.0</span></code>)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">size_reduction</span></code>: Scaling factor for node sizes (default: <code class="docutils literal notranslate"><span class="pre">0.5</span></code>)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">cluster_reduction_ratio</span></code>: Compression factor for cluster layout (default: <code class="docutils literal notranslate"><span class="pre">0.4</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">cluster_weight</span></code>: Edge weight metric for clustering (default: <code class="docutils literal notranslate"><span class="pre">&quot;comorbidity_beta&quot;</span></code>)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">line_width</span></code>: Width of comorbidity lines (default: <code class="docutils literal notranslate"><span class="pre">1.0</span></code>)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">line_color</span></code>: Color of comorbidity lines (default: <code class="docutils literal notranslate"><span class="pre">&quot;black&quot;</span></code>)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">layer_distance</span></code>: Distance between concentric circles (default: <code class="docutils literal notranslate"><span class="pre">40.0</span></code>)</p></li>
@@ -1072,20 +1084,14 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">trajectory_plot</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">cluster_weight</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;comorbidity_beta&#39;</span><span class="p">,</span>
-    <span class="n">source</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="s1">&#39;phecode_d1&#39;</span><span class="p">,</span>
-    <span class="n">target</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="s1">&#39;phecode_d2&#39;</span><span class="p">,</span>
     <span class="n">dpi</span><span class="p">:</span> <span class="nb">float</span><span class="o">=</span><span class="mi">500</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
-<p>Generate and save trajectory plots per cluster as (.png files).</p>
+<p>Generate and save trajectory plots per cluster as .png file.</p>
 <p><strong>Parameters:</strong></p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">path</span></code>: Directory path to save output images</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">cluster_weight</span></code>: Edge weight metric used for clustering (default: <code class="docutils literal notranslate"><span class="pre">&quot;comorbidity_beta&quot;</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">source</span></code>: Column name representing source nodes (disease onset points) in trajectory data (default: <code class="docutils literal notranslate"><span class="pre">'phecode_d1'</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">target</span></code>: Column name representing target nodes (subsequent disease points) in trajectory data (default: <code class="docutils literal notranslate"><span class="pre">'phecode_d2'</span></code>)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">dpi</span></code>: Image resolution in dots per inch for output files (default: <code class="docutils literal notranslate"><span class="pre">500</span></code>)</p></li>
 </ul>
 </section>
@@ -1095,30 +1101,24 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phewas_plot</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">system_font_size</span><span class="p">:</span> <span class="nb">float</span><span class="o">=</span><span class="mi">17</span><span class="p">,</span>
-    <span class="n">disese_font_size</span><span class="p">:</span> <span class="nb">float</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
-    <span class="n">col_coef</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;phewas_coef&#39;</span><span class="p">,</span>
-    <span class="n">col_system</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;system&#39;</span><span class="p">,</span>
-    <span class="n">col_se</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;phewas_se&#39;</span><span class="p">,</span>
-    <span class="n">col_disease</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;disease&#39;</span><span class="p">,</span>
+    <span class="n">system_font_size</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">17</span><span class="p">,</span>
+    <span class="n">disease_font_size</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="n">HR_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="n">incident_number_max</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">is_exposure_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="n">col_exposure</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;N_cases_exposed&#39;</span><span class="p">,</span>
-    <span class="n">dpi</span><span class="p">:</span> <span class="nb">float</span><span class="o">=</span><span class="mi">200</span>
+    <span class="n">dpi</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">200</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
-<p>Creates a polar bar plot visualizing disease associations across different disease categories (systems)</p>
+<p>Creates a circular PheWAS polar bar plot across disease systems, outer ring shows individual diseases, inner segments group by system, color gradient encodes hazard ratio, text rotates automatically for readability.</p>
 <p><strong>Parameters:</strong></p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">path</span></code>: Output file path for saving the plot</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">system_font_size</span></code>: Font size for disease system/category labels (default: <code class="docutils literal notranslate"><span class="pre">17</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">system_font_size</span></code>: Font size for disease system or category labels (default: <code class="docutils literal notranslate"><span class="pre">17</span></code>)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">disease_font_size</span></code>: Font size for disease labels (default: <code class="docutils literal notranslate"><span class="pre">10</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">col_coef</span></code>: Column name for effect size coefficients (default: <code class="docutils literal notranslate"><span class="pre">&quot;phewas_coef&quot;</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">col_system</span></code>: Column name for disease system/category (default: <code class="docutils literal notranslate"><span class="pre">&quot;system&quot;</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">col_se</span></code>: Column name for standard errors (default: <code class="docutils literal notranslate"><span class="pre">&quot;phewas_se&quot;</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">col_disease</span></code>: Column name for disease names (default: <code class="docutils literal notranslate"><span class="pre">&quot;disease&quot;</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">is_exposure_only</span></code>: Identifier of exposure (default: <code class="docutils literal notranslate"><span class="pre">False</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">col_exposure</span></code>: Column name for exposure number (default: <code class="docutils literal notranslate"><span class="pre">&quot;N_cases_exposed&quot;</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">HR_max</span></code>: Upper bound for the HR heatmap, values greater than or equal to this render as the same red, affects color only (default: <code class="docutils literal notranslate"><span class="pre">2</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">incident_number_max</span></code>: Upper bound for the incident count heatmap for exposure only cohorts, values greater than or equal to this render as the same red, <code class="docutils literal notranslate"><span class="pre">None</span></code> auto scales to the maximum observed count (default: <code class="docutils literal notranslate"><span class="pre">None</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">is_exposure_only</span></code>: Flag for exposure only cohort, set to <code class="docutils literal notranslate"><span class="pre">True</span></code> for exposure only, <code class="docutils literal notranslate"><span class="pre">False</span></code> for standard or matched cohort (default: <code class="docutils literal notranslate"><span class="pre">False</span></code>)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">dpi</span></code>: Image resolution in dots per inch for output files (default: <code class="docutils literal notranslate"><span class="pre">200</span></code>)</p></li>
 </ul>
 </section>

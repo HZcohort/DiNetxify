@@ -8,3 +8,18 @@
 **0.1.3 - 2025-08-28**
 
 - Fixed a bug in visualization.py
+
+
+**0.1.4 - 2025-10-02**
+
+- Fix a bug in the comorbidity network estimation step that could produce imaginary numbers in the phi correlation.
+
+
+**0.1.5 - 2025-10-04**
+
+- Add support for phecode version 1.3a.
+
+
+**0.1.6 - 2025-10-06**
+
+- Fix some existing bugs in the visualization module.
