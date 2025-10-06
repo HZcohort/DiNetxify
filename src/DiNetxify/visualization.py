@@ -75,24 +75,61 @@ class Plot(object):
         If there are no changes of column name of pd.DataFrame of results of data analysis module, 
         you will retain the default values.
         ---------------------
-        source (str, optional): 
-            Column name indicating source/antecedent diseases in disease pair.
+        phecode_col (str, optional): 
+            Column name of pd.DataFrame for phecode in the PHEWAS result.
+            Defaults to 'phecode'.
+        
+        disease_col (str, optional):
+            Column name of pd.DataFrame for disease name in the PHEWAS result.
+            Defaults to 'disease'.
+        
+        system_col (str): 
+            Column name of pd.DataFrame for disease system classifications in the PHEWAS result.
+            Defaults to 'system'.
+        
+        phewas_number_col (str, optional):
+            Column name of pd.DataFrame for case counts in the PHEWAS result.
+            Defaults to 'N_cases_exposed'.
+        
+        phewas_coef_col (str, optional):
+            Column name of pd.DataFrame for effect sizes in the PHEWAS result.
+            Defaults to 'phewas_coef'.
+        
+        phewas_se_col (str, optional):
+            Column name of pd.DataFrame for standard errors in the PHEWAS result.
+            Defaults to 'phewas_se'.
+    
+        source_col (str, optional): 
+            Column name indicating source/antecedent diseases in the comorbidity_result and trajectory_result.
             Defaults to 'phecode_d1'.
             
-        target (str, optional): 
-            Column name indicating target/consequent diseases in disease pair.
+        target_col (str, optional): 
+            Column name indicating target/consequent diseases in the comorbidity_result and trajectory_result.
             Defaults to 'phecode_d2'.
 
-        phewas_phecode (str, optional): 
-            Column name of pd.DataFrame for phecode disease name in the PHEWAS result.
-            It means that Defaults to 'phecode'
+        disease_pair_col (str): 
+            Column name of pd.DataFrame for disease pair identifiers in the comorbidity_result and trajectory_result.
+            Defaults to 'name_disease_pair'.
+        
+        comorbidity_beta_col (str, optional):
+            Column name of pd.DataFrame for effect sizes in the comorbidity_result.
+            Defaults to 'comorbidity_beta'.
+        
+        trajectory_beta_col (str, optional):
+            Column name of pd.DataFrame for effect sizes in the trajectory_result.
+            Defaults to 'trajectory_beta'.
+        
+        phewas_significance_col (str): 
+            Column name of pd.DataFrame for PHEWAS significance filter.
+            Defaults to 'phewas_p_significance'.
 
-        phewas_number (str): Column name of pd.DataFrame for case counts in the PHEWAS result
-        system_col (str): Column name of pd.DataFrame for disease system classifications
-        col_disease_pair (str): Column name of pd.DataFrame for disease pair identifiers
-        filter_phewas_col (str): Column name of pd.DataFrame for PHEWAS significance filter
-        filter_comorbidity_col (str): Column name of pd.DataFrame for comorbidity significance filter  
-        filter_trajectory_col (str): Column name of pd.DataFrame for trajectory significance filter
+        comorbidity_significance_col (str): 
+            Column name of pd.DataFrame for comorbidity significance filter.
+            Defaults to 'comorbidity_p_significance'.
+
+        trajectory_significance_col (str): 
+            Column name of pd.DataFrame for trajectory significance filter.
+            Defaults to 'trajectory_p_significance'.
 
         **kwargs:
         SYSTEM (List[str]): 
@@ -158,15 +195,15 @@ class Plot(object):
             trajectory_df,
             exposure_size=15,
             exposure_location=(0,0,0),
-            source: Optional[str]='phecode_d1',
-            target: Optional[str]='phecode_d2',
-            phewas_phecode: Optional[str]='phecode',
-            phewas_number: Optional[str]='N_cases_exposed',
+            source_col: Optional[str]='phecode_d1',
+            target_col: Optional[str]='phecode_d2',
+            phecode_col: Optional[str]='phecode',
+            phewas_number_col: Optional[str]='N_cases_exposed',
             system_col: Optional[str]='system',
-            col_disease_pair: Optional[str]='name_disease_pair',
-            filter_phewas_col: Optional[str]='phewas_p_significance',
-            filter_comorbidity_col: Optional[str]='comorbidity_p_significance',
-            filter_trajectory_col: Optional[str]='trajectory_p_significance',
+            disease_pair_col: Optional[str]='name_disease_pair',
+            phewas_significance_col: Optional[str]='phewas_p_significance',
+            comorbidity_significance_col: Optional[str]='comorbidity_p_significance',
+            trajectory_significance_col: Optional[str]='trajectory_p_significance',
         )
 
         if there are no changes of column name of pd.DataFrame of the results 
@@ -186,15 +223,15 @@ class Plot(object):
             exposure_name=None,
             exposure_size=None,
             exposure_location=None,
-            source: Optional[str]='phecode_d1',
-            target: Optional[str]='phecode_d2',
-            phewas_phecode: Optional[str]='phecode',
-            phewas_number: Optional[str]='N_cases_exposed',
+            source_col: Optional[str]='phecode_d1',
+            target_col: Optional[str]='phecode_d2',
+            phecode_col: Optional[str]='phecode',
+            phewas_number_col: Optional[str]='N_cases_exposed',
             system_col: Optional[str]='system',
-            col_disease_pair: Optional[str]='name_disease_pair',
-            filter_phewas_col: Optional[str]='phewas_p_significance',
-            filter_comorbidity_col: Optional[str]='comorbidity_p_significance',
-            filter_trajectory_col: Optional[str]='trajectory_p_significance',
+            disease_pair_col: Optional[str]='name_disease_pair',
+            phewas_significance_col: Optional[str]='phewas_p_significance',
+            comorbidity_significance_col: Optional[str]='comorbidity_p_significance',
+            trajectory_significance_col: Optional[str]='trajectory_p_significance',
         )
         if there are no changes of column name of pd.DataFrame of the results 
         in data analysis module, it will be simplified like that:
@@ -209,19 +246,23 @@ class Plot(object):
         phewas_result: Df,
         comorbidity_result: Df, 
         trajectory_result: Df,
-        disease_system: Optional[List[str]] | None=None,
         exposure_name: Optional[str] | None=None,
         exposure_location: Optional[Tuple[float]] | None=None,
         exposure_size: Optional[float] | None=None,
-        source: Optional[str]='phecode_d1',
-        target: Optional[str]='phecode_d2',
-        phewas_phecode: Optional[str]='phecode',
-        phewas_number: Optional[str]='N_cases_exposed',
+        phecode_col: Optional[str]='phecode',
+        disease_col: Optional[str]='disease',
         system_col: Optional[str]='system',
-        col_disease_pair: Optional[str]='name_disease_pair',
-        filter_phewas_col: Optional[str]='phewas_p_significance',
-        filter_comorbidity_col: Optional[str]='comorbidity_p_significance',
-        filter_trajectory_col: Optional[str]='trajectory_p_significance',
+        phewas_number_col: Optional[str]='N_cases_exposed',
+        phewas_coef_col: Optional[str]='phewas_coef',
+        phewas_se_col: Optional[str]='phewas_se',
+        source_col: Optional[str]='phecode_d1',
+        target_col: Optional[str]='phecode_d2',
+        disease_pair_col: Optional[str]='name_disease_pair',
+        comorbidity_beta_col: Optional[str]='comorbidity_beta',
+        trajectory_beta_col: Optional[str]='trajectory_beta',
+        phewas_significance_col: Optional[str]='phewas_p_significance',
+        comorbidity_significance_col: Optional[str]='comorbidity_p_significance',
+        trajectory_significance_col: Optional[str]='trajectory_p_significance',
         **kwargs
     ):
         
@@ -240,51 +281,58 @@ class Plot(object):
 
         # Dictionary of variables to check (name: value)
         validate_string_params = {
-            'source': source,
-            'target': target,
-            'phewas_phecode': phewas_phecode,
-            'phewas_number': phewas_number,
+            'phecode_col': phecode_col,
+            'disease_col': disease_col,
             'system_col': system_col,
-            'col_disease_pair': col_disease_pair,
-            'filter_phewas_col': filter_phewas_col,
-            'filter_comorbidity_col': filter_comorbidity_col,
-            'filter_trajectory_col': filter_trajectory_col
+            'phewas_number_col': phewas_number_col,
+            'phewas_coef_col': phewas_coef_col,
+            'phewas_se_col': phewas_se_col,
+            'source_col': source_col,
+            'target_col': target_col,
+            'disease_pair_col': disease_pair_col,
+            'comorbidity_beta_col': comorbidity_beta_col,
+            'trajectory_beta_col': trajectory_beta_col,
+            'phewas_significance_col': phewas_significance_col,
+            'comorbidity_significance_col': comorbidity_significance_col,
+            'trajectory_significance_col': trajectory_significance_col
         }
         # Check each variable's type whether is string
         for name, value in validate_string_params.items():
             if isinstance(value, str):
+                #assign attribute name
+                setattr(self, name, value)
                 continue
             else:
                 raise TypeError(f"{name} is NOT a string {type(value)}")
 
         # check the variables whether in column names of the phewas_result
-        for col_name in [phewas_phecode, phewas_number, system_col, filter_phewas_col]:
+        for col_name in [self.phecode_col, self.disease_col, self.system_col, self.phewas_number_col, self.phewas_significance_col]:
             if col_name not in phewas_result.columns:
                 raise ValueError(f"{col_name} is NOT a column name in the phewas_result (pandas.DataFrame)")
 
         # check the variables whether in column names of the comorbidity_result
-        for col_name in [source, target, col_disease_pair, filter_comorbidity_col]:
+        for col_name in [self.source_col, self.target_col, self.disease_pair_col, self.comorbidity_significance_col]:
             if col_name not in comorbidity_result.columns:
                 raise ValueError(f"{col_name} is NOT a column name in the comorbidity_result (pandas.DataFrame)")
 
         # check the variables whether in column names of the trajectory_result
-        for col_name in [source, target, col_disease_pair, filter_trajectory_col]:
+        for col_name in [self.source_col, self.target_col, self.disease_pair_col, self.trajectory_significance_col]:
             if col_name not in trajectory_result.columns:
                 raise ValueError(f"{col_name} is NOT a column name in the trajectory_result (pandas.DataFrame)") 
         
         # all phecodes to analysis
-        diseases_phewas = phewas_result[phewas_phecode].to_list()
+        diseases_phewas = phewas_result[self.phecode_col].to_list()
         # check the disesaes of comorbidity result whether are included in phewas result
-        diseases_com = comorbidity_result[source].to_list() + comorbidity_result[target].to_list()
+        diseases_com = comorbidity_result[self.source_col].to_list() + comorbidity_result[self.target_col].to_list()
         for disease in set(diseases_com):
             if disease not in diseases_phewas:
                 raise ValueError(f"{disease} of comorbidity result is NOT in the phewas_result (pandas.DataFrame)")    
 
         # check the disesaes of trajectory result whether are included in phewas result
-        diseases_tra = trajectory_result[source].to_list() + trajectory_result[target].to_list()
+        diseases_tra = trajectory_result[self.source_col].to_list() + trajectory_result[self.target_col].to_list()
         for disease in set(diseases_tra):
             if disease not in diseases_phewas:
-                raise ValueError(f"{disease} of trajectory result is NOT in the phewas_result (pandas.DataFrame)")  
+                raise ValueError(f"{disease} of trajectory result is NOT in the phewas_result (pandas.DataFrame)")
 
         # filter the results meeting some rules
         phewas_result, comorbidity_result, trajectory_result = self.__filter_significant(
@@ -292,9 +340,9 @@ class Plot(object):
             comorbidity_result,
             trajectory_result,
             exposure_name,
-            filter_phewas_col,
-            filter_comorbidity_col,
-            filter_trajectory_col
+            self.phewas_significance_col,
+            self.comorbidity_significance_col,
+            self.trajectory_significance_col
         )
 
         COLOR = [
@@ -318,49 +366,46 @@ class Plot(object):
             '#6A5ACD' 
         ]
 
-        SYSTEM = [
-            'circulatory system',
-            'sense organs',
-            'injuries & poisonings',
-            'neurological',
-            'dermatologic',
-            'digestive',
-            'hematopoietic',
-            'musculoskeletal',
-            'endocrine/metabolic',
-            'mental disorders',
-            'infectious diseases',
-            'genitourinary',
-            'neoplasms',
-            'respiratory',
-            'pregnancy complications'
-        ]
+        sys_dict = {
+            'neoplasms':'Neoplasms', 
+            'genitourinary':'Genitourinary diseases', 
+            'digestive':'Digestive diseases', 
+            'respiratory':'Respiratory diseases',
+            'infectious diseases':'Infectious diseases', 
+            'mental disorders':'Mental disorders', 
+            'musculoskeletal':'Musculoskeletal diseases',
+            'hematopoietic':'Hematopoietic diseases', 
+            'dermatologic':'Dermatologic diseases', 
+            'circulatory system':'Circulatory system diseases',
+            'neurological':'Neurological diseases',
+            'endocrine/metabolic':'Endocrine/metabolic diseases', 
+            'sense organs':'Diseases of the sense organs',
+            'injuries & poisonings': 'Injuries & poisonings',
+            'congenital anomalies': 'Congenital anomalies diseases',
+            'symptoms':'Symptoms diseases',
+            'others':'Others diseases',
+            'pregnancy complications':'Pregnancy complications diseases'
+        }
 
-        if system_col:
-            system = list(phewas_result[system_col].unique())
-            for x in system:
-                if x not in SYSTEM:
-                    SYSTEM.append(x)
+        system = list(phewas_result[self.system_col].unique())
 
-        SYSTEM = kwargs.get("SYSTEM", SYSTEM)
+        SYSTEM = kwargs.get("SYSTEM", system)
         COLOR = kwargs.get("COLOR", COLOR)
+        # ensure all systems in the results are included in SYSTEM
+        for x in system:
+            if x not in SYSTEM:
+                raise ValueError(f"Phecode system {x} of is NOT in SYSTEM")
+        # check whether all listed systems are valid
+        for x in SYSTEM:
+            if x not in sys_dict.keys():
+                raise ValueError(f"{x} is NOT a valid phecode system")
+
         if len(SYSTEM) > len(COLOR):
             raise ValueError(
                 f"the length of SYSTEM is more than that of COLOR"
             )
         else:
             COLOR = COLOR[0: len(SYSTEM)]
-        
-        if disease_system:
-            outside_system = [
-                sys for sys in disease_system
-                if sys not in SYSTEM
-            ]
-            SYSTEM = disease_system
-            if outside_system:
-                raise ValueError(
-                    f"The system of {outside_system} is not support"
-                )
             
         system_color = dict(
             zip(
@@ -374,17 +419,17 @@ class Plot(object):
         self.__check_disease_pairs(
             trajectory_result,
             comorbidity_result,
-            source,
-            target
+            self.source_col,
+            self.target_col
         )
 
         # concat the trajectory and comorbidity in vertical level
-        df = trajectory_result.copy()
-        df.columns = comorbidity_result.columns
+        df = trajectory_result[[self.source_col, self.target_col, self.disease_pair_col, self.trajectory_beta_col]].copy()
+        df = df.rename(columns={self.trajectory_beta_col: self.comorbidity_beta_col})
         #retain only disease pairs not present in comorbidity_result for concatenation
-        df['temp_name'] = df.apply(lambda row: set(row[[source, target]]), axis=1)
+        df['temp_name'] = df.apply(lambda row: set(row[[self.source_col, self.target_col]]), axis=1)
         comorbidity_result['temp_name'] = comorbidity_result.apply(
-            lambda row: set(row[[source, target]]), axis=1)
+            lambda row: set(row[[self.source_col, self.target_col]]), axis=1)
         df = df[~df['temp_name'].isin(comorbidity_result['temp_name'])].drop(columns=['temp_name'])
         #drop temp_name column from comorbidity_result
         del comorbidity_result['temp_name']
@@ -396,7 +441,7 @@ class Plot(object):
         )
 
         comorbidity_result.drop_duplicates(
-            subset=[source, target],
+            subset=[self.source_col, self.target_col],
             inplace=True,
             ignore_index=True,
             keep="first"
@@ -408,9 +453,9 @@ class Plot(object):
             trajectory_result = self.__sequence(
                 trajectory_result,
                 exposure,
-                source,
-                target,
-                col_disease_pair
+                self.source_col,
+                self.target_col,
+                self.disease_pair_col
             )
         else:
             exposure = None
@@ -423,23 +468,18 @@ class Plot(object):
             exposure_name = exposure_name,
             exposure_location = exposure_location,
             exposure_size = exposure_size,
-            source = source,
-            target = target,
-            describe = pd.read_csv(
-                os.path.join(
-                    os.path.dirname(__file__),
-                    "data/phecode_1.2/phecode_info.csv"
-                )
-            ),
+            source = self.source_col,
+            target = self.target_col,
+            describe = phewas_result[[self.phecode_col, self.disease_col, self.system_col, self.phewas_number_col]].copy(),
             commorbidity_nodes = self.__get_nodes(
                 comorbidity_result,
-                source,
-                target
+                self.source_col,
+                self.target_col
             ),
             trajectory_nodes = self.__get_nodes(
                 trajectory_result,
-                source,
-                target
+                self.source_col,
+                self.target_col
             ),
             system_color = system_color,
             nodes_attrs = {},
@@ -447,8 +487,10 @@ class Plot(object):
         )
         
         self.__make_node_basic_attrs(
-            phewas_phecode,
-            phewas_number
+            self.phecode_col,
+            self.phewas_number_col,
+            self.disease_col,
+            self.system_col,
         )
 
     @staticmethod
@@ -884,7 +926,7 @@ class Plot(object):
             if exposure_name:
                 phewas_result = phewas_result.loc[
                     (phewas_result[filter_phewas_col] == True) 
-                    & (phewas_result['phewas_coef'] > 0)
+                    & (phewas_result[self.phewas_coef_col] > 0)
                 ]
             else:
                 phewas_result = phewas_result.loc[
@@ -894,13 +936,13 @@ class Plot(object):
         if filter_comorbidity_col:
             comorbidity_result = comorbidity_result.loc[
                 (comorbidity_result[filter_comorbidity_col] == True) &
-                (comorbidity_result['comorbidity_beta'] > 0)
+                (comorbidity_result[self.comorbidity_beta_col] > 0)
             ]
 
         if filter_trajectory_col:
             trajectory_result = trajectory_result.loc[
                 (trajectory_result[filter_trajectory_col] == True) &
-                (trajectory_result['trajectory_beta'] > 0)
+                (trajectory_result[self.trajectory_beta_col] > 0)
             ]
         
         return phewas_result, comorbidity_result, trajectory_result
@@ -1266,7 +1308,9 @@ class Plot(object):
     def __make_node_basic_attrs(
         self,
         phewas_phecode: str,
-        phewas_number: str
+        phewas_number: str,
+        disease_col: str,
+        system_col: str
     ) -> None:
         """Initializes and updates basic node attributes for network visualization.
 
@@ -1311,15 +1355,15 @@ class Plot(object):
         node_name = {
             node:self.__split_name('%s (%.1f)' % (name, node)) 
             for node, name in self._describe[
-                ["phecode", "phenotype"]
+                [phewas_phecode, disease_col]
             ].values
         }
 
         # disease system attrs
         node_system = dict(
             zip(
-                self._describe["phecode"], 
-                self._describe["category"]
+                self._describe[phewas_phecode], 
+                self._describe[system_col]
             )
         )
 
@@ -1688,7 +1732,6 @@ class Plot(object):
         line_width: Optional[float]=1.0,
         size_reduction: Optional[float]=0.5,
         cluster_reduction_ratio: Optional[float]=1,
-        cluster_weight: str="comorbidity_beta",
         layer_distance: Optional[float]=40.0,
         layout_width: Optional[float]=900.0,
         layout_height: Optional[float]=900.0,
@@ -1710,7 +1753,6 @@ class Plot(object):
             line_width: Width for trajectory lines (default: 1.0)
             size_reduction: Scaling factor for node sizes (default: 0.5)
             cluster_reduction_ratio: Cluster compression factor for layout (default: 1)
-            cluster_weight: Edge weight metric used for clustering (default: "comorbidity_beta")
             layer_distance: Vertical distance between layers (default: 40.0)
             layout_width: Figure width in pixels (default: 900.0)
             layout_height: Figure height in pixels (default: 900.0)
@@ -1740,6 +1782,7 @@ class Plot(object):
             - Output is an interactive HTML file
             - All distance/size parameters are in arbitrary units
         """
+        cluster_weight = self.comorbidity_beta_col
         if not self.__check_node_attrs("cluster"):
             self.__cluster(cluster_weight)
         if not self.__check_node_attrs("order"):
@@ -1831,7 +1874,6 @@ class Plot(object):
         min_radius: Optional[float]=35.0,
         size_reduction: Optional[float]=0.5,
         cluster_reduction_ratio: Optional[float]=1,
-        cluster_weight: Optional[str]="comorbidity_beta",
         line_width: Optional[float]=1.0,
         line_color: Optional[str]="black",
         layer_distance: Optional[float]=40.0,
@@ -1851,7 +1893,6 @@ class Plot(object):
             min_radius: Minimum radial position for nodes (default: 35.0)
             size_reduction: Scaling factor for node sizes (default: 0.5)
             cluster_reduction_ratio: Compression factor for cluster layout (default: 0.4)
-            cluster_weight: Edge weight metric for clustering (default: "comorbidity_beta")
             line_width: Width of comorbidity lines (default: 1.0)
             line_color: Color of comorbidity lines (default: "black")
             layer_distance: Distance between concentric circles (default: 40.0)
@@ -1882,7 +1923,7 @@ class Plot(object):
 
         """
         if not self.__check_node_attrs("cluster"):
-            self.__cluster(cluster_weight)
+            self.__cluster(self.comorbidity_beta_col)
         if not self.__check_node_attrs("order"):
             self.__trajectory_order()
             self.__comorbidity_order()
@@ -1972,9 +2013,6 @@ class Plot(object):
     def trajectory_plot(
         self, 
         path: str,
-        cluster_weight: Optional[str]="comorbidity_beta",
-        source: Optional[str]='phecode_d1',
-        target: Optional[str]='phecode_d2',
         dpi: Optional[float]=500
     ) -> None:
         """Generates and saves trajectory visualizations for each disease cluster.
@@ -1985,11 +2023,6 @@ class Plot(object):
 
         Args:
             path: Directory path to save output images
-            cluster_weight: Edge weight metric used for clustering (default: "comorbidity_beta")
-            source: Column name representing source nodes (disease onset points) in trajectory data
-                    (default: 'phecode_d1')
-            target: Column name representing target nodes (subsequent disease points) in trajectory data
-                    (default: 'phecode_d2')
             dpi: Image resolution in dots per inch for output files (default: 500)
 
         Workflow:
@@ -2005,8 +2038,7 @@ class Plot(object):
 
         Example:
             >>> network.trajectory_plot(
-                    "output/plots",
-                    cluster_weight="comorbidity_beta"
+                    "output/plots"
                 )
 
         Note:
@@ -2016,12 +2048,20 @@ class Plot(object):
             - Node sizes proportional to disease significance
             - Edge widths proportional to trajectory strength
         """
+        source = self.source_col
+        target = self.target_col
+        cluster_weight = self.comorbidity_beta_col
+
         if not self.__check_node_attrs("cluster"):
             self.__cluster(cluster_weight)
         if self._exposure:
             exposure = self._exposure
         else:
             exposure = 0
+
+        #check the existence of path
+        if not os.path.exists(path):
+            raise ValueError(f'No such directory: {path}')
         
         def rotate(angle_,valuex,valuey,pointx,pointy):
             valuex = np.array(valuex)
@@ -2293,13 +2333,10 @@ class Plot(object):
         self,
         path: str,
         system_font_size: Optional[float]=17,
-        disese_font_size: Optional[float]=10,
-        col_coef: Optional[str]="phewas_coef",
-        col_system: Optional[str]="system",
-        col_se: Optional[str]="phewas_se",
-        col_disease: Optional[str]="disease",
+        disease_font_size: Optional[float]=10,
+        HR_max: Optional[float]=2,
+        incident_number_max: Optional[int]=None,
         is_exposure_only: Optional[bool]=False,
-        col_exposure: Optional[str]='N_cases_exposed',
         dpi: Optional[float]=200
     ) -> None:
         """Generates a circular PheWAS (Phenome-Wide Association Study) plot.
@@ -2315,19 +2352,14 @@ class Plot(object):
             path: Output file path for saving the plot
             system_font_size: Font size for disease system/category labels (default: 17)
             disease_font_size: Font size for disease labels (default: 10)
-            col_coef: Column name for effect size coefficients (default: "phewas_coef")
-            col_system: Column name for disease system/category (default: "system")
-            col_se: Column name for standard errors (default: "phewas_se")
-            col_disease: Column name for disease names (default: "disease")
+            HR_max: Maximum hazard ratio to display (default: 2)
+            incident_number_max: Maximum incident number for exposure-only plots (default: None)
             is_exposure_only: Identifier of exposure (default: False)
-            col_exposure: Column name for exposure number (default: "N_cases_exposed")
             dpi: Image resolution in dots per inch for output files (default: 200)
 
         Example:
             >>> network.phewas_plot(
                     "phewas_plot.png",
-                    col_coef="beta",
-                    col_system="category"
                 )
 
         Note:
@@ -2339,9 +2371,23 @@ class Plot(object):
             * System category labels
             * Individual disease labels
         """
+        col_coef = self.phewas_coef_col
+        col_se = self.phewas_se_col
+        col_disease = self.disease_col
+        col_system = self.system_col
+        col_exposure = self.phewas_number_col
+        #for exposed only cohort, HR_max is not used
+        if is_exposure_only:
+            HR_max = None
+            if incident_number_max is not None:
+                if incident_number_max <=0 or not isinstance(incident_number_max, int)  :
+                    raise ValueError("incident_number_max should be int and larger than 0.")
+        elif is_exposure_only == False:
+            incident_number_max = None
+
         def random_effect(coef_lst, se_lst):
             if len(coef_lst)==1:
-                return [coef_lst[0], se_lst[0]]
+                return coef_lst[0]
             
             #calculate fixed effect result
             w = 1/np.square(se_lst)
@@ -2380,7 +2426,7 @@ class Plot(object):
         )
         
         cmap = plt.get_cmap("tab20c")
-        max_pos = np.log(1.5)
+        max_pos = np.log(HR_max)
         cmap_pos = plt.get_cmap("Reds")
         sys_dict = {
             'neoplasms':'Neoplasms', 
@@ -2410,13 +2456,16 @@ class Plot(object):
         phe_df = phe_df.sort_values(by=col_disease)
 
         if is_exposure_only:
-            incident_number_max = phe_df[col_exposure].max()
+            if incident_number_max is None:
+                incident_number_max = phe_df[col_exposure].max()
             incident_number_min = phe_df[col_exposure].min()
+            q0,q1,q2,q3 = np.linspace(incident_number_min, incident_number_max, 4)
             phe_df["col_color"] = phe_df[col_exposure].apply(
                 lambda x: x/incident_number_max
             )
 
         else:
+            q0,q1,q2,q3 = np.linspace(np.log(1), max_pos, 4)
             phe_df["col_color"] = phe_df[col_coef].apply(
                 lambda x: x/max_pos
             )
@@ -2494,7 +2543,7 @@ class Plot(object):
                         va='center', 
                         rotation=rotation, 
                         rotation_mode="anchor",
-                        fontsize=disese_font_size
+                        fontsize=disease_font_size
                     )
                 else:
                     ax.text(
@@ -2505,7 +2554,7 @@ class Plot(object):
                         va='center', 
                         rotation=rotation+180, 
                         rotation_mode="anchor",
-                        fontsize=disese_font_size
+                        fontsize=disease_font_size
                     )
             start = left[-1] + width[0]*(1+edge_width_n)
 
@@ -2538,23 +2587,11 @@ class Plot(object):
         bar.locator = tick_locator
         bar.update_ticks()
         if is_exposure_only:
-            bar.set_ticks(
-                [
-                    incident_number_min,
-                    (incident_number_min+incident_number_max)/2,
-                    incident_number_max
-                ]
-            )
-            bar.set_ticklabels(
-                [
-                    f'{incident_number_min}', 
-                    f'{(incident_number_min+incident_number_max)/2}',
-                    f'{incident_number_max}'
-                ]
-            )
+            bar.set_ticks([q0,q1,q2,q3])
+            bar.set_ticklabels([int(x) for x in [q0,q1,q2,q3]])
         else:
-            bar.set_ticks([np.log(1), np.log(1.2), np.log(1.5)])
-            bar.set_ticklabels(['1.0', '1.2', '≥1.5'])
+            bar.set_ticks([q0,q1,q2,q3])
+            bar.set_ticklabels([f'{np.exp(x):.1f}' for x in [q0,q1,q2,q3]])
 
         ax.set_axis_off()
         plt.savefig(
