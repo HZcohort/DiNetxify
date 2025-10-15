@@ -356,8 +356,8 @@ class Plot(object):
             '#4ECDC4',
             '#6A5ACD' 
         ]
-
-        sys_dict = {
+        system = list(phewas_result[self.system_col].unique())
+        self.sys_dict = {
             'neoplasms':'Neoplasms', 
             'genitourinary':'Genitourinary diseases', 
             'digestive':'Digestive diseases', 
@@ -372,13 +372,11 @@ class Plot(object):
             'endocrine/metabolic':'Endocrine/metabolic diseases', 
             'sense organs':'Diseases of the sense organs',
             'injuries & poisonings': 'Injuries & poisonings',
-            'congenital anomalies': 'Congenital anomalies diseases',
-            'symptoms':'Symptoms diseases',
-            'others':'Others diseases',
-            'pregnancy complications':'Pregnancy complications diseases'
+            'congenital anomalies': 'Congenital anomalies',
+            'symptoms':'Symptoms',
+            'others':'Other diseases',
+            'pregnancy complications':'Pregnancy complications'
         }
-
-        system = list(phewas_result[self.system_col].unique())
 
         SYSTEM = kwargs.get("SYSTEM", system)
         COLOR = kwargs.get("COLOR", COLOR)
@@ -388,7 +386,7 @@ class Plot(object):
                 raise ValueError(f"Phecode system {x} of is NOT in SYSTEM")
         # check whether all listed systems are valid
         for x in SYSTEM:
-            if x not in sys_dict.keys():
+            if x not in self.sys_dict.keys():
                 raise ValueError(f"{x} is NOT a valid phecode system")
 
         if len(SYSTEM) > len(COLOR):
@@ -777,10 +775,9 @@ class Plot(object):
         """
         for _, attrs in self._nodes_attrs.items():
             if key in attrs.keys():
-                is_exist = True
+                continue
             else:
-                is_exist = False
-        return is_exist
+                return False
 
     def __calculate_ratio(
         self, 
@@ -1680,7 +1677,7 @@ class Plot(object):
                     showlegend=is_showlegend,
                     lighting=plot_attrs[4],
                     hovertemplate=self._nodes_attrs[node]["name"],
-                    name="%s" % (sys.title()),
+                    name="%s" % (self.sys_dict[sys]),
                     showscale=False,
                     legendgroup="sphere",
                     legendgrouptitle_text="Disease Systems",
@@ -1779,13 +1776,12 @@ class Plot(object):
         if not self.__check_node_attrs("order"):
             self.__trajectory_order()
             self.__comorbidity_order()
-        if not self.__check_node_attrs("location"):
-            self.__make_location_random(
-                max_radius,
-                min_radius,
-                layer_distance,
-                cluster_reduction_ratio
-            )
+        self.__make_location_random(
+            max_radius,
+            min_radius,
+            layer_distance,
+            cluster_reduction_ratio
+        )
 
         plot_data = []
 
@@ -1918,13 +1914,12 @@ class Plot(object):
         if not self.__check_node_attrs("order"):
             self.__trajectory_order()
             self.__comorbidity_order()
-        if not self.__check_node_attrs("location"):
-            self.__make_location_random(
-                max_radius,
-                min_radius,
-                layer_distance,
-                cluster_reduction_ratio
-            )
+        self.__make_location_random(
+            max_radius,
+            min_radius,
+            layer_distance,
+            cluster_reduction_ratio
+        )
 
         fig = go.Figure()
         pairs = self._comorbidity[[self._source, self._target]].values
@@ -1975,10 +1970,11 @@ class Plot(object):
                     mode="lines",
                     fillcolor=self._nodes_attrs[node]["color"],
                     showlegend=is_showlegend,
-                    hovertemplate=self._nodes_attrs[node]["name"],
-                    name='%s Disease' % (sys.title()), 
+                    hovertemplate='{text}<extra></extra>',
+                    text=self._nodes_attrs[node]["name"],
+                    name='%s' % (self.sys_dict[sys]),
                     legendgroup='sphere', 
-                    legendgrouptitle_text='Diseases',
+                    legendgrouptitle_text='Disease Systems',
                     line=dict(color=self._nodes_attrs[node]["color"], width=1)
                 ))
 
@@ -2419,26 +2415,6 @@ class Plot(object):
         cmap = plt.get_cmap("tab20c")
         max_pos = np.log(HR_max)
         cmap_pos = plt.get_cmap("Reds")
-        sys_dict = {
-            'neoplasms':'Neoplasms', 
-            'genitourinary':'Genitourinary diseases', 
-            'digestive':'Digestive diseases', 
-            'respiratory':'Respiratory diseases',
-            'infectious diseases':'Infectious diseases', 
-            'mental disorders':'Mental disorders', 
-            'musculoskeletal':'Musculoskeletal diseases',
-            'hematopoietic':'Hematopoietic diseases', 
-            'dermatologic':'Dermatologic diseases', 
-            'circulatory system':'Circulatory system diseases',
-            'neurological':'Neurological diseases',
-            'endocrine/metabolic':'Endocrine/metabolic diseases', 
-            'sense organs':'Diseases of the sense organs',
-            'injuries & poisonings': 'Injuries & poisonings',
-            'congenital anomalies': 'Congenital anomalies diseases',
-            'symptoms':'Symptoms diseases',
-            'others':'Others diseases',
-            'pregnancy complications':'Pregnancy complications diseases'
-        }
         if is_exposure_only:
             phe_df = self._phewas
         else:
@@ -2503,7 +2479,7 @@ class Plot(object):
                 ax.text(
                     x_system,
                     0.15,
-                    sys_dict[system].capitalize(),
+                    self.sys_dict[system],
                     ha='left',
                     va='center',
                     rotation=np.rad2deg(x_system),
@@ -2514,7 +2490,7 @@ class Plot(object):
                 ax.text(
                     x_system,
                     0.15,
-                    sys_dict[system].capitalize(),
+                    self.sys_dict[system],
                     ha='right',
                     va='center',
                     rotation=np.rad2deg(x_system)+180,
