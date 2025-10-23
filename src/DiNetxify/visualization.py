@@ -330,10 +330,6 @@ class Plot(object):
             phewas_result,
             comorbidity_result,
             trajectory_result,
-            exposure_name,
-            self.phewas_significance_col,
-            self.comorbidity_significance_col,
-            self.trajectory_significance_col
         )
 
         COLOR = [
@@ -863,30 +859,17 @@ class Plot(object):
         phewas_result: Df,
         comorbidity_result: Df,
         trajectory_result: Df,
-        exposure_name: str,
-        filter_phewas_col: str,
-        filter_comorbidity_col: str,
-        filter_trajectory_col: str
     ) -> Df:
         """Filters input dataframes to only include statistically significant results.
 
         Applies boolean filters to each input dataframe based on specified significance
-        columns, returning only rows marked as significant (True). If no filter column
-        is provided for a dataframe, it is returned unchanged.
+        columns, returning only rows marked as significant (True) and with positive effect sizes 
+        for comorbidity network and disease trajectory reesults.
 
         Args:
             phewas_result: DataFrame containing PheWAS analysis results
             comorbidity_result: DataFrame containing comorbidity analysis results
             trajectory_result: DataFrame containing disease trajectory results
-            exposure_name (str, optional):
-                Identifier for the primary exposure variable of interest.
-                Defaults to None, means to exposed-only cohort.
-            filter_phewas_col: Column name in phewas_result indicating significance.
-                            If None, no filtering is applied.
-            filter_comorbidity_col: Column name in comorbidity_result indicating significance.
-                                If None, no filtering is applied.
-            filter_trajectory_col: Column name in trajectory_result indicating significance.
-                                If None, no filtering is applied.
 
         Returns:
             A tuple containing the filtered dataframes in order:
@@ -906,32 +889,19 @@ class Plot(object):
             # - None (no trajectory input)
 
         Note:
-            - Each filter column should contain boolean values
             - None values for filter columns skip filtering for that dataframe
             - Original dataframes are not modified (returns filtered copies
         """
-        if filter_phewas_col:
-            if exposure_name:
-                phewas_result = phewas_result.loc[
-                    (phewas_result[filter_phewas_col] == True) 
-                    & (phewas_result[self.phewas_coef_col] > 0)
-                ]
-            else:
-                phewas_result = phewas_result.loc[
-                    (phewas_result[filter_phewas_col] == True)
-                ]
+        #keep original phewas result without filtering
 
-        if filter_comorbidity_col:
-            comorbidity_result = comorbidity_result.loc[
-                (comorbidity_result[filter_comorbidity_col] == True) &
-                (comorbidity_result[self.comorbidity_beta_col] > 0)
-            ]
-
-        if filter_trajectory_col:
-            trajectory_result = trajectory_result.loc[
-                (trajectory_result[filter_trajectory_col] == True) &
-                (trajectory_result[self.trajectory_beta_col] > 0)
-            ]
+        comorbidity_result = comorbidity_result.loc[
+            (comorbidity_result[self.comorbidity_significance_col] == True) &
+            (comorbidity_result[self.comorbidity_beta_col] > 0)
+        ]
+        trajectory_result = trajectory_result.loc[
+            (trajectory_result[self.trajectory_significance_col] == True) &
+            (trajectory_result[self.trajectory_beta_col] > 0)
+        ]
         
         return phewas_result, comorbidity_result, trajectory_result
     
@@ -2358,6 +2328,7 @@ class Plot(object):
             * System category labels
             * Individual disease labels
         """
+        col_significant = self.phewas_significance_col
         col_coef = self.phewas_coef_col
         col_se = self.phewas_se_col
         col_disease = self.disease_col
@@ -2411,14 +2382,13 @@ class Plot(object):
             nrows=1,
             ncols=1
         )
-        
         cmap = plt.get_cmap("tab20c")
         max_pos = np.log(HR_max)
         cmap_pos = plt.get_cmap("Reds")
         if is_exposure_only:
-            phe_df = self._phewas
+            phe_df = self._phewas[self._phewas[col_significant]==True]
         else:
-            phe_df = self._phewas.loc[self._phewas[col_coef]>0]
+            phe_df = self._phewas.loc[(self._phewas[col_coef]>0) & (self._phewas[col_significant]==True)]
 
         phe_df = phe_df.sort_values(by=col_disease)
 

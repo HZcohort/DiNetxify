@@ -53,7 +53,10 @@ def com_phi(n:int,c:int,p1:int,p2:int):
         phi and p-value
 
     """
-    phi = (c*n-p1*p2)/(((p1*p2)*(n-p1)*(n-p2))**0.5)
+    try:
+        phi = (c*n-p1*p2)/(((p1*p2)*(n-p1)*(n-p2))**0.5)
+    except:
+        raise ValueError('phi correlation calculation error, either number of individuals with d1/d2 diagnosis is zero or equalt to total number of individuals.')
     try:
         z_phi = 0.5*np.log((1+phi)/(1-phi))
     except:
