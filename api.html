@@ -7,14 +7,14 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>API Reference &mdash; DiNetxify  documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=92fd9be5" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="_static/doctools.js?v=9a2dae69"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -125,7 +125,7 @@
 <p>Below is a concise reference for <em><strong>DiNetxify</strong></em>’s classes and functions, summarizing their signatures and parameters. This is useful when writing your own scripts or if you need to quickly recall how to call a function.</p>
 <section id="class-diseasenetworkdata">
 <h2>Class <code class="docutils literal notranslate"><span class="pre">DiseaseNetworkData</span></code><a class="headerlink" href="#class-diseasenetworkdata" title="Link to this heading"></a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">DiseaseNetworkData</span><span class="p">(</span>  
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">DiseaseNetworkData</span><span class="p">(</span>  
     <span class="n">study_design</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;cohort&#39;</span><span class="p">,</span>  
     <span class="n">phecode_level</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>  
     <span class="n">min_required_icd_codes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>  
@@ -948,7 +948,7 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
 </section>
 <section id="class-plot">
 <h2>Class <code class="docutils literal notranslate"><span class="pre">Plot</span></code><a class="headerlink" href="#class-plot" title="Link to this heading"></a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Plot</span><span class="p">(</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Plot</span><span class="p">(</span>
     <span class="n">phewas_result</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
     <span class="n">comorbidity_result</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
     <span class="n">trajectory_result</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
@@ -1105,7 +1105,7 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
     <span class="n">disease_font_size</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
     <span class="n">HR_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
     <span class="n">incident_number_max</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">is_exposure_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">exposed_only_cohort</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">dpi</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">200</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
@@ -1118,7 +1118,7 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
 <li><p><code class="docutils literal notranslate"><span class="pre">disease_font_size</span></code>: Font size for disease labels (default: <code class="docutils literal notranslate"><span class="pre">10</span></code>)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">HR_max</span></code>: Upper bound for the HR heatmap, values greater than or equal to this render as the same red, affects color only (default: <code class="docutils literal notranslate"><span class="pre">2</span></code>)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">incident_number_max</span></code>: Upper bound for the incident count heatmap for exposure only cohorts, values greater than or equal to this render as the same red, <code class="docutils literal notranslate"><span class="pre">None</span></code> auto scales to the maximum observed count (default: <code class="docutils literal notranslate"><span class="pre">None</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">is_exposure_only</span></code>: Flag for exposure only cohort, set to <code class="docutils literal notranslate"><span class="pre">True</span></code> for exposure only, <code class="docutils literal notranslate"><span class="pre">False</span></code> for standard or matched cohort (default: <code class="docutils literal notranslate"><span class="pre">False</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">exposed_only_cohort</span></code>: Flag for exposed-only cohort, set to <code class="docutils literal notranslate"><span class="pre">True</span></code> for exposed-only cohort, <code class="docutils literal notranslate"><span class="pre">False</span></code> for standard cohort or matched cohort (default: <code class="docutils literal notranslate"><span class="pre">False</span></code>)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">dpi</span></code>: Image resolution in dots per inch for output files (default: <code class="docutils literal notranslate"><span class="pre">200</span></code>)</p></li>
 </ul>
 </section>
