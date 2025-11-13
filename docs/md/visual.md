@@ -53,7 +53,7 @@ For example:
 # Generate a PheWAS plot  
 result_plot.phewas_plot(  
     path="/your/project/path/phewas_plot.png",  # output file path (supports .png, .svg, .jpg)  
-    is_exposure_only=False                      # False for cohort/matched designs; True if this is an exposed-only cohort  
+    exposed_only_cohort=False                      # False for cohort/matched designs; True if this is an exposed-only cohort  
 )
 ```
 
@@ -62,7 +62,7 @@ This function will save the plot to the specified file path. Supported formats i
 Parameters for `phewas_plot()` include:
 
 - **path** – File path including filename and extension. Ensure the extension is one of the supported image types.
-- **is_exposure_only** – Boolean flag; set to `True` if your study is an exposed-only cohort. For a standard/matched cohort, it's `False`.
+- **exposed_only_cohort** – Boolean flag; set to `True` if your study is an exposed-only cohort. For a standard/matched cohort, it's `False`.
 
 **Optional parameters:**
 

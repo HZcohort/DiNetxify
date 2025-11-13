@@ -332,6 +332,14 @@ class Plot(object):
             trajectory_result,
         )
 
+        # if 'exposure' is in kwargs, then throw error
+        if 'exposure' in kwargs.keys():
+            raise ValueError("Unknown parameter 'exposure'. Did you mean 'exposure_name'?")
+        # for other parameter in kwargs, other than SYSTEM and COLOR, throw error
+        for key in kwargs.keys():
+            if key not in ['SYSTEM', 'COLOR']:
+                raise ValueError(f"Unknown parameter '{key}'")
+
         COLOR = [
             '#F46D5A',
             '#5DA5DA',
@@ -2293,7 +2301,7 @@ class Plot(object):
         disease_font_size: Optional[float]=10,
         HR_max: Optional[float]=2,
         incident_number_max: Optional[int]=None,
-        is_exposure_only: Optional[bool]=False,
+        exposed_only_cohort: Optional[bool]=False,
         dpi: Optional[float]=200
     ) -> None:
         """Generates a circular PheWAS (Phenome-Wide Association Study) plot.
@@ -2309,9 +2317,9 @@ class Plot(object):
             path: Output file path for saving the plot
             system_font_size: Font size for disease system/category labels (default: 17)
             disease_font_size: Font size for disease labels (default: 10)
-            HR_max: MUpper bound for the HR heatmap. Values greater than or equal to this render as the same red. Affects color only. (default: 2)
+            HR_max: Upper bound for the HR heatmap. Values greater than or equal to this render as the same red. Affects color only. (default: 2)
             incident_number_max: Upper bound for the incident count heatmap for exposed-only cohort. Values greater than or equal to this render as the same red. None means auto scale to the max observed count. (default: None)
-            is_exposure_only: Identifier of exposure (default: False)
+            exposed_only_cohort: Whether the PheWAS is performed in an exposed-only cohort. If True, the incident count heatmap will be used instead of HR heatmap. (default: False)
             dpi: Image resolution in dots per inch for output files (default: 200)
 
         Example:
@@ -2335,12 +2343,12 @@ class Plot(object):
         col_system = self.system_col
         col_exposure = self.phewas_number_col
         #for exposed only cohort, HR_max is not used
-        if is_exposure_only:
+        if exposed_only_cohort:
             HR_max = None
             if incident_number_max is not None:
                 if incident_number_max <=0 or not isinstance(incident_number_max, int)  :
                     raise ValueError("incident_number_max should be int and larger than 0.")
-        elif is_exposure_only == False:
+        elif exposed_only_cohort == False:
             incident_number_max = None
 
         def random_effect(coef_lst, se_lst):
@@ -2367,7 +2375,7 @@ class Plot(object):
             sys_lst = set(df[col_system].values)
             for sys in sys_lst:
                 temp = df.loc[df[col_system]==sys]
-                if is_exposure_only:
+                if exposed_only_cohort:
                     mean = random_effect(temp[col_exposure].values, temp[col_exposure].values)
                 else:
                     mean = random_effect(temp[col_coef].values, temp[col_se].values)
@@ -2385,14 +2393,14 @@ class Plot(object):
         cmap = plt.get_cmap("tab20c")
         max_pos = np.log(HR_max)
         cmap_pos = plt.get_cmap("Reds")
-        if is_exposure_only:
+        if exposed_only_cohort:
             phe_df = self._phewas[self._phewas[col_significant]==True]
         else:
             phe_df = self._phewas.loc[(self._phewas[col_coef]>0) & (self._phewas[col_significant]==True)]
 
         phe_df = phe_df.sort_values(by=col_disease)
 
-        if is_exposure_only:
+        if exposed_only_cohort:
             if incident_number_max is None:
                 incident_number_max = phe_df[col_exposure].max()
             incident_number_min = phe_df[col_exposure].min()
@@ -2495,7 +2503,7 @@ class Plot(object):
                     )
             start = left[-1] + width[0]*(1+edge_width_n)
 
-        if is_exposure_only:
+        if exposed_only_cohort:
             norm = mpl.colors.Normalize(
                 vmin=incident_number_min, 
                 vmax=incident_number_max
@@ -2523,7 +2531,7 @@ class Plot(object):
         tick_locator = ticker.MaxNLocator(nbins=3)
         bar.locator = tick_locator
         bar.update_ticks()
-        if is_exposure_only:
+        if exposed_only_cohort:
             bar.set_ticks([q0,q1,q2,q3])
             bar.set_ticklabels([int(x) for x in [q0,q1,q2,q3]])
         else:
