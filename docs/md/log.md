@@ -24,14 +24,17 @@
 
 - Fix some existing bugs in the visualization module.
 
+
 **0.1.7 - 2025-10-15**
 
 - Add correct legend for nodes in comorbidity network plot.
 - Update phecode system label in the plots.
 
+
 **0.1.8 - 2025-10-23**
 
 - Fix a bug in visulization module.
+
 
 **0.1.9 - 2025-11-13**
 

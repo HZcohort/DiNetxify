@@ -1690,11 +1690,11 @@ class Plot(object):
         return plot_data
     
     def three_dimension_plot(
-        self, 
+        self,
         path: str,
-        max_radius: Optional[float]=180.0, 
+        max_radius: Optional[float]=180.0,
         min_radius: Optional[float]=35.0,
-        line_color: Optional[str]="black", 
+        line_color: Optional[str]="black",
         line_width: Optional[float]=1.0,
         size_reduction: Optional[float]=0.5,
         cluster_reduction_ratio: Optional[float]=1,
@@ -1704,56 +1704,15 @@ class Plot(object):
         font_style: Optional[str]='Times New Roman',
         font_size: Optional[float]=15.0,
     ) -> None:
-        """Generates and saves a 3D visualization of comorbidity and disease trajectory networks.
+        import plotly.graph_objects as go
 
-        Creates an interactive 3D plot showing:
-        - Disease nodes (phecodes) as colored spheres grouped by clusters/systems
-        - Disease trajectories as connecting lines between nodes
-        - Optional exposure disease marker if specified
-
-        Args:
-            path: File path to save the HTML visualization
-            max_radius: Maximum radial distance for node placement (default: 180.0)
-            min_radius: Minimum radial distance for node placement (default: 35.0)
-            line_color: Color for trajectory lines (default: "black")
-            line_width: Width for trajectory lines (default: 1.0)
-            size_reduction: Scaling factor for node sizes (default: 0.5)
-            cluster_reduction_ratio: Cluster compression factor for layout (default: 1)
-            layer_distance: Vertical distance between layers (default: 40.0)
-            layout_width: Figure width in pixels (default: 900.0)
-            layout_height: Figure height in pixels (default: 900.0)
-            font_style: Font family for text elements (default: 'Times New Roman')
-            font_size: Base font size in points (default: 15.0)
-
-        Workflow:
-            1. Checks/calculates cluster assignments if missing
-            2. Computes trajectory orders if missing
-            3. Generates 3D node positions if missing
-            4. Creates visualization with:
-            - Exposure marker (if specified)
-            - Disease nodes (colored by system)
-            - Trajectory paths
-            5. Saves interactive plot to HTML file
-
-        Example:
-            >>> network.three_dimension_plot(
-                    path="visualization.html",
-                    max_radius=50,
-                    line_color="blue",
-                    size_reduction=0.8
-                )
-
-        Note:
-            - Requires plotly for visualization
-            - Output is an interactive HTML file
-            - All distance/size parameters are in arbitrary units
-        """
         cluster_weight = self.comorbidity_beta_col
         if not self.__check_node_attrs("cluster"):
             self.__cluster(cluster_weight)
         if not self.__check_node_attrs("order"):
             self.__trajectory_order()
             self.__comorbidity_order()
+
         self.__make_location_random(
             max_radius,
             min_radius,
@@ -1763,45 +1722,106 @@ class Plot(object):
 
         plot_data = []
 
-        # plot exposure
+        # Exposure marker
         if self._exposure:
-            exposure_data = go.Scatter3d(
-                x=[self._exposure_location[0]],
-                y=[self._exposure_location[1]],
-                z=[self._exposure_location[2]],
-                mode='markers',
-                marker=dict(
-                    symbol='circle',
-                    size=self._exposure_size,
-                    color='black'
-                ),
-                name=self._exposure_name,
-                legendgrouptitle_text='Origin of Trajectories',
-                showlegend=True
+            plot_data.append(
+                go.Scatter3d(
+                    x=[self._exposure_location[0]],
+                    y=[self._exposure_location[1]],
+                    z=[self._exposure_location[2]],
+                    mode='markers',
+                    marker=dict(symbol='circle', size=self._exposure_size, color='black'),
+                    name=self._exposure_name,
+                    legendgrouptitle_text='Origin of Trajectories',
+                    showlegend=True,
+                    customdata=[str(self._exposure)],
+                    hovertemplate=f"{self._exposure_name}<extra></extra>",
+                )
             )
-            plot_data += [exposure_data]
 
-        # plot the nodes and edges
-        plot_data += self.__plot(
-            line_width, 
-            line_color, 
-            size_reduction
-        )
-  
-        # axis
+        #spheres (Surface) + trajectory edges (Scatter3d lines)
+        plot_data += self.__plot(line_width, line_color, size_reduction)
+
+        #locate the base trajectory edge trace created by __plot
+        edge_trace_idx = None
+        for i, tr in enumerate(plot_data):
+            if getattr(tr, "type", None) == "scatter3d" and ("lines" in (tr.mode or "")) and (tr.name == "Trajectories"):
+                edge_trace_idx = i
+                break
+        if edge_trace_idx is None:
+            for i, tr in enumerate(plot_data):
+                if getattr(tr, "type", None) == "scatter3d" and ("lines" in (tr.mode or "")):
+                    edge_trace_idx = i
+                    break
+        if edge_trace_idx is None:
+            raise RuntimeError("Could not find the trajectory edge trace (Scatter3d lines).")
+
+        ex = list(plot_data[edge_trace_idx].x or [])
+        ey = list(plot_data[edge_trace_idx].y or [])
+        ez = list(plot_data[edge_trace_idx].z or [])
+
+        #build adjacency from your trajectory dataframe
+        edges = list(zip(self._trajectory[self._source], self._trajectory[self._target]))
+        adj_starts = {}  # node_id(str) -> list of start indices into ex/ey/ez
+        for ei, (s, t) in enumerate(edges):
+            start = 3 * ei  # because __get_edge_attrs appends [src, tgt, None] per edge :contentReference[oaicite:4]{index=4}
+            ss, tt = str(s), str(t)
+            adj_starts.setdefault(ss, []).append(start)
+            adj_starts.setdefault(tt, []).append(start)
+
+        #prebuild one highlight line trace per node, initially hidden
+        hl_trace_index = {}
+        hl_line = dict(width=max(2.0, line_width * 4.0), color="rgba(197,76,130,1.0)")
+
+        for nid, starts in adj_starts.items():
+            hx, hy, hz = [], [], []
+            for s in starts:
+                if s + 1 >= len(ex):
+                    continue
+                hx += [ex[s], ex[s + 1], None]
+                hy += [ey[s], ey[s + 1], None]
+                hz += [ez[s], ez[s + 1], None]
+
+            plot_data.append(
+                go.Scatter3d(
+                    x=hx, y=hy, z=hz,
+                    mode="lines",
+                    line=hl_line,
+                    name=f"__hl__{nid}",
+                    showlegend=False,
+                    hoverinfo="skip",
+                    visible=False
+                )
+            )
+            hl_trace_index[nid] = len(plot_data) - 1
+
+        #node centers used to map Surface clicks (sphere surface point) -> nearest node center
+        node_ids, node_x, node_y, node_z = [], [], [], []
+        if self._exposure:
+            node_ids.append(str(self._exposure))
+            node_x.append(float(self._exposure_location[0]))
+            node_y.append(float(self._exposure_location[1]))
+            node_z.append(float(self._exposure_location[2]))
+
+        for n, attrs in self._nodes_attrs.items():
+            loc = attrs["location"]
+            node_ids.append(str(n))
+            node_x.append(float(loc[0]))
+            node_y.append(float(loc[1]))
+            node_z.append(float(loc[2]))
+
         axis = dict(
-            showbackground=False, 
+            showbackground=False,
             showline=False,
-            zeroline = False,
-            showgrid = False,
-            showticklabels = False,
+            zeroline=False,
+            showgrid=False,
+            showticklabels=False,
             title=''
         )
 
-        # layout
         layout = go.Layout(
             title=dict(
-                text="Three Dimensional Disease Network", 
+                text="Three-Dimensional Disease Network",
                 font=dict(size=30, family=font_style),
                 x=0.45
             ),
@@ -1814,23 +1834,122 @@ class Plot(object):
                 zaxis=dict(axis)
             ),
             margin=dict(t=100),
-            hovermode='closest', 
+            hovermode='closest',
+            clickmode="event",
             legend=dict(
                 title=dict(text='Figure legend'),
-                font=dict(family=font_style,size=font_size),
+                font=dict(family=font_style, size=font_size),
                 itemclick=False
-            ), 
-            font=dict(family=font_style)
+            ),
+            font=dict(family=font_style),
+            meta=dict(
+                __hl_trace_index=hl_trace_index,
+                __hl_node_ids=node_ids,
+                __hl_node_x=node_x,
+                __hl_node_y=node_y,
+                __hl_node_z=node_z,
+                __hl_edge_trace_idx=edge_trace_idx
+            )
         )
 
-        # plot the figure
         fig = go.Figure(data=plot_data, layout=layout)
 
-        # create the file of the figure
-        py.plot(
-            fig, 
-            filename=path
-        )
+    # inject JavaScript for interactive highlighting
+        post_script = r"""
+    (function() {
+    var gd = document.getElementById('{plot_id}');
+    if (!gd) return;
+
+    var meta = (gd.layout && gd.layout.meta) ? gd.layout.meta : {};
+    var hlMap = meta.__hl_trace_index || {};
+    var nodeIds = meta.__hl_node_ids || [];
+    var nx = meta.__hl_node_x || [];
+    var ny = meta.__hl_node_y || [];
+    var nz = meta.__hl_node_z || [];
+
+    function nearestNodeId(x, y, z) {
+        var best = -1, bestD = Infinity;
+        for (var i = 0; i < nodeIds.length; i++) {
+        var dx = nx[i] - x, dy = ny[i] - y, dz = nz[i] - z;
+        var d = dx*dx + dy*dy + dz*dz;
+        if (d < bestD) { bestD = d; best = i; }
+        }
+        return (best >= 0) ? String(nodeIds[best]) : null;
+    }
+
+    function setVisible(traceIndex, vis) {
+        if (traceIndex === null || traceIndex === undefined) return Promise.resolve();
+        return Plotly.restyle(gd, {visible: vis}, [traceIndex]);
+    }
+
+    function clearHighlight() {
+        var prev = gd.__hlPrevIndex;
+        gd.__hlPrevIndex = null;
+        gd.__hlPrevNode = null;
+        return setVisible(prev, false);
+    }
+
+    (function addButton(){
+        var btn = document.createElement('button');
+        btn.textContent = 'Clear highlight';
+        btn.style.cssText = 'margin:6px 0; padding:6px 10px; cursor:pointer;';
+        gd.parentNode.insertBefore(btn, gd);
+        btn.addEventListener('click', function(){ clearHighlight(); });
+    })();
+
+    gd.on('plotly_click', function(ev) {
+        if (!ev || !ev.points || !ev.points.length) return;
+
+        var p = ev.points[0];
+        var tr = p.data || {};
+
+        // Ignore clicking on any line trace (base edges or highlight edges)
+        if (tr.type === 'scatter3d' && String(tr.mode || '').indexOf('lines') !== -1) return;
+
+        var nid = null;
+
+        // Exposure marker provides customdata
+        if (p.customdata !== undefined && p.customdata !== null) {
+        nid = String(p.customdata);
+        } else {
+        // Surface spheres do not have node ids per point, map by nearest center
+        nid = nearestNodeId(p.x, p.y, p.z);
+        }
+
+        if (!nid) return;
+
+        var idx = hlMap[nid];
+        if (idx === undefined || idx === null) {
+        // no incident edges stored (isolated node)
+        clearHighlight();
+        return;
+        }
+
+        // toggle off
+        if (gd.__hlPrevNode === nid) {
+        clearHighlight();
+        return;
+        }
+
+        var prevIdx = gd.__hlPrevIndex;
+        gd.__hlPrevIndex = idx;
+        gd.__hlPrevNode = nid;
+
+        // Only toggle visibility, avoid rewriting x/y/z arrays (much faster in 3D)
+        requestAnimationFrame(function() {
+        setVisible(prevIdx, false).then(function() {
+            return setVisible(idx, true);
+        });
+        });
+    });
+
+    })();
+    """
+        fig.write_html(
+            path,
+            include_plotlyjs=True,
+            full_html=True,
+            post_script=post_script)
 
     def comorbidity_network_plot(
         self, 
