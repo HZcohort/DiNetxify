@@ -940,7 +940,7 @@ phewas_plot(
     disease_font_size: float = 10,
     HR_max: float = 2,
     incident_number_max: int = None,
-    is_exposure_only: bool = False,
+    exposed_only_cohort: bool = False,
     dpi: float = 200
 ) -> None
 ```
@@ -954,5 +954,5 @@ Creates a circular PheWAS polar bar plot across disease systems, outer ring show
 - `disease_font_size`: Font size for disease labels (default: `10`)
 - `HR_max`: Upper bound for the HR heatmap, values greater than or equal to this render as the same red, affects color only (default: `2`)
 - `incident_number_max`: Upper bound for the incident count heatmap for exposure only cohorts, values greater than or equal to this render as the same red, `None` auto scales to the maximum observed count (default: `None`)
-- `is_exposure_only`: Flag for exposure only cohort, set to `True` for exposure only, `False` for standard or matched cohort (default: `False`)
+- `exposed_only_cohort`: Flag for exposed-only cohort, set to `True` for exposed-only cohort, `False` for standard cohort or matched cohort (default: `False`)
 - `dpi`: Image resolution in dots per inch for output files (default: `200`)

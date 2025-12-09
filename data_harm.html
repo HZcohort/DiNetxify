@@ -7,14 +7,14 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Data harmonization &mdash; DiNetxify  documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=92fd9be5" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="_static/doctools.js?v=9a2dae69"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -90,7 +90,7 @@
 <section id="initializing-the-data-object">
 <h2>Initializing the data object<a class="headerlink" href="#initializing-the-data-object" title="Link to this heading"></a></h2>
 <p>First, import the <em><strong>DiNetxify</strong></em> package and instantiate a <code class="docutils literal notranslate"><span class="pre">DiseaseNetworkData</span></code> object with your chosen study design, phecode level, and any optional parameters. For example:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">DiNetxify</span> <span class="k">as</span> <span class="nn">dnt</span>  
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">DiNetxify</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dnt</span>  
 
 <span class="c1"># For a matched cohort study  </span>
 <span class="n">data</span> <span class="o">=</span> <span class="n">dnt</span><span class="o">.</span><span class="n">DiseaseNetworkData</span><span class="p">(</span>  
@@ -322,7 +322,7 @@
 <section id="reload-diseasenetworkdata-object">
 <h2>Reload DiseaseNetworkData object<a class="headerlink" href="#reload-diseasenetworkdata-object" title="Link to this heading"></a></h2>
 <p>If you have previously saved a <code class="docutils literal notranslate"><span class="pre">DiseaseNetworkData</span></code> object, you can reload it instead of re-reading all input files. This is especially useful for large datasets or when sharing the processed object with collaborators. To reload, first instantiate a new empty <code class="docutils literal notranslate"><span class="pre">DiseaseNetworkData</span></code> object, then call the corresponding load function (<code class="docutils literal notranslate"><span class="pre">load()</span></code> or <code class="docutils literal notranslate"><span class="pre">load_npz()</span></code>). For example:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">DiNetxify</span> <span class="k">as</span> <span class="nn">dnt</span>  
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">DiNetxify</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dnt</span>  
 
 <span class="c1"># Create a new DiseaseNetworkData object with the same design/parameters  </span>
 <span class="n">data</span> <span class="o">=</span> <span class="n">dnt</span><span class="o">.</span><span class="n">DiseaseNetworkData</span><span class="p">()</span>
