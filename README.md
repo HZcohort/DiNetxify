@@ -98,8 +98,8 @@ For a detailed tutorial on using ***DiNetxify***, see our documentation at [http
 
 If you use this software in your research, please cite the following papers:
 
-1. [Disease clusters and their genetic determinants following a diagnosis of depression: analyses based on a novel three-dimensional disease network approach](https://www.nature.com/articles/s41380-025-03120-y) ([PMID: 40681841](https://pubmed.ncbi.nlm.nih.gov/40681841/))
-1. [DiNetxify: a Python package for three-dimensional disease network analysis based on electronic health record data](https://www.medrxiv.org/content/10.1101/2025.08.19.25333629v1)
+1. [DiNetxify—a python package for three‑dimensional disease network analysis based on electronic health record data](https://link.springer.com/article/10.1007/s10654-025-01360-4) ([PMID: 41579291](https://pubmed.ncbi.nlm.nih.gov/41579291/))
+2. [Disease clusters and their genetic determinants following a diagnosis of depression: analyses based on a novel three-dimensional disease network approach](https://www.nature.com/articles/s41380-025-03120-y) ([PMID: 40681841](https://pubmed.ncbi.nlm.nih.gov/40681841/))
 
 ## Contact
 
