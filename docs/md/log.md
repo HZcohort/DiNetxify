@@ -39,3 +39,8 @@
 **0.1.9 - 2025-11-13**
 
 - Fixes some incorrect parameter descriptions in the visualization module.
+
+
+**0.1.10 - 2025-12-***
+
+- In the 3D figure, add the ability to highlight connected edges when a node is clicked.
