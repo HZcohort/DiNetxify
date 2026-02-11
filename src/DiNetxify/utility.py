@@ -1330,55 +1330,76 @@ def check_variance_vif(df:pd.DataFrame,
     else:
         raise ValueError("Invalid input.")
 
-def compute_vif_sm_exact(df):
+def compute_vif_sm_exact(df, corr_thresh=0.99):
     """
     Compute Variance Inflation Factor (VIF) for each feature in the DataFrame.
     This function handles perfectly collinear variables by setting their VIF to infinity.
+
+    Fix: collinear groups are transitive (connected components under corr >= corr_thresh).
     """
     result = {}
-    X = df.dropna().astype(float).values
-    # detect perfectly collinear columns by checking correlation matrix
-    corr_matrix = df.corr().abs()
-    
-    # find groups of perfectly collinear variables
-    collinear_groups = []
-    processed_columns = set()
+    if df.shape[1] == 0:
+        return result
 
-    for i, col in enumerate(df.columns):
-        if col in processed_columns:
-            continue
-        # find columns perfectly correlated with this one
-        perfect_matches = [c for c in df.columns if c != col and corr_matrix.loc[col, c] >= 0.999]
-        if perfect_matches:
-            # Create a group including the current column
-            group = [col] + perfect_matches
-            collinear_groups.append(group)
-            processed_columns.update(group)
-        else:
-            processed_columns.add(col)
-    
-    #for each group of collinear variables, mark others as infinite VIF
+    corr_matrix = df.corr().abs()
+    cols = list(corr_matrix.columns)
+    p = len(cols)
+
+    # --- Build transitive groups with Union-Find ---
+    parent = list(range(p))
+
+    def find(a):
+        while parent[a] != a:
+            parent[a] = parent[parent[a]]
+            a = parent[a]
+        return a
+
+    def union(a, b):
+        ra, rb = find(a), find(b)
+        if ra != rb:
+            parent[rb] = ra
+
+    # Union any pair with corr >= threshold
+    for i in range(p):
+        for j in range(i + 1, p):
+            if corr_matrix.iat[i, j] >= corr_thresh:
+                union(i, j)
+
+    # Collect connected components as groups of column names
+    groups_by_root = {}
+    for i in range(p):
+        r = find(i)
+        groups_by_root.setdefault(r, []).append(cols[i])
+
+    collinear_groups = [g for g in groups_by_root.values() if len(g) > 1]
+    # ---------------------------------------------
+
+    # Mark all but the representative in each group as infinite VIF
     perfect_collinear = []
     for group in collinear_groups:
-        perfect_collinear.extend(group[1:])
+        perfect_collinear.extend(group[1:])  # keep group[0], drop the rest
+
     for col in perfect_collinear:
         result[col] = np.inf
 
-    # Calculate VIF for non-collinear variables
     remaining_cols = [col for col in df.columns if col not in perfect_collinear]
-    # Add the representative columns from collinear groups back to remaining columns
-    for group in collinear_groups:
-        if group[0] not in remaining_cols:
-            remaining_cols.append(group[0])
-    
+
     if remaining_cols:
         X_remaining = df[remaining_cols].values
         G = X_remaining.T @ X_remaining
-        G_inv = np.linalg.inv(G)
-        # Calculate VIF for remaining variables
-        remaining_vifs = dict(zip(remaining_cols, np.diag(G) * np.diag(G_inv)))
-        result.update(remaining_vifs)
-    
+        try:
+            G_inv = np.linalg.inv(G)
+            remaining_vifs = dict(zip(remaining_cols, np.diag(G) * np.diag(G_inv)))
+            result.update(remaining_vifs)
+        except np.linalg.LinAlgError:
+            # Fallback, use statsmodels VIF (loops, but only when singular)
+            from statsmodels.stats.outliers_influence import variance_inflation_factor
+
+            vifs = [variance_inflation_factor(X_remaining, i) for i in range(X_remaining.shape[1])]
+            vifs = [np.inf if (not np.isfinite(v) or v > 1e12) else float(v) for v in vifs]
+            remaining_vifs = dict(zip(remaining_cols, vifs))
+            result.update(remaining_vifs)
+
     return result
 
 def check_variance_vif_single(df:pd.DataFrame, forcedin_var_lst:list,
