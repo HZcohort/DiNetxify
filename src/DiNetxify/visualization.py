@@ -2195,6 +2195,15 @@ class Plot(object):
         def hierarchy_layout(df, start_node, method='prox'):
             # Create a directed graph from the dataframe
             G = nx.from_pandas_edgelist(df, source=source, target=target, create_using=nx.DiGraph())
+
+            if G.number_of_nodes() == 0:
+                return {}, 150
+            
+            if start_node not in G:
+                G.add_node(start_node)
+                first_layer = [n for n, deg in G.in_degree() if deg == 0 and n != start_node]
+                for n in first_layer:
+                    G.add_edge(start_node, n)   
             
             # Compute strongly connected components (SCCs)
             scc = list(nx.strongly_connected_components(G))
@@ -2280,7 +2289,7 @@ class Plot(object):
                                 break
                             else:
                                 continue
-            return new_pos
+            return new_pos,height
 
         def distance(pos_0,dot_lst,pos_dict_):
             total = 0
@@ -2336,13 +2345,21 @@ class Plot(object):
                 df = pd.concat([df, temp_df])
             df.index = np.arange(len(df))
 
-            position = hierarchy_layout(df, exposure)
+            position, height = hierarchy_layout(df, exposure)
             graph = nx.DiGraph()
             for idx in df.index:
                 graph.add_edge(
-                    df.loc[idx, self._source],
-                    df.loc[idx, self._target]
-                )
+                    df.loc[idx, self._source],df.loc[idx, self._target])
+            
+            # Ensure every graph node has a position
+            missing = [n for n in graph.nodes if n not in position]
+            if missing:
+                # place missing/disconnected nodes on an extra lower arc
+                if position:
+                    y_bottom = min(y for _, y in position.values()) - height
+                else:
+                    y_bottom = 1500
+                position.update(sort_arc(missing, y_bottom))
 
             fig, ax_nx = plt.subplots(dpi=600, figsize=(6,4))
             plt.axis("off")
