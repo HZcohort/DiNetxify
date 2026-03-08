@@ -22,7 +22,7 @@ if __name__ =="__main__":
 
     # Load the phenotype CSV file into the data object
     data.phenotype_data(
-        phenotype_data_path=path+"/data/dummy_cohort.csv",
+        phenotype_data_path=path+"/data/dummy_phenotype.csv",
         column_names=col_dict,
         covariates=vars_lst
     )
