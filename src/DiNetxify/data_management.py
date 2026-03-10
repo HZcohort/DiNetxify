@@ -1351,10 +1351,26 @@ class DiseaseNetworkData:
                 self.__print_string += f"The average group size is: {self.__phenotype_statistics['n_per_group']:.2f}\n"
             self.__print_string += f"Average follow-up years: {self.__phenotype_statistics['avg_follow_exposed']:.2f} (exposed) and {self.__phenotype_statistics['avg_follow_unexposed']:.2f} (unexposed)\n"
         if len(self.__medical_records_info) > 0:
-            self.__print_string += '\nMerged Medical records\n'
-            self.__print_string += f"{self.__medical_records_statistics['n_merged_records']:,} diagnosis records from {self.__medical_records_statistics['n_merged_files']} medical records file were merged ({self.__medical_records_statistics['n_missing']:,} with missing values).\n"
-            self.__print_string += f"Average number of disease diagnosis during follow-up: {self.__medical_records_statistics['n_phecode_diagnosis_per_exposed']:.2f} (exposed) and {self.__medical_records_statistics['n_phecode_diagnosis_per_unexposed']:.2f} (unexposed)\n"
-            self.__print_string += f"Average number of disease diagnosis before follow-up: {self.__medical_records_statistics['n_phecode_history_per_exposed']:.2f} (exposed) and {self.__medical_records_statistics['n_phecode_history_per_unexposed']:.2f} (unexposed)\n"
+            self.__print_string += "\nMerged medical records\n"
+            self.__print_string += (
+                f"{self.__medical_records_statistics['n_merged_records']:,} ICD-9/10 diagnosis records "
+                f"from {self.__medical_records_statistics['n_merged_files']} medical records files "
+                f"were merged, with {self.__medical_records_statistics['n_missing']:,} records containing missing values.\n"
+            )
+            self.__print_string += (
+                f"Mean number of recorded phecodes during follow-up was "
+                f"{self.__medical_records_statistics['n_phecode_diagnosis_per_exposed']:.2f} "
+                f"in the exposed group and "
+                f"{self.__medical_records_statistics['n_phecode_diagnosis_per_unexposed']:.2f} "
+                f"in the unexposed group.\n"
+            )
+            self.__print_string += (
+                f"Mean number of recorded phecodes before follow-up was "
+                f"{self.__medical_records_statistics['n_phecode_history_per_exposed']:.2f} "
+                f"in the exposed group and "
+                f"{self.__medical_records_statistics['n_phecode_history_per_unexposed']:.2f} "
+                f"in the unexposed group.\n"
+            )
         if len(self.__warning_phenotype) > 0:
             self.__print_string += '\n'
             self.__print_string += '\n'.join(self.__warning_phenotype)
