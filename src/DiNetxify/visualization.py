@@ -782,6 +782,7 @@ class Plot(object):
                 continue
             else:
                 return False
+        return True
 
     def __calculate_ratio(
         self, 
@@ -1688,6 +1689,34 @@ class Plot(object):
         )
         plot_data.append(trace_data)
         return plot_data
+    
+    def get_louvain_clusters(
+        self,
+        max_attempts: Optional[int]=5000,
+    ) -> Dict[Any, int]:
+        """Runs Louvain clustering for the comorbidity network and returns node labels.
+
+        This public method computes community labels using the internal ``__cluster``
+        workflow and the configured comorbidity edge-weight column. If cluster labels
+        are already available in node attributes, existing labels are reused.
+
+        Args:
+            max_attempts: Maximum number of random seeds evaluated by Louvain.
+                Higher values may improve modularity but increase runtime.
+                Defaults to 5000.
+
+        Returns:
+            Dictionary mapping each node ID to its assigned cluster ID.
+
+        Example:
+            >>> cluster_dict = result_plot.Louvain_cluster(max_attempts=1000)
+        """
+        if not self.__check_node_attrs("cluster"):
+            self.__cluster(
+                self.comorbidity_beta_col,
+                max_attempts=max_attempts,
+            )
+        return {node: attrs["cluster"] for node, attrs in self._nodes_attrs.items()}
     
     def three_dimension_plot(
         self,
