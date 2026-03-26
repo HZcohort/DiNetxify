@@ -1,69 +1,203 @@
 # Input data preparation
 
-## Requirements for input data
+## Overview
 
-***DiNetxify*** enables 3D disease network analysis on cohort data from electronic health records (EHR) and offers three study designs: the **standard cohort**, which compares individuals with a specific disease or exposure (e.g., depression or smoking) against the general population; the **matched cohort**, which pairs subjects on key characteristics to reduce confounding; and the **exposed-only cohort**, which examines disease networks within a defined group (e.g., older adults) without an unexposed comparison group.
+`DiNetxify` requires two types of input:
 
-To begin using ***DiNetxify***, two datasets are required: a **phenotype data** file containing each participant’s baseline information, and one or more **medical record data** files extracted from an EHR database that list diagnoses (codes and dates) for all cohort individuals over the study period. The specific requirements for these datasets are:
+1. A phenotype file describing the cohort
+2. One or more medical-record files containing diagnosis codes and diagnosis dates
 
-- **Phenotype data:** A CSV (or TSV) file with a header row, where each row represents a participant. Required columns are:
+The package supports three study designs:
 
-  - **Participant ID** – Unique identifier for each individual.
+- `cohort`
+- `matched cohort`
+- `exposed-only cohort`
 
-  - **Index date** – Start of follow-up (e.g., date of exposure or baseline).
+Before loading any data, create a `DiseaseNetworkData` object.
 
-  - **End date** – End of follow-up (e.g., last visit, death, or study completion).
+```python
+import DiNetxify as dnt
 
-  - **Exposure** – Binary indicator (1 = exposed, 0 = unexposed) for standard and matched cohorts (omit for exposed-only cohorts).
+data = dnt.DiseaseNetworkData(
+    study_design="cohort",
+    phecode_level=1,
+    min_required_icd_codes=1,
+    date_fmt="%Y-%m-%d",
+    phecode_version="1.2",
+)
+```
 
-  - **Match ID** – Identifier for matched sets (only for matched cohort designs).
+Key initialization arguments:
 
-  - **Sex** – Biological sex (1 = female, 0 = male).
+- `study_design`: One of `'cohort'`, `'matched cohort'`, or `'exposed-only cohort'`.
+- `phecode_level`: Use `1` or `2`.
+- `min_required_icd_codes`: Minimum number of mapped ICD codes required for a phecode to count as valid.
+- `date_fmt`: Date format used in the phenotype file. This is also the default for medical-record files unless you override it later.
+- `phecode_version`: Version `1.2` is the recommended general-purpose option.
 
-  - **Additional covariates (optional)** – Any number of extra variables for adjustment or matching (e.g., age, BMI, education).
+## Phenotype data
 
-For all required columns, missing values are not permitted and dates must follow a consistent format (default `YYYY-MM-DD`). The **Sex** and **Exposure** fields must use the specified 1/0 coding. You may include unlimited additional covariates; their types (binary, categorical, or continuous) will be auto-detected and processed accordingly (e.g., one-hot encoding for categorical variables). Missing values in continuous covariates are dropped, whereas missing categorical values are treated as a separate “NA” category.
+Phenotype data must be provided as a CSV or TSV file with a header row and one row per participant.
 
-- **Medical records data**: One or more CSV/TSV files (each with a header row), listing diagnosis events for the participants. Each record (row) must include:
+### Required columns
 
-  - **Participant ID** – The same unique ID used in the phenotype data, linking each record to an individual.
-  - **Diagnosis code** – A diagnosis code (e.g., ICD-10 or ICD-9 code).
-  - **Date of diagnosis** – The date of that diagnosis/event (format consistent with the phenotype dates, e.g., `YYYY-MM-DD`).
+For `cohort`:
 
-  The **medical record data** should be in a “long” format (multiple rows per participant if they have multiple diagnoses). ***DiNetxify*** will automatically filter these records to include only those within each individual’s follow-up period (from index date up to end date). **Do not pre-filter** the medical record by date or by first occurrence — provide the complete set of diagnoses for each participant, and let the software handle the filtering and mapping. Each medical record file should use a single coding system for diagnoses. Currently supported code versions are ICD-9 (WHO and CM) and ICD-10 (WHO and CM). If your data uses a different coding system, you will need to map it to one of the supported formats beforehand.
+- `Participant ID`
+- `Exposure`
+- `Sex`
+- `Index date`
+- `End date`
 
-## Dummy dataset overview
+For `matched cohort`:
 
-A [dummy dataset](https://github.com/HZcohort/DiNetxify/tree/main/tests/data) is provided to help you become familiar with the input format and to allow you to run through the full analysis workflow before using your own data. It simulates a matched-cohort study of 10,000 exposed individuals and 50,000 matched unexposed individuals, along with their entire follow-up EHR records.
+- `Participant ID`
+- `Exposure`
+- `Sex`
+- `Index date`
+- `End date`
+- `Match ID`
 
-> **Note:** All participant characteristics and diagnoses in this dummy dataset are randomly generated. The ICD-9 and ICD-10 codes correspond to real classifications, and the analysis may yield seemingly significant associations, but these results **do not** reflect true medical findings! They are for instructional purposes only.
+For `exposed-only cohort`:
 
-- The dummy dataset consists of three CSV files:
-  - **`dummy_phenotype.csv`** – Simulated baseline characteristics for 60,000 individuals, containing:
-    
-    - **ID** – Unique participant identifier.
-    - **date_start**, **date_end** – Follow-up start and end dates.
-    - **exposure** – Exposure status (0 = unexposed, 1 = exposed).
-    - **group_id** – Matching group identifier (each exposed is matched with unexposed in groups).
-    - **sex** – Biological sex (1 = female, 0 = male).
-    - **age** – Baseline age (years).
-    - **BMI** – Body mass index category.
-  - **`dummy_EHR_ICD9.csv`** – Simulated EHR diagnoses coded in ICD-9 (10,188 records), containing:
-  
-      - **ID** – Participant ID (matches the phenotype file).
-  
-      - **dia_date** – Diagnosis date.
-  
-      - **diag_icd9** – ICD-9 diagnosis code.
-  
-  
-  - **`dummy_EHR_ICD10.csv`** – Simulated EHR diagnoses coded in ICD-10 (1,048,576 records), containing:
-  
-      - **ID** – Participant ID.
-  
-      - **dia_date** – Diagnosis date.
-  
-      - **diag_icd10** – ICD-10 diagnosis code.
-  
+- `Participant ID`
+- `Sex`
+- `Index date`
+- `End date`
 
-Using this dummy dataset, you can practice the workflow and verify that the tool runs correctly. In the following sections, we will demonstrate the analysis and visualization steps using the dummy data.
+You may also provide any number of additional covariates, such as age, BMI, smoking, or education.
+
+### Input rules
+
+- Required columns cannot contain missing values.
+- `Exposure` must be coded as `1` for exposed and `0` for unexposed when the study design includes an exposure group.
+- `Sex` must be coded as `1` for female and `0` for male.
+- Dates must use a consistent format.
+- Covariate types are detected automatically and converted internally.
+- Continuous covariates with missing values lead to participant removal during loading.
+- Covariate names must not conflict with reserved internal variable names.
+
+### Load phenotype data
+
+```python
+col_dict = {
+    "Participant ID": "ID",
+    "Exposure": "exposure",
+    "Sex": "sex",
+    "Index date": "date_start",
+    "End date": "date_end",
+}
+
+covariates = ["age", "BMI"]
+
+data.phenotype_data(
+    phenotype_data_path="tests/data/dummy_phenotype.csv",
+    column_names=col_dict,
+    covariates=covariates,
+    is_single_sex=False,
+    force=False,
+)
+```
+
+Notes:
+
+- For a matched cohort, include `"Match ID"` in `column_names`.
+- For an exposed-only cohort, omit `"Exposure"` from `column_names`.
+- If your cohort contains only one sex, set `is_single_sex=True`.
+- If you want to overwrite already loaded data, set `force=True`.
+
+## Medical records data
+
+Medical records must be provided in long format, with one diagnosis event per row.
+
+### Required columns
+
+Each medical-record file must contain:
+
+- `Participant ID`
+- `Diagnosis code`
+- `Date of diagnosis`
+
+### Supported diagnosis code systems
+
+Each file must use exactly one supported coding system:
+
+- `ICD-9-CM`
+- `ICD-9-WHO`
+- `ICD-10-CM`
+- `ICD-10-WHO`
+
+If you have multiple coding systems, load them as separate files by calling `merge_medical_records()` multiple times.
+
+### Input rules
+
+- Use the same participant IDs as in the phenotype file.
+- Do not mix ICD-9 and ICD-10 codes in one file.
+- Do not mix CM and WHO code systems in one file.
+- Do not pre-filter diagnoses to first occurrence only.
+- Do not pre-filter diagnoses to the follow-up period; `DiNetxify` handles follow-up filtering internally.
+- ICD-10 codes may be provided with or without decimal points.
+- ICD-9 codes may be provided in decimal or short format.
+
+### Load medical records
+
+```python
+data.merge_medical_records(
+    medical_records_data_path="tests/data/dummy_EHR_ICD9.csv",
+    diagnosis_code="ICD-9-WHO",
+    column_names={
+        "Participant ID": "ID",
+        "Diagnosis code": "diag_icd9",
+        "Date of diagnosis": "dia_date",
+    },
+    date_fmt=None,
+    chunksize=1000000,
+    diagnosis_code_exclusion=[],
+)
+
+data.merge_medical_records(
+    medical_records_data_path="tests/data/dummy_EHR_ICD10.csv",
+    diagnosis_code="ICD-10-WHO",
+    column_names={
+        "Participant ID": "ID",
+        "Diagnosis code": "diag_icd10",
+        "Date of diagnosis": "dia_date",
+    },
+)
+```
+
+Notes:
+
+- If `date_fmt=None`, the medical-record file uses the same date format as the phenotype file.
+- `chunksize` controls how many rows are processed at a time and is useful for large files.
+- `diagnosis_code_exclusion` lets you exclude specific diagnosis codes before mapping.
+- After each merge, the package updates diagnosis, diagnosis-count, and history information inside the `DiseaseNetworkData` object.
+
+## Dummy dataset
+
+A dummy dataset is included under [tests/data](https://github.com/HZcohort/DiNetxify/tree/main/tests/data) so you can test the full workflow before using your own data.
+
+The dataset contains:
+
+- `dummy_phenotype.csv`: 60,000 participants in a matched-cohort-style example
+- `dummy_EHR_ICD9.csv`: 10,188 ICD-9 diagnosis records
+- `dummy_EHR_ICD10.csv`: 1,668,795 ICD-10 diagnosis records
+
+Important columns in the dummy phenotype file:
+
+- `ID`: Participant identifier
+- `group_id`: Matching group identifier
+- `exposure`: Exposure status
+- `date_start`: Follow-up start date
+- `date_end`: Follow-up end date
+- `age`: Baseline age
+- `sex`: Biological sex
+- `BMI`: BMI category
+
+Important columns in the dummy medical-record files:
+
+- `ID`: Participant identifier
+- `dia_date`: Diagnosis date
+- `diag_icd9` or `diag_icd10`: Diagnosis code
+
+> **Note:** The dummy data are simulated for demonstration only. They are useful for learning the workflow and checking that the software runs, but they should not be interpreted as real clinical findings.
