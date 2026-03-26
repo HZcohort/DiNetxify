@@ -119,12 +119,12 @@
 <ul class="simple">
 <li><p><strong>min_required_icd_codes</strong>: Minimum number of ICD records mapping to the same phecode before that phecode is counted as present for an individual. Default is <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
 <li><p><strong>date_fmt</strong>: Date format used in the phenotype file. This is also the default format for medical-record files unless overridden later. Default is <code class="docutils literal notranslate"><span class="pre">'%Y-%m-%d'</span></code>.</p></li>
-<li><p><strong>phecode_version</strong>: Phecode mapping version. <code class="docutils literal notranslate"><span class="pre">'1.2'</span></code> is the recommended general-purpose choice. <code class="docutils literal notranslate"><span class="pre">'1.3a'</span></code> and <code class="docutils literal notranslate"><span class="pre">'VL_autism'</span></code> are also available for special use cases.</p></li>
+<li><p><strong>phecode_version</strong>: Phecode mapping version. <code class="docutils literal notranslate"><span class="pre">'1.2'</span></code> is the recommended general-purpose choice. <code class="docutils literal notranslate"><span class="pre">'1.3a'</span></code> is also available for special use cases.</p></li>
 </ul>
 </section>
 <section id="load-phenotype-data">
 <h2>Load phenotype data<a class="headerlink" href="#load-phenotype-data" title="Link to this heading"></a></h2>
-<p>After creating the data object, use <code class="docutils literal notranslate"><span class="pre">phenotype_data()</span></code> to load the cohort metadata.</p>
+<p>After creating the data object, use <code class="docutils literal notranslate"><span class="pre">phenotype_data()</span></code> to load the cohort phenotype data.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Matched cohort</span>
 <span class="n">col_dict</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;Participant ID&quot;</span><span class="p">:</span> <span class="s2">&quot;ID&quot;</span><span class="p">,</span>
@@ -198,7 +198,7 @@
 <span class="nb">print</span><span class="p">(</span><span class="n">table1_df</span><span class="o">.</span><span class="n">head</span><span class="p">())</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">Table1()</span></code> summarizes continuous variables, categorical variables, and follow-up time. For <code class="docutils literal notranslate"><span class="pre">cohort</span></code> and <code class="docutils literal notranslate"><span class="pre">matched</span> <span class="pre">cohort</span></code>, the table compares exposed and unexposed groups; for <code class="docutils literal notranslate"><span class="pre">exposed-only</span> <span class="pre">cohort</span></code>, it produces a single-group summary.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Table1()</span></code> summarizes sex, covariates included and follow-up time. For <code class="docutils literal notranslate"><span class="pre">cohort</span></code> and <code class="docutils literal notranslate"><span class="pre">matched</span> <span class="pre">cohort</span></code>, the table compares exposed and unexposed groups; for <code class="docutils literal notranslate"><span class="pre">exposed-only</span> <span class="pre">cohort</span></code>, it produces a single-group summary.</p>
 </section>
 <section id="load-medical-record-data">
 <h2>Load medical record data<a class="headerlink" href="#load-medical-record-data" title="Link to this heading"></a></h2>
