@@ -7,14 +7,14 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Result tables description &mdash; DiNetxify  documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=92fd9be5" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -97,59 +97,60 @@
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">phecode</span></code></p></td>
-<td><p>String</p></td>
-<td><p>Disease code (Phecode) used in PheWAS analysis</p></td>
+<td><p>String/Float</p></td>
+<td><p>Phecode included in the PheWAS result</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">disease</span></code></p></td>
 <td><p>String</p></td>
-<td><p>Disease name corresponding to the Phecode</p></td>
+<td><p>Disease name corresponding to the phecode</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">system</span></code></p></td>
 <td><p>String</p></td>
-<td><p>Phecode disease system corresponding to the Phecode (e.g., infectious diseases)</p></td>
+<td><p>Phecode disease system corresponding to the phecode</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sex</span></code></p></td>
 <td><p>String</p></td>
-<td><p>Sex-specificity of the disease (e.g., Both, Male, Female)</p></td>
+<td><p>Sex specificity of the phecode (<code class="docutils literal notranslate"><span class="pre">Both</span></code>, <code class="docutils literal notranslate"><span class="pre">Male</span></code>, or <code class="docutils literal notranslate"><span class="pre">Female</span></code>)</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">N_cases_exposed</span></code></p></td>
 <td><p>Integer</p></td>
-<td><p>Number of individuals diagnosed with the disease in the exposed group</p></td>
+<td><p>Number of exposed individuals diagnosed with the phecode during follow-up</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">describe</span></code></p></td>
 <td><p>String</p></td>
-<td><p>Descriptions of the model fitting state and removed covariates with reasons</p></td>
+<td><p>Model-fitting note or reason a full model estimate was not returned</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">exposed_group</span></code></p></td>
 <td><p>String</p></td>
-<td><p>Incidence rate (unit: per 1,000 person-years) in the exposed group</p></td>
+<td><p>Event summary for the exposed group, formatted as cases/person-years (incidence per 1,000 person-years)</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">unexposed_group</span></code></p></td>
 <td><p>String</p></td>
-<td><p>Incidence rate (unit: per 1,000 person-years) in the unexposed group</p></td>
+<td><p>Event summary for the unexposed group, formatted as cases/person-years (incidence per 1,000 person-years)</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">phewas_coef</span></code></p></td>
 <td><p>Float</p></td>
-<td><p>Estimated coefficient from the model</p></td>
+<td><p>Estimated effect size from the PheWAS model</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">phewas_se</span></code></p></td>
 <td><p>Float</p></td>
-<td><p>Standard error of the estimated coefficient</p></td>
+<td><p>Standard error of the estimated effect size</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">phewas_p</span></code></p></td>
 <td><p>Float</p></td>
-<td><p>P-value indicating statistical significance of the coefficient</p></td>
+<td><p>P-value from the PheWAS model</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">phewas_p_significance</span></code></p></td>
 <td><p>Boolean</p></td>
-<td><p>Indicates whether the result is statistically significant based on adjusted p-value (True/False)</p></td>
+<td><p>Whether the phecode is significant after multiple-testing correction</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">phewas_p_adjusted</span></code></p></td>
 <td><p>Float</p></td>
-<td><p>Adjusted p-value accounting for multiple comparisons</p></td>
+<td><p>Adjusted P-value for <code class="docutils literal notranslate"><span class="pre">phewas_p</span></code></p></td>
 </tr>
 </tbody>
 </table>
+<p>For <code class="docutils literal notranslate"><span class="pre">exposed-only</span> <span class="pre">cohort</span></code>, the returned table is simpler: significance is based on the case-count threshold, and model-based columns such as <code class="docutils literal notranslate"><span class="pre">phewas_coef</span></code>, <code class="docutils literal notranslate"><span class="pre">phewas_se</span></code>, <code class="docutils literal notranslate"><span class="pre">phewas_p</span></code>, and <code class="docutils literal notranslate"><span class="pre">phewas_p_adjusted</span></code> may be absent.</p>
 </section>
 <section id="result-of-comorbidity-strength-estimation">
 <h2>Result of comorbidity strength estimation<a class="headerlink" href="#result-of-comorbidity-strength-estimation" title="Link to this heading"></a></h2>
@@ -162,104 +163,120 @@
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">phecode_d1</span></code></p></td>
-<td><p>Integer</p></td>
+<td><p>Float</p></td>
 <td><p>Phecode for disease 1 in the disease pair</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">phecode_d2</span></code></p></td>
-<td><p>Integer</p></td>
+<td><p>Float</p></td>
 <td><p>Phecode for disease 2 in the disease pair</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">name_disease_pair</span></code></p></td>
 <td><p>String</p></td>
-<td><p>Name of the disease pair (format: “D1-D2”)</p></td>
+<td><p>Disease-pair label in the format <code class="docutils literal notranslate"><span class="pre">D1-D2</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">N_exposed</span></code></p></td>
 <td><p>Integer</p></td>
-<td><p>Total number of individuals in exposed group</p></td>
+<td><p>Total number of exposed individuals in the analysis dataset</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">n_total</span></code></p></td>
 <td><p>Integer</p></td>
-<td><p>Number of exposed individuals included in the sub-cohort that meet the sex-specificity eligibility criteria for both diseases and after excluding those with history of either disease 1, disease 2, or related diseases</p></td>
+<td><p>Number of exposed individuals eligible for the pair-specific analysis after excluding ineligible disease histories</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">n_d1d2_diagnosis</span></code></p></td>
 <td><p>Integer</p></td>
-<td><p>Number of individuals diagnosed with both diseases</p></td>
+<td><p>Number of eligible individuals diagnosed with both diseases</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">n_d1_diagnosis</span></code></p></td>
 <td><p>Integer</p></td>
-<td><p>Number of individuals diagnosed with disease 1</p></td>
+<td><p>Number of eligible individuals diagnosed with disease 1</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">n_d2_diagnosis</span></code></p></td>
 <td><p>Integer</p></td>
-<td><p>Number of individuals diagnosed with disease 2</p></td>
+<td><p>Number of eligible individuals diagnosed with disease 2</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">n_d1d2_nontemporal</span></code></p></td>
 <td><p>Integer</p></td>
-<td><p>Number of individuals diagnosed with both disease 1 and disease 2 but without defined temporal order (i.e., the time interval between the two diagnosis is smaller than or equal to <code class="docutils literal notranslate"><span class="pre">min_interval_days</span></code> or larger <code class="docutils literal notranslate"><span class="pre">max_interval_days</span></code>)</p></td>
+<td><p>Number of individuals with a non-temporal D1-D2 pair</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">n_d1d2_temporal</span></code></p></td>
 <td><p>Integer</p></td>
-<td><p>Number of individuals diagnosed with disease 1 followed by disease 2 in a defined temporal order (i.e., the time interval between the two diagnosis is larger than <code class="docutils literal notranslate"><span class="pre">min_interval_days</span></code> and smaller than or equal to<code class="docutils literal notranslate"><span class="pre">max_interval_days</span></code>)</p></td>
+<td><p>Number of individuals with temporal order <code class="docutils literal notranslate"><span class="pre">D1</span> <span class="pre">-&gt;</span> <span class="pre">D2</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">n_d2d1_temporal</span></code></p></td>
 <td><p>Integer</p></td>
-<td><p>Number of individuals diagnosed with disease 2 followed by disease 1 in a defined temporal order (i.e., the time interval between the two diagnosis is larger than <code class="docutils literal notranslate"><span class="pre">min_interval_days</span></code> and smaller than or equal to<code class="docutils literal notranslate"><span class="pre">max_interval_days</span></code>)</p></td>
+<td><p>Number of individuals with temporal order <code class="docutils literal notranslate"><span class="pre">D2</span> <span class="pre">-&gt;</span> <span class="pre">D1</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">phi_coef</span></code></p></td>
-<td><p>Float</p></td>
-<td><p>Phi coefficient (φ), Pearson’s correlations for two binary variables</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">n_d1d2_pair</span></code></p></td>
+<td><p>Integer</p></td>
+<td><p>Total number of individuals contributing a D1/D2 pair, counting temporal and non-temporal pair occurrences together</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">phi_p</span></code></p></td>
-<td><p>Float</p></td>
-<td><p>P-value for Phi coefficient significance</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">description</span></code></p></td>
+<td><p>String</p></td>
+<td><p>Note describing why statistics were not estimated, if applicable</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">RR</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">phi</span></code></p></td>
 <td><p>Float</p></td>
-<td><p>Relative risk of observing both conditions in the same individual relative to expectation</p></td>
+<td><p>Phi correlation for the disease pair</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">phi_theta</span></code></p></td>
+<td><p>Float</p></td>
+<td><p>Standard-error term used for inference on phi</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">phi_p</span></code></p></td>
+<td><p>Float</p></td>
+<td><p>P-value for phi correlation</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RR</span></code></p></td>
+<td><p>Float</p></td>
+<td><p>Relative risk for co-occurrence of the disease pair</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">RR_theta</span></code></p></td>
+<td><p>Float</p></td>
+<td><p>Standard-error term used for inference on RR</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RR_p</span></code></p></td>
 <td><p>Float</p></td>
 <td><p>P-value for relative risk</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">phi_p_adjusted</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">phi_p_significance</span></code></p></td>
+<td><p>Boolean</p></td>
+<td><p>Whether <code class="docutils literal notranslate"><span class="pre">phi_p</span></code> is significant after correction</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">phi_p_adjusted</span></code></p></td>
 <td><p>Float</p></td>
-<td><p>Adjusted P-value for Phi coefficient (multiple comparisons)</p></td>
+<td><p>Adjusted P-value for <code class="docutils literal notranslate"><span class="pre">phi_p</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">RR_p_significance</span></code></p></td>
+<td><p>Boolean</p></td>
+<td><p>Whether <code class="docutils literal notranslate"><span class="pre">RR_p</span></code> is significant after correction</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RR_p_adjusted</span></code></p></td>
 <td><p>Float</p></td>
-<td><p>Adjusted P-value for relative risk (multiple comparisons)</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">phi_p_significance</span></code></p></td>
-<td><p>Boolean</p></td>
-<td><p>Whether the Phi is statistically significant based on adjusted p-value</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RR_p_significance</span></code></p></td>
-<td><p>Boolean</p></td>
-<td><p>Whether the RR is statistically significant based on adjusted p-value</p></td>
+<td><p>Adjusted P-value for <code class="docutils literal notranslate"><span class="pre">RR_p</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">disease_d1</span></code></p></td>
 <td><p>String</p></td>
-<td><p>Name of disease 1</p></td>
+<td><p>Disease name for <code class="docutils literal notranslate"><span class="pre">phecode_d1</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">system_d1</span></code></p></td>
 <td><p>String</p></td>
-<td><p>Phecode disease system related to disease 1</p></td>
+<td><p>Disease system for <code class="docutils literal notranslate"><span class="pre">phecode_d1</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sex_d1</span></code></p></td>
 <td><p>String</p></td>
-<td><p>Sex-specificity of disease 1</p></td>
+<td><p>Sex specificity for <code class="docutils literal notranslate"><span class="pre">phecode_d1</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">disease_d2</span></code></p></td>
 <td><p>String</p></td>
-<td><p>Name of disease 2</p></td>
+<td><p>Disease name for <code class="docutils literal notranslate"><span class="pre">phecode_d2</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">system_d2</span></code></p></td>
 <td><p>String</p></td>
-<td><p>Phecode disease system related to disease 2</p></td>
+<td><p>Disease system for <code class="docutils literal notranslate"><span class="pre">phecode_d2</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sex_d2</span></code></p></td>
 <td><p>String</p></td>
-<td><p>Sex-specificity of disease 2</p></td>
+<td><p>Sex specificity for <code class="docutils literal notranslate"><span class="pre">phecode_d2</span></code></p></td>
 </tr>
 </tbody>
 </table>
@@ -284,19 +301,19 @@
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">name_disease_pair</span></code></p></td>
 <td><p>String</p></td>
-<td><p>Name of the temporal disease pair (e.g., D1-&gt;D2)</p></td>
+<td><p>Temporal disease-pair label, typically <code class="docutils literal notranslate"><span class="pre">D1-&gt;D2</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">n_d1d2_nontemporal</span></code></p></td>
-<td><p>Float</p></td>
-<td><p>Number of individuals diagnosed with both disease 1 and disease 2 but without defined temporal order (i.e., the time interval between the two diagnosis is smaller than or equal to <code class="docutils literal notranslate"><span class="pre">min_interval_days</span></code> or larger <code class="docutils literal notranslate"><span class="pre">max_interval_days</span></code>)</p></td>
+<td><p>Integer</p></td>
+<td><p>Number of individuals with a non-temporal D1-D2 pair</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">n_d1d2_temporal</span></code></p></td>
-<td><p>Float</p></td>
-<td><p>Number of individuals diagnosed with disease 1 followed by disease 2 in a defined temporal order (i.e., the time interval between the two diagnosis is larger than <code class="docutils literal notranslate"><span class="pre">min_interval_days</span></code> and smaller than or equal to<code class="docutils literal notranslate"><span class="pre">max_interval_days</span></code>)</p></td>
+<td><p>Integer</p></td>
+<td><p>Number of individuals with temporal order <code class="docutils literal notranslate"><span class="pre">D1</span> <span class="pre">-&gt;</span> <span class="pre">D2</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">n_d2d1_temporal</span></code></p></td>
-<td><p>Float</p></td>
-<td><p>Number of individuals diagnosed with disease 2 followed by disease 1 in a defined temporal order (i.e., the time interval between the two diagnosis is larger than <code class="docutils literal notranslate"><span class="pre">min_interval_days</span></code> and smaller than or equal to<code class="docutils literal notranslate"><span class="pre">max_interval_days</span></code>)</p></td>
+<td><p>Integer</p></td>
+<td><p>Number of individuals with temporal order <code class="docutils literal notranslate"><span class="pre">D2</span> <span class="pre">-&gt;</span> <span class="pre">D1</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">binomial_p</span></code></p></td>
 <td><p>Float</p></td>
@@ -304,43 +321,43 @@
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">binomial_proportion</span></code></p></td>
 <td><p>Float</p></td>
-<td><p>Proportion of successful outcomes in the binomial test</p></td>
+<td><p>Estimated directionality proportion from the binomial test</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">binomial_proportion_ci</span></code></p></td>
 <td><p>String</p></td>
-<td><p>Confidence interval for the binomial proportion</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">disease_d1</span></code></p></td>
-<td><p>String</p></td>
-<td><p>Name of disease 1</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">system_d1</span></code></p></td>
-<td><p>String</p></td>
-<td><p>Phecode disease system for disease 1</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sex_d1</span></code></p></td>
-<td><p>String</p></td>
-<td><p>Sex-specificity of disease 1</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">disease_d2</span></code></p></td>
-<td><p>String</p></td>
-<td><p>Name of disease 2</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">system_d2</span></code></p></td>
-<td><p>String</p></td>
-<td><p>Phecode disease system for disease 2</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sex_d2</span></code></p></td>
-<td><p>String</p></td>
-<td><p>Sex-specificity of disease 2</p></td>
+<td><p>Confidence interval for the directionality proportion</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">binomial_p_significance</span></code></p></td>
 <td><p>Boolean</p></td>
-<td><p>Indicates whether the result is statistically significant based on adjusted p-value</p></td>
+<td><p>Whether <code class="docutils literal notranslate"><span class="pre">binomial_p</span></code> is significant after correction</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">binomial_p_adjusted</span></code></p></td>
 <td><p>Float</p></td>
-<td><p>Adjusted p-value for multiple comparisons</p></td>
+<td><p>Adjusted P-value for <code class="docutils literal notranslate"><span class="pre">binomial_p</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">disease_d1</span></code></p></td>
+<td><p>String</p></td>
+<td><p>Disease name for <code class="docutils literal notranslate"><span class="pre">phecode_d1</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">system_d1</span></code></p></td>
+<td><p>String</p></td>
+<td><p>Disease system for <code class="docutils literal notranslate"><span class="pre">phecode_d1</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sex_d1</span></code></p></td>
+<td><p>String</p></td>
+<td><p>Sex specificity for <code class="docutils literal notranslate"><span class="pre">phecode_d1</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">disease_d2</span></code></p></td>
+<td><p>String</p></td>
+<td><p>Disease name for <code class="docutils literal notranslate"><span class="pre">phecode_d2</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">system_d2</span></code></p></td>
+<td><p>String</p></td>
+<td><p>Disease system for <code class="docutils literal notranslate"><span class="pre">phecode_d2</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sex_d2</span></code></p></td>
+<td><p>String</p></td>
+<td><p>Sex specificity for <code class="docutils literal notranslate"><span class="pre">phecode_d2</span></code></p></td>
 </tr>
 </tbody>
 </table>
@@ -365,103 +382,106 @@
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">name_disease_pair</span></code></p></td>
 <td><p>String</p></td>
-<td><p>Name of the non-temporal disease pair (e.g., “D1-D2”)</p></td>
+<td><p>Disease-pair label in the format <code class="docutils literal notranslate"><span class="pre">D1-D2</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">N_exposed</span></code></p></td>
 <td><p>Integer</p></td>
-<td><p>Total number of individuals in exposed group</p></td>
+<td><p>Total number of exposed individuals in the analysis dataset</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">n_total</span></code></p></td>
 <td><p>Integer</p></td>
-<td><p>Number of exposed individuals included in the sub-cohort that meet the sex-specificity eligibility criteria for both diseases and after excluding those with history of either disease 1, disease 2, or related diseases</p></td>
+<td><p>Number of individuals included in the pair-specific regression analysis</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">n_exposed/n_cases</span></code></p></td>
 <td><p>String</p></td>
-<td><p>Number of exposed individuals (individuals with diagnosis of  D1) among cases (individuals with diagnosis of D2)</p></td>
+<td><p>Exposure summary among cases for the pair-specific model</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">n_exposed/n_controls</span></code></p></td>
 <td><p>String</p></td>
-<td><p>Number of exposed individuals (individuals with diagnosis of D1) among controls (individuals without diagnosis of D2)</p></td>
+<td><p>Exposure summary among controls for the pair-specific model</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">comorbidity_network_method</span></code></p></td>
 <td><p>String</p></td>
-<td><p>Method used for comorbidity network analysis</p></td>
+<td><p>Method used for comorbidity network analysis (<code class="docutils literal notranslate"><span class="pre">CN</span></code>, <code class="docutils literal notranslate"><span class="pre">RPCN</span></code>, or <code class="docutils literal notranslate"><span class="pre">PCN_PCA</span></code>)</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">describe</span></code></p></td>
 <td><p>String</p></td>
-<td><p>Description of the model fitting, removed covariates in the model, and reasons for removal of covariates in the model</p></td>
+<td><p>Model-fitting description, including removed covariates when relevant</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">co_vars_list</span></code></p></td>
 <td><p>String</p></td>
-<td><p>List of covariates used in the model</p></td>
+<td><p>Covariates retained in the fitted model</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">co_vars_zvalues</span></code></p></td>
 <td><p>String</p></td>
-<td><p>Z-values for each covariate in the model</p></td>
+<td><p>Z-values for covariates retained in the fitted model</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">comorbidity_beta</span></code></p></td>
 <td><p>Float</p></td>
-<td><p>Estimated coefficient from the comorbidity model</p></td>
+<td><p>Estimated effect size from the comorbidity network model</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">comorbidity_se</span></code></p></td>
 <td><p>Float</p></td>
-<td><p>Standard error of the estimated coefficient</p></td>
+<td><p>Standard error of the estimated effect size</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">comorbidity_p</span></code></p></td>
 <td><p>Float</p></td>
-<td><p>P-value for the comorbidity coefficient</p></td>
+<td><p>P-value for the comorbidity network effect</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">comorbidity_aic</span></code></p></td>
 <td><p>Float</p></td>
-<td><p>Akaike information criterion for the model</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">disease_d1</span></code></p></td>
-<td><p>String</p></td>
-<td><p>Name of the disease 1</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">system_d1</span></code></p></td>
-<td><p>String</p></td>
-<td><p>Phecode disease system for the disease 1</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sex_d1</span></code></p></td>
-<td><p>String</p></td>
-<td><p>Sex-specificity of the disease 1</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">disease_d2</span></code></p></td>
-<td><p>String</p></td>
-<td><p>Name of the disease 2</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">system_d2</span></code></p></td>
-<td><p>String</p></td>
-<td><p>Phecode disease system for the disease 2</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sex_d2</span></code></p></td>
-<td><p>String</p></td>
-<td><p>Sex-specificity of the disease 2</p></td>
+<td><p>Akaike information criterion of the fitted model</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">comorbidity_p_significance</span></code></p></td>
 <td><p>Boolean</p></td>
-<td><p>Whether the result is statistically significant based on adjusted p-value</p></td>
+<td><p>Whether <code class="docutils literal notranslate"><span class="pre">comorbidity_p</span></code> is significant after correction</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">comorbidity_p_adjusted</span></code></p></td>
 <td><p>Float</p></td>
-<td><p>Adjusted p-value accounting for multiple comparisons</p></td>
+<td><p>Adjusted P-value for <code class="docutils literal notranslate"><span class="pre">comorbidity_p</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><strong>Columns for RPCN method</strong></p></td>
-<td><p></p></td>
-<td><p></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">disease_d1</span></code></p></td>
+<td><p>String</p></td>
+<td><p>Disease name for <code class="docutils literal notranslate"><span class="pre">phecode_d1</span></code></p></td>
 </tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">system_d1</span></code></p></td>
+<td><p>String</p></td>
+<td><p>Disease system for <code class="docutils literal notranslate"><span class="pre">phecode_d1</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sex_d1</span></code></p></td>
+<td><p>String</p></td>
+<td><p>Sex specificity for <code class="docutils literal notranslate"><span class="pre">phecode_d1</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">disease_d2</span></code></p></td>
+<td><p>String</p></td>
+<td><p>Disease name for <code class="docutils literal notranslate"><span class="pre">phecode_d2</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">system_d2</span></code></p></td>
+<td><p>String</p></td>
+<td><p>Disease system for <code class="docutils literal notranslate"><span class="pre">phecode_d2</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sex_d2</span></code></p></td>
+<td><p>String</p></td>
+<td><p>Sex specificity for <code class="docutils literal notranslate"><span class="pre">phecode_d2</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Method-specific columns</strong></p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Variable Name</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">alpha</span></code></p></td>
 <td><p>Float</p></td>
-<td><p>Hyperparameter used for l1-norm (Weight multiplying the l1 penalty term)</p></td>
+<td><p>Present for <code class="docutils literal notranslate"><span class="pre">RPCN</span></code>; the L1 penalty level used in the final model</p></td>
 </tr>
-<tr class="row-odd"><td><p><strong>Columns for PCN_PCA method</strong></p></td>
-<td><p></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">pc_sum_variance_explained</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pc_sum_variance_explained</span></code></p></td>
 <td><p>Float</p></td>
-<td><p>The cumulative proportion of variance that is accounted for by a selected number of principal components in a Principal Component Analysis (sum of explained variance for principal components)</p></td>
+<td><p>Present for <code class="docutils literal notranslate"><span class="pre">PCN_PCA</span></code>; cumulative variance explained by retained principal components</p></td>
 </tr>
 </tbody>
 </table>
@@ -486,103 +506,106 @@
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">name_disease_pair</span></code></p></td>
 <td><p>String</p></td>
-<td><p>Name of the temporal disease pair (e.g., “D1 → D2”)</p></td>
+<td><p>Temporal disease-pair label, typically <code class="docutils literal notranslate"><span class="pre">D1-&gt;D2</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">N_exposed</span></code></p></td>
 <td><p>Integer</p></td>
-<td><p>Total number of individuals in exposed group</p></td>
+<td><p>Total number of exposed individuals in the analysis dataset</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">n_total</span></code></p></td>
 <td><p>Integer</p></td>
-<td><p>Number of exposed individuals included in the nested case-control dataset, where eligible cases (with diagnosis of D2) are all selected and matched with specified number of controls using incidence density sampling</p></td>
+<td><p>Number of individuals included in the nested case-control analysis for the pair</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">n_exposed/n_cases</span></code></p></td>
 <td><p>String</p></td>
-<td><p>Number of exposed individuals (individuals with diagnosis of  D1) among cases (individuals with diagnosis of D2)</p></td>
+<td><p>Exposure summary among sampled cases</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">n_exposed/n_controls</span></code></p></td>
 <td><p>String</p></td>
-<td><p>Number of exposed individuals (individuals with diagnosis of  D1) among cases (individuals with diagnosis of D2)</p></td>
+<td><p>Exposure summary among sampled controls</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">trajectory_method</span></code></p></td>
 <td><p>String</p></td>
-<td><p>Method used for disease trajectory analysis</p></td>
+<td><p>Method used for disease trajectory analysis (<code class="docutils literal notranslate"><span class="pre">CN</span></code>, <code class="docutils literal notranslate"><span class="pre">RPCN</span></code>, or <code class="docutils literal notranslate"><span class="pre">PCN_PCA</span></code>)</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">describe</span></code></p></td>
 <td><p>String</p></td>
-<td><p>Description of the model fitting, removed covariates in the model, and reasons for removal of covariates in the model</p></td>
+<td><p>Model-fitting description, including removed covariates when relevant</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">co_vars_list</span></code></p></td>
 <td><p>String</p></td>
-<td><p>List of covariates included in the model</p></td>
+<td><p>Covariates retained in the fitted model</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">co_vars_zvalues</span></code></p></td>
 <td><p>String</p></td>
-<td><p>Z-values for each covariate in the model</p></td>
+<td><p>Z-values for covariates retained in the fitted model</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">trajectory_beta</span></code></p></td>
 <td><p>Float</p></td>
-<td><p>Estimated coefficient from the model</p></td>
+<td><p>Estimated effect size from the trajectory model</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">trajectory_se</span></code></p></td>
 <td><p>Float</p></td>
-<td><p>Standard error of the estimated coefficient</p></td>
+<td><p>Standard error of the estimated effect size</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">trajectory_p</span></code></p></td>
 <td><p>Float</p></td>
-<td><p>P-value for the coefficient</p></td>
+<td><p>P-value for the trajectory effect</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">trajectory_aic</span></code></p></td>
 <td><p>Float</p></td>
-<td><p>Akaike information criterion for the model</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">disease_d1</span></code></p></td>
-<td><p>String</p></td>
-<td><p>Name of the disease 1</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">system_d1</span></code></p></td>
-<td><p>String</p></td>
-<td><p>Phecode disease system for the disease 1</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sex_d1</span></code></p></td>
-<td><p>String</p></td>
-<td><p>Sex-specificity of the disease 1</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">disease_d2</span></code></p></td>
-<td><p>String</p></td>
-<td><p>Name of the disease 2</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">system_d2</span></code></p></td>
-<td><p>String</p></td>
-<td><p>Phecode disease system for the disease 2</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sex_d2</span></code></p></td>
-<td><p>String</p></td>
-<td><p>Sex-specificity of the disease 2</p></td>
+<td><p>Akaike information criterion of the fitted model</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">trajectory_p_significance</span></code></p></td>
 <td><p>Boolean</p></td>
-<td><p>Whether the result is statistically significant based on adjusted p-value</p></td>
+<td><p>Whether <code class="docutils literal notranslate"><span class="pre">trajectory_p</span></code> is significant after correction</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">trajectory_p_adjusted</span></code></p></td>
 <td><p>Float</p></td>
-<td><p>Adjusted p-value accounting for multiple comparisons</p></td>
+<td><p>Adjusted P-value for <code class="docutils literal notranslate"><span class="pre">trajectory_p</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><strong>Columns for RPCN method</strong></p></td>
-<td><p></p></td>
-<td><p></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">disease_d1</span></code></p></td>
+<td><p>String</p></td>
+<td><p>Disease name for <code class="docutils literal notranslate"><span class="pre">phecode_d1</span></code></p></td>
 </tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">system_d1</span></code></p></td>
+<td><p>String</p></td>
+<td><p>Disease system for <code class="docutils literal notranslate"><span class="pre">phecode_d1</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sex_d1</span></code></p></td>
+<td><p>String</p></td>
+<td><p>Sex specificity for <code class="docutils literal notranslate"><span class="pre">phecode_d1</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">disease_d2</span></code></p></td>
+<td><p>String</p></td>
+<td><p>Disease name for <code class="docutils literal notranslate"><span class="pre">phecode_d2</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">system_d2</span></code></p></td>
+<td><p>String</p></td>
+<td><p>Disease system for <code class="docutils literal notranslate"><span class="pre">phecode_d2</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sex_d2</span></code></p></td>
+<td><p>String</p></td>
+<td><p>Sex specificity for <code class="docutils literal notranslate"><span class="pre">phecode_d2</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Method-specific columns</strong></p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Variable Name</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">alpha</span></code></p></td>
 <td><p>Float</p></td>
-<td><p>Hyperparameter used for l1-norm (weight multiplying the l1 penalty term)</p></td>
+<td><p>Present for <code class="docutils literal notranslate"><span class="pre">RPCN</span></code>; the L1 penalty level used in the final model</p></td>
 </tr>
-<tr class="row-odd"><td><p><strong>Columns for PCN_PCA method</strong></p></td>
-<td><p></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">pc_sum_variance_explained</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pc_sum_variance_explained</span></code></p></td>
 <td><p>Float</p></td>
-<td><p>The cumulative proportion of variance in a dataset that is accounted for by a selected number of principal components in a Principal Component Analysis (sum of explained variance for principal components)</p></td>
+<td><p>Present for <code class="docutils literal notranslate"><span class="pre">PCN_PCA</span></code>; cumulative variance explained by retained principal components</p></td>
 </tr>
 </tbody>
 </table>

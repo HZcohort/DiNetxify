@@ -7,14 +7,14 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Three-dimensional disease network analysis &mdash; DiNetxify  documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=92fd9be5" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -47,16 +47,21 @@
 <li class="toctree-l1"><a class="reference internal" href="data_prep.html">Input data preparation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data_harm.html">Data harmonization</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Three-dimensional disease network analysis</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#one-step-analysis">One-step analysis</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#step-by-step-analysis">Step-by-step analysis</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#phewas-analysis">3.2.1 PheWAS Analysis</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#disease-pair-generation">3.2.2 Disease pair generation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#comorbidity-strength-estimation">3.2.3 Comorbidity strength estimation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#binomial-test">3.2.4 Binomial test</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#comorbidity-network-analysis">3.2.5 Comorbidity network analysis</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#disease-trajectory-analysis">3.2.6 Disease trajectory analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#one-step-analysis">One-step analysis</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#core-pipeline-arguments">Core pipeline arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#method-specific-arguments">Method-specific arguments</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#step-by-step-analysis">Step-by-step analysis</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#phewas">1. PheWAS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#disease-pair-construction">2. Disease pair construction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#comorbidity-strength">3. Comorbidity strength</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#binomial-test">4. Binomial test</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#comorbidity-network-analysis">5. Comorbidity network analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#disease-trajectory-analysis">6. Disease trajectory analysis</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#outputs">Outputs</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="visual.html">Visualization</a></li>
@@ -91,314 +96,314 @@
              
   <section id="three-dimensional-disease-network-analysis">
 <h1>Three-dimensional disease network analysis<a class="headerlink" href="#three-dimensional-disease-network-analysis" title="Link to this heading"></a></h1>
-<p>Once the data is prepared and stored in a <code class="docutils literal notranslate"><span class="pre">DiseaseNetworkData</span></code> object, <code class="docutils literal notranslate"><span class="pre">DiNetxify</span></code> offers two approaches to perform the three-dimensional disease network analysis:</p>
+<p>Once your data have been loaded into a <code class="docutils literal notranslate"><span class="pre">DiseaseNetworkData</span></code> object, DiNetxify supports two ways to run the three-dimensional disease network analysis:</p>
 <ol class="arabic simple">
-<li><p><strong>One-step analysis:</strong> A comprehensive pipeline that automates the entire sequence of analyses (PheWAS → disease pair generation → comorbidity strength estimation → binomial test → comorbidity network analysis → disease trajectory analysis) or (PheWAS → disease pair generation → comorbidity strength estimation → comorbidity network analysis → binomial test → disease trajectory analysis) with one function call. This is convenient and ensures all steps are performed in the correct order with default or specified parameters.</p></li>
-<li><p><strong>Step-by-step analysis:</strong> Individual functions for each analysis component, allowing you to run and inspect each step separately. This approach offers enhanced control and flexibility, enabling parameter adjustment at every step. However, this comes at the cost of additional code.</p></li>
+<li><p>A one-step pipeline with <code class="docutils literal notranslate"><span class="pre">disease_network_pipeline()</span></code></p></li>
+<li><p>A step-by-step workflow using the individual analysis functions</p></li>
 </ol>
-<p>Both approaches output their results as <code class="docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code>, which you can further analysis or export using <code class="docutils literal notranslate"><span class="pre">pandas</span></code>. The one-step analysis minimizes redundant codes, but does not allow modifying certain internal parameters beyond what its arguments specified. The step-by-step analysis is more verbose but lets you adjust and understand each phase of the analysis in detail. We’ll demonstrate both appraoches.</p>
+<p>Both workflows return <code class="docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code> objects that you can inspect, export, or pass to the visualization module.</p>
 <section id="one-step-analysis">
 <h2>One-step analysis<a class="headerlink" href="#one-step-analysis" title="Link to this heading"></a></h2>
-<p>With your <code class="docutils literal notranslate"><span class="pre">DiseaseNetworkData</span></code> ready (let’s call it <code class="docutils literal notranslate"><span class="pre">data</span></code>), you can perform the entire analysis in one go using the <code class="docutils literal notranslate"><span class="pre">disease_network_pipeline()</span></code> function. This function returns all major result as <code class="docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code> that can be exported into various file formats. The example below illustrates using <code class="docutils literal notranslate"><span class="pre">disease_network_pipeline()</span></code> and it is applicable to any of the three study designs:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Reminder:</span>
-<span class="c1"># When using multiprocessing, ensure that the code is enclosed within the following block.</span>
-<span class="c1"># This prevents entering a never ending loop of new process creation.</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">DiNetxify</span><span class="w"> </span><span class="kn">import</span> <span class="n">disease_network_pipeline</span>  
+<p><code class="docutils literal notranslate"><span class="pre">disease_network_pipeline()</span></code> runs the main analysis workflow in order:</p>
+<p><code class="docutils literal notranslate"><span class="pre">PheWAS</span> <span class="pre">-&gt;</span> <span class="pre">disease</span> <span class="pre">pair</span> <span class="pre">construction</span> <span class="pre">-&gt;</span> <span class="pre">comorbidity</span> <span class="pre">strength</span> <span class="pre">-&gt;</span> <span class="pre">binomial</span> <span class="pre">test</span> <span class="pre">/</span> <span class="pre">comorbidity</span> <span class="pre">network</span> <span class="pre">-&gt;</span> <span class="pre">disease</span> <span class="pre">trajectory</span></code></p>
+<p>Two pipeline modes are available:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">pipeline_mode='v1'</span></code>: run the binomial test before the comorbidity network analysis</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pipeline_mode='v2'</span></code>: run the comorbidity network analysis before the binomial test, and restrict the binomial test to network-significant pairs</p></li>
+</ul>
+<p>Example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">DiNetxify</span> <span class="kn">import</span> <span class="n">disease_network_pipeline</span>
 
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>  <span class="c1"># Required when using multiprocessing on Windows, MacOS, Linux</span>
-    <span class="n">phewas_result</span><span class="p">,</span> <span class="n">com_strength_result</span><span class="p">,</span> <span class="n">com_network_result</span><span class="p">,</span> <span class="n">binomial_result</span><span class="p">,</span> <span class="n">trajectory_result</span> <span class="o">=</span> <span class="n">disease_network_pipeline</span><span class="p">(</span>
-        <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">n_process</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+<span class="c1"># When using multiprocessing, wrap the call in the main guard.</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="p">(</span>
+        <span class="n">phewas_result</span><span class="p">,</span>
+        <span class="n">com_strength_result</span><span class="p">,</span>
+        <span class="n">com_network_result</span><span class="p">,</span>
+        <span class="n">binomial_result</span><span class="p">,</span>
+        <span class="n">trajectory_result</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">=</span> <span class="n">disease_network_pipeline</span><span class="p">(</span>
+        <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+        <span class="n">n_process</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
         <span class="n">n_threshold_phewas</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
         <span class="n">n_threshold_comorbidity</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
-        <span class="n">output_dir</span><span class="o">=</span><span class="s2">&quot;/your/project/path/results/&quot;</span><span class="p">,</span>
+        <span class="n">output_dir</span><span class="o">=</span><span class="s2">&quot;./results&quot;</span><span class="p">,</span>
         <span class="n">project_prefix</span><span class="o">=</span><span class="s2">&quot;disease_network&quot;</span><span class="p">,</span>
         <span class="n">keep_positive_associations</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">save_intermediate_data</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">system_exl</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;symptoms&#39;</span><span class="p">,</span> <span class="s1">&#39;others&#39;</span><span class="p">,</span> <span class="s1">&#39;injuries &amp; poisonings&#39;</span><span class="p">],</span>
+        <span class="n">system_exl</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;symptoms&quot;</span><span class="p">,</span> <span class="s2">&quot;others&quot;</span><span class="p">,</span> <span class="s2">&quot;injuries &amp; poisonings&quot;</span><span class="p">],</span>
         <span class="n">pipeline_mode</span><span class="o">=</span><span class="s2">&quot;v1&quot;</span><span class="p">,</span>
         <span class="n">method</span><span class="o">=</span><span class="s2">&quot;RPCN&quot;</span><span class="p">,</span>
-        <span class="n">covariates</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;BMI&#39;</span><span class="p">,</span> <span class="s1">&#39;age&#39;</span><span class="p">,</span> <span class="s1">&#39;sex&#39;</span><span class="p">],</span>
-        <span class="n">matching_var_dict</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;sex&#39;</span><span class="p">:</span> <span class="s1">&#39;exact&#39;</span><span class="p">},</span>
+        <span class="n">covariates</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;age&quot;</span><span class="p">,</span> <span class="s2">&quot;BMI&quot;</span><span class="p">],</span>
+        <span class="n">matching_var_dict</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;sex&quot;</span><span class="p">:</span> <span class="s2">&quot;exact&quot;</span><span class="p">},</span>
         <span class="n">matching_n</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
         <span class="n">min_interval_days</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-        <span class="n">max_interval_days</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">),</span>
-        <span class="n">enforce_temporal_order</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">correction</span><span class="o">=</span><span class="s1">&#39;bonferroni&#39;</span><span class="p">,</span>
-        <span class="n">cutoff</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span> 
+        <span class="n">max_interval_days</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">),</span>
+        <span class="n">enforce_temporal_order</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">correction</span><span class="o">=</span><span class="s2">&quot;bonferroni&quot;</span><span class="p">,</span>
+        <span class="n">cutoff</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+    <span class="p">)</span>
 </pre></div>
 </div>
-<blockquote>
-<div><p><strong>Note:</strong> When using multiprocessing, multi-threading may not always close successfully, which can cause conflicts that significantly affect performance. We recommend disabling multi-threading manually with the following code (Linux):</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">OPENBLAS_NUM_THREADS</span><span class="o">=</span><span class="m">1</span>
-<span class="nb">export</span><span class="w"> </span><span class="nv">MKL_NUM_THREADS</span><span class="o">=</span><span class="m">1</span>
-<span class="nb">export</span><span class="w"> </span><span class="nv">BLIS_NUM_THREADS</span><span class="o">=</span><span class="m">1</span>
-<span class="nb">export</span><span class="w"> </span><span class="nv">OMP_NUM_THREADS</span><span class="o">=</span><span class="m">1</span>
-<span class="nb">export</span><span class="w"> </span><span class="nv">NUMEXPR_NUM_THREADS</span><span class="o">=</span><span class="m">1</span>
-</pre></div>
-</div>
-<p>or the following code in Windows:</p>
-<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="nb">set </span><span class="n">OPENBLAS_NUM_THREADS</span><span class="p">=</span><span class="n">1</span>
-<span class="nb">set </span><span class="n">MKL_NUM_THREADS</span><span class="p">=</span><span class="n">1</span>
-<span class="nb">set </span><span class="n">BLIS_NUM_THREADS</span><span class="p">=</span><span class="n">1</span>
-<span class="nb">set </span><span class="n">OMP_NUM_THREADS</span><span class="p">=</span><span class="n">1</span>
-<span class="nb">set </span><span class="n">NUMEXPR_NUM_THREADS</span><span class="p">=</span><span class="n">1</span>
-</pre></div>
-</div>
-</div></blockquote>
-<ul>
-<li><p><strong>Parameters (key arguments in <code class="docutils literal notranslate"><span class="pre">disease_network_pipeline()</span></code>):</strong></p>
+<p>Important notes:</p>
 <ul class="simple">
-<li><p><strong>data</strong> – The <code class="docutils literal notranslate"><span class="pre">DiseaseNetworkData</span></code> object containing your loaded phenotype and medical record data.</p></li>
-<li><p><strong>n_process</strong> – Number of parallel processes for computation. Use <code class="docutils literal notranslate"><span class="pre">1</span></code> for single-threaded execution, or higher to speed up analysis with multiprocessing (especially beneficial for large datasets). <em>(No default; you must specify this.)</em></p></li>
-<li><p><strong>n_threshold_phewas</strong> – Minimum number of exposed cases required for each disease (phecode) to be included in the PheWAS analysis. This filters out very rare diseases. (This value is passed to the internal <code class="docutils literal notranslate"><span class="pre">phewas()</span></code> function.)</p></li>
-<li><p><strong>n_threshold_comorbidity</strong> – Minimum number of exposed individuals in whom a given disease pair co-occurs (considering both temporal and non-temporal occurrences) to include that pair in the comorbidity strength analysis. (Passed to <code class="docutils literal notranslate"><span class="pre">comorbidity_strength()</span></code>.)</p></li>
-<li><p><strong>output_dir</strong> – Directory path for saving output files. The pipeline will create result files here (e.g., results in CSV and log files, etc.). Use an absolute path or a path relative to your working directory.</p></li>
-<li><p><strong>project_prefix</strong> – A string prefix for naming output files. For example, if <code class="docutils literal notranslate"><span class="pre">project_prefix=&quot;disease_network&quot;</span></code>, output files might be named like <code class="docutils literal notranslate"><span class="pre">disease_network_phewas_results.csv</span></code>, etc.</p></li>
-<li><p><strong>keep_positive_associations</strong> – If set to <code class="docutils literal notranslate"><span class="pre">True</span></code>, the pipeline will filter results to retain only “positive” associations. For example, diseases with hazard ratio (HR) &gt; 1 in the PheWAS and disease pairs with positive correlation in comorbidity analysis. <em>(Default: False – retains all significant associations regardless of direction.)</em></p></li>
-<li><p><strong>save_intermediate_data</strong> – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, intermediate <code class="docutils literal notranslate"><span class="pre">DiseaseNetworkData</span></code> objects (specifically those created during disease pair generation) will be saved to disk. <em>(Default: False)</em>.</p></li>
-<li><p><strong>system_exl</strong> – A list of phecode disease categories/systems to exclude from all analyses. If certain categories/systems of diseases are not of interest or should be filtered out (e.g., <code class="docutils literal notranslate"><span class="pre">‘symptoms’</span></code> or <code class="docutils literal notranslate"><span class="pre">‘injuries</span> <span class="pre">&amp;</span> <span class="pre">poisonings’</span></code>). If set to <code class="docutils literal notranslate"><span class="pre">None</span></code> or an empty list, no system is excluded. <em>(Default: None)</em>. Valid system names include: <em>circulatory system, congenital anomalies, dermatologic, digestive, endocrine/metabolic, genitourinary, hematopoietic, infectious diseases, injuries &amp; poisonings, mental disorders, musculoskeletal, neoplasms, neurological, pregnancy complications, respiratory, sense organs, symptoms, others</em>.</p></li>
-<li><p><strong>pipeline_mode</strong> – Specifies the order of analysis. Two modes are available:</p>
-<ul>
-<li><p><strong>‘v1’</strong>: PheWAS → comorbidity strength → binomial test → <em>then parallel/complementary</em>: comorbidity network analysis and disease trajectory analysis. (In this mode, the binomial test is run on all eligible disease pairs without considering network analysis results, so trajectory and network analyses can be done independently.)</p></li>
-<li><p><strong>‘v2’</strong>: PheWAS → comorbidity strength → comorbidity network analysis → binomial test → disease trajectory analysis. (In this mode, only the disease pairs deemed significant in the network analysis are subjected to the binomial test and subsequently used for trajectory analysis. This means the trajectory analysis focuses on a subset defined by network results.)
-<em>(Default: ‘v1’)</em>. Choose ‘v2’ if you want a more stringent approach where trajectory analysis is conditional on network significance; otherwise, ‘v1’ covers all pairs passing earlier filters.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">output_dir</span></code> must already exist.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_threshold_comorbidity</span></code> must be less than or equal to <code class="docutils literal notranslate"><span class="pre">n_threshold_phewas</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">keep_positive_associations=True</span></code> keeps PheWAS results with <code class="docutils literal notranslate"><span class="pre">phewas_coef</span> <span class="pre">&gt;=</span> <span class="pre">0</span></code> for non-exposed-only designs, and keeps comorbidity pairs with <code class="docutils literal notranslate"><span class="pre">phi</span> <span class="pre">&gt;</span> <span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">RR</span> <span class="pre">&gt;</span> <span class="pre">1</span></code>.</p></li>
+<li><p>The pipeline writes result tables and log files to <code class="docutils literal notranslate"><span class="pre">output_dir</span></code>, in addition to returning the result DataFrames.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">save_intermediate_data=True</span></code>, the intermediate <code class="docutils literal notranslate"><span class="pre">DiseaseNetworkData</span></code> object created after disease-pair generation is saved with the prefix <code class="docutils literal notranslate"><span class="pre">project_prefix</span></code>.</p></li>
 </ul>
-</li>
-<li><p><strong>method</strong> – The method used for comorbidity network and disease trajectory analysis. Options are:</p>
-<ul>
-<li><p><strong>‘RPCN’</strong> – <em>Regularized Partial Correlation Network</em>. This method uses a regularized logistic regression framework including all other diseases as covariates (with L1 penalty) to evaluate direct disease-disease associations, adjusting for other covariates. <em>(This is the default and our recommended approach.)</em></p></li>
-<li><p><strong>‘PCN_PCA’</strong> – <em>Partial Correlation Network with PCA</em>. Similar to RPCN but applies principal component analysis to reduce dimensionality of the “other diseases” covariates before computing the network. This can significantly reduce the computation time required.</p></li>
-<li><p><strong>‘CN’</strong> – <em>Correlation Network</em>. A simpler approach using standard logistic regression for each disease pair (plus covariates) without partialling out other diseases. Essentially assesses correlation of each pair independently.
-<em>(Default: ‘RPCN’)</em>. The choice of method will affect how comorbidity networks and trajectories are inferred.</p></li>
+<section id="core-pipeline-arguments">
+<h3>Core pipeline arguments<a class="headerlink" href="#core-pipeline-arguments" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">data</span></code>: A <code class="docutils literal notranslate"><span class="pre">DiseaseNetworkData</span></code> object with phenotype data and medical records already loaded.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_process</span></code>: Number of processes for the parallelized steps.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_threshold_phewas</span></code>: Minimum number of exposed cases required for a phecode to enter PheWAS.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_threshold_comorbidity</span></code>: Minimum number of exposed individuals with a disease pair for comorbidity strength estimation.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">system_exl</span></code>: Optional list of phecode systems to exclude.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">method</span></code>: One of <code class="docutils literal notranslate"><span class="pre">'RPCN'</span></code>, <code class="docutils literal notranslate"><span class="pre">'PCN_PCA'</span></code>, or <code class="docutils literal notranslate"><span class="pre">'CN'</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">covariates</span></code>: Covariates used in PheWAS, comorbidity network analysis, and trajectory analysis.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">matching_var_dict</span></code>: Matching rules for trajectory analysis. Use <code class="docutils literal notranslate"><span class="pre">'sex'</span></code> for sex.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">matching_n</span></code>: Maximum number of matched controls per case in trajectory analysis.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">min_interval_days</span></code>, <code class="docutils literal notranslate"><span class="pre">max_interval_days</span></code>: Time-window settings used when building disease pairs.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">enforce_temporal_order</span></code>: Passed to <code class="docutils literal notranslate"><span class="pre">binomial_test()</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">correction</span></code>, <code class="docutils literal notranslate"><span class="pre">cutoff</span></code>: Multiple-testing correction method and significance threshold.</p></li>
 </ul>
-</li>
-<li><p><strong>covariates</strong> – List of covariates to adjust for in the PheWAS, comorbidity network, and disease trajectory analysis. These should match the covariates you provided in <code class="docutils literal notranslate"><span class="pre">phenotype_data()</span></code>. For example, <code class="docutils literal notranslate"><span class="pre">['BMI',</span> <span class="pre">'age',</span> <span class="pre">'sex']</span></code> as shown above. To include the required variable sex as a covariate, always use <code class="docutils literal notranslate"><span class="pre">sex</span></code> instead of its original column name. <em>(Default: None, meaning adjust for sex along with all specified covariates.)</em></p></li>
-<li><p><strong>matching_var_dict</strong> – A dictionary specifying how controls are matched to cases for the trajectory analysis (which uses an incidence density sampling approach). Keys are variable names to match on, and values specify matching criteria: for categorical or binary variables use <code class="docutils literal notranslate"><span class="pre">'exact'</span></code>; for continuous variables, provide a numeric tolerance. <strong>Important:</strong> use <code class="docutils literal notranslate"><span class="pre">'sex'</span></code> to match on sex (even if your original column name was different) because the data object uses a standardized ‘sex’ field. Other covariates should be referred to by their original names. <em>(Default: {‘sex’: ‘exact’}, meaning match controls to cases by sex.)</em>.</p></li>
-<li><p><strong>matching_n</strong> – Maximum number of matched controls to select for each case in the trajectory analysis. For example, <code class="docutils literal notranslate"><span class="pre">matching_n=2</span></code> tries to find up to 2 controls per case. <em>(Default: 2)</em>.</p></li>
-<li><p><strong>min_interval_days</strong> – Minimum time interval in days required between two diagnoses to consider one occurring <em>before</em> the other for temporal (trajectory) analysis. If the time between D1 and D2 diagnoses in an individual is less than or equal to this threshold, the pair is treated as effectively simultaneous (and thus not counted as a temporal sequence). <em>(Default: 0 days)</em>. Setting a positive number here can exclude very closely timed diagnoses from being considered as one preceding the other.</p></li>
-<li><p><strong>max_interval_days</strong> – Maximum time interval in days to consider for disease pairs. If the gap between two diagnoses is larger than this, that pair occurrence might be ignored for certain analyses. <em>(Default: infinity, i.e., no maximum gap applied.)</em>.</p></li>
-<li><p><strong>enforce_temporal_order</strong> – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, the pipeline will enforce strict temporal ordering in the trajectory analyses: any individual who has a disease pair in the opposite order (D2 before D1) may be excluded from certain calculations, and the binomial test will only consider pairs where a clear ordering can be established. In practice, setting this to True means the binomial test will ignore individuals who have the diseases in both orders, and the trajectory analysis will also respect the specified <code class="docutils literal notranslate"><span class="pre">min_interval_days</span></code> and <code class="docutils literal notranslate"><span class="pre">max_interval_days</span></code> strictly. <em>(Default: False)</em>.</p></li>
-<li><p><strong>correction</strong> – The multiple hypothesis testing correction method to apply to p-values (where applicable). This uses methods from <code class="docutils literal notranslate"><span class="pre">statsmodels.stats.multitest.multipletests</span></code>. Options include <code class="docutils literal notranslate"><span class="pre">'bonferroni'</span></code>, <code class="docutils literal notranslate"><span class="pre">'holm'</span></code>, <code class="docutils literal notranslate"><span class="pre">'fdr_bh'</span></code>, etc. <em>(Default: ‘bonferroni’)</em>.</p></li>
-<li><p><strong>cutoff</strong> – Significance cutoff for adjusted p-values. <em>(Default: 0.05)</em>. Any results with adjusted p-value above this threshold will be considered non-significant and typically filtered out from the final results.</p></li>
+</section>
+<section id="method-specific-arguments">
+<h3>Method-specific arguments<a class="headerlink" href="#method-specific-arguments" title="Link to this heading"></a></h3>
+<p>For <code class="docutils literal notranslate"><span class="pre">method=&quot;RPCN&quot;</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">auto_penalty=True</span></code> by default</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">alpha_range=(1,</span> <span class="pre">15)</span></code> by default when <code class="docutils literal notranslate"><span class="pre">auto_penalty=True</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">scaling_factor=1</span></code> by default</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">auto_penalty=False</span></code>, you must provide <code class="docutils literal notranslate"><span class="pre">alpha</span></code></p></li>
 </ul>
-<p>The <code class="docutils literal notranslate"><span class="pre">disease_network_pipeline</span></code> will return a tuple of DataFrames: in order, these correspond to <strong>phewas_result</strong>, <strong>com_strength_result</strong> (comorbidity strength), <strong>com_network_result</strong> (comorbidity network), <strong>binomial_result</strong>, and <strong>trajectory_result</strong>. In addition to returning these, the function writes out certain results and logs to files in <code class="docutils literal notranslate"><span class="pre">output_dir</span></code> for your records.</p>
-</li>
+<p>For <code class="docutils literal notranslate"><span class="pre">method=&quot;PCN_PCA&quot;</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">n_PC=5</span></code> by default</p></li>
+<li><p>or use <code class="docutils literal notranslate"><span class="pre">explained_variance=&lt;float</span> <span class="pre">between</span> <span class="pre">0</span> <span class="pre">and</span> <span class="pre">1&gt;</span></code> instead of <code class="docutils literal notranslate"><span class="pre">n_PC</span></code></p></li>
 </ul>
+</section>
 </section>
 <section id="step-by-step-analysis">
 <h2>Step-by-step analysis<a class="headerlink" href="#step-by-step-analysis" title="Link to this heading"></a></h2>
-<p>If you want to run each part of the analysis separately — for example, to inspect intermediate outputs, adjust parameters for individual steps, or run alternative filtering between steps, <em><strong>DiNetxify</strong></em> will allow these by calling individual functions for each analysis stage. Below we illustrate a step-by-step analysis performing the same overall analysis as the one-step analysis above. We will reuse the <code class="docutils literal notranslate"><span class="pre">data</span></code> object already loaded.</p>
-<section id="phewas-analysis">
-<h3>3.2.1 PheWAS Analysis<a class="headerlink" href="#phewas-analysis" title="Link to this heading"></a></h3>
-<p>To perform a PheWAS (Phenome-Wide Association Study) using <em><strong>DiNetxify</strong></em>, use the <code class="docutils literal notranslate"><span class="pre">dnt.phewas()</span></code> function. This function will identify which diseases (phecodes) are significantly associated with the exposure of interest. In a cohort or matched cohort cohort study, it runs Cox proportional hazards models and reports hazard ratios (HR) and p-values for each disease comparing exposed vs unexposed. In an exposed-only cohort study, this function simply flags diseases that exceed a certain incidence threshold.</p>
-<p>The example below demonstrates a PheWAS in a matched cohort study, adjusting for covariates and using parallel processing:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Reminder: if using n_process &gt; 1, wrap calls in if __name__ == &quot;__main__&quot;:</span>
-
-<span class="n">phewas_result</span> <span class="o">=</span> <span class="n">dnt</span><span class="o">.</span><span class="n">phewas</span><span class="p">(</span>  
-    <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>                                             <span class="c1"># our DiseaseNetworkData object  </span>
-    <span class="n">covariates</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;BMI&#39;</span><span class="p">,</span> <span class="s1">&#39;age&#39;</span><span class="p">,</span> <span class="s1">&#39;sex&#39;</span><span class="p">],</span>                      <span class="c1"># adjust for BMI, age and sex  </span>
-    <span class="n">proportion_threshold</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>                             <span class="c1"># require at least 1% of exposed have the disease  </span>
-    <span class="n">n_process</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>                                           <span class="c1"># use 2 processes for parallel model fitting  </span>
-    <span class="n">correction</span><span class="o">=</span><span class="s1">&#39;bonferroni&#39;</span><span class="p">,</span>                               <span class="c1"># multiple testing correction method  </span>
-    <span class="n">cutoff</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>                                           <span class="c1"># significance threshold  </span>
-    <span class="n">system_inc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>                                       <span class="c1"># (optional) include only certain systems  </span>
-    <span class="n">system_exl</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>                                       <span class="c1"># (optional) exclude certain systems  </span>
-    <span class="n">phecode_inc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>                                      <span class="c1"># (optional) include only certain phecodes  </span>
-    <span class="n">phecode_exl</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>                                      <span class="c1"># (optional) exclude certain phecodes  </span>
-    <span class="n">log_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>                                         <span class="c1"># (optional) log file prefix  </span>
-    <span class="n">lifelines_disable</span><span class="o">=</span><span class="kc">False</span>                                <span class="c1"># whether to disable lifelines (Cox model library)  </span>
-<span class="p">)</span>  
-
+<p>Use the step-by-step workflow if you want to inspect intermediate outputs or customize each stage separately.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">DiNetxify</span> <span class="k">as</span> <span class="nn">dnt</span>
 </pre></div>
 </div>
-<p>Important points about <code class="docutils literal notranslate"><span class="pre">phewas()</span></code>:</p>
+<section id="phewas">
+<h3>1. PheWAS<a class="headerlink" href="#phewas" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">dnt.phewas()</span></code> identifies phecodes associated with the exposure.</p>
 <ul class="simple">
-<li><p>We specified <code class="docutils literal notranslate"><span class="pre">proportion_threshold=0.01</span></code> which means a phecode must have at least 1% of exposed individuals as cases to be considered. (This is an alternative to using <code class="docutils literal notranslate"><span class="pre">n_threshold</span></code>; you generally use one or the other, not both.)</p></li>
-<li><p>We left inclusion/exclusion lists as <code class="docutils literal notranslate"><span class="pre">None</span></code>, meaning we are analyzing all diseases.</p></li>
-<li><p>We enabled <code class="docutils literal notranslate"><span class="pre">'bonferroni'</span></code> correction on p-values and set a cutoff of 0.05 for significance.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">lifelines_disable=False</span></code> means we switch to <code class="docutils literal notranslate"><span class="pre">lifelines</span></code> package for Cox model fitting when <code class="docutils literal notranslate"><span class="pre">statsmodels</span></code> failed to converge.</p></li>
+<li><p>In <code class="docutils literal notranslate"><span class="pre">cohort</span></code> and <code class="docutils literal notranslate"><span class="pre">matched</span> <span class="pre">cohort</span></code> designs, it fits Cox models.</p></li>
+<li><p>In <code class="docutils literal notranslate"><span class="pre">exposed-only</span> <span class="pre">cohort</span></code>, it marks a phecode as significant when <code class="docutils literal notranslate"><span class="pre">N_cases_exposed</span></code> reaches the threshold.</p></li>
 </ul>
-<p>Running <code class="docutils literal notranslate"><span class="pre">dnt.phewas()</span></code> returns a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> (<code class="docutils literal notranslate"><span class="pre">phewas_result</span></code>). In a cohort design, this <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> will include columns such as: phecode, disease name, number of cases in exposed and unexposed, hazard ratio (HR) and its confidence interval, p-value, and adjusted p-value (q-value). For a matched cohort, similar output with stratified Cox results. For an exposed-only design, the output will only include basic statistics.</p>
-<p>By examining <code class="docutils literal notranslate"><span class="pre">phewas_result</span></code>, you can see which diseases are significantly associated with your exposure of interest. Typically, for downstream analysis, we will focus on diseases with HR &gt; 1 and q-value &lt; cutoff, which is exactly what the <code class="docutils literal notranslate"><span class="pre">keep_positive_associations=True</span></code> setting in the pipeline would enforce.</p>
-<p>After obtaining <code class="docutils literal notranslate"><span class="pre">phewas_result</span></code>, if you want to apply a different multiple testing correction or filter in a custom way, <em><strong>DiNetxify</strong></em> provides convenience functions: you can use <code class="docutils literal notranslate"><span class="pre">dnt.phewas_multipletests()</span></code> to adjust p-values in <code class="docutils literal notranslate"><span class="pre">phewas_result</span></code> using a specified method (if you didn’t do it inside <code class="docutils literal notranslate"><span class="pre">phewas()</span></code> or want to try a different method):</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Example: applying a different correction (e.g., FDR) to the PheWAS results  </span>
-<span class="n">phewas_result</span> <span class="o">=</span> <span class="n">dnt</span><span class="o">.</span><span class="n">phewas_multipletests</span><span class="p">(</span>  
-    <span class="n">df</span><span class="o">=</span><span class="n">phewas_result</span><span class="p">,</span>  
-    <span class="n">correction</span><span class="o">=</span><span class="s1">&#39;fdr_bh&#39;</span><span class="p">,</span>   <span class="c1"># Benjamini-Hochberg FDR  </span>
-    <span class="n">cutoff</span><span class="o">=</span><span class="mf">0.05</span>  
-<span class="p">)</span> 
-</pre></div>
-</div>
-<p>This will add columns in <code class="docutils literal notranslate"><span class="pre">phewas_result</span></code> for adjusted p-values and significance flags according to the chosen method and cutoff. (The <code class="docutils literal notranslate"><span class="pre">df</span></code> parameter is just the DataFrame from <code class="docutils literal notranslate"><span class="pre">phewas()</span></code>, so you can call this on any similar results <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>)</p>
-</section>
-<section id="disease-pair-generation">
-<h3>3.2.2 Disease pair generation<a class="headerlink" href="#disease-pair-generation" title="Link to this heading"></a></h3>
-<p>After identifying which diseases are associated with the exposure (through PheWAS), the next step is to generate all possible disease pairs from that set of diseases for further analysis. In <em><strong>DiNetxify</strong></em>, this is done using the <code class="docutils literal notranslate"><span class="pre">DiseaseNetworkData.disease_pair()</span></code> method, which operates on the <code class="docutils literal notranslate"><span class="pre">data</span></code> object. It will produce all combinations of the significant diseases for each individual, distinguishing between <em>temporal</em> pairs (D1 before D2) and <em>non-temporal</em> co-occurrence.</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">disease_pair()</span></code> method requires the PheWAS result <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> to know which diseases to consider. It also allows specifying time interval constraints. For example:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Generate disease pairs for further analysis  </span>
-<span class="n">data</span><span class="o">.</span><span class="n">disease_pair</span><span class="p">(</span>  
-    <span class="n">phewas_result</span><span class="o">=</span><span class="n">phewas_result</span><span class="p">,</span>     <span class="c1"># DataFrame from PheWAS (to get the list of diseases)  </span>
-    <span class="n">min_interval_days</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>             <span class="c1"># minimum days between diagnoses for D1-&gt;D2 (0 = no minimum)  </span>
-    <span class="n">max_interval_days</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">),</span>  <span class="c1"># maximum days between diagnoses to consider (inf = no limit)  </span>
-    <span class="n">force</span><span class="o">=</span><span class="kc">False</span>                      <span class="c1"># if data already has pair info, this prevents overwrite unless True  </span>
+<p>Example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phewas_result</span> <span class="o">=</span> <span class="n">dnt</span><span class="o">.</span><span class="n">phewas</span><span class="p">(</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+    <span class="n">covariates</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;age&quot;</span><span class="p">,</span> <span class="s2">&quot;BMI&quot;</span><span class="p">],</span>
+    <span class="n">n_threshold</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">n_process</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+    <span class="n">correction</span><span class="o">=</span><span class="s2">&quot;bonferroni&quot;</span><span class="p">,</span>
+    <span class="n">cutoff</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+    <span class="n">system_exl</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">phecode_inc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">phecode_exl</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">log_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">lifelines_disable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
-<p>Important points about <code class="docutils literal notranslate"><span class="pre">disease_pair()</span></code>:</p>
+<p>Notes:</p>
 <ul class="simple">
-<li><p><strong>phewas_result</strong> – the <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> of PheWAS results.</p></li>
-<li><p><strong>min_interval_days</strong>, <strong>max_interval_days</strong> – these define the time window for considering temporal relationships. As defined earlier, here we’ve left them at 0 and infinity which means we include all occurrences and do not impose a maximum gap. If you wanted to only consider, say, disease pairs where events occur within 5 years of each other, you could set <code class="docutils literal notranslate"><span class="pre">max_interval_days=1825</span></code> (approximately 5*365).</p></li>
-<li><p><strong>force</strong> – similar to earlier methods, if <code class="docutils literal notranslate"><span class="pre">False</span></code> it will not recompute pairs if they were already computed before for this data object (to avoid unnecessary overwriting). Use <code class="docutils literal notranslate"><span class="pre">True</span></code> to force overwriting.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_threshold</span></code> and <code class="docutils literal notranslate"><span class="pre">proportion_threshold</span></code> are mutually exclusive.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">covariates=None</span></code>, DiNetxify uses <code class="docutils literal notranslate"><span class="pre">'sex'</span></code> plus the covariates provided in <code class="docutils literal notranslate"><span class="pre">phenotype_data()</span></code>.</p></li>
+<li><p>In matched cohorts, including matching variables as covariates may cause singular-model issues.</p></li>
 </ul>
-<p>This function will generate a new attribute in the <code class="docutils literal notranslate"><span class="pre">data</span></code> that contains information about each disease pair found in each person. The subsequent function <code class="docutils literal notranslate"><span class="pre">comorbidity_strength()</span></code> will use the updated <code class="docutils literal notranslate"><span class="pre">data</span></code> object which now has the disease pair information to calculate metrics.</p>
-<blockquote>
-<div><p>Note: In the one-step analysis, <code class="docutils literal notranslate"><span class="pre">disease_pair()</span></code> generation is handled internally; here we are making it explicit</p>
-</div></blockquote>
-</section>
-<section id="comorbidity-strength-estimation">
-<h3>3.2.3 Comorbidity strength estimation<a class="headerlink" href="#comorbidity-strength-estimation" title="Link to this heading"></a></h3>
-<p>The next step is to assess the <strong>comorbidity strength</strong> of each disease pair – essentially measuring how strongly the two diseases are associated with each other in a cross-sectional sense (regardless of time order). <em><strong>DiNetxify</strong></em>’s <code class="docutils literal notranslate"><span class="pre">comorbidity_strength()</span></code> function calculates statistics <strong>relative risk (RR)</strong> and <strong>phi-correlation</strong> for each pair, and can perform filtering and significance testing.</p>
-<p>Using the <code class="docutils literal notranslate"><span class="pre">data</span></code> object (which now has disease pairs from the previous step), we can run:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Reminder: if using n_process &gt; 1, wrap calls in if __name__ == &quot;__main__&quot;:</span>
-<span class="n">com_strength_result</span> <span class="o">=</span> <span class="n">dnt</span><span class="o">.</span><span class="n">comorbidity_strength</span><span class="p">(</span>  
-    <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>  
-    <span class="n">proportion_threshold</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>    <span class="c1"># Alternatively, could require a certain prevalence  </span>
-    <span class="n">n_threshold</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>              <span class="c1"># Only consider pairs that co-occur in at least 100 exposed individuals (same as we used above)  </span>
-    <span class="n">n_process</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>                  <span class="c1"># Single process (this function is usually fast; can set &gt;1 if needed)  </span>
-    <span class="n">log_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>                <span class="c1"># Log file (optional)  </span>
-    <span class="n">correction_phi</span><span class="o">=</span><span class="s1">&#39;bonferroni&#39;</span><span class="p">,</span>  <span class="c1"># Correction method for Phi coefficient p-values  </span>
-    <span class="n">cutoff_phi</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>              <span class="c1"># Significance cutoff for Phi  </span>
-    <span class="n">correction_RR</span><span class="o">=</span><span class="s1">&#39;bonferroni&#39;</span><span class="p">,</span>   <span class="c1"># Correction method for RR p-values  </span>
-    <span class="n">cutoff_RR</span><span class="o">=</span><span class="mf">0.05</span>                <span class="c1"># Significance cutoff for RR  </span>
-<span class="p">)</span>  
-
+<p>If you want to reapply multiple-testing correction later:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phewas_result</span> <span class="o">=</span> <span class="n">dnt</span><span class="o">.</span><span class="n">phewas_multipletests</span><span class="p">(</span>
+    <span class="n">df</span><span class="o">=</span><span class="n">phewas_result</span><span class="p">,</span>
+    <span class="n">correction</span><span class="o">=</span><span class="s2">&quot;fdr_bh&quot;</span><span class="p">,</span>
+    <span class="n">cutoff</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+<span class="p">)</span>
 </pre></div>
 </div>
-<p>Important points about <code class="docutils literal notranslate"><span class="pre">comorbidity_strength()</span></code>:</p>
+</section>
+<section id="disease-pair-construction">
+<h3>2. Disease pair construction<a class="headerlink" href="#disease-pair-construction" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">DiseaseNetworkData.disease_pair()</span></code> uses the significant phecodes from the PheWAS result to build temporal and non-temporal disease pairs among exposed individuals.</p>
+<p>Example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">data</span><span class="o">.</span><span class="n">disease_pair</span><span class="p">(</span>
+    <span class="n">phewas_result</span><span class="o">=</span><span class="n">phewas_result</span><span class="p">,</span>
+    <span class="n">min_interval_days</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">max_interval_days</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">),</span>
+    <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">n_process</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Notes:</p>
 <ul class="simple">
-<li><p>It uses data attributes generated by <code class="docutils literal notranslate"><span class="pre">disease_pairs()</span></code>, so ensure you have called <code class="docutils literal notranslate"><span class="pre">disease_pair()</span></code>.</p></li>
-<li><p><strong>n_threshold</strong> serves to filter out infrequent pairs (at least 100 co-occurrences). This is analogous to <code class="docutils literal notranslate"><span class="pre">n_threshold_comorbidity</span></code> in the one-step analysis.</p></li>
-<li><p>It will compute two metrics:</p>
-<ul>
-<li><p><strong>RR (Relative Risk)</strong> of the two diseases co-occurring in the same person, compared to what would be expected if independent (often simplified as co-occurrence probability vs product of marginal probabilities).</p></li>
-<li><p><strong>Φ (Phi correlation)</strong> which is basically the Pearson correlation for two binary variables (disease present/absent).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">force=True</span></code> is needed if <code class="docutils literal notranslate"><span class="pre">data.trajectory</span></code> already exists and you want to rebuild the pairs.</p></li>
+<li><p>By default, the method expects <code class="docutils literal notranslate"><span class="pre">phewas_result</span></code> to contain <code class="docutils literal notranslate"><span class="pre">phecode</span></code> and <code class="docutils literal notranslate"><span class="pre">phewas_p_significance</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">min_interval_days</span></code> and <code class="docutils literal notranslate"><span class="pre">max_interval_days</span></code> are stored on the data object and reused later by trajectory analysis.</p></li>
 </ul>
-</li>
-<li><p>The output <code class="docutils literal notranslate"><span class="pre">com_strength_result</span></code> will be a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>.</p></li>
+</section>
+<section id="comorbidity-strength">
+<h3>3. Comorbidity strength<a class="headerlink" href="#comorbidity-strength" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">dnt.comorbidity_strength()</span></code> evaluates disease-pair co-occurrence strength among exposed individuals using phi-correlation and relative risk (RR).</p>
+<p>Example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">com_strength_result</span> <span class="o">=</span> <span class="n">dnt</span><span class="o">.</span><span class="n">comorbidity_strength</span><span class="p">(</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+    <span class="n">n_threshold</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">n_process</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+    <span class="n">correction_phi</span><span class="o">=</span><span class="s2">&quot;bonferroni&quot;</span><span class="p">,</span>
+    <span class="n">cutoff_phi</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+    <span class="n">correction_RR</span><span class="o">=</span><span class="s2">&quot;bonferroni&quot;</span><span class="p">,</span>
+    <span class="n">cutoff_RR</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+    <span class="n">log_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Notes:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">n_threshold</span></code> and <code class="docutils literal notranslate"><span class="pre">proportion_threshold</span></code> are mutually exclusive.</p></li>
+<li><p>This function requires disease pairs to have already been generated.</p></li>
+<li><p>Downstream network and trajectory analyses only keep pairs significant for both phi and RR.</p></li>
 </ul>
-<p>After obtaining <code class="docutils literal notranslate"><span class="pre">com_strength_result</span></code>, you can examine this <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>. A convenience function <code class="docutils literal notranslate"><span class="pre">comorbidity_strength_multipletests()</span></code> exists if you need to re-adjust p-values with a different method.</p>
+<p>If needed, you can rerun the multiple-testing correction:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">com_strength_result</span> <span class="o">=</span> <span class="n">dnt</span><span class="o">.</span><span class="n">comorbidity_strength_multipletests</span><span class="p">(</span>
+    <span class="n">df</span><span class="o">=</span><span class="n">com_strength_result</span><span class="p">,</span>
+    <span class="n">correction_phi</span><span class="o">=</span><span class="s2">&quot;fdr_bh&quot;</span><span class="p">,</span>
+    <span class="n">cutoff_phi</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+    <span class="n">correction_RR</span><span class="o">=</span><span class="s2">&quot;fdr_bh&quot;</span><span class="p">,</span>
+    <span class="n">cutoff_RR</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
 </section>
 <section id="binomial-test">
-<h3>3.2.4 Binomial test<a class="headerlink" href="#binomial-test" title="Link to this heading"></a></h3>
-<p>For each disease pair, binomial test determine if there is a <strong>temporal order</strong> (i.e., does D1 tend to occur before D2 more often than vice versa). Essentially, for every individual who has both diseases, the function will check how many had D1 first vs D2 first, across all individuals. Under the null hypothesis of no preferred order, these are like coin flips; the binomial test checks if one order is significantly more common than the other.</p>
-<p>The function <code class="docutils literal notranslate"><span class="pre">dnt.binomial_test()</span></code> performs this analysis. It uses the pair information in <code class="docutils literal notranslate"><span class="pre">data</span></code>. You can call it as:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>
-<span class="n">binomial_result</span> <span class="o">=</span> <span class="n">dnt</span><span class="o">.</span><span class="n">binomial_test</span><span class="p">(</span>
+<h3>4. Binomial test<a class="headerlink" href="#binomial-test" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">dnt.binomial_test()</span></code> tests whether one temporal direction is more common than the reverse direction for each eligible disease pair.</p>
+<p>Example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">binomial_result</span> <span class="o">=</span> <span class="n">dnt</span><span class="o">.</span><span class="n">binomial_test</span><span class="p">(</span>
     <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
-    <span class="n">comorbidity_network_result</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>                  <span class="c1"># default value</span>
-    <span class="n">comorbidity_strength_result</span><span class="o">=</span><span class="n">com_strength_result</span><span class="p">,</span>  <span class="c1"># the result of comorbidity strength estimation</span>
-    <span class="n">enforce_temporal_order</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>                     <span class="c1"># If True, exclude individuals with ties/non-temporal occurrences</span>
-    <span class="n">correction</span><span class="o">=</span><span class="s1">&#39;bonferroni&#39;</span><span class="p">,</span>                          <span class="c1"># p-value correction method</span>
-    <span class="n">cutoff</span><span class="o">=</span><span class="mf">0.05</span>                                       <span class="c1"># significance threshold  </span>
+    <span class="n">comorbidity_strength_result</span><span class="o">=</span><span class="n">com_strength_result</span><span class="p">,</span>
+    <span class="n">comorbidity_network_result</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">n_process</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">correction</span><span class="o">=</span><span class="s2">&quot;bonferroni&quot;</span><span class="p">,</span>
+    <span class="n">cutoff</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+    <span class="n">enforce_temporal_order</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">log_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span>
-
 </pre></div>
 </div>
-<p>Important points about <code class="docutils literal notranslate"><span class="pre">binomial_test()</span></code>:</p>
+<p>Notes:</p>
 <ul class="simple">
-<li><p><strong>enforce_temporal_order</strong> – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, the function will exclude any “non-temporal” pairs (i.e., individuals where the two diseases occurred on the same day or essentially simultaneously, as defined by min_interval_days) from the counts. It also will ensure that if an individual has both orders of occurrence (e.g., D1 then D2 and later D2 then D1 due to multiple episodes), those might be handled to not bias the test. Since we set it False here, we’re being more permissive (which is fine given our <code class="docutils literal notranslate"><span class="pre">min_interval_days</span></code>=0, meaning simultaneous is allowed and counted in whichever order they happened first).</p></li>
-<li><p><strong>correction, cutoff</strong> – Correction for multiple tests (there’s one binomial test per disease pair) and significance threshold for the adjusted p-value.</p></li>
-<li><p><strong>comorbidity_network_result</strong> - Setting this to none is same as pipeline mode ‘v1’, where basically all pairs survive the comorbidity strength steps are tested. If given the results dataframe from <code class="docutils literal notranslate"><span class="pre">comorbidity_network</span></code> function (see below), that set is further restricted to those significant in the comorbidity network analysis, as done in pipeline mode ‘v2’. Here, assuming we want to analyzeall pairs identified as having some comorbidity strength (since we didn’t filter by comorbidity network first in our pipeline example)</p></li>
+<li><p>Multiprocessing is disabled for this function, so <code class="docutils literal notranslate"><span class="pre">n_process</span></code> must remain <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
+<li><p>If you pass <code class="docutils literal notranslate"><span class="pre">comorbidity_network_result</span></code>, the test is restricted to network-significant pairs. This mirrors pipeline mode <code class="docutils literal notranslate"><span class="pre">v2</span></code>.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">enforce_temporal_order=True</span></code>, non-temporal D1-D2 occurrences are excluded from the test.</p></li>
 </ul>
-<p>The <code class="docutils literal notranslate"><span class="pre">binomial_result</span></code> <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> will list disease pairs (identified by phecodes) with the number of individuals where D1 happened first vs D2 first, the binomial p-value and adjusted p-value, and possibly an indication of which order is predominant. Typically, we filter the pairs based on adjusted p-value &lt; 0.05. This result will be used in building trajectories.</p>
+<p>If needed:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">binomial_result</span> <span class="o">=</span> <span class="n">dnt</span><span class="o">.</span><span class="n">binomial_multipletests</span><span class="p">(</span>
+    <span class="n">df</span><span class="o">=</span><span class="n">binomial_result</span><span class="p">,</span>
+    <span class="n">correction</span><span class="o">=</span><span class="s2">&quot;fdr_bh&quot;</span><span class="p">,</span>
+    <span class="n">cutoff</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
 </section>
 <section id="comorbidity-network-analysis">
-<h3>3.2.5 Comorbidity network analysis<a class="headerlink" href="#comorbidity-network-analysis" title="Link to this heading"></a></h3>
-<p>Now we move to perform the <strong>comorbidity network</strong> analysis, adjusting for covariates and other diseases per the method selected. This is effectively a deeper analysis on the set of disease pairs that survived earlier filters, focusing on non-temporal relationships.</p>
-<p>The function <code class="docutils literal notranslate"><span class="pre">dnt.comorbidity_network()</span></code> carries out this analysis. Depending on the <code class="docutils literal notranslate"><span class="pre">method</span></code> (RPCN, PCN_PCA, or CN), it will fit either a series of regularized regressions or simpler correlations. Here’s how we call it (mirroring our pipeline parameters):</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Reminder: if using n_process &gt; 1, wrap calls in if __name__ == &quot;__main__&quot;:</span>
-
-<span class="n">com_network_result</span> <span class="o">=</span> <span class="n">dnt</span><span class="o">.</span><span class="n">comorbidity_network</span><span class="p">(</span>  
-    <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>  
-    <span class="n">comorbidity_strength_result</span><span class="o">=</span><span class="n">com_strength_result</span><span class="p">,</span> <span class="c1"># the result of comorbidity strength estimation</span>
-    <span class="n">method</span><span class="o">=</span><span class="s2">&quot;RPCN&quot;</span><span class="p">,</span>                    <span class="c1"># or &quot;PCN_PCA&quot; or &quot;CN&quot;  </span>
-    <span class="n">covariates</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;BMI&#39;</span><span class="p">,</span> <span class="s1">&#39;age&#39;</span><span class="p">,</span> <span class="s1">&#39;sex&#39;</span><span class="p">],</span> <span class="c1"># adjust for these covariates in each model  </span>
-    <span class="n">correction</span><span class="o">=</span><span class="s1">&#39;bonferroni&#39;</span><span class="p">,</span>          <span class="c1"># correction for multiple testing of edges  </span>
-    <span class="n">cutoff</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>                      <span class="c1"># significance threshold  </span>
-    <span class="o">**</span><span class="p">{</span>  
-        <span class="s2">&quot;alpha&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>                <span class="c1"># RPCN-specific kwargs: if we wanted to manually set  </span>
-        <span class="s2">&quot;auto_penalty&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>         <span class="c1"># whether to auto-select alpha  </span>
-        <span class="s2">&quot;alpha_range&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">15</span><span class="p">),</span>  
-        <span class="s2">&quot;scaling_factor&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>  
-                                      <span class="c1"># If using PCN_PCA: we could provide &quot;n_PC&quot; or &quot;explained_variance&quot; as kwargs  </span>
-    <span class="p">}</span>  
-<span class="p">)</span>  
-
+<h3>5. Comorbidity network analysis<a class="headerlink" href="#comorbidity-network-analysis" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">dnt.comorbidity_network()</span></code> estimates adjusted disease-disease associations for the comorbidity network.</p>
+<p>Example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">com_network_result</span> <span class="o">=</span> <span class="n">dnt</span><span class="o">.</span><span class="n">comorbidity_network</span><span class="p">(</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+    <span class="n">comorbidity_strength_result</span><span class="o">=</span><span class="n">com_strength_result</span><span class="p">,</span>
+    <span class="n">binomial_test_result</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">method</span><span class="o">=</span><span class="s2">&quot;RPCN&quot;</span><span class="p">,</span>
+    <span class="n">covariates</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;age&quot;</span><span class="p">,</span> <span class="s2">&quot;BMI&quot;</span><span class="p">],</span>
+    <span class="n">n_process</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+    <span class="n">correction</span><span class="o">=</span><span class="s2">&quot;bonferroni&quot;</span><span class="p">,</span>
+    <span class="n">cutoff</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+    <span class="n">auto_penalty</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">alpha_range</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">15</span><span class="p">),</span>
+    <span class="n">scaling_factor</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">log_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
 </pre></div>
 </div>
-<p>Important points about <code class="docutils literal notranslate"><span class="pre">comorbidity_network()</span></code>:</p>
+<p>Notes:</p>
 <ul class="simple">
-<li><p><strong>method</strong> – The network inference method: <code class="docutils literal notranslate"><span class="pre">'RPCN'</span></code> (default, uses L1-penalized partial correlation), <code class="docutils literal notranslate"><span class="pre">'PCN_PCA'</span></code> (partial correlation with dimensionality reduction), or <code class="docutils literal notranslate"><span class="pre">'CN'</span></code> (simple correlation network).</p></li>
-<li><p><strong>covariates</strong> – Covariates to adjust for in the models. We include sex, BMI and age as in PheWAS.</p></li>
-<li><p><strong>correction, cutoff</strong> – multiple testing correction for the edge significance and the significance threshold. Each edge (disease pair) will get a p-value (from logistic regression coefficients, etc.), and these will be corrected. We use <code class="docutils literal notranslate"><span class="pre">'Bonferroni'</span></code> and 0.05.</p></li>
-<li><p><strong>kwargs</strong> – RPCN and PCN_PCA have additional parameters:</p>
-<ul>
-<li><p>For RPCN: <code class="docutils literal notranslate"><span class="pre">alpha</span></code> (L1 penalty weight; if None and <code class="docutils literal notranslate"><span class="pre">auto_penalty</span></code> set to True, the code will try to auto-tune it), <code class="docutils literal notranslate"><span class="pre">auto_penalty</span></code> (if True, find optimal alpha via AIC), <code class="docutils literal notranslate"><span class="pre">alpha_range</span></code> (range to search for alpha), <code class="docutils literal notranslate"><span class="pre">scaling_factor</span></code> (scales alpha search). We left <code class="docutils literal notranslate"><span class="pre">alpha=None</span></code> and <code class="docutils literal notranslate"><span class="pre">auto_penalty=True</span></code> which means it will choose the best penalty.</p></li>
-<li><p>For PCN_PCA: <code class="docutils literal notranslate"><span class="pre">n_PC</span></code> (number of principal components to use; default 5) or <code class="docutils literal notranslate"><span class="pre">explained_variance</span></code> (if set, override n_PC to take enough PCs to explain this fraction of variance). Not used in RPCN.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">method</span></code> can be <code class="docutils literal notranslate"><span class="pre">'RPCN'</span></code>, <code class="docutils literal notranslate"><span class="pre">'PCN_PCA'</span></code>, or <code class="docutils literal notranslate"><span class="pre">'CN'</span></code>.</p></li>
+<li><p>The current implementation is driven by disease pairs that are significant for both phi and RR in <code class="docutils literal notranslate"><span class="pre">comorbidity_strength_result</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">binomial_test_result</span></code> is accepted by the function signature for compatibility with the shared column-handling logic, but the latest code does not use it to filter the comorbidity network analysis.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RPCN</span></code> and <code class="docutils literal notranslate"><span class="pre">PCN_PCA</span></code> add network-disease covariates automatically; <code class="docutils literal notranslate"><span class="pre">CN</span></code> uses only phenotypic covariates.</p></li>
 </ul>
-</li>
-<li><p>The output <code class="docutils literal notranslate"><span class="pre">com_network_result</span></code> will be a DataFrame indicating which disease pairs (edges) are considered significant in this network analysis. Columns in the dataframe include: disease1, disease2, estimated beta, p-value, adjusted p-value, adjusted p-value, and an indicator of significance.</p></li>
-</ul>
-<p>After this function, you can filter <code class="docutils literal notranslate"><span class="pre">com_network_result</span></code> to focus on disease pairs with postivie comorbidity associaitons only (beta&gt;0).</p>
+<p>If needed:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">com_network_result</span> <span class="o">=</span> <span class="n">dnt</span><span class="o">.</span><span class="n">comorbidity_multipletests</span><span class="p">(</span>
+    <span class="n">df</span><span class="o">=</span><span class="n">com_network_result</span><span class="p">,</span>
+    <span class="n">correction</span><span class="o">=</span><span class="s2">&quot;fdr_bh&quot;</span><span class="p">,</span>
+    <span class="n">cutoff</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
 </section>
 <section id="disease-trajectory-analysis">
-<h3>3.2.6 Disease trajectory analysis<a class="headerlink" href="#disease-trajectory-analysis" title="Link to this heading"></a></h3>
-<p>Finally, we conduct the <strong>disease trajectory analysis</strong>. This aims to identify sequences of diseases, i.e., if having disease D1 increases the risk of subsequently developing disease D2 (beyond just co-occurrence). This is typically done with a nested case-control approach using incidence density sampling that was set up by <code class="docutils literal notranslate"><span class="pre">matching_var_dict</span></code> and <code class="docutils literal notranslate"><span class="pre">matching_n</span></code>. Essentially, for each candidate pair survive the binomial test (with significant temporal order), we treat the first-occurring disease as an exposure and the second as an outcome in a logistic analysis framework to test the temporal association (while accounting for matching and covariates).</p>
-<p>The function <code class="docutils literal notranslate"><span class="pre">dnt.disease_trajectory()</span></code> performs this analysis. We will call it on the filtered set of disease pairs with temporal order.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Reminder: if using n_process &gt; 1, wrap calls in if __name__ == &quot;__main__&quot;:</span>
-
-<span class="n">trajectory_result</span> <span class="o">=</span> <span class="n">dnt</span><span class="o">.</span><span class="n">disease_trajectory</span><span class="p">(</span>  
-    <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>  
-    <span class="n">comorbidity_strength_result</span><span class="o">=</span><span class="n">com_strength_result</span><span class="p">,</span>  <span class="c1"># the result of comorbidity strength estimation</span>
-    <span class="n">binomial_test_result</span><span class="o">=</span><span class="n">binomial_result</span><span class="p">,</span>             <span class="c1"># the result of binomial test</span>
-    <span class="n">covariates</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;BMI&#39;</span><span class="p">,</span> <span class="s1">&#39;age&#39;</span><span class="p">],</span>                        <span class="c1"># adjust for these covariates  </span>
-    <span class="n">matching_var_dict</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;sex&#39;</span><span class="p">:</span> <span class="s1">&#39;exact&#39;</span><span class="p">},</span>               <span class="c1"># matching variables and criteria (as used earlier)  </span>
-    <span class="n">matching_n</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>                                     <span class="c1"># number of matched controls per case  </span>
-    <span class="n">method</span><span class="o">=</span><span class="s1">&#39;RPCN&#39;</span><span class="p">,</span>                                    <span class="c1"># same as above</span>
-    <span class="n">enforce_time_interval</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>                       <span class="c1"># whether to enforce min/max intervals in analysis  </span>
-    <span class="n">correction</span><span class="o">=</span><span class="s1">&#39;bonferroni&#39;</span><span class="p">,</span>                          <span class="c1"># p-value correction method  </span>
-    <span class="n">cutoff</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>                                       <span class="c1"># significance threshold </span>
-    <span class="o">**</span><span class="p">{</span>  
-        <span class="s2">&quot;alpha&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>                <span class="c1"># RPCN-specific kwargs: if we wanted to manually set  </span>
-        <span class="s2">&quot;auto_penalty&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>         <span class="c1"># whether to auto-select alpha  </span>
-        <span class="s2">&quot;alpha_range&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">15</span><span class="p">),</span>  
-        <span class="s2">&quot;scaling_factor&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>  
-                                      <span class="c1"># If using PCN_PCA: we could provide &quot;n_PC&quot; or &quot;explained_variance&quot; as kwargs  </span>
-    <span class="p">}</span>  
-<span class="p">)</span>  
-
+<h3>6. Disease trajectory analysis<a class="headerlink" href="#disease-trajectory-analysis" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">dnt.disease_trajectory()</span></code> performs the final trajectory analysis on disease pairs that are significant in both comorbidity strength and the binomial test.</p>
+<p>Example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">trajectory_result</span> <span class="o">=</span> <span class="n">dnt</span><span class="o">.</span><span class="n">disease_trajectory</span><span class="p">(</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+    <span class="n">comorbidity_strength_result</span><span class="o">=</span><span class="n">com_strength_result</span><span class="p">,</span>
+    <span class="n">binomial_test_result</span><span class="o">=</span><span class="n">binomial_result</span><span class="p">,</span>
+    <span class="n">method</span><span class="o">=</span><span class="s2">&quot;RPCN&quot;</span><span class="p">,</span>
+    <span class="n">matching_var_dict</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;sex&quot;</span><span class="p">:</span> <span class="s2">&quot;exact&quot;</span><span class="p">},</span>
+    <span class="n">matching_n</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">max_n_cases</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">),</span>
+    <span class="n">global_sampling</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">covariates</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;age&quot;</span><span class="p">,</span> <span class="s2">&quot;BMI&quot;</span><span class="p">],</span>
+    <span class="n">n_process</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+    <span class="n">correction</span><span class="o">=</span><span class="s2">&quot;bonferroni&quot;</span><span class="p">,</span>
+    <span class="n">cutoff</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+    <span class="n">enforce_time_interval</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">auto_penalty</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">alpha_range</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">15</span><span class="p">),</span>
+    <span class="n">scaling_factor</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">log_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
 </pre></div>
 </div>
-<p>Important points about <code class="docutils literal notranslate"><span class="pre">disease_trajectory()</span></code>:</p>
+<p>Notes:</p>
 <ul class="simple">
-<li><p><strong>covariates</strong> – Covariates to include in the conditional logistic regression models (again, include BMI and age, sex is used as matching variable, so not included here).</p></li>
-<li><p><strong>matching_var_dict</strong> and <strong>matching_n</strong> – These parameters decide how we generate the nested case-control dataset for each pair. In our example, we matched on sex exactly and allowed up to 2 controls per case being matched.</p></li>
-<li><p><strong>enforce_time_interval</strong> – If True, applies the specified minimum and maximum time intervals when determining the D2 outcome among individuals diagnosed with D1. Since we set it True, only D1-exposed individuals diagnosed with D2 within the specified time interval were considered as cases.</p></li>
-<li><p><strong>correction, cutoff</strong> – multiple testing correction for the trajectory analysis p-values and the significance threshold.</p></li>
-<li><p><strong>method</strong> – The network inference method: <code class="docutils literal notranslate"><span class="pre">'RPCN'</span></code> (default, uses L1-penalized partial correlation), <code class="docutils literal notranslate"><span class="pre">'PCN_PCA'</span></code> (partial correlation with dimensionality reduction), or <code class="docutils literal notranslate"><span class="pre">'CN'</span></code> (simple correlation network).</p></li>
-<li><p><strong>kwargs</strong> – RPCN and PCN_PCA have additional parameters, same as <code class="docutils literal notranslate"><span class="pre">comorbidity_network()</span></code> function.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">matching_var_dict</span></code> controls incidence-density sampling for the nested case-control design.</p></li>
+<li><p>Categorical or binary matching variables should usually not also be included as covariates.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">enforce_time_interval=True</span></code> is the default and applies the interval rules defined earlier in <code class="docutils literal notranslate"><span class="pre">data.disease_pair()</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">global_sampling=True</span></code> reuses incidence-density sampling across pairs with the same D2 and can be useful for larger analyses.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_n_cases</span></code> can cap the number of D2 cases analyzed for each model.</p></li>
 </ul>
-<p>The output <code class="docutils literal notranslate"><span class="pre">trajectory_result</span></code> will be a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> of disease pairs with metrics indicating temporal association significance. For example each pair (D1 -&gt; D2), it provides an estimated effect size (beta value of the model), p-value, and adjusted p-value, and an indicator if it’s significant. Only pairs that passed previous binomial test filtering are analyzed, and among those, some will show a significant temporal relationship after adjusting for covariates. In essence, this final result pinpoints which disease pairs have a directionality (D1 significantly predisposes to D2).</p>
-<p>After completing these steps, you now have:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">phewas_result</span></code>: diseases associated with exposure</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">com_strength_result</span></code>: disease pairs with comorbidity strength metrics</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">binomial_result</span></code>: temporal order of the disease pairs</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">com_network_result</span></code>: non-temporal comorbidity associations of the filtered disease pairs</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">trajectory_result</span></code>: temporal associations of the filtered disease pairs</p></li>
-</ul>
-<p>These correspond to the outputs of the one-step analysis <code class="docutils literal notranslate"><span class="pre">disease_network_pipeline()</span></code>. You can proceed to interpret them, and also to visualize them using the <code class="docutils literal notranslate"><span class="pre">Plot</span></code> class as described next.</p>
+<p>If needed:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">trajectory_result</span> <span class="o">=</span> <span class="n">dnt</span><span class="o">.</span><span class="n">trajectory_multipletests</span><span class="p">(</span>
+    <span class="n">df</span><span class="o">=</span><span class="n">trajectory_result</span><span class="p">,</span>
+    <span class="n">correction</span><span class="o">=</span><span class="s2">&quot;fdr_bh&quot;</span><span class="p">,</span>
+    <span class="n">cutoff</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
 </section>
+</section>
+<section id="outputs">
+<h2>Outputs<a class="headerlink" href="#outputs" title="Link to this heading"></a></h2>
+<p>The main result tables are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">phewas_result</span></code>: PheWAS results for individual phecodes</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">com_strength_result</span></code>: Comorbidity strength results based on phi and RR</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">com_network_result</span></code>: Adjusted comorbidity network results</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">binomial_result</span></code>: Temporal-order test results</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">trajectory_result</span></code>: Final disease trajectory results</p></li>
+</ul>
+<p>These outputs can be passed directly to <code class="docutils literal notranslate"><span class="pre">DiNetxify.visualization.Plot</span></code> for visualization.</p>
 </section>
 </section>
 

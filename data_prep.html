@@ -7,14 +7,14 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Input data preparation &mdash; DiNetxify  documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=92fd9be5" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -45,8 +45,21 @@
               <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Input data preparation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#requirements-for-input-data">Requirements for input data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#dummy-dataset-overview">Dummy dataset overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#phenotype-data">Phenotype data</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#required-columns">Required columns</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#input-rules">Input rules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#load-phenotype-data">Load phenotype data</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#medical-records-data">Medical records data</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">Required columns</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#supported-diagnosis-code-systems">Supported diagnosis code systems</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id2">Input rules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#load-medical-records">Load medical records</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#dummy-dataset">Dummy dataset</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="data_harm.html">Data harmonization</a></li>
@@ -83,73 +96,212 @@
              
   <section id="input-data-preparation">
 <h1>Input data preparation<a class="headerlink" href="#input-data-preparation" title="Link to this heading"></a></h1>
-<section id="requirements-for-input-data">
-<h2>Requirements for input data<a class="headerlink" href="#requirements-for-input-data" title="Link to this heading"></a></h2>
-<p><em><strong>DiNetxify</strong></em> enables 3D disease network analysis on cohort data from electronic health records (EHR) and offers three study designs: the <strong>standard cohort</strong>, which compares individuals with a specific disease or exposure (e.g., depression or smoking) against the general population; the <strong>matched cohort</strong>, which pairs subjects on key characteristics to reduce confounding; and the <strong>exposed-only cohort</strong>, which examines disease networks within a defined group (e.g., older adults) without an unexposed comparison group.</p>
-<p>To begin using <em><strong>DiNetxify</strong></em>, two datasets are required: a <strong>phenotype data</strong> file containing each participant’s baseline information, and one or more <strong>medical record data</strong> files extracted from an EHR database that list diagnoses (codes and dates) for all cohort individuals over the study period. The specific requirements for these datasets are:</p>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DiNetxify</span></code> requires two types of input:</p>
+<ol class="arabic simple">
+<li><p>A phenotype file describing the cohort</p></li>
+<li><p>One or more medical-record files containing diagnosis codes and diagnosis dates</p></li>
+</ol>
+<p>The package supports three study designs:</p>
 <ul class="simple">
-<li><p><strong>Phenotype data:</strong> A CSV (or TSV) file with a header row, where each row represents a participant. Required columns are:</p>
-<ul>
-<li><p><strong>Participant ID</strong> – Unique identifier for each individual.</p></li>
-<li><p><strong>Index date</strong> – Start of follow-up (e.g., date of exposure or baseline).</p></li>
-<li><p><strong>End date</strong> – End of follow-up (e.g., last visit, death, or study completion).</p></li>
-<li><p><strong>Exposure</strong> – Binary indicator (1 = exposed, 0 = unexposed) for standard and matched cohorts (omit for exposed-only cohorts).</p></li>
-<li><p><strong>Match ID</strong> – Identifier for matched sets (only for matched cohort designs).</p></li>
-<li><p><strong>Sex</strong> – Biological sex (1 = female, 0 = male).</p></li>
-<li><p><strong>Additional covariates (optional)</strong> – Any number of extra variables for adjustment or matching (e.g., age, BMI, education).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cohort</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">matched</span> <span class="pre">cohort</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">exposed-only</span> <span class="pre">cohort</span></code></p></li>
 </ul>
-</li>
-</ul>
-<p>For all required columns, missing values are not permitted and dates must follow a consistent format (default <code class="docutils literal notranslate"><span class="pre">YYYY-MM-DD</span></code>). The <strong>Sex</strong> and <strong>Exposure</strong> fields must use the specified 1/0 coding. You may include unlimited additional covariates; their types (binary, categorical, or continuous) will be auto-detected and processed accordingly (e.g., one-hot encoding for categorical variables). Missing values in continuous covariates are dropped, whereas missing categorical values are treated as a separate “NA” category.</p>
-<ul>
-<li><p><strong>Medical records data</strong>: One or more CSV/TSV files (each with a header row), listing diagnosis events for the participants. Each record (row) must include:</p>
+<p>Before loading any data, create a <code class="docutils literal notranslate"><span class="pre">DiseaseNetworkData</span></code> object.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">DiNetxify</span> <span class="k">as</span> <span class="nn">dnt</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="n">dnt</span><span class="o">.</span><span class="n">DiseaseNetworkData</span><span class="p">(</span>
+    <span class="n">study_design</span><span class="o">=</span><span class="s2">&quot;cohort&quot;</span><span class="p">,</span>
+    <span class="n">phecode_level</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">min_required_icd_codes</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">date_fmt</span><span class="o">=</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="n">phecode_version</span><span class="o">=</span><span class="s2">&quot;1.2&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Key initialization arguments:</p>
 <ul class="simple">
-<li><p><strong>Participant ID</strong> – The same unique ID used in the phenotype data, linking each record to an individual.</p></li>
-<li><p><strong>Diagnosis code</strong> – A diagnosis code (e.g., ICD-10 or ICD-9 code).</p></li>
-<li><p><strong>Date of diagnosis</strong> – The date of that diagnosis/event (format consistent with the phenotype dates, e.g., <code class="docutils literal notranslate"><span class="pre">YYYY-MM-DD</span></code>).</p></li>
-</ul>
-<p>The <strong>medical record data</strong> should be in a “long” format (multiple rows per participant if they have multiple diagnoses). <em><strong>DiNetxify</strong></em> will automatically filter these records to include only those within each individual’s follow-up period (from index date up to end date). <strong>Do not pre-filter</strong> the medical record by date or by first occurrence — provide the complete set of diagnoses for each participant, and let the software handle the filtering and mapping. Each medical record file should use a single coding system for diagnoses. Currently supported code versions are ICD-9 (WHO and CM) and ICD-10 (WHO and CM). If your data uses a different coding system, you will need to map it to one of the supported formats beforehand.</p>
-</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">study_design</span></code>: One of <code class="docutils literal notranslate"><span class="pre">'cohort'</span></code>, <code class="docutils literal notranslate"><span class="pre">'matched</span> <span class="pre">cohort'</span></code>, or <code class="docutils literal notranslate"><span class="pre">'exposed-only</span> <span class="pre">cohort'</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phecode_level</span></code>: Use <code class="docutils literal notranslate"><span class="pre">1</span></code> or <code class="docutils literal notranslate"><span class="pre">2</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">min_required_icd_codes</span></code>: Minimum number of mapped ICD codes required for a phecode to count as valid.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">date_fmt</span></code>: Date format used in the phenotype file. This is also the default for medical-record files unless you override it later.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phecode_version</span></code>: Version <code class="docutils literal notranslate"><span class="pre">1.2</span></code> is the recommended general-purpose option.</p></li>
 </ul>
 </section>
-<section id="dummy-dataset-overview">
-<h2>Dummy dataset overview<a class="headerlink" href="#dummy-dataset-overview" title="Link to this heading"></a></h2>
-<p>A <a class="reference external" href="https://github.com/HZcohort/DiNetxify/tree/main/tests/data">dummy dataset</a> is provided to help you become familiar with the input format and to allow you to run through the full analysis workflow before using your own data. It simulates a matched-cohort study of 10,000 exposed individuals and 50,000 matched unexposed individuals, along with their entire follow-up EHR records.</p>
-<blockquote>
-<div><p><strong>Note:</strong> All participant characteristics and diagnoses in this dummy dataset are randomly generated. The ICD-9 and ICD-10 codes correspond to real classifications, and the analysis may yield seemingly significant associations, but these results <strong>do not</strong> reflect true medical findings! They are for instructional purposes only.</p>
-</div></blockquote>
+<section id="phenotype-data">
+<h2>Phenotype data<a class="headerlink" href="#phenotype-data" title="Link to this heading"></a></h2>
+<p>Phenotype data must be provided as a CSV or TSV file with a header row and one row per participant.</p>
+<section id="required-columns">
+<h3>Required columns<a class="headerlink" href="#required-columns" title="Link to this heading"></a></h3>
+<p>For <code class="docutils literal notranslate"><span class="pre">cohort</span></code>:</p>
 <ul class="simple">
-<li><p>The dummy dataset consists of three CSV files:</p>
-<ul>
-<li><p><strong><code class="docutils literal notranslate"><span class="pre">dummy_phenotype.csv</span></code></strong> – Simulated baseline characteristics for 60,000 individuals, containing:</p>
-<ul>
-<li><p><strong>ID</strong> – Unique participant identifier.</p></li>
-<li><p><strong>date_start</strong>, <strong>date_end</strong> – Follow-up start and end dates.</p></li>
-<li><p><strong>exposure</strong> – Exposure status (0 = unexposed, 1 = exposed).</p></li>
-<li><p><strong>group_id</strong> – Matching group identifier (each exposed is matched with unexposed in groups).</p></li>
-<li><p><strong>sex</strong> – Biological sex (1 = female, 0 = male).</p></li>
-<li><p><strong>age</strong> – Baseline age (years).</p></li>
-<li><p><strong>BMI</strong> – Body mass index category.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Participant</span> <span class="pre">ID</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Exposure</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Sex</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Index</span> <span class="pre">date</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">End</span> <span class="pre">date</span></code></p></li>
 </ul>
-</li>
-<li><p><strong><code class="docutils literal notranslate"><span class="pre">dummy_EHR_ICD9.csv</span></code></strong> – Simulated EHR diagnoses coded in ICD-9 (10,188 records), containing:</p>
-<ul>
-<li><p><strong>ID</strong> – Participant ID (matches the phenotype file).</p></li>
-<li><p><strong>dia_date</strong> – Diagnosis date.</p></li>
-<li><p><strong>diag_icd9</strong> – ICD-9 diagnosis code.</p></li>
+<p>For <code class="docutils literal notranslate"><span class="pre">matched</span> <span class="pre">cohort</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Participant</span> <span class="pre">ID</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Exposure</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Sex</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Index</span> <span class="pre">date</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">End</span> <span class="pre">date</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Match</span> <span class="pre">ID</span></code></p></li>
 </ul>
-</li>
-<li><p><strong><code class="docutils literal notranslate"><span class="pre">dummy_EHR_ICD10.csv</span></code></strong> – Simulated EHR diagnoses coded in ICD-10 (1,048,576 records), containing:</p>
-<ul>
-<li><p><strong>ID</strong> – Participant ID.</p></li>
-<li><p><strong>dia_date</strong> – Diagnosis date.</p></li>
-<li><p><strong>diag_icd10</strong> – ICD-10 diagnosis code.</p></li>
+<p>For <code class="docutils literal notranslate"><span class="pre">exposed-only</span> <span class="pre">cohort</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Participant</span> <span class="pre">ID</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Sex</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Index</span> <span class="pre">date</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">End</span> <span class="pre">date</span></code></p></li>
 </ul>
-</li>
+<p>You may also provide any number of additional covariates, such as age, BMI, smoking, or education.</p>
+</section>
+<section id="input-rules">
+<h3>Input rules<a class="headerlink" href="#input-rules" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Required columns cannot contain missing values.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Exposure</span></code> must be coded as <code class="docutils literal notranslate"><span class="pre">1</span></code> for exposed and <code class="docutils literal notranslate"><span class="pre">0</span></code> for unexposed when the study design includes an exposure group.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Sex</span></code> must be coded as <code class="docutils literal notranslate"><span class="pre">1</span></code> for female and <code class="docutils literal notranslate"><span class="pre">0</span></code> for male.</p></li>
+<li><p>Dates must use a consistent format.</p></li>
+<li><p>Covariate types are detected automatically and converted internally.</p></li>
+<li><p>Continuous covariates with missing values lead to participant removal during loading.</p></li>
+<li><p>Covariate names must not conflict with reserved internal variable names.</p></li>
 </ul>
-</li>
+</section>
+<section id="load-phenotype-data">
+<h3>Load phenotype data<a class="headerlink" href="#load-phenotype-data" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">col_dict</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;Participant ID&quot;</span><span class="p">:</span> <span class="s2">&quot;ID&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Exposure&quot;</span><span class="p">:</span> <span class="s2">&quot;exposure&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Sex&quot;</span><span class="p">:</span> <span class="s2">&quot;sex&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Index date&quot;</span><span class="p">:</span> <span class="s2">&quot;date_start&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;End date&quot;</span><span class="p">:</span> <span class="s2">&quot;date_end&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="n">covariates</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;age&quot;</span><span class="p">,</span> <span class="s2">&quot;BMI&quot;</span><span class="p">]</span>
+
+<span class="n">data</span><span class="o">.</span><span class="n">phenotype_data</span><span class="p">(</span>
+    <span class="n">phenotype_data_path</span><span class="o">=</span><span class="s2">&quot;tests/data/dummy_phenotype.csv&quot;</span><span class="p">,</span>
+    <span class="n">column_names</span><span class="o">=</span><span class="n">col_dict</span><span class="p">,</span>
+    <span class="n">covariates</span><span class="o">=</span><span class="n">covariates</span><span class="p">,</span>
+    <span class="n">is_single_sex</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Notes:</p>
+<ul class="simple">
+<li><p>For a matched cohort, include <code class="docutils literal notranslate"><span class="pre">&quot;Match</span> <span class="pre">ID&quot;</span></code> in <code class="docutils literal notranslate"><span class="pre">column_names</span></code>.</p></li>
+<li><p>For an exposed-only cohort, omit <code class="docutils literal notranslate"><span class="pre">&quot;Exposure&quot;</span></code> from <code class="docutils literal notranslate"><span class="pre">column_names</span></code>.</p></li>
+<li><p>If your cohort contains only one sex, set <code class="docutils literal notranslate"><span class="pre">is_single_sex=True</span></code>.</p></li>
+<li><p>If you want to overwrite already loaded data, set <code class="docutils literal notranslate"><span class="pre">force=True</span></code>.</p></li>
 </ul>
-<p>Using this dummy dataset, you can practice the workflow and verify that the tool runs correctly. In the following sections, we will demonstrate the analysis and visualization steps using the dummy data.</p>
+</section>
+</section>
+<section id="medical-records-data">
+<h2>Medical records data<a class="headerlink" href="#medical-records-data" title="Link to this heading"></a></h2>
+<p>Medical records must be provided in long format, with one diagnosis event per row.</p>
+<section id="id1">
+<h3>Required columns<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<p>Each medical-record file must contain:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Participant</span> <span class="pre">ID</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Diagnosis</span> <span class="pre">code</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Date</span> <span class="pre">of</span> <span class="pre">diagnosis</span></code></p></li>
+</ul>
+</section>
+<section id="supported-diagnosis-code-systems">
+<h3>Supported diagnosis code systems<a class="headerlink" href="#supported-diagnosis-code-systems" title="Link to this heading"></a></h3>
+<p>Each file must use exactly one supported coding system:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ICD-9-CM</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ICD-9-WHO</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ICD-10-CM</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ICD-10-WHO</span></code></p></li>
+</ul>
+<p>If you have multiple coding systems, load them as separate files by calling <code class="docutils literal notranslate"><span class="pre">merge_medical_records()</span></code> multiple times.</p>
+</section>
+<section id="id2">
+<h3>Input rules<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Use the same participant IDs as in the phenotype file.</p></li>
+<li><p>Do not mix ICD-9 and ICD-10 codes in one file.</p></li>
+<li><p>Do not mix CM and WHO code systems in one file.</p></li>
+<li><p>Do not pre-filter diagnoses to first occurrence only.</p></li>
+<li><p>Do not pre-filter diagnoses to the follow-up period; <code class="docutils literal notranslate"><span class="pre">DiNetxify</span></code> handles follow-up filtering internally.</p></li>
+<li><p>ICD-10 codes may be provided with or without decimal points.</p></li>
+<li><p>ICD-9 codes may be provided in decimal or short format.</p></li>
+</ul>
+</section>
+<section id="load-medical-records">
+<h3>Load medical records<a class="headerlink" href="#load-medical-records" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">data</span><span class="o">.</span><span class="n">merge_medical_records</span><span class="p">(</span>
+    <span class="n">medical_records_data_path</span><span class="o">=</span><span class="s2">&quot;tests/data/dummy_EHR_ICD9.csv&quot;</span><span class="p">,</span>
+    <span class="n">diagnosis_code</span><span class="o">=</span><span class="s2">&quot;ICD-9-WHO&quot;</span><span class="p">,</span>
+    <span class="n">column_names</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;Participant ID&quot;</span><span class="p">:</span> <span class="s2">&quot;ID&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Diagnosis code&quot;</span><span class="p">:</span> <span class="s2">&quot;diag_icd9&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Date of diagnosis&quot;</span><span class="p">:</span> <span class="s2">&quot;dia_date&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="n">date_fmt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">chunksize</span><span class="o">=</span><span class="mi">1000000</span><span class="p">,</span>
+    <span class="n">diagnosis_code_exclusion</span><span class="o">=</span><span class="p">[],</span>
+<span class="p">)</span>
+
+<span class="n">data</span><span class="o">.</span><span class="n">merge_medical_records</span><span class="p">(</span>
+    <span class="n">medical_records_data_path</span><span class="o">=</span><span class="s2">&quot;tests/data/dummy_EHR_ICD10.csv&quot;</span><span class="p">,</span>
+    <span class="n">diagnosis_code</span><span class="o">=</span><span class="s2">&quot;ICD-10-WHO&quot;</span><span class="p">,</span>
+    <span class="n">column_names</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;Participant ID&quot;</span><span class="p">:</span> <span class="s2">&quot;ID&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Diagnosis code&quot;</span><span class="p">:</span> <span class="s2">&quot;diag_icd10&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Date of diagnosis&quot;</span><span class="p">:</span> <span class="s2">&quot;dia_date&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Notes:</p>
+<ul class="simple">
+<li><p>If <code class="docutils literal notranslate"><span class="pre">date_fmt=None</span></code>, the medical-record file uses the same date format as the phenotype file.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">chunksize</span></code> controls how many rows are processed at a time and is useful for large files.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">diagnosis_code_exclusion</span></code> lets you exclude specific diagnosis codes before mapping.</p></li>
+<li><p>After each merge, the package updates diagnosis, diagnosis-count, and history information inside the <code class="docutils literal notranslate"><span class="pre">DiseaseNetworkData</span></code> object.</p></li>
+</ul>
+</section>
+</section>
+<section id="dummy-dataset">
+<h2>Dummy dataset<a class="headerlink" href="#dummy-dataset" title="Link to this heading"></a></h2>
+<p>A dummy dataset is included under <a class="reference external" href="https://github.com/HZcohort/DiNetxify/tree/main/tests/data">tests/data</a> so you can test the full workflow before using your own data.</p>
+<p>The dataset contains:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">dummy_phenotype.csv</span></code>: 60,000 participants in a matched-cohort-style example</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dummy_EHR_ICD9.csv</span></code>: 10,188 ICD-9 diagnosis records</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dummy_EHR_ICD10.csv</span></code>: 1,668,795 ICD-10 diagnosis records</p></li>
+</ul>
+<p>Important columns in the dummy phenotype file:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ID</span></code>: Participant identifier</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">group_id</span></code>: Matching group identifier</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">exposure</span></code>: Exposure status</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">date_start</span></code>: Follow-up start date</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">date_end</span></code>: Follow-up end date</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">age</span></code>: Baseline age</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sex</span></code>: Biological sex</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BMI</span></code>: BMI category</p></li>
+</ul>
+<p>Important columns in the dummy medical-record files:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ID</span></code>: Participant identifier</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dia_date</span></code>: Diagnosis date</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">diag_icd9</span></code> or <code class="docutils literal notranslate"><span class="pre">diag_icd10</span></code>: Diagnosis code</p></li>
+</ul>
+<blockquote>
+<div><p><strong>Note:</strong> The dummy data are simulated for demonstration only. They are useful for learning the workflow and checking that the software runs, but they should not be interpreted as real clinical findings.</p>
+</div></blockquote>
 </section>
 </section>
 

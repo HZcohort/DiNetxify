@@ -7,14 +7,14 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DiNetxify &mdash; DiNetxify  documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=92fd9be5" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -79,25 +79,26 @@
   <section id="dinetxify">
 <h1><em><strong>DiNetxify</strong></em><a class="headerlink" href="#dinetxify" title="Link to this heading"></a></h1>
 <p><a class="reference internal" href="_images/DiNetxify-logo.png"><img alt="DiNetxify logo" src="_images/DiNetxify-logo.png" style="width: 400px;" /></a></p>
-<p><em><strong>DiNetxify</strong></em> is an open-source Python package for comprehensive three-dimensional (3D) disease network analysis of large-scale electronic health record (EHR) data. It integrates data harmonization, analysis, and visualization into a user-friendly package to uncover multimorbidity patterns and disease progression pathways. <em><strong>DiNetxify</strong></em> is optimized for efficiency (capable of handling cohorts of hundreds of thousands of patients within hours on standard hardware) and supports multiple study designs with customizable parameters and parallel computing. <em><strong>DiNetxify</strong></em> is released under GPL-3.0 license.</p>
-<p><a class="reference internal" href="_images/framework.png"><img alt="DiNetxify logo" src="_images/framework.png" style="width: 1200px;" /></a></p>
+<p><em><strong>DiNetxify</strong></em> is an open-source Python package for comprehensive three-dimensional (3D) disease network analysis of large-scale electronic health record (EHR) data. It integrates data harmonization, statistical analysis, and visualization in a single workflow to uncover multimorbidity patterns and disease progression pathways. The package supports <code class="docutils literal notranslate"><span class="pre">cohort</span></code>, <code class="docutils literal notranslate"><span class="pre">matched</span> <span class="pre">cohort</span></code>, and <code class="docutils literal notranslate"><span class="pre">exposed-only</span> <span class="pre">cohort</span></code> study designs, provides both step-by-step and one-step analysis workflows, and is released under the GPL-3.0 license.</p>
+<p><a class="reference internal" href="_images/framework.png"><img alt="DiNetxify framework" src="_images/framework.png" style="width: 1200px;" /></a></p>
 </section>
 <section id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h1>
-<p><em><strong>DiNetxify</strong></em> requires <strong>Python 3.10+</strong>. Install the latest release from PyPI using pip:</p>
+<p><em><strong>DiNetxify</strong></em> requires <strong>Python 3.10+</strong>. Install the latest release from PyPI with:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>dinetxify
 </pre></div>
 </div>
+<p>Core dependencies include <code class="docutils literal notranslate"><span class="pre">numpy</span></code>, <code class="docutils literal notranslate"><span class="pre">pandas</span></code>, <code class="docutils literal notranslate"><span class="pre">scipy</span></code>, <code class="docutils literal notranslate"><span class="pre">statsmodels</span></code>, <code class="docutils literal notranslate"><span class="pre">lifelines</span></code>, <code class="docutils literal notranslate"><span class="pre">matplotlib</span></code>, <code class="docutils literal notranslate"><span class="pre">plotly</span></code>, <code class="docutils literal notranslate"><span class="pre">networkx</span></code>, <code class="docutils literal notranslate"><span class="pre">python_louvain</span></code>, <code class="docutils literal notranslate"><span class="pre">scikit_learn</span></code>, and <code class="docutils literal notranslate"><span class="pre">tqdm</span></code>.</p>
 </section>
 <section id="source-code-and-issue-report">
 <h1>Source code and issue report<a class="headerlink" href="#source-code-and-issue-report" title="Link to this heading"></a></h1>
-<p>Available on Github, <a class="reference external" href="https://github.com/HZcohort/DiNetxify">HZcohort/DiNetxify</a>. Please report bugs and issues there.</p>
+<p>Source code, release history, and issue tracking are available on GitHub: <a class="reference external" href="https://github.com/HZcohort/DiNetxify">HZcohort/DiNetxify</a>.</p>
 </section>
 <section id="citation">
 <h1>Citation<a class="headerlink" href="#citation" title="Link to this heading"></a></h1>
-<p>If you use this software in your research, please cite the following papers:</p>
+<p>If you use this software in your research, please cite:</p>
 <ol class="arabic simple">
-<li><p><a class="reference external" href="https://link.springer.com/article/10.1007/s10654-025-01360-4">DiNetxify—a python package for three‑dimensional disease network analysis based on electronic health record data</a> (<a class="reference external" href="https://pubmed.ncbi.nlm.nih.gov/41579291/">PMID: 41579291</a>)</p></li>
+<li><p><a class="reference external" href="https://link.springer.com/article/10.1007/s10654-025-01360-4">DiNetxify: a python package for three-dimensional disease network analysis based on electronic health record data</a> (<a class="reference external" href="https://pubmed.ncbi.nlm.nih.gov/41579291/">PMID: 41579291</a>)</p></li>
 <li><p><a class="reference external" href="https://www.nature.com/articles/s41380-025-03120-y">Disease clusters and their genetic determinants following a diagnosis of depression: analyses based on a novel three-dimensional disease network approach</a> (<a class="reference external" href="https://pubmed.ncbi.nlm.nih.gov/40681841/">PMID: 40681841</a>)</p></li>
 </ol>
 </section>
@@ -111,8 +112,10 @@
 <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="data_prep.html">Input data preparation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="data_prep.html#requirements-for-input-data">Requirements for input data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="data_prep.html#dummy-dataset-overview">Dummy dataset overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_prep.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_prep.html#phenotype-data">Phenotype data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_prep.html#medical-records-data">Medical records data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_prep.html#dummy-dataset">Dummy dataset</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="data_harm.html">Data harmonization</a><ul>
@@ -126,10 +129,11 @@
 <li class="toctree-l1"><a class="reference internal" href="3d_analysis.html">Three-dimensional disease network analysis</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="3d_analysis.html#one-step-analysis">One-step analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="3d_analysis.html#step-by-step-analysis">Step-by-step analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="3d_analysis.html#outputs">Outputs</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="visual.html">Visualization</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="visual.html#initializing-the-plot-object">Initializing the Plot object</a></li>
+<li class="toctree-l2"><a class="reference internal" href="visual.html#initialize-a-plot-object">Initialize a <code class="docutils literal notranslate"><span class="pre">Plot</span></code> object</a></li>
 <li class="toctree-l2"><a class="reference internal" href="visual.html#phewas-plot">PheWAS plot</a></li>
 <li class="toctree-l2"><a class="reference internal" href="visual.html#comorbidity-network-plot">Comorbidity network plot</a></li>
 <li class="toctree-l2"><a class="reference internal" href="visual.html#disease-trajectory-plot">Disease trajectory plot</a></li>

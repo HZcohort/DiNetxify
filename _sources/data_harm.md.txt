@@ -1,270 +1,217 @@
 # Data harmonization
 
-Data harmonization involves loading and merging the **phenotype data** and **medical record data** into a single `DiseaseNetworkData` object for analysis. During this process, the software ensures consistent coding (e.g., converting diagnosis codes to phecodes) and standardized formatting (e.g., datetime parsing for diagnosis and follow-up periods).
+Data harmonization in ***DiNetxify*** means loading phenotype data and medical-record data into a single `DiseaseNetworkData` object. During this process, diagnosis codes are mapped to phecodes, dates are standardized, follow-up windows are applied, and phenotype covariates are converted into analysis-ready variables.
 
 ## Initializing the data object
 
-First, import the ***DiNetxify*** package and instantiate a `DiseaseNetworkData` object with your chosen study design, phecode level, and any optional parameters. For example:
+First, import ***DiNetxify*** and create a `DiseaseNetworkData` object with your study design and phecode settings.
 
 ```python
-import DiNetxify as dnt  
+import DiNetxify as dnt
 
-# For a matched cohort study  
-data = dnt.DiseaseNetworkData(  
-    study_design='matched cohort',  
-    phecode_level=1,  
-)  
+# Matched cohort
+data = dnt.DiseaseNetworkData(
+    study_design="matched cohort",
+    phecode_level=1,
+)
 
-# For a standard cohort study  
-data = dnt.DiseaseNetworkData(  
-    study_design='cohort',  
-    phecode_level=1,  
-)  
+# Standard cohort
+data = dnt.DiseaseNetworkData(
+    study_design="cohort",
+    phecode_level=1,
+)
 
-# For an exposed-only cohort study  
-data = dnt.DiseaseNetworkData(  
-    study_design='exposed-only cohort',  
-    phecode_level=1,  
-)  
+# Exposed-only cohort
+data = dnt.DiseaseNetworkData(
+    study_design="exposed-only cohort",
+    phecode_level=1,
+)
 ```
 
-- **study_design** – Type of study design. Options: `'cohort'`, `'matched cohort'`, or `'exposed-only cohort'`. *(Default: 'cohort')*.
-- **phecode_level** – Level of phecode to use for grouping diagnoses. Level 1 provides broader categories (~585 conditions) while level 2 offers more detailed categories (~1257 conditions). For smaller datasets, level 1 is recommended to maintain statistical power; for larger datasets, level 2 can provide finer granularity. *(Options: 1 or 2; Default: 1)*.
+- **study_design**: One of `'cohort'`, `'matched cohort'`, or `'exposed-only cohort'`. Default is `'cohort'`.
+- **phecode_level**: Use `1` or `2`. Level 1 is broader and usually more stable for smaller datasets; level 2 is more granular and often more suitable for larger cohorts.
 
 **Optional parameters:**
 
-- **min_required_icd_codes** – Minimum number of ICD diagnosis records mapping to the same phecode for that phecode to be considered "present" in an individual. For example, `min_required_icd_codes=2` means a single occurrence of a code isn't enough to count the person as having that phecode; at least two occurrences are required. Ensure your medical record are comprehensive (not limited to first occurrences) if using this parameter. *(Default: 1)*.
-- **date_fmt** – Date format of the **Index date** and **End date** columns in your phenotype data. *(Default: '%Y-%m-%d', i.e. YYYY-MM-DD)*.
-- **phecode_version** – Phecode version for mapping diagnosis codes. Currently, version `'1.2'` is the recommended official version (with mapping files for ICD-9-CM/WHO and ICD-10-CM/WHO). An unofficial `'1.3a'` is available in the package for special use cases but **is not** recommended for general use. *(Default: '1.2')*.
+- **min_required_icd_codes**: Minimum number of ICD records mapping to the same phecode before that phecode is counted as present for an individual. Default is `1`.
+- **date_fmt**: Date format used in the phenotype file. This is also the default format for medical-record files unless overridden later. Default is `'%Y-%m-%d'`.
+- **phecode_version**: Phecode mapping version. `'1.2'` is the recommended general-purpose choice. `'1.3a'` and `'VL_autism'` are also available for special use cases.
 
 ## Load phenotype data
 
-After initializing the `DiseaseNetworkData` object, use the `phenotype_data()` method to load your phenotype data file. You need to provide the file path, a dictionary mapping the required column names to your file's column headers, and a list of any additional covariate column names.
-
-Below are examples demonstrating how to load the dummy phenotype dataset under different study designs. The dummy file is structured for a matched cohort study, but it can be adapted for other designs by dropping certain columns when mapping: if you omit the **Match ID** column in the mapping, the data will be treated as a standard cohort (ignoring the matching groups); if you omit both **Match ID** and **Exposure**, it will be treated as an exposed-only cohort (all individuals considered as "exposed").
+After creating the data object, use `phenotype_data()` to load the cohort metadata.
 
 ```python
-# Load phenotype data for a matched cohort study  
-col_dict = {  
-    'Participant ID': 'ID',  
-    'Exposure': 'exposure',  
-    'Sex': 'sex',  
-    'Index date': 'date_start',  
-    'End date': 'date_end',  
-    'Match ID': 'group_id'  
-}  
-covariates_list = ['age', 'BMI']  
-data.phenotype_data(  
-    phenotype_data_path=r"/test/data/dummy_phenotype.csv",  
-    column_names=col_dict,  
-    covariates=covariates_list  
-)  
+# Matched cohort
+col_dict = {
+    "Participant ID": "ID",
+    "Exposure": "exposure",
+    "Sex": "sex",
+    "Index date": "date_start",
+    "End date": "date_end",
+    "Match ID": "group_id",
+}
+covariates = ["age", "BMI"]
+data.phenotype_data(
+    phenotype_data_path="tests/data/dummy_phenotype.csv",
+    column_names=col_dict,
+    covariates=covariates,
+)
 
-# Load phenotype data for a standard cohort study (no matching)  
-col_dict = {  
-    'Participant ID': 'ID',  
-    'Exposure': 'exposure',  
-    'Sex': 'sex',  
-    'Index date': 'date_start',  
-    'End date': 'date_end'  
-}  
-covariates_list = ['age', 'BMI']  
-data.phenotype_data(  
-    phenotype_data_path=r"/test/data/dummy_phenotype.csv",  
-    column_names=col_dict,  
-    covariates=covariates_list  
-)  
+# Standard cohort
+col_dict = {
+    "Participant ID": "ID",
+    "Exposure": "exposure",
+    "Sex": "sex",
+    "Index date": "date_start",
+    "End date": "date_end",
+}
+data.phenotype_data(
+    phenotype_data_path="tests/data/dummy_phenotype.csv",
+    column_names=col_dict,
+    covariates=["age", "BMI"],
+)
 
-# Load phenotype data for an exposed-only cohort study (only exposed group, no comparator)  
-col_dict = {  
-    'Participant ID': 'ID',  
-    'Sex': 'sex',  
-    'Index date': 'date_start',  
-    'End date': 'date_end'  
-}  
-covariates_list = ['age', 'BMI']  
-data.phenotype_data(  
-    phenotype_data_path=r"/test/data/dummy_phenotype.csv",  
-    column_names=col_dict,  
-    covariates=covariates_list  
-)  
+# Exposed-only cohort
+col_dict = {
+    "Participant ID": "ID",
+    "Sex": "sex",
+    "Index date": "date_start",
+    "End date": "date_end",
+}
+data.phenotype_data(
+    phenotype_data_path="tests/data/dummy_phenotype.csv",
+    column_names=col_dict,
+    covariates=["age", "BMI"],
+)
 ```
 
-- **phenotype_data_path** – Path to your phenotype data file (CSV or TSV).
-- **column_names** – Dictionary mapping the required column names (`'Participant ID'`, `'Index date'`, `'End date'`, `'Sex'`, and depending on design `'Exposure'` and `'Match ID'`) to the corresponding column headers in your file. Include `'Exposure'` for cohort and matched cohort designs, and include `'Match ID'` only for matched cohorts.
-- **covariates** – List of additional covariate column names to load (if any). Use an empty list `[]` if there are none. The function will automatically detect each covariate's type and process it appropriately (e.g., encode categorical variables). For continuous covariates, any rows with missing values will be dropped; for categorical covariates, missing values will be categorized as "NA".
+- **phenotype_data_path**: Path to a CSV or TSV phenotype file.
+- **column_names**: Dictionary mapping required DiNetxify field names to the corresponding column names in your dataset.
+- **covariates**: List of additional phenotype variables to load.
 
 **Optional parameters:**
 
-- **is_single_sex** – If your cohort contains only one sex (all male or all female), set this to `True` so the software knows to treat the Sex column accordingly. *(Default: False)*.
-- **force** – If `False`, the method will raise an error if phenotype data has already been loaded into this `DiseaseNetworkData` object (to prevent accidental overwrite). Setting `force=True` will overwrite any existing data in the object with the new data. *(Default: False)*.
+- **is_single_sex**: Set to `True` if the cohort contains only one sex. Default is `False`.
+- **force**: If `True`, overwrite phenotype and medical-record information already stored in the object. Default is `False`.
+
+**Important phenotype input rules:**
+
+- For `cohort` and `matched cohort`, `Exposure` must be coded as `1` for exposed and `0` for unexposed.
+- `Sex` must be coded as `1` for female and `0` for male.
+- Required columns cannot contain missing values.
+- Continuous covariates with missing values will remove those participants during loading.
+- Categorical covariates with missing values are retained and treated as an `"NA"` category.
+- Column names used for covariates must not conflict with DiNetxify reserved variables.
 
 **After loading phenotype data:**
 
-Once the phenotype data is loaded, you can inspect the basic characteristics by printing the `data` object:
+You can inspect the cohort summary by printing the object:
 
 ```python
-print(data)  
-# Example output (for a matched cohort study):  
-"""  
-DiNetxify.DiseaseNetworkData  
-
-Study design: matched cohort  
-
-Phenotype data  
-Total number of individuals: 60,000 (10,000 exposed and 50,000 unexposed)  
-The average group size is: 6.00  
-Average follow-up years: 10.44 (exposed) and 10.46 (unexposed)  
-
-Warning: 102 exposed individuals and 440 unexposed individuals have negative or zero follow-up time.  
-Consider removing them before merge.  
-"""  
-
+print(data)
 ```
 
-The printed summary confirms the number of individuals, breakdown by exposure, average matching group size (for matched cohorts), and average follow-up times. Warnings are provided if any participants have non-positive follow-up lengths, which you may want to address (e.g., by removing those individuals) before proceeding.
-
-Additionally, you can generate a basic descriptive table (Table 1) of the phenotype data using the `Table1()` method. This returns a pandas DataFrame summarizing each variable (e.g., medians/IQRs for continuous variables, counts/percentages for categorical variables) and performing simple statistical comparisons between exposed and unexposed groups:
+You can also generate a phenotype summary table with:
 
 ```python
-table1_df = data.Table1()  
-print(table1_df)  
-# Example (truncated) output:  
-"""  
-                   Variable exposure=1 (n=10,000) exposure=0 (n=50,000)  Test and p-value
-0        _age (median, IQR)   57.08 (48.91-65.32)   57.05 (48.87-65.35)  Mann-Whitney U test p-value=9.824e-01
-1   follow_up (median, IQR)     9.18 (5.77-13.70)     9.22 (5.80-13.75)  Mann-Whitney U test p-value=6.806e-01
-2                sex (n, %)                                               
-3                sex=Female        5,045 (50.45%)       25,225 (50.45%)   
-4                  sex=Male        4,955 (49.55%)       24,775 (49.55%)  Chi-squared test p-value=1.000e+00 
-5                BMI (n, %)                                              ...
-6                    BMI=c2        1,945 (19.45%)       10,170 (20.34%)   
-7                    BMI=c4        2,022 (20.22%)       10,022 (20.04%)   
-8                    BMI=c5        2,002 (20.02%)       10,031 (20.06%)   
-9                    BMI=c1        1,999 (19.99%)        9,952 (19.90%)   
-10                   BMI=c3        2,032 (20.32%)        9,825 (19.65%)  Chi-squared test p-value=2.552e-01     
-"""  
+table1_df = data.Table1()
+print(table1_df.head())
 ```
 
-This Table 1 gives a quick overview of how the exposed and unexposed groups compare on key variables. You can save this `DataFrame` to a CSV/TSV/Excel file using pandas if needed.
+`Table1()` summarizes continuous variables, categorical variables, and follow-up time. For `cohort` and `matched cohort`, the table compares exposed and unexposed groups; for `exposed-only cohort`, it produces a single-group summary.
 
 ## Load medical record data
 
-After loading the phenotype data, use the `merge_medical_records()` method to load and merge each medical record file. You will call this method for each separate file (e.g., one for ICD-10 and one for ICD-9 in our dummy data). Provide the file path, specify the ICD coding standard used in that file, and a dictionary mapping required columns. The following example code shows how to load the dummy EHR ICD-10 and ICD-9 files:
+After the phenotype data are loaded, merge one or more diagnosis files with `merge_medical_records()`. Call the method once per file if your records use different ICD systems.
 
 ```python
-# Merge the first medical record file (dummy_EHR_ICD10.csv)  
-data.merge_medical_records(  
-    medical_records_data_path=r"/test/data/dummy_EHR_ICD10.csv",  
-    diagnosis_code='ICD-10-WHO',  
-    column_names={  
-        'Participant ID': 'ID',  
-        'Diagnosis code': 'diag_icd10',  
-        'Date of diagnosis': 'dia_date'  
-    }  
-)  
+data.merge_medical_records(
+    medical_records_data_path="tests/data/dummy_EHR_ICD10.csv",
+    diagnosis_code="ICD-10-WHO",
+    column_names={
+        "Participant ID": "ID",
+        "Diagnosis code": "diag_icd10",
+        "Date of diagnosis": "dia_date",
+    },
+)
 
-# Merge the second medical record file (dummy_EHR_ICD9.csv)  
-data.merge_medical_records(  
-    medical_records_data_path=r"/test/data/dummy_EHR_ICD9.csv",  
-    diagnosis_code="ICD-9-WHO",  
-    column_names={  
-        'Participant ID': 'ID',  
-        'Diagnosis code': 'diag_icd9',  
-        'Date of diagnosis': 'dia_date'  
-    }  
-)  
-
+data.merge_medical_records(
+    medical_records_data_path="tests/data/dummy_EHR_ICD9.csv",
+    diagnosis_code="ICD-9-WHO",
+    column_names={
+        "Participant ID": "ID",
+        "Diagnosis code": "diag_icd9",
+        "Date of diagnosis": "dia_date",
+    },
+    diagnosis_code_exclusion=[],
+)
 ```
 
-- **medical_records_data_path** – Path to a medical record data file (CSV or TSV).
-- **diagnosis_code** – The diagnosis coding system used in that file. Options include `'ICD-9-CM'`, `'ICD-9-WHO'`, `'ICD-10-CM'`, `'ICD-10-WHO'` (case-sensitive).
-- **column_names** – Dictionary mapping the required column names (`'Participant ID'`, `'Diagnosis code'`, `'Date of diagnosis'`) to your file's column headers.
+- **medical_records_data_path**: Path to a CSV or TSV diagnosis file.
+- **diagnosis_code**: One ICD system per file. Supported values are `'ICD-9-CM'`, `'ICD-9-WHO'`, `'ICD-10-CM'`, and `'ICD-10-WHO'`.
+- **column_names**: Dictionary mapping `'Participant ID'`, `'Diagnosis code'`, and `'Date of diagnosis'` to the actual columns in your file.
 
 **Optional parameters:**
 
-- **date_fmt** – Date format of the **Date of diagnosis** column in this file. If not provided, it defaults to the same format used for phenotype dates (`date_fmt` specified in the `DiseaseNetworkData` initialization).
-- **chunksize** – If the file is very large, you can specify a number of rows to read per chunk (the function will stream through the file in chunks to manage memory usage). *(Default: 1,000,000 rows per chunk.)*
+- **date_fmt**: Date format for the diagnosis file. If `None`, DiNetxify uses the `date_fmt` defined in the `DiseaseNetworkData` object.
+- **chunksize**: Number of rows processed per chunk. Default is `1000000`.
+- **diagnosis_code_exclusion**: List of diagnosis codes to exclude before phecode mapping.
 
-**During data loading:**
+**Important medical-record input rules:**
 
-As each medical record file is processed, ***DiNetxify*** will output progress messages and basic stats. For example:
+- Use the same participant IDs as the phenotype file.
+- Do not mix ICD-9 and ICD-10 codes in one file.
+- Do not mix CM and WHO coding systems in one file.
+- Do not restrict records to first occurrences only.
+- Do not pre-filter records to the follow-up period; DiNetxify handles follow-up filtering internally.
 
-```python
-"""
-1,000,000 records read, 1,000,000 left after filltering on participant ID/exclusion list of diagnosis codes, 0 records with missing values excluded.
-1,668,795 records read, 1,668,795 left after filltering on participant ID/exclusion list of diagnosis codes, 0 records with missing values excluded.
-Total: 1,668,795 diagnosis records processed, 0 records with missing values were excluded.
-1,286,386 diagnosis records mapped to phecode without truncating.
-0 diagnosis records mapped to phecode after truncating to 4 digits.
-72,073 diagnosis records mapped to phecode after truncating to 3 digits.
-302,908 diagnosis records not mapped to any phecode.
-Phecode diagnosis records successfully merged (18,486 invalid records were not merged, typically with diagnosis date later than date of follow-up end)
+**During loading, the package reports:**
 
-1 medical records data already merged, merging with a new one.
-10,188 records read, 10,188 left after filltering on participant ID/exclusion list of diagnosis codes, 0 records with missing values excluded.
-Total: 10,188 diagnosis records processed, 0 records with missing values were excluded.
-9,711 diagnosis records mapped to phecode without truncating.
-0 diagnosis records mapped to phecode after truncating to 4 digits.
-266 diagnosis records mapped to phecode after truncating to 3 digits.
-211 diagnosis records not mapped to any phecode.
-Phecode diagnosis records successfully merged (0 invalid records were not merged, typically with diagnosis date later than date of follow-up end)
-"""
-```
-
-From these logs, you can see how many records were read and included, how many were excluded (e.g., missing values or out-of-follow-up-range dates), and how many diagnosis codes were successfully mapped to phecodes versus not mapped. The logs also indicate when multiple files are being merged sequentially.
+- how many rows were read
+- how many rows were excluded because of missing values or ID/code filtering
+- how many diagnosis codes mapped directly or after truncation
+- how many codes were not mapped to any phecode
+- how many mapped records were invalid because the diagnosis date fell outside the usable follow-up window
 
 **After loading medical record data:**
 
-After merging all medical record files, you can print the `data` object again to see a summary of the combined dataset:
+Print the object again to see the merged-data summary:
 
 ```python
-print(data)  
-# Example output (matched cohort study):  
-"""  
-Merged Medical records
-1,678,983 diagnosis records from 2 medical records file were merged (0 with missing values).
-Average number of disease diagnosis during follow-up: 18.99 (exposed) and 7.31 (unexposed)
-Average number of disease diagnosis before follow-up: 8.40 (exposed) and 3.46 (unexposed)
-
-Warning: 102 exposed individuals and 440 unexposed individuals have negative or zero follow-up time.  
-Consider removing them before merge.  
-Warning: 18.15% of ICD-10-WHO codes were not mapped to phecodes for file /test/data/dummy_EHR_ICD10.csv.  
-Warning: 2.07% of ICD-9-WHO codes were not mapped to phecodes for file /test/data/dummy_EHR_ICD9.csv.  
-"""  
+print(data)
 ```
 
-This output confirms the number of diagnosis records merged and provides average counts of diagnoses per person (during and before follow-up, by exposure group). Warnings indicate the percentage of codes that could not be mapped to a phecode for each file, so you're aware of any unmapped codes.
+This summary includes the number of merged files, the total number of processed diagnosis records, mean numbers of recorded phecodes during and before follow-up, and any mapping or follow-up warnings collected during harmonization.
 
 ## Save DiseaseNetworkData object
 
-At this stage, after loading phenotype and medical record data, you may want to save the `DiseaseNetworkData` object for later use. Saving allows you to reuse the prepared data without re-reading and processing raw files each time, facilitating reproducibility and easy sharing of the processed data. ***DiNetxify*** provides two methods: `save()` (which uses Python's pickle serialization, saving to a compressed `.pkl.gz` file) and `save_npz()` (which saves to a compressed NumPy `.npz` file). You can use either or both depending on your needs. For example:
+Once phenotype data and medical records have been harmonized, you can save the `DiseaseNetworkData` object for later reuse.
 
 ```python
-# Save the data object to a gzipped pickle file  
-data.save('/your/project/path/cohort_data')  
-# (This will produce a file named "cohort_data.pkl.gz")  
+# Save as gzip-compressed pickle
+data.save("results/cohort_data")
 
-# Save the data object to a NumPy .npz file  
-data.save_npz('/your/project/path/cohort_data')  
-# (This will produce a file named "cohort_data.npz")
+# Save as compressed NumPy archive
+data.save_npz("results/cohort_data")
 ```
 
-You do not need to add the file extension in the path; the functions will append `.pkl.gz` or `.npz` automatically. Make sure to choose a directory where you have write permissions and enough storage space (the files can be large if your dataset is large).
+You do not need to add the extension yourself. `save()` appends `.pkl.gz`, and `save_npz()` writes a `.npz` file.
 
 ## Reload DiseaseNetworkData object
 
-If you have previously saved a `DiseaseNetworkData` object, you can reload it instead of re-reading all input files. This is especially useful for large datasets or when sharing the processed object with collaborators. To reload, first instantiate a new empty `DiseaseNetworkData` object, then call the corresponding load function (`load()` or `load_npz()`). For example:
+To reload a saved object, create a new `DiseaseNetworkData` instance and call `load()` or `load_npz()`.
 
 ```python
-import DiNetxify as dnt  
+import DiNetxify as dnt
 
-# Create a new DiseaseNetworkData object with the same design/parameters  
 data = dnt.DiseaseNetworkData()
 
-# Load from a .pkl.gz file  
-data.load('/your/project/path/cohort_data', force=True)  
+# Load from gzip-compressed pickle
+data.load("results/cohort_data")
 
-# Or load from a .npz file  
-data.load_npz('/your/project/path/cohort_data', force=True)  
+# Or load from compressed NumPy archive
+data.load_npz("results/cohort_data")
 ```
+
+Use `force=True` only if you are loading into an object that already contains data and you want to overwrite it.

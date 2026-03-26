@@ -1,325 +1,333 @@
 # Three-dimensional disease network analysis
 
-Once the data is prepared and stored in a `DiseaseNetworkData` object, `DiNetxify` offers two approaches to perform the three-dimensional disease network analysis:
+Once your data have been loaded into a `DiseaseNetworkData` object, DiNetxify supports two ways to run the three-dimensional disease network analysis:
 
-1. **One-step analysis:** A comprehensive pipeline that automates the entire sequence of analyses (PheWAS → disease pair generation → comorbidity strength estimation → binomial test → comorbidity network analysis → disease trajectory analysis) or (PheWAS → disease pair generation → comorbidity strength estimation → comorbidity network analysis → binomial test → disease trajectory analysis) with one function call. This is convenient and ensures all steps are performed in the correct order with default or specified parameters.
-2. **Step-by-step analysis:** Individual functions for each analysis component, allowing you to run and inspect each step separately. This approach offers enhanced control and flexibility, enabling parameter adjustment at every step. However, this comes at the cost of additional code.
+1. A one-step pipeline with `disease_network_pipeline()`
+2. A step-by-step workflow using the individual analysis functions
 
-Both approaches output their results as `pandas.DataFrame`, which you can further analysis or export using `pandas`. The one-step analysis minimizes redundant codes, but does not allow modifying certain internal parameters beyond what its arguments specified. The step-by-step analysis is more verbose but lets you adjust and understand each phase of the analysis in detail. We'll demonstrate both appraoches.
+Both workflows return `pandas.DataFrame` objects that you can inspect, export, or pass to the visualization module.
 
 ## One-step analysis
 
-With your `DiseaseNetworkData` ready (let’s call it `data`), you can perform the entire analysis in one go using the `disease_network_pipeline()` function. This function returns all major result as `pandas.DataFrame` that can be exported into various file formats. The example below illustrates using `disease_network_pipeline()` and it is applicable to any of the three study designs:
+`disease_network_pipeline()` runs the main analysis workflow in order:
+
+`PheWAS -> disease pair construction -> comorbidity strength -> binomial test / comorbidity network -> disease trajectory`
+
+Two pipeline modes are available:
+
+- `pipeline_mode='v1'`: run the binomial test before the comorbidity network analysis
+- `pipeline_mode='v2'`: run the comorbidity network analysis before the binomial test, and restrict the binomial test to network-significant pairs
+
+Example:
 
 ```python
-# Reminder:
-# When using multiprocessing, ensure that the code is enclosed within the following block.
-# This prevents entering a never ending loop of new process creation.
-from DiNetxify import disease_network_pipeline  
+from DiNetxify import disease_network_pipeline
 
-if __name__ == "__main__":  # Required when using multiprocessing on Windows, MacOS, Linux
-    phewas_result, com_strength_result, com_network_result, binomial_result, trajectory_result = disease_network_pipeline(
-        data=data, n_process=2,
+# When using multiprocessing, wrap the call in the main guard.
+if __name__ == "__main__":
+    (
+        phewas_result,
+        com_strength_result,
+        com_network_result,
+        binomial_result,
+        trajectory_result,
+    ) = disease_network_pipeline(
+        data=data,
+        n_process=4,
         n_threshold_phewas=100,
         n_threshold_comorbidity=100,
-        output_dir="/your/project/path/results/",
+        output_dir="./results",
         project_prefix="disease_network",
         keep_positive_associations=True,
         save_intermediate_data=False,
-        system_exl=['symptoms', 'others', 'injuries & poisonings'],
+        system_exl=["symptoms", "others", "injuries & poisonings"],
         pipeline_mode="v1",
         method="RPCN",
-        covariates=['BMI', 'age', 'sex'],
-        matching_var_dict={'sex': 'exact'},
+        covariates=["age", "BMI"],
+        matching_var_dict={"sex": "exact"},
         matching_n=2,
         min_interval_days=0,
-        max_interval_days=float('inf'),
-        enforce_temporal_order=True,
-        correction='bonferroni',
-        cutoff=0.05) 
+        max_interval_days=float("inf"),
+        enforce_temporal_order=False,
+        correction="bonferroni",
+        cutoff=0.05,
+    )
 ```
 
-> **Note:** When using multiprocessing, multi-threading may not always close successfully, which can cause conflicts that significantly affect performance. We recommend disabling multi-threading manually with the following code (Linux):
->
-> ```shell
-> export OPENBLAS_NUM_THREADS=1
-> export MKL_NUM_THREADS=1
-> export BLIS_NUM_THREADS=1
-> export OMP_NUM_THREADS=1
-> export NUMEXPR_NUM_THREADS=1
-> ```
->
-> or the following code in Windows:
->
-> ```powershell
-> set OPENBLAS_NUM_THREADS=1
-> set MKL_NUM_THREADS=1
-> set BLIS_NUM_THREADS=1
-> set OMP_NUM_THREADS=1
-> set NUMEXPR_NUM_THREADS=1
-> ```
+Important notes:
 
-- **Parameters (key arguments in `disease_network_pipeline()`):**
+- `output_dir` must already exist.
+- `n_threshold_comorbidity` must be less than or equal to `n_threshold_phewas`.
+- `keep_positive_associations=True` keeps PheWAS results with `phewas_coef >= 0` for non-exposed-only designs, and keeps comorbidity pairs with `phi > 0` and `RR > 1`.
+- The pipeline writes result tables and log files to `output_dir`, in addition to returning the result DataFrames.
+- If `save_intermediate_data=True`, the intermediate `DiseaseNetworkData` object created after disease-pair generation is saved with the prefix `project_prefix`.
 
-  - **data** – The `DiseaseNetworkData` object containing your loaded phenotype and medical record data.
-  - **n_process** – Number of parallel processes for computation. Use `1` for single-threaded execution, or higher to speed up analysis with multiprocessing (especially beneficial for large datasets). *(No default; you must specify this.)*
-  - **n_threshold_phewas** – Minimum number of exposed cases required for each disease (phecode) to be included in the PheWAS analysis. This filters out very rare diseases. (This value is passed to the internal `phewas()` function.)
-  - **n_threshold_comorbidity** – Minimum number of exposed individuals in whom a given disease pair co-occurs (considering both temporal and non-temporal occurrences) to include that pair in the comorbidity strength analysis. (Passed to `comorbidity_strength()`.)
-  - **output_dir** – Directory path for saving output files. The pipeline will create result files here (e.g., results in CSV and log files, etc.). Use an absolute path or a path relative to your working directory.
-  - **project_prefix** – A string prefix for naming output files. For example, if `project_prefix="disease_network"`, output files might be named like `disease_network_phewas_results.csv`, etc.
-  - **keep_positive_associations** – If set to `True`, the pipeline will filter results to retain only "positive" associations. For example, diseases with hazard ratio (HR) > 1 in the PheWAS and disease pairs with positive correlation in comorbidity analysis. *(Default: False – retains all significant associations regardless of direction.)*
-  - **save_intermediate_data** – If `True`, intermediate `DiseaseNetworkData` objects (specifically those created during disease pair generation) will be saved to disk. *(Default: False)*.
-  - **system_exl** – A list of phecode disease categories/systems to exclude from all analyses. If certain categories/systems of diseases are not of interest or should be filtered out (e.g., `‘symptoms’` or `‘injuries & poisonings’`). If set to `None` or an empty list, no system is excluded. *(Default: None)*. Valid system names include: *circulatory system, congenital anomalies, dermatologic, digestive, endocrine/metabolic, genitourinary, hematopoietic, infectious diseases, injuries & poisonings, mental disorders, musculoskeletal, neoplasms, neurological, pregnancy complications, respiratory, sense organs, symptoms, others*.
-  - **pipeline_mode** – Specifies the order of analysis. Two modes are available:
-    - **'v1'**: PheWAS → comorbidity strength → binomial test → *then parallel/complementary*: comorbidity network analysis and disease trajectory analysis. (In this mode, the binomial test is run on all eligible disease pairs without considering network analysis results, so trajectory and network analyses can be done independently.)
-    - **'v2'**: PheWAS → comorbidity strength → comorbidity network analysis → binomial test → disease trajectory analysis. (In this mode, only the disease pairs deemed significant in the network analysis are subjected to the binomial test and subsequently used for trajectory analysis. This means the trajectory analysis focuses on a subset defined by network results.)
-      *(Default: 'v1')*. Choose 'v2' if you want a more stringent approach where trajectory analysis is conditional on network significance; otherwise, 'v1' covers all pairs passing earlier filters.
-  - **method** – The method used for comorbidity network and disease trajectory analysis. Options are:
-    - **'RPCN'** – *Regularized Partial Correlation Network*. This method uses a regularized logistic regression framework including all other diseases as covariates (with L1 penalty) to evaluate direct disease-disease associations, adjusting for other covariates. *(This is the default and our recommended approach.)*
-    - **'PCN_PCA'** – *Partial Correlation Network with PCA*. Similar to RPCN but applies principal component analysis to reduce dimensionality of the "other diseases" covariates before computing the network. This can significantly reduce the computation time required.
-    - **'CN'** – *Correlation Network*. A simpler approach using standard logistic regression for each disease pair (plus covariates) without partialling out other diseases. Essentially assesses correlation of each pair independently.
-      *(Default: 'RPCN')*. The choice of method will affect how comorbidity networks and trajectories are inferred.
-  - **covariates** – List of covariates to adjust for in the PheWAS, comorbidity network, and disease trajectory analysis. These should match the covariates you provided in `phenotype_data()`. For example, `['BMI', 'age', 'sex']` as shown above. To include the required variable sex as a covariate, always use `sex` instead of its original column name. *(Default: None, meaning adjust for sex along with all specified covariates.)*
-  - **matching_var_dict** – A dictionary specifying how controls are matched to cases for the trajectory analysis (which uses an incidence density sampling approach). Keys are variable names to match on, and values specify matching criteria: for categorical or binary variables use `'exact'`; for continuous variables, provide a numeric tolerance. **Important:** use `'sex'` to match on sex (even if your original column name was different) because the data object uses a standardized 'sex' field. Other covariates should be referred to by their original names. *(Default: {'sex': 'exact'}, meaning match controls to cases by sex.)*.
-  - **matching_n** – Maximum number of matched controls to select for each case in the trajectory analysis. For example, `matching_n=2` tries to find up to 2 controls per case. *(Default: 2)*.
-  - **min_interval_days** – Minimum time interval in days required between two diagnoses to consider one occurring *before* the other for temporal (trajectory) analysis. If the time between D1 and D2 diagnoses in an individual is less than or equal to this threshold, the pair is treated as effectively simultaneous (and thus not counted as a temporal sequence). *(Default: 0 days)*. Setting a positive number here can exclude very closely timed diagnoses from being considered as one preceding the other.
-  - **max_interval_days** – Maximum time interval in days to consider for disease pairs. If the gap between two diagnoses is larger than this, that pair occurrence might be ignored for certain analyses. *(Default: infinity, i.e., no maximum gap applied.)*.
-  - **enforce_temporal_order** – If `True`, the pipeline will enforce strict temporal ordering in the trajectory analyses: any individual who has a disease pair in the opposite order (D2 before D1) may be excluded from certain calculations, and the binomial test will only consider pairs where a clear ordering can be established. In practice, setting this to True means the binomial test will ignore individuals who have the diseases in both orders, and the trajectory analysis will also respect the specified `min_interval_days` and `max_interval_days` strictly. *(Default: False)*.
-  - **correction** – The multiple hypothesis testing correction method to apply to p-values (where applicable). This uses methods from `statsmodels.stats.multitest.multipletests`. Options include `'bonferroni'`, `'holm'`, `'fdr_bh'`, etc. *(Default: 'bonferroni')*.
-  - **cutoff** – Significance cutoff for adjusted p-values. *(Default: 0.05)*. Any results with adjusted p-value above this threshold will be considered non-significant and typically filtered out from the final results.
+### Core pipeline arguments
 
-  The `disease_network_pipeline` will return a tuple of DataFrames: in order, these correspond to **phewas_result**, **com_strength_result** (comorbidity strength), **com_network_result** (comorbidity network), **binomial_result**, and **trajectory_result**. In addition to returning these, the function writes out certain results and logs to files in `output_dir` for your records.
+- `data`: A `DiseaseNetworkData` object with phenotype data and medical records already loaded.
+- `n_process`: Number of processes for the parallelized steps.
+- `n_threshold_phewas`: Minimum number of exposed cases required for a phecode to enter PheWAS.
+- `n_threshold_comorbidity`: Minimum number of exposed individuals with a disease pair for comorbidity strength estimation.
+- `system_exl`: Optional list of phecode systems to exclude.
+- `method`: One of `'RPCN'`, `'PCN_PCA'`, or `'CN'`.
+- `covariates`: Covariates used in PheWAS, comorbidity network analysis, and trajectory analysis.
+- `matching_var_dict`: Matching rules for trajectory analysis. Use `'sex'` for sex.
+- `matching_n`: Maximum number of matched controls per case in trajectory analysis.
+- `min_interval_days`, `max_interval_days`: Time-window settings used when building disease pairs.
+- `enforce_temporal_order`: Passed to `binomial_test()`.
+- `correction`, `cutoff`: Multiple-testing correction method and significance threshold.
 
+### Method-specific arguments
+
+For `method="RPCN"`:
+
+- `auto_penalty=True` by default
+- `alpha_range=(1, 15)` by default when `auto_penalty=True`
+- `scaling_factor=1` by default
+- If `auto_penalty=False`, you must provide `alpha`
+
+For `method="PCN_PCA"`:
+
+- `n_PC=5` by default
+- or use `explained_variance=<float between 0 and 1>` instead of `n_PC`
 
 ## Step-by-step analysis
 
-If you want to run each part of the analysis separately — for example, to inspect intermediate outputs, adjust parameters for individual steps, or run alternative filtering between steps, ***DiNetxify*** will allow these by calling individual functions for each analysis stage. Below we illustrate a step-by-step analysis performing the same overall analysis as the one-step analysis above. We will reuse the `data` object already loaded.
-
-### 3.2.1 PheWAS Analysis
-
-To perform a PheWAS (Phenome-Wide Association Study) using ***DiNetxify***, use the `dnt.phewas()` function. This function will identify which diseases (phecodes) are significantly associated with the exposure of interest. In a cohort or matched cohort cohort study, it runs Cox proportional hazards models and reports hazard ratios (HR) and p-values for each disease comparing exposed vs unexposed. In an exposed-only cohort study, this function simply flags diseases that exceed a certain incidence threshold.
-
-The example below demonstrates a PheWAS in a matched cohort study, adjusting for covariates and using parallel processing:
+Use the step-by-step workflow if you want to inspect intermediate outputs or customize each stage separately.
 
 ```python
-# Reminder: if using n_process > 1, wrap calls in if __name__ == "__main__":
-
-phewas_result = dnt.phewas(  
-    data=data,                                             # our DiseaseNetworkData object  
-    covariates=['BMI', 'age', 'sex'],                      # adjust for BMI, age and sex  
-    proportion_threshold=0.01,                             # require at least 1% of exposed have the disease  
-    n_process=1,                                           # use 2 processes for parallel model fitting  
-    correction='bonferroni',                               # multiple testing correction method  
-    cutoff=0.05,                                           # significance threshold  
-    system_inc=None,                                       # (optional) include only certain systems  
-    system_exl=None,                                       # (optional) exclude certain systems  
-    phecode_inc=None,                                      # (optional) include only certain phecodes  
-    phecode_exl=None,                                      # (optional) exclude certain phecodes  
-    log_file=None,                                         # (optional) log file prefix  
-    lifelines_disable=False                                # whether to disable lifelines (Cox model library)  
-)  
-
+import DiNetxify as dnt
 ```
 
-Important points about `phewas()`:
+### 1. PheWAS
 
-- We specified `proportion_threshold=0.01` which means a phecode must have at least 1% of exposed individuals as cases to be considered. (This is an alternative to using `n_threshold`; you generally use one or the other, not both.)
-- We left inclusion/exclusion lists as `None`, meaning we are analyzing all diseases.
-- We enabled `'bonferroni'` correction on p-values and set a cutoff of 0.05 for significance.
-- `lifelines_disable=False` means we switch to `lifelines` package for Cox model fitting when `statsmodels` failed to converge.
+`dnt.phewas()` identifies phecodes associated with the exposure.
 
-Running `dnt.phewas()` returns a `DataFrame` (`phewas_result`). In a cohort design, this `DataFrame` will include columns such as: phecode, disease name, number of cases in exposed and unexposed, hazard ratio (HR) and its confidence interval, p-value, and adjusted p-value (q-value). For a matched cohort, similar output with stratified Cox results. For an exposed-only design, the output will only include basic statistics.
+- In `cohort` and `matched cohort` designs, it fits Cox models.
+- In `exposed-only cohort`, it marks a phecode as significant when `N_cases_exposed` reaches the threshold.
 
-By examining `phewas_result`, you can see which diseases are significantly associated with your exposure of interest. Typically, for downstream analysis, we will focus on diseases with HR > 1 and q-value < cutoff, which is exactly what the `keep_positive_associations=True` setting in the pipeline would enforce.
-
-After obtaining `phewas_result`, if you want to apply a different multiple testing correction or filter in a custom way, ***DiNetxify*** provides convenience functions: you can use `dnt.phewas_multipletests()` to adjust p-values in `phewas_result` using a specified method (if you didn’t do it inside `phewas()` or want to try a different method):
+Example:
 
 ```python
-# Example: applying a different correction (e.g., FDR) to the PheWAS results  
-phewas_result = dnt.phewas_multipletests(  
-    df=phewas_result,  
-    correction='fdr_bh',   # Benjamini-Hochberg FDR  
-    cutoff=0.05  
-) 
-```
-
-This will add columns in `phewas_result` for adjusted p-values and significance flags according to the chosen method and cutoff. (The `df` parameter is just the DataFrame from `phewas()`, so you can call this on any similar results `DataFrame`)
-
-### 3.2.2 Disease pair generation
-
-After identifying which diseases are associated with the exposure (through PheWAS), the next step is to generate all possible disease pairs from that set of diseases for further analysis. In ***DiNetxify***, this is done using the `DiseaseNetworkData.disease_pair()` method, which operates on the `data` object. It will produce all combinations of the significant diseases for each individual, distinguishing between *temporal* pairs (D1 before D2) and *non-temporal* co-occurrence.
-
-The `disease_pair()` method requires the PheWAS result `DataFrame` to know which diseases to consider. It also allows specifying time interval constraints. For example:
-
-```python
-# Generate disease pairs for further analysis  
-data.disease_pair(  
-    phewas_result=phewas_result,     # DataFrame from PheWAS (to get the list of diseases)  
-    min_interval_days=0,             # minimum days between diagnoses for D1->D2 (0 = no minimum)  
-    max_interval_days=float('inf'),  # maximum days between diagnoses to consider (inf = no limit)  
-    force=False                      # if data already has pair info, this prevents overwrite unless True  
+phewas_result = dnt.phewas(
+    data=data,
+    covariates=["age", "BMI"],
+    n_threshold=100,
+    n_process=4,
+    correction="bonferroni",
+    cutoff=0.05,
+    system_exl=None,
+    phecode_inc=None,
+    phecode_exl=None,
+    log_file=None,
+    lifelines_disable=False,
 )
 ```
 
-Important points about `disease_pair()`:
+Notes:
 
-- **phewas_result** – the `DataFrame` of PheWAS results.
-- **min_interval_days**, **max_interval_days** – these define the time window for considering temporal relationships. As defined earlier, here we've left them at 0 and infinity which means we include all occurrences and do not impose a maximum gap. If you wanted to only consider, say, disease pairs where events occur within 5 years of each other, you could set `max_interval_days=1825` (approximately 5*365).
-- **force** – similar to earlier methods, if `False` it will not recompute pairs if they were already computed before for this data object (to avoid unnecessary overwriting). Use `True` to force overwriting.
+- `n_threshold` and `proportion_threshold` are mutually exclusive.
+- If `covariates=None`, DiNetxify uses `'sex'` plus the covariates provided in `phenotype_data()`.
+- In matched cohorts, including matching variables as covariates may cause singular-model issues.
 
-This function will generate a new attribute in the `data` that contains information about each disease pair found in each person. The subsequent function `comorbidity_strength()` will use the updated `data` object which now has the disease pair information to calculate metrics.
-
-> Note: In the one-step analysis, `disease_pair()` generation is handled internally; here we are making it explicit
-
-### 3.2.3 Comorbidity strength estimation
-
-The next step is to assess the **comorbidity strength** of each disease pair – essentially measuring how strongly the two diseases are associated with each other in a cross-sectional sense (regardless of time order). ***DiNetxify***’s `comorbidity_strength()` function calculates statistics **relative risk (RR)** and **phi-correlation** for each pair, and can perform filtering and significance testing.
-
-Using the `data` object (which now has disease pairs from the previous step), we can run:
+If you want to reapply multiple-testing correction later:
 
 ```python
-# Reminder: if using n_process > 1, wrap calls in if __name__ == "__main__":
-com_strength_result = dnt.comorbidity_strength(  
-    data=data,  
-    proportion_threshold=None,    # Alternatively, could require a certain prevalence  
-    n_threshold=100,              # Only consider pairs that co-occur in at least 100 exposed individuals (same as we used above)  
-    n_process=1,                  # Single process (this function is usually fast; can set >1 if needed)  
-    log_file=None,                # Log file (optional)  
-    correction_phi='bonferroni',  # Correction method for Phi coefficient p-values  
-    cutoff_phi=0.05,              # Significance cutoff for Phi  
-    correction_RR='bonferroni',   # Correction method for RR p-values  
-    cutoff_RR=0.05                # Significance cutoff for RR  
-)  
-
+phewas_result = dnt.phewas_multipletests(
+    df=phewas_result,
+    correction="fdr_bh",
+    cutoff=0.05,
+)
 ```
 
-Important points about `comorbidity_strength()`:
+### 2. Disease pair construction
 
-- It uses data attributes generated by `disease_pairs()`, so ensure you have called `disease_pair()`.
-- **n_threshold** serves to filter out infrequent pairs (at least 100 co-occurrences). This is analogous to `n_threshold_comorbidity` in the one-step analysis.
-- It will compute two metrics:
-  - **RR (Relative Risk)** of the two diseases co-occurring in the same person, compared to what would be expected if independent (often simplified as co-occurrence probability vs product of marginal probabilities).
-  - **Φ (Phi correlation)** which is basically the Pearson correlation for two binary variables (disease present/absent).
-- The output `com_strength_result` will be a `DataFrame`.
+`DiseaseNetworkData.disease_pair()` uses the significant phecodes from the PheWAS result to build temporal and non-temporal disease pairs among exposed individuals.
 
-After obtaining `com_strength_result`, you can examine this `DataFrame`. A convenience function `comorbidity_strength_multipletests()` exists if you need to re-adjust p-values with a different method.
-
-### 3.2.4 Binomial test
-
-For each disease pair, binomial test determine if there is a **temporal order** (i.e., does D1 tend to occur before D2 more often than vice versa). Essentially, for every individual who has both diseases, the function will check how many had D1 first vs D2 first, across all individuals. Under the null hypothesis of no preferred order, these are like coin flips; the binomial test checks if one order is significantly more common than the other.
-
-The function `dnt.binomial_test()` performs this analysis. It uses the pair information in `data`. You can call it as:
+Example:
 
 ```python
+data.disease_pair(
+    phewas_result=phewas_result,
+    min_interval_days=0,
+    max_interval_days=float("inf"),
+    force=True,
+    n_process=4,
+)
+```
 
+Notes:
+
+- `force=True` is needed if `data.trajectory` already exists and you want to rebuild the pairs.
+- By default, the method expects `phewas_result` to contain `phecode` and `phewas_p_significance`.
+- `min_interval_days` and `max_interval_days` are stored on the data object and reused later by trajectory analysis.
+
+### 3. Comorbidity strength
+
+`dnt.comorbidity_strength()` evaluates disease-pair co-occurrence strength among exposed individuals using phi-correlation and relative risk (RR).
+
+Example:
+
+```python
+com_strength_result = dnt.comorbidity_strength(
+    data=data,
+    n_threshold=100,
+    n_process=4,
+    correction_phi="bonferroni",
+    cutoff_phi=0.05,
+    correction_RR="bonferroni",
+    cutoff_RR=0.05,
+    log_file=None,
+)
+```
+
+Notes:
+
+- `n_threshold` and `proportion_threshold` are mutually exclusive.
+- This function requires disease pairs to have already been generated.
+- Downstream network and trajectory analyses only keep pairs significant for both phi and RR.
+
+If needed, you can rerun the multiple-testing correction:
+
+```python
+com_strength_result = dnt.comorbidity_strength_multipletests(
+    df=com_strength_result,
+    correction_phi="fdr_bh",
+    cutoff_phi=0.05,
+    correction_RR="fdr_bh",
+    cutoff_RR=0.05,
+)
+```
+
+### 4. Binomial test
+
+`dnt.binomial_test()` tests whether one temporal direction is more common than the reverse direction for each eligible disease pair.
+
+Example:
+
+```python
 binomial_result = dnt.binomial_test(
     data=data,
-    comorbidity_network_result=None,                  # default value
-    comorbidity_strength_result=com_strength_result,  # the result of comorbidity strength estimation
-    enforce_temporal_order=False,                     # If True, exclude individuals with ties/non-temporal occurrences
-    correction='bonferroni',                          # p-value correction method
-    cutoff=0.05                                       # significance threshold  
+    comorbidity_strength_result=com_strength_result,
+    comorbidity_network_result=None,
+    n_process=1,
+    correction="bonferroni",
+    cutoff=0.05,
+    enforce_temporal_order=False,
+    log_file=None,
 )
-
 ```
 
-Important points about `binomial_test()`:
+Notes:
 
-- **enforce_temporal_order** – If `True`, the function will exclude any "non-temporal" pairs (i.e., individuals where the two diseases occurred on the same day or essentially simultaneously, as defined by min_interval_days) from the counts. It also will ensure that if an individual has both orders of occurrence (e.g., D1 then D2 and later D2 then D1 due to multiple episodes), those might be handled to not bias the test. Since we set it False here, we're being more permissive (which is fine given our `min_interval_days`=0, meaning simultaneous is allowed and counted in whichever order they happened first).
-- **correction, cutoff** – Correction for multiple tests (there’s one binomial test per disease pair) and significance threshold for the adjusted p-value.
-- **comorbidity_network_result** - Setting this to none is same as pipeline mode 'v1', where basically all pairs survive the comorbidity strength steps are tested. If given the results dataframe from `comorbidity_network` function (see below), that set is further restricted to those significant in the comorbidity network analysis, as done in pipeline mode 'v2'. Here, assuming we want to analyzeall pairs identified as having some comorbidity strength (since we didn’t filter by comorbidity network first in our pipeline example)
+- Multiprocessing is disabled for this function, so `n_process` must remain `1`.
+- If you pass `comorbidity_network_result`, the test is restricted to network-significant pairs. This mirrors pipeline mode `v2`.
+- If `enforce_temporal_order=True`, non-temporal D1-D2 occurrences are excluded from the test.
 
-The `binomial_result` `DataFrame` will list disease pairs (identified by phecodes) with the number of individuals where D1 happened first vs D2 first, the binomial p-value and adjusted p-value, and possibly an indication of which order is predominant. Typically, we filter the pairs based on adjusted p-value < 0.05. This result will be used in building trajectories.
-
-### 3.2.5 Comorbidity network analysis
-
-Now we move to perform the **comorbidity network** analysis, adjusting for covariates and other diseases per the method selected. This is effectively a deeper analysis on the set of disease pairs that survived earlier filters, focusing on non-temporal relationships.
-
-The function `dnt.comorbidity_network()` carries out this analysis. Depending on the `method` (RPCN, PCN_PCA, or CN), it will fit either a series of regularized regressions or simpler correlations. Here’s how we call it (mirroring our pipeline parameters):
+If needed:
 
 ```python
-# Reminder: if using n_process > 1, wrap calls in if __name__ == "__main__":
-
-com_network_result = dnt.comorbidity_network(  
-    data=data,  
-    comorbidity_strength_result=com_strength_result, # the result of comorbidity strength estimation
-    method="RPCN",                    # or "PCN_PCA" or "CN"  
-    covariates=['BMI', 'age', 'sex'], # adjust for these covariates in each model  
-    correction='bonferroni',          # correction for multiple testing of edges  
-    cutoff=0.05,                      # significance threshold  
-    **{  
-        "alpha": None,                # RPCN-specific kwargs: if we wanted to manually set  
-        "auto_penalty": True,         # whether to auto-select alpha  
-        "alpha_range": (1, 15),  
-        "scaling_factor": 1,  
-                                      # If using PCN_PCA: we could provide "n_PC" or "explained_variance" as kwargs  
-    }  
-)  
-
+binomial_result = dnt.binomial_multipletests(
+    df=binomial_result,
+    correction="fdr_bh",
+    cutoff=0.05,
+)
 ```
 
-Important points about `comorbidity_network()`:
+### 5. Comorbidity network analysis
 
-- **method** – The network inference method: `'RPCN'` (default, uses L1-penalized partial correlation), `'PCN_PCA'` (partial correlation with dimensionality reduction), or `'CN'` (simple correlation network).
-- **covariates** – Covariates to adjust for in the models. We include sex, BMI and age as in PheWAS.
-- **correction, cutoff** – multiple testing correction for the edge significance and the significance threshold. Each edge (disease pair) will get a p-value (from logistic regression coefficients, etc.), and these will be corrected. We use `'Bonferroni'` and 0.05.
-- **kwargs** – RPCN and PCN_PCA have additional parameters:
-  - For RPCN: `alpha` (L1 penalty weight; if None and `auto_penalty` set to True, the code will try to auto-tune it), `auto_penalty` (if True, find optimal alpha via AIC), `alpha_range` (range to search for alpha), `scaling_factor` (scales alpha search). We left `alpha=None` and `auto_penalty=True` which means it will choose the best penalty.
-  - For PCN_PCA: `n_PC` (number of principal components to use; default 5) or `explained_variance` (if set, override n_PC to take enough PCs to explain this fraction of variance). Not used in RPCN.
-- The output `com_network_result` will be a DataFrame indicating which disease pairs (edges) are considered significant in this network analysis. Columns in the dataframe include: disease1, disease2, estimated beta, p-value, adjusted p-value, adjusted p-value, and an indicator of significance.
+`dnt.comorbidity_network()` estimates adjusted disease-disease associations for the comorbidity network.
 
-After this function, you can filter `com_network_result` to focus on disease pairs with postivie comorbidity associaitons only (beta>0).
-
-### 3.2.6 Disease trajectory analysis
-
-Finally, we conduct the **disease trajectory analysis**. This aims to identify sequences of diseases, i.e., if having disease D1 increases the risk of subsequently developing disease D2 (beyond just co-occurrence). This is typically done with a nested case-control approach using incidence density sampling that was set up by `matching_var_dict` and `matching_n`. Essentially, for each candidate pair survive the binomial test (with significant temporal order), we treat the first-occurring disease as an exposure and the second as an outcome in a logistic analysis framework to test the temporal association (while accounting for matching and covariates).
-
-The function `dnt.disease_trajectory()` performs this analysis. We will call it on the filtered set of disease pairs with temporal order.
+Example:
 
 ```python
-# Reminder: if using n_process > 1, wrap calls in if __name__ == "__main__":
-
-trajectory_result = dnt.disease_trajectory(  
-    data=data,  
-    comorbidity_strength_result=com_strength_result,  # the result of comorbidity strength estimation
-    binomial_test_result=binomial_result,             # the result of binomial test
-    covariates=['BMI', 'age'],                        # adjust for these covariates  
-    matching_var_dict={'sex': 'exact'},               # matching variables and criteria (as used earlier)  
-    matching_n=2,                                     # number of matched controls per case  
-    method='RPCN',                                    # same as above
-    enforce_time_interval=True,                       # whether to enforce min/max intervals in analysis  
-    correction='bonferroni',                          # p-value correction method  
-    cutoff=0.05,                                       # significance threshold 
-    **{  
-        "alpha": None,                # RPCN-specific kwargs: if we wanted to manually set  
-        "auto_penalty": True,         # whether to auto-select alpha  
-        "alpha_range": (1, 15),  
-        "scaling_factor": 1,  
-                                      # If using PCN_PCA: we could provide "n_PC" or "explained_variance" as kwargs  
-    }  
-)  
-
+com_network_result = dnt.comorbidity_network(
+    data=data,
+    comorbidity_strength_result=com_strength_result,
+    binomial_test_result=None,
+    method="RPCN",
+    covariates=["age", "BMI"],
+    n_process=4,
+    correction="bonferroni",
+    cutoff=0.05,
+    auto_penalty=True,
+    alpha_range=(1, 15),
+    scaling_factor=1,
+    log_file=None,
+)
 ```
 
-Important points about `disease_trajectory()`:
+Notes:
 
-- **covariates** – Covariates to include in the conditional logistic regression models (again, include BMI and age, sex is used as matching variable, so not included here).
-- **matching_var_dict** and **matching_n** – These parameters decide how we generate the nested case-control dataset for each pair. In our example, we matched on sex exactly and allowed up to 2 controls per case being matched.
-- **enforce_time_interval** – If True, applies the specified minimum and maximum time intervals when determining the D2 outcome among individuals diagnosed with D1. Since we set it True, only D1-exposed individuals diagnosed with D2 within the specified time interval were considered as cases.
-- **correction, cutoff** – multiple testing correction for the trajectory analysis p-values and the significance threshold.
-- **method** – The network inference method: `'RPCN'` (default, uses L1-penalized partial correlation), `'PCN_PCA'` (partial correlation with dimensionality reduction), or `'CN'` (simple correlation network).
-- **kwargs** – RPCN and PCN_PCA have additional parameters, same as `comorbidity_network()` function.
+- `method` can be `'RPCN'`, `'PCN_PCA'`, or `'CN'`.
+- The current implementation is driven by disease pairs that are significant for both phi and RR in `comorbidity_strength_result`.
+- `binomial_test_result` is accepted by the function signature for compatibility with the shared column-handling logic, but the latest code does not use it to filter the comorbidity network analysis.
+- `RPCN` and `PCN_PCA` add network-disease covariates automatically; `CN` uses only phenotypic covariates.
 
+If needed:
 
+```python
+com_network_result = dnt.comorbidity_multipletests(
+    df=com_network_result,
+    correction="fdr_bh",
+    cutoff=0.05,
+)
+```
 
-The output `trajectory_result` will be a `DataFrame` of disease pairs with metrics indicating temporal association significance. For example each pair (D1 -> D2), it provides an estimated effect size (beta value of the model), p-value, and adjusted p-value, and an indicator if it’s significant. Only pairs that passed previous binomial test filtering are analyzed, and among those, some will show a significant temporal relationship after adjusting for covariates. In essence, this final result pinpoints which disease pairs have a directionality (D1 significantly predisposes to D2).
+### 6. Disease trajectory analysis
 
-After completing these steps, you now have:
+`dnt.disease_trajectory()` performs the final trajectory analysis on disease pairs that are significant in both comorbidity strength and the binomial test.
 
-- `phewas_result`: diseases associated with exposure
-- `com_strength_result`: disease pairs with comorbidity strength metrics
-- `binomial_result`: temporal order of the disease pairs
-- `com_network_result`: non-temporal comorbidity associations of the filtered disease pairs
-- `trajectory_result`: temporal associations of the filtered disease pairs
+Example:
 
-These correspond to the outputs of the one-step analysis `disease_network_pipeline()`. You can proceed to interpret them, and also to visualize them using the `Plot` class as described next.
+```python
+trajectory_result = dnt.disease_trajectory(
+    data=data,
+    comorbidity_strength_result=com_strength_result,
+    binomial_test_result=binomial_result,
+    method="RPCN",
+    matching_var_dict={"sex": "exact"},
+    matching_n=2,
+    max_n_cases=float("inf"),
+    global_sampling=False,
+    covariates=["age", "BMI"],
+    n_process=4,
+    correction="bonferroni",
+    cutoff=0.05,
+    enforce_time_interval=True,
+    auto_penalty=True,
+    alpha_range=(1, 15),
+    scaling_factor=1,
+    log_file=None,
+)
+```
+
+Notes:
+
+- `matching_var_dict` controls incidence-density sampling for the nested case-control design.
+- Categorical or binary matching variables should usually not also be included as covariates.
+- `enforce_time_interval=True` is the default and applies the interval rules defined earlier in `data.disease_pair()`.
+- `global_sampling=True` reuses incidence-density sampling across pairs with the same D2 and can be useful for larger analyses.
+- `max_n_cases` can cap the number of D2 cases analyzed for each model.
+
+If needed:
+
+```python
+trajectory_result = dnt.trajectory_multipletests(
+    df=trajectory_result,
+    correction="fdr_bh",
+    cutoff=0.05,
+)
+```
+
+## Outputs
+
+The main result tables are:
+
+- `phewas_result`: PheWAS results for individual phecodes
+- `com_strength_result`: Comorbidity strength results based on phi and RR
+- `com_network_result`: Adjusted comorbidity network results
+- `binomial_result`: Temporal-order test results
+- `trajectory_result`: Final disease trajectory results
+
+These outputs can be passed directly to `DiNetxify.visualization.Plot` for visualization.

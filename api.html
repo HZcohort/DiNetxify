@@ -7,14 +7,14 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>API Reference &mdash; DiNetxify  documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=92fd9be5" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -56,9 +56,10 @@
 <li class="toctree-l4"><a class="reference internal" href="#table1"><code class="docutils literal notranslate"><span class="pre">Table1</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#merge-medical-records"><code class="docutils literal notranslate"><span class="pre">merge_medical_records</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#get-attribute"><code class="docutils literal notranslate"><span class="pre">get_attribute</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#medical-records-to-dataframe"><code class="docutils literal notranslate"><span class="pre">medical_records_to_dataframe</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#concat"><code class="docutils literal notranslate"><span class="pre">concat</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#modify-phecode-level"><code class="docutils literal notranslate"><span class="pre">modify_phecode_level</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#disease-pair"><code class="docutils literal notranslate"><span class="pre">disease_pair</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#medical-records-to-dataframe"><code class="docutils literal notranslate"><span class="pre">medical_records_to_dataframe</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#save"><code class="docutils literal notranslate"><span class="pre">save</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#load"><code class="docutils literal notranslate"><span class="pre">load</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#save-npz"><code class="docutils literal notranslate"><span class="pre">save_npz</span></code></a></li>
@@ -122,26 +123,26 @@
              
   <section id="api-reference">
 <h1>API Reference<a class="headerlink" href="#api-reference" title="Link to this heading"></a></h1>
-<p>Below is a concise reference for <em><strong>DiNetxify</strong></em>’s classes and functions, summarizing their signatures and parameters. This is useful when writing your own scripts or if you need to quickly recall how to call a function.</p>
+<p>Below is a concise reference for <em><strong>DiNetxify</strong></em> classes and functions, based on the current package implementation.</p>
 <section id="class-diseasenetworkdata">
 <h2>Class <code class="docutils literal notranslate"><span class="pre">DiseaseNetworkData</span></code><a class="headerlink" href="#class-diseasenetworkdata" title="Link to this heading"></a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">DiseaseNetworkData</span><span class="p">(</span>  
-    <span class="n">study_design</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;cohort&#39;</span><span class="p">,</span>  
-    <span class="n">phecode_level</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>  
-    <span class="n">min_required_icd_codes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>  
-    <span class="n">date_fmt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">,</span>  
-    <span class="n">phecode_version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;1.2&#39;</span>  
-<span class="p">)</span>  
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">DiseaseNetworkData</span><span class="p">(</span>
+    <span class="n">study_design</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;cohort&quot;</span><span class="p">,</span>
+    <span class="n">phecode_level</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">min_required_icd_codes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">date_fmt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="n">phecode_version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;1.2&quot;</span><span class="p">,</span>
+<span class="p">)</span>
 </pre></div>
 </div>
-<p>A class for handling disease network data creation and operations, for use in <em><strong>DiNetxify</strong></em> module.</p>
+<p>Create a data container for phenotype data, medical records, phecode mappings, and downstream pair-construction results.</p>
 <p><strong>Parameters:</strong></p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">study_design</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Specify the type of study design, either “cohort”, “matched cohort”, or “exposed-only cohort”. Defaults to <code class="docutils literal notranslate"><span class="pre">'cohort'</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">phecode_level</span></code> (<code class="docutils literal notranslate"><span class="pre">int</span></code>): The level of phecode to use for analysis, where level 1 (with a total of 585 medical conditions) corresponds to 3-digit ICD-10 codes and level 2 (with a total of 1257 medical conditions) to 4-digit ICD-10 codes. Level 2 phecodes offer a more granular analysis with potentially smaller sample sizes per disease category. For larger studies, level 2 phecodes may enhance result interpretation. For smaller studies, level 1 is recommended to maintain statistical power. Defaults to <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">min_required_icd_codes</span></code> (<code class="docutils literal notranslate"><span class="pre">int</span></code>): The minimum number of ICD codes mapping to a specific phecode required for the phecode to be considered valid. For example, if set to 2, a single diagnosis record will not be sufficient to count as an occurrence. Ensure that your medical record are complete (i.e., not limited to only the first occurrence for each code) when using this parameter. Defaults to <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">date_fmt</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): The format of the date fields in your phenotype and medical record data. Defaults to <code class="docutils literal notranslate"><span class="pre">'%Y-%m-%d'</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">phecode_version</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): The version of the phecode system used for converting diagnosis codes. Version 1.2 is the official version of the phecode system, with mapping files available for ICD-9-CM, ICD-9-WHO, ICD-10-CM, and ICD-10-WHO codes. While option 1.3a is provided, it’s an unofficial version and not recommended for general use. Defaults to <code class="docutils literal notranslate"><span class="pre">'1.2'</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">study_design</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): One of <code class="docutils literal notranslate"><span class="pre">&quot;cohort&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;matched</span> <span class="pre">cohort&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;exposed-only</span> <span class="pre">cohort&quot;</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phecode_level</span></code> (<code class="docutils literal notranslate"><span class="pre">int</span></code>): Phecode granularity, either <code class="docutils literal notranslate"><span class="pre">1</span></code> or <code class="docutils literal notranslate"><span class="pre">2</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">min_required_icd_codes</span></code> (<code class="docutils literal notranslate"><span class="pre">int</span></code>): Minimum mapped ICD count required before a phecode is counted as present.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">date_fmt</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Default date format used for phenotype data and, unless overridden, medical-record data.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phecode_version</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): One of <code class="docutils literal notranslate"><span class="pre">&quot;1.2&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;1.3a&quot;</span></code>. Version <code class="docutils literal notranslate"><span class="pre">&quot;1.2&quot;</span></code> is the recommended general-purpose option.</p></li>
 </ul>
 <hr class="docutils" />
 <section id="instance-methods">
@@ -154,18 +155,18 @@
     <span class="n">column_names</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
     <span class="n">covariates</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
     <span class="n">is_single_sex</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="n">force</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">force</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
 <p>Load phenotype data into the object.</p>
 <p><strong>Parameters:</strong></p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">phenotype_data_path</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Path to CSV/TSV phenotype file with header row.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">column_names</span></code> (<code class="docutils literal notranslate"><span class="pre">dict</span></code>): Mapping of dataset column names. Required keys: <code class="docutils literal notranslate"><span class="pre">'Participant</span> <span class="pre">ID'</span></code>, <code class="docutils literal notranslate"><span class="pre">'Index</span> <span class="pre">date'</span></code>, <code class="docutils literal notranslate"><span class="pre">'End</span> <span class="pre">date'</span></code>, <code class="docutils literal notranslate"><span class="pre">'Exposure'</span></code>, <code class="docutils literal notranslate"><span class="pre">'Sex'</span></code>, <code class="docutils literal notranslate"><span class="pre">'Match</span> <span class="pre">ID'</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">covariates</span></code> (<code class="docutils literal notranslate"><span class="pre">list</span></code>): List of additional covariate names (e.g., <code class="docutils literal notranslate"><span class="pre">['age',</span> <span class="pre">'BMI']</span></code>).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">is_single_sex</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): True if dataset contains only one sex. Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">force</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): If True, overwrite existing data attributes. Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phenotype_data_path</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Path to a CSV or TSV phenotype file.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">column_names</span></code> (<code class="docutils literal notranslate"><span class="pre">dict</span></code>): Mapping from DiNetxify-required field names to dataset columns. Required keys depend on <code class="docutils literal notranslate"><span class="pre">study_design</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">covariates</span></code> (<code class="docutils literal notranslate"><span class="pre">list</span></code>): Additional phenotype variables to load.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">is_single_sex</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): Set to <code class="docutils literal notranslate"><span class="pre">True</span></code> if the cohort contains only one sex.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">force</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): Overwrite existing phenotype and medical-record data if <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
 </ul>
 <p><strong>Returns:</strong></p>
 <ul class="simple">
@@ -177,21 +178,14 @@
 <h4><code class="docutils literal notranslate"><span class="pre">Table1</span></code><a class="headerlink" href="#table1" title="Link to this heading"></a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">Table1</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
-    <span class="n">continuous_stat_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;auto&#39;</span>
+    <span class="n">continuous_stat_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;auto&quot;</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
-<p>Generate a descriptive summary table of phenotype data.</p>
+<p>Generate a Table 1 style summary of the phenotype data.</p>
 <p><strong>Parameters:</strong></p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">continuous_stat_mode</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Method for continuous variable statistics. Choices:</p>
-<ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">auto</span></code>: Automatic normality-based choice.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">normal</span></code>: Mean and standard deviation.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">nonnormal</span></code>: Median and interquartile range.
-Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'</span></code>.</p></li>
-</ul>
-</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">continuous_stat_mode</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): One of <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;normal&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;nonnormal&quot;</span></code>.</p></li>
 </ul>
 <p><strong>Returns:</strong></p>
 <ul class="simple">
@@ -207,18 +201,20 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
     <span class="n">diagnosis_code</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">column_names</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
     <span class="n">date_fmt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">chunksize</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000000</span>
+    <span class="n">chunksize</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000000</span><span class="p">,</span>
+    <span class="n">diagnosis_code_exclusion</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="p">[],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
-<p>Load one or more medical record datasets.</p>
+<p>Load and merge one medical-record file into the object.</p>
 <p><strong>Parameters:</strong></p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">medical_records_data_path</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Path to CSV/TSV medical record file.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">diagnosis_code</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Code type: <code class="docutils literal notranslate"><span class="pre">'ICD-9-CM'</span></code>, <code class="docutils literal notranslate"><span class="pre">'ICD-9-WHO'</span></code>, <code class="docutils literal notranslate"><span class="pre">'ICD-10-CM'</span></code>, or <code class="docutils literal notranslate"><span class="pre">'ICD-10-WHO'</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">column_names</span></code> (<code class="docutils literal notranslate"><span class="pre">dict</span></code>): Mapping for dataset columns. Required keys: <code class="docutils literal notranslate"><span class="pre">'Participant</span> <span class="pre">ID'</span></code>, <code class="docutils literal notranslate"><span class="pre">'Diagnosis</span> <span class="pre">code'</span></code>, <code class="docutils literal notranslate"><span class="pre">'Date</span> <span class="pre">of</span> <span class="pre">diagnosis'</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">date_fmt</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Date format (defaults to phenotype data format). Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">chunksize</span></code> (<code class="docutils literal notranslate"><span class="pre">int</span></code>): Rows per chunk for large files. Defaults to <code class="docutils literal notranslate"><span class="pre">1000000</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">medical_records_data_path</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Path to a CSV or TSV diagnosis file.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">diagnosis_code</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): One of <code class="docutils literal notranslate"><span class="pre">&quot;ICD-9-CM&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;ICD-9-WHO&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;ICD-10-CM&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;ICD-10-WHO&quot;</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">column_names</span></code> (<code class="docutils literal notranslate"><span class="pre">dict</span></code>): Mapping for <code class="docutils literal notranslate"><span class="pre">&quot;Participant</span> <span class="pre">ID&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;Diagnosis</span> <span class="pre">code&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">&quot;Date</span> <span class="pre">of</span> <span class="pre">diagnosis&quot;</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">date_fmt</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span> <span class="pre">|</span> <span class="pre">None</span></code>): Date format for this file. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, use the object’s <code class="docutils literal notranslate"><span class="pre">date_fmt</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">chunksize</span></code> (<code class="docutils literal notranslate"><span class="pre">int</span></code>): Number of rows processed per chunk.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">diagnosis_code_exclusion</span></code> (<code class="docutils literal notranslate"><span class="pre">list</span></code>): Diagnosis codes to exclude before phecode mapping.</p></li>
 </ul>
 <p><strong>Returns:</strong></p>
 <ul class="simple">
@@ -230,39 +226,42 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
 <h4><code class="docutils literal notranslate"><span class="pre">get_attribute</span></code><a class="headerlink" href="#get-attribute" title="Link to this heading"></a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">get_attribute</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
-    <span class="n">attr_name</span><span class="p">:</span> <span class="nb">str</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">any</span>
+    <span class="n">attr_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span>
 </pre></div>
 </div>
-<p>Retrieve the value of a private or protected attribute.</p>
-<p><strong>Parameters:</strong></p>
+<p>Access selected internal metadata from the object.</p>
+<p><strong>Supported attribute names:</strong></p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">attr_name</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Name of the attribute to retrieve.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">warning_phenotype</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phenotype_statistics</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phenotype_info</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">warning_medical_records</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">medical_records_statistics</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">medical_records_info</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">module_dir</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">significant_phecodes</span></code></p></li>
 </ul>
 <p><strong>Returns:</strong></p>
 <ul class="simple">
-<li><p>Attribute value (<code class="docutils literal notranslate"><span class="pre">any</span></code>)</p></li>
+<li><p>Requested value (<code class="docutils literal notranslate"><span class="pre">Any</span></code>)</p></li>
 </ul>
 </section>
 <hr class="docutils" />
-<section id="medical-records-to-dataframe">
-<h4><code class="docutils literal notranslate"><span class="pre">medical_records_to_dataframe</span></code><a class="headerlink" href="#medical-records-to-dataframe" title="Link to this heading"></a></h4>
+<section id="concat">
+<h4><code class="docutils literal notranslate"><span class="pre">concat</span></code><a class="headerlink" href="#concat" title="Link to this heading"></a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">concat</span><span class="p">(</span>
-    <span class="bp">self</span><span class="p">,</span> 
-    <span class="n">phecode_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
-    <span class="n">medical_history</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DiseaseNetworkData</span>
+    <span class="bp">cls</span><span class="p">,</span>
+    <span class="n">first_data</span><span class="p">:</span> <span class="s2">&quot;DiseaseNetworkData&quot;</span><span class="p">,</span>
+    <span class="n">second_data</span><span class="p">:</span> <span class="s2">&quot;DiseaseNetworkData&quot;</span><span class="p">,</span>
+    <span class="n">duplicates</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;raise&quot;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;DiseaseNetworkData&quot;</span>
 </pre></div>
 </div>
-<p>Convert stored medical record into a tidy pandas DataFrame.</p>
-<p><strong>Parameters:</strong></p>
+<p>Class method reserved for concatenating two <code class="docutils literal notranslate"><span class="pre">DiseaseNetworkData</span></code> objects.</p>
+<p><strong>Current status:</strong></p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">phecode_list</span></code> (<code class="docutils literal notranslate"><span class="pre">list</span></code>): List of phecodes to extract from the medical record. Only phecodes valid for the current phecode_level are accepted.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">medical_history</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): Include a binary history column for each phecode if set to True. Default to <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
-</ul>
-<p><strong>Returns:</strong></p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p></li>
+<li><p>Present in the API, but currently raises <code class="docutils literal notranslate"><span class="pre">NotImplementedError</span></code>.</p></li>
 </ul>
 </section>
 <hr class="docutils" />
@@ -270,15 +269,11 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
 <h4><code class="docutils literal notranslate"><span class="pre">modify_phecode_level</span></code><a class="headerlink" href="#modify-phecode-level" title="Link to this heading"></a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">modify_phecode_level</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
-    <span class="n">phecode_level</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">phecode_level</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
-<p>Update the phecode level setting.</p>
-<p><strong>Parameters:</strong></p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">phecode_level</span></code> (<code class="docutils literal notranslate"><span class="pre">int</span></code>): New phecode level (1 or 2).</p></li>
-</ul>
+<p>Switch between phecode level <code class="docutils literal notranslate"><span class="pre">1</span></code> and <code class="docutils literal notranslate"><span class="pre">2</span></code>. This cannot be done after trajectory data have already been generated.</p>
 <p><strong>Returns:</strong></p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
@@ -291,25 +286,25 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">phewas_result</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
     <span class="n">min_interval_days</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
-    <span class="n">max_interval_days</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">),</span>
+    <span class="n">max_interval_days</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
     <span class="n">force</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">n_process</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
-    <span class="o">**</span><span class="n">kwargs</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
-<p>Construct temporal and non-temporal disease pairs.</p>
+<p>Construct temporal and non-temporal disease pairs from significant PheWAS phecodes among exposed individuals.</p>
 <p><strong>Parameters:</strong></p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">phewas_result</span></code> (<code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code>): DataFrame from <code class="docutils literal notranslate"><span class="pre">phewas()</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">min_interval_days</span></code> (<code class="docutils literal notranslate"><span class="pre">int</span></code>): Minimum days between diagnoses. Defaults to <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">max_interval_days</span></code> (<code class="docutils literal notranslate"><span class="pre">float</span></code>): Maximum days between diagnoses. Defaults to <code class="docutils literal notranslate"><span class="pre">inf</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">force</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): Overwrite existing data. Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">n_process</span></code> (<code class="docutils literal notranslate"><span class="pre">int</span></code>): Number of parallel processes. Defaults to <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">**kwargs</span></code>: Additional mappings:</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">phewas_result</span></code> (<code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code>): Result table from <code class="docutils literal notranslate"><span class="pre">phewas()</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">min_interval_days</span></code> (<code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">|</span> <span class="pre">float</span></code>): Minimum gap required for a temporal D1 -&gt; D2 relationship.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_interval_days</span></code> (<code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">|</span> <span class="pre">float</span></code>): Maximum gap allowed before a pair is treated as non-temporal.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">force</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): Overwrite existing trajectory data if <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_process</span></code> (<code class="docutils literal notranslate"><span class="pre">int</span></code>): Number of processes used for pair construction.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">**kwargs</span></code>: Optional column-name overrides:</p>
 <ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">phecode_col</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Column for phecode. Defaults to <code class="docutils literal notranslate"><span class="pre">'phecode'</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">significance_col</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Column for significance. Defaults to <code class="docutils literal notranslate"><span class="pre">'phewas_p_significance'</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phecode_col</span></code> (default <code class="docutils literal notranslate"><span class="pre">'phecode'</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">significance_col</span></code> (default <code class="docutils literal notranslate"><span class="pre">'phewas_p_significance'</span></code>)</p></li>
 </ul>
 </li>
 </ul>
@@ -319,23 +314,36 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
 </ul>
 </section>
 <hr class="docutils" />
+<section id="medical-records-to-dataframe">
+<h4><code class="docutils literal notranslate"><span class="pre">medical_records_to_dataframe</span></code><a class="headerlink" href="#medical-records-to-dataframe" title="Link to this heading"></a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">medical_records_to_dataframe</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">phecode_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
+    <span class="n">medical_history</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+<p>Export selected phecodes from the stored medical records into a participant-level DataFrame.</p>
+<p><strong>Parameters:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">phecode_list</span></code> (<code class="docutils literal notranslate"><span class="pre">list</span></code>): Phecodes to extract.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">medical_history</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): If <code class="docutils literal notranslate"><span class="pre">True</span></code>, add <code class="docutils literal notranslate"><span class="pre">&lt;phecode&gt;_history</span></code> indicators.</p></li>
+</ul>
+<p><strong>Returns:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p></li>
+</ul>
+</section>
+<hr class="docutils" />
 <section id="save">
 <h4><code class="docutils literal notranslate"><span class="pre">save</span></code><a class="headerlink" href="#save" title="Link to this heading"></a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">save</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
-    <span class="n">file</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
-<p>Save object state to a gzip-compressed pickle file (<code class="docutils literal notranslate"><span class="pre">.pkl.gz</span></code>).</p>
-<p><strong>Parameters:</strong></p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">file</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Filename or prefix (adds <code class="docutils literal notranslate"><span class="pre">.pkl.gz</span></code>).</p></li>
-</ul>
-<p><strong>Returns:</strong></p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
-</ul>
+<p>Save the object as a gzip-compressed pickle file. The <code class="docutils literal notranslate"><span class="pre">.pkl.gz</span></code> suffix is appended automatically if needed.</p>
 </section>
 <hr class="docutils" />
 <section id="load">
@@ -343,39 +351,22 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">load</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">force</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">force</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
-<p>Load object state from a gzip-compressed pickle file.</p>
-<p><strong>Parameters:</strong></p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">file</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Filename or prefix (adds <code class="docutils literal notranslate"><span class="pre">.pkl.gz</span></code>).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">force</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): Overwrite if True. Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
-</ul>
-<p><strong>Returns:</strong></p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
-</ul>
+<p>Load the object from a gzip-compressed pickle file.</p>
 </section>
 <hr class="docutils" />
 <section id="save-npz">
 <h4><code class="docutils literal notranslate"><span class="pre">save_npz</span></code><a class="headerlink" href="#save-npz" title="Link to this heading"></a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">save_npz</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
-    <span class="n">file</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
-<p>Save object state to a NumPy <code class="docutils literal notranslate"><span class="pre">.npz</span></code> file.</p>
-<p><strong>Parameters:</strong></p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">file</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Filename or prefix (adds <code class="docutils literal notranslate"><span class="pre">.npz</span></code>).</p></li>
-</ul>
-<p><strong>Returns:</strong></p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
-</ul>
+<p>Save the object as a compressed NumPy archive. The output file is written as <code class="docutils literal notranslate"><span class="pre">.npz</span></code>.</p>
 </section>
 <hr class="docutils" />
 <section id="load-npz">
@@ -383,25 +374,17 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">load_npz</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">force</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">force</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
-<p>Load object state from a NumPy <code class="docutils literal notranslate"><span class="pre">.npz</span></code> file.</p>
-<p><strong>Parameters:</strong></p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">file</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Filename or prefix (adds <code class="docutils literal notranslate"><span class="pre">.npz</span></code>).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">force</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): Overwrite if True. Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
-</ul>
-<p><strong>Returns:</strong></p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
-</ul>
+<p>Load the object from a compressed NumPy archive.</p>
 </section>
 </section>
 </section>
 <section id="analysis-functions">
 <h2>Analysis Functions<a class="headerlink" href="#analysis-functions" title="Link to this heading"></a></h2>
+<p>For p-value correction arguments throughout the analysis API, DiNetxify accepts <code class="docutils literal notranslate"><span class="pre">'none'</span></code> or any method supported by <code class="docutils literal notranslate"><span class="pre">statsmodels.stats.multitest.multipletests</span></code>.</p>
 <section id="function-disease-network-pipeline">
 <h3>Function: <code class="docutils literal notranslate"><span class="pre">disease_network_pipeline</span></code><a class="headerlink" href="#function-disease-network-pipeline" title="Link to this heading"></a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">disease_network_pipeline</span><span class="p">(</span>
@@ -414,55 +397,50 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
     <span class="n">keep_positive_associations</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">save_intermediate_data</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">system_exl</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">pipeline_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;v1&#39;</span><span class="p">,</span>
-    <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;RPCN&#39;</span><span class="p">,</span>
+    <span class="n">pipeline_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;v1&quot;</span><span class="p">,</span>
+    <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;RPCN&quot;</span><span class="p">,</span>
     <span class="n">covariates</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">matching_var_dict</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;sex&#39;</span><span class="p">:</span><span class="s1">&#39;exact&#39;</span><span class="p">},</span>
+    <span class="n">matching_var_dict</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;sex&quot;</span><span class="p">:</span> <span class="s2">&quot;exact&quot;</span><span class="p">},</span>
     <span class="n">matching_n</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
     <span class="n">min_interval_days</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
-    <span class="n">max_interval_days</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">),</span>
+    <span class="n">max_interval_days</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
     <span class="n">enforce_temporal_order</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="n">correction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;bonferroni&#39;</span><span class="p">,</span>
-    <span class="n">cutoff</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
-    <span class="o">**</span><span class="n">kwargs</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+    <span class="n">correction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;bonferroni&quot;</span><span class="p">,</span>
+    <span class="n">cutoff</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span>
 </pre></div>
 </div>
-<p><strong>Parameters:</strong></p>
+<p>Run the main workflow:</p>
+<p><code class="docutils literal notranslate"><span class="pre">PheWAS</span> <span class="pre">-&gt;</span> <span class="pre">disease_pair</span> <span class="pre">-&gt;</span> <span class="pre">comorbidity_strength</span> <span class="pre">-&gt;</span> <span class="pre">binomial/comorbidity_network</span> <span class="pre">-&gt;</span> <span class="pre">disease_trajectory</span></code></p>
+<p><strong>Returns:</strong></p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">data</span></code> (<code class="docutils literal notranslate"><span class="pre">DiseaseNetworkData</span></code>): The DiseaseNetworkData object.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">n_process</span></code> (<code class="docutils literal notranslate"><span class="pre">int</span></code>): Specifies the number of parallel processes to use. Defaults to required.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">n_threshold_phewas</span></code> (<code class="docutils literal notranslate"><span class="pre">int</span></code>): Minimum cases in exposed group for PheWAS inclusion. Passed to <code class="docutils literal notranslate"><span class="pre">phewas()</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">n_threshold_comorbidity</span></code> (<code class="docutils literal notranslate"><span class="pre">int</span></code>): Minimum co-occurrences for comorbidity strength. Passed to <code class="docutils literal notranslate"><span class="pre">comorbidity_strength()</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">output_dir</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Directory path for pipeline outputs.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">project_prefix</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Prefix for naming outputs.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">keep_positive_associations</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): Retain only positive associations. Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">save_intermediate_data</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): Save intermediate data objects. Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">system_exl</span></code> (<code class="docutils literal notranslate"><span class="pre">list</span></code>): Phecode systems to exclude. Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">pipeline_mode</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Analysis order mode (<code class="docutils literal notranslate"><span class="pre">'v1'</span></code> or <code class="docutils literal notranslate"><span class="pre">'v2'</span></code>). Defaults to <code class="docutils literal notranslate"><span class="pre">'v1'</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">method</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Comorbidity network / trajectory method (<code class="docutils literal notranslate"><span class="pre">'RPCN'</span></code>, <code class="docutils literal notranslate"><span class="pre">'PCN_PCA'</span></code>, <code class="docutils literal notranslate"><span class="pre">'CN'</span></code>). Defaults to <code class="docutils literal notranslate"><span class="pre">'RPCN'</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">covariates</span></code> (<code class="docutils literal notranslate"><span class="pre">list</span></code>): Covariates for models. Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">matching_var_dict</span></code> (<code class="docutils literal notranslate"><span class="pre">dict</span></code>): Matching variables and criteria. Defaults to <code class="docutils literal notranslate"><span class="pre">{'sex':'exact'}</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">matching_n</span></code> (<code class="docutils literal notranslate"><span class="pre">int</span></code>): Number of matched controls per case. Defaults to <code class="docutils literal notranslate"><span class="pre">2</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">min_interval_days</span></code> (<code class="docutils literal notranslate"><span class="pre">int</span></code>): Minimum days between diagnoses. Defaults to <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">max_interval_days</span></code> (<code class="docutils literal notranslate"><span class="pre">float</span></code>): Maximum days between diagnoses. Defaults to <code class="docutils literal notranslate"><span class="pre">inf</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">enforce_temporal_order</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): Enforce temporal order in testing. Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">correction</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): p-value correction method. Defaults to <code class="docutils literal notranslate"><span class="pre">'bonferroni'</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">cutoff</span></code> (<code class="docutils literal notranslate"><span class="pre">float</span></code>): Significance threshold. Defaults to <code class="docutils literal notranslate"><span class="pre">0.05</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">**kwargs</span></code>:</p>
+<li><p>A 5-tuple in this order:</p>
 <ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">alpha</span></code> (<code class="docutils literal notranslate"><span class="pre">float</span></code>): L1 penalty weight. Defaults per method.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">auto_penalty</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): Auto-select alpha. Defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">alpha_range</span></code> (<code class="docutils literal notranslate"><span class="pre">tuple</span></code>): Search range for alpha. Defaults to <code class="docutils literal notranslate"><span class="pre">(1,15)</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">scaling_factor</span></code> (<code class="docutils literal notranslate"><span class="pre">float</span></code>): Scaling factor for alpha. Defaults to <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">n_PC</span></code> (<code class="docutils literal notranslate"><span class="pre">int</span></code>): Number of principal components. Defaults to <code class="docutils literal notranslate"><span class="pre">5</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">explained_variance</span></code> (<code class="docutils literal notranslate"><span class="pre">float</span></code>): Variance threshold for PCs.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phewas_result</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">com_strength_result</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">com_network_result</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">binomial_result</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">trajectory_result</span></code></p></li>
 </ul>
 </li>
 </ul>
-<p><strong>Returns:</strong></p>
+<p><strong>Method-specific kwargs:</strong></p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">dict</span></code>: Summary of significant results count.</p></li>
+<li><p>For <code class="docutils literal notranslate"><span class="pre">method=&quot;RPCN&quot;</span></code>:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">auto_penalty</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">True</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">alpha</span></code> (<code class="docutils literal notranslate"><span class="pre">float</span></code>, required if <code class="docutils literal notranslate"><span class="pre">auto_penalty=False</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">alpha_range</span></code> (<code class="docutils literal notranslate"><span class="pre">tuple</span></code>, default <code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">15)</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">scaling_factor</span></code> (<code class="docutils literal notranslate"><span class="pre">float</span></code>, default <code class="docutils literal notranslate"><span class="pre">1</span></code>)</p></li>
+</ul>
+</li>
+<li><p>For <code class="docutils literal notranslate"><span class="pre">method=&quot;PCN_PCA&quot;</span></code>:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_PC</span></code> (<code class="docutils literal notranslate"><span class="pre">int</span></code>, default <code class="docutils literal notranslate"><span class="pre">5</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">explained_variance</span></code> (<code class="docutils literal notranslate"><span class="pre">float</span></code>)</p></li>
+</ul>
+</li>
 </ul>
 </section>
 <hr class="docutils" />
@@ -474,36 +452,23 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
     <span class="n">proportion_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">n_threshold</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">n_process</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
-    <span class="n">correction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;bonferroni&#39;</span><span class="p">,</span>
+    <span class="n">correction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;bonferroni&quot;</span><span class="p">,</span>
     <span class="n">cutoff</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
     <span class="n">system_inc</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">system_exl</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">phecode_inc</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">phecode_exl</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">log_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">lifelines_disable</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">lifelines_disable</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
-<p><strong>Parameters:</strong></p>
+<p>Run a phecode-wide association scan.</p>
+<p><strong>Notes:</strong></p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">data</span></code> (<code class="docutils literal notranslate"><span class="pre">DiseaseNetworkData</span></code>): Input data object.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">covariates</span></code> (<code class="docutils literal notranslate"><span class="pre">list</span></code>): Phenotypic covariates. Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">proportion_threshold</span></code> (<code class="docutils literal notranslate"><span class="pre">float</span></code>): Minimum proportion of cases. Mutually exclusive with <code class="docutils literal notranslate"><span class="pre">n_threshold</span></code>. Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">n_threshold</span></code> (<code class="docutils literal notranslate"><span class="pre">int</span></code>): Minimum case count. Mutually exclusive with <code class="docutils literal notranslate"><span class="pre">proportion_threshold</span></code>. Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">n_process</span></code> (<code class="docutils literal notranslate"><span class="pre">int</span></code>): Parallel processes. Defaults to <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">correction</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): p-value correction method. Defaults to <code class="docutils literal notranslate"><span class="pre">'bonferroni'</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">cutoff</span></code> (<code class="docutils literal notranslate"><span class="pre">float</span></code>): Significance threshold. Defaults to <code class="docutils literal notranslate"><span class="pre">0.05</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">system_inc</span></code> (<code class="docutils literal notranslate"><span class="pre">list</span></code>): Systems to include. Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">system_exl</span></code> (<code class="docutils literal notranslate"><span class="pre">list</span></code>): Systems to exclude. Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">phecode_inc</span></code> (<code class="docutils literal notranslate"><span class="pre">list</span></code>): Specific phecodes to include. Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">phecode_exl</span></code> (<code class="docutils literal notranslate"><span class="pre">list</span></code>): Specific phecodes to exclude. Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">log_file</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Log file prefix. Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">lifelines_disable</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): Disable lifelines. Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
-</ul>
-<p><strong>Returns:</strong></p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code>: PheWAS results.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_threshold</span></code> and <code class="docutils literal notranslate"><span class="pre">proportion_threshold</span></code> are mutually exclusive.</p></li>
+<li><p>For <code class="docutils literal notranslate"><span class="pre">cohort</span></code> and <code class="docutils literal notranslate"><span class="pre">matched</span> <span class="pre">cohort</span></code>, PheWAS fits Cox models.</p></li>
+<li><p>For <code class="docutils literal notranslate"><span class="pre">exposed-only</span> <span class="pre">cohort</span></code>, significance is based on the case-count threshold rather than a model-based p-value.</p></li>
 </ul>
 </section>
 <hr class="docutils" />
@@ -511,22 +476,14 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
 <h3>Function: <code class="docutils literal notranslate"><span class="pre">phewas_multipletests</span></code><a class="headerlink" href="#function-phewas-multipletests" title="Link to this heading"></a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phewas_multipletests</span><span class="p">(</span>
     <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
-    <span class="n">correction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;bonferroni&#39;</span><span class="p">,</span>
-    <span class="n">cutoff</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span>
+    <span class="n">correction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;bonferroni&quot;</span><span class="p">,</span>
+    <span class="n">cutoff</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
-<p><strong>Parameters:</strong></p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">df</span></code> (<code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code>): Input results from <code class="docutils literal notranslate"><span class="pre">phewas()</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">correction</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): p-value correction method. Defaults to <code class="docutils literal notranslate"><span class="pre">'bonferroni'</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">cutoff</span></code> (<code class="docutils literal notranslate"><span class="pre">float</span></code>): Significance threshold. Defaults to <code class="docutils literal notranslate"><span class="pre">0.05</span></code>.</p></li>
-</ul>
-<p><strong>Returns:</strong></p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code>: Adjusted results.</p></li>
-</ul>
+<p>Apply multiple-testing correction to the PheWAS result table.</p>
 </section>
+<hr class="docutils" />
 <section id="function-comorbidity-strength">
 <h3>Function: <code class="docutils literal notranslate"><span class="pre">comorbidity_strength</span></code><a class="headerlink" href="#function-comorbidity-strength" title="Link to this heading"></a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">comorbidity_strength</span><span class="p">(</span>
@@ -535,118 +492,35 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
     <span class="n">n_threshold</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">n_process</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
     <span class="n">log_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">correction_phi</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;bonferroni&#39;</span><span class="p">,</span>
+    <span class="n">correction_phi</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;bonferroni&quot;</span><span class="p">,</span>
     <span class="n">cutoff_phi</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
-    <span class="n">correction_RR</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;bonferroni&#39;</span><span class="p">,</span>
-    <span class="n">cutoff_RR</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span>
+    <span class="n">correction_RR</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;bonferroni&quot;</span><span class="p">,</span>
+    <span class="n">cutoff_RR</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
-<p><strong>Parameters:</strong></p>
+<p>Estimate disease-pair strength among exposed individuals using phi correlation and relative risk.</p>
+<p><strong>Notes:</strong></p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">data</span></code> (<em>DiseaseNetworkData</em>): DiseaseNetworkData object.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">proportion_threshold</span></code> (<em>float</em>): The minimum proportion of individuals in the exposed group in which a disease pair must co-occur (temporal or non-temporal) to be included in the comorbidity strength estimation. If the proportion of co-occurrence is below this threshold, the disease pair is excluded from the analysis. proportion_threshold and n_threshold are mutually exclusive.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">n_threshold</span></code> (<em>int</em>): The minimum number of individuals in the exposed group in which a disease pair must co-occur (temporal or non-temporal) to be included in the comorbidity strength estimation. If the number of co-occurrences is below this threshold, the disease pair is excluded from the analysis. n_threshold and proportion_threshold are mutually exclusive.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">n_process</span></code> (<em>int, default=1</em>): Specifies the number of parallel processes to use for the analysis. Multiprocessing is enabled when <code class="docutils literal notranslate"><span class="pre">n_process</span></code> is set to a value greater than one.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">correction_phi</span></code> (<em>str, default=’bonferroni’</em>): Method for phi-correlation p-value correction from the statsmodels.stats.multitest.multipletests.</p>
-<ul>
-<li><p>Available methods are:</p>
-<ul>
-<li><p>none : no correction</p></li>
-<li><p>bonferroni : one-step correction</p></li>
-<li><p>sidak : one-step correction</p></li>
-<li><p>holm-sidak : step down method using Sidak adjustments</p></li>
-<li><p>holm : step-down method using Bonferroni adjustments</p></li>
-<li><p>simes-hochberg : step-up method (independent)</p></li>
-<li><p>hommel : closed method based on Simes tests (non-negative)</p></li>
-<li><p>fdr_bh : Benjamini/Hochberg (non-negative)</p></li>
-<li><p>fdr_by : Benjamini/Yekutieli (negative) fdr_tsbh : two stage fdr correction (non-negative)</p></li>
-<li><p>fdr_tsbky : two stage fdr correction (non-negative)</p></li>
-</ul>
-</li>
-<li><p>See https://www.statsmodels.org/dev/generated/statsmodels.stats.multitest.multipletests.html for more details.</p></li>
-</ul>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">cutoff_phi</span></code> (<em>float, default=0.05</em>): The significance threshold for adjusted phi-correlatio p-values.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">correction_RR</span></code> (<em>str, default=’bonferroni’</em>): Method for RR p-value correction from the statsmodels.stats.multitest.multipletests.</p>
-<ul>
-<li><p>Available methods are:</p>
-<ul>
-<li><p>none : no correction</p></li>
-<li><p>bonferroni : one-step correction</p></li>
-<li><p>sidak : one-step correction</p></li>
-<li><p>holm-sidak : step down method using Sidak adjustments</p></li>
-<li><p>holm : step-down method using Bonferroni adjustments</p></li>
-<li><p>simes-hochberg : step-up method (independent)</p></li>
-<li><p>hommel : closed method based on Simes tests (non-negative)</p></li>
-<li><p>fdr_bh : Benjamini/Hochberg (non-negative)</p></li>
-<li><p>fdr_by : Benjamini/Yekutieli (negative) fdr_tsbh : two stage fdr correction (non-negative)</p></li>
-<li><p>fdr_tsbky : two stage fdr correction (non-negative)</p></li>
-</ul>
-</li>
-<li><p>See https://www.statsmodels.org/dev/generated/statsmodels.stats.multitest.multipletests.html for more details.</p></li>
-</ul>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">cutoff_RR</span></code> (<em>float, default=0.05</em>): The significance threshold for adjusted RR p-values.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">log_file</span></code> (<em>str, default=None</em>): Path and prefix for the text file where log will be recorded. If None, the log will be written to the temporary files directory with file prefix of DiseaseNet_com_strength_.</p></li>
+<li><p>Requires disease pairs to have already been built with <code class="docutils literal notranslate"><span class="pre">DiseaseNetworkData.disease_pair()</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_threshold</span></code> and <code class="docutils literal notranslate"><span class="pre">proportion_threshold</span></code> are mutually exclusive.</p></li>
 </ul>
 </section>
+<hr class="docutils" />
 <section id="function-comorbidity-strength-multipletests">
 <h3>Function: <code class="docutils literal notranslate"><span class="pre">comorbidity_strength_multipletests</span></code><a class="headerlink" href="#function-comorbidity-strength-multipletests" title="Link to this heading"></a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">comorbidity_strength_multipletests</span><span class="p">(</span>
     <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
-    <span class="n">correction_phi</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;bonferroni&#39;</span><span class="p">,</span>
+    <span class="n">correction_phi</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;bonferroni&quot;</span><span class="p">,</span>
     <span class="n">cutoff_phi</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
-    <span class="n">correction_RR</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;bonferroni&#39;</span><span class="p">,</span>
-    <span class="n">cutoff_RR</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span>
+    <span class="n">correction_RR</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;bonferroni&quot;</span><span class="p">,</span>
+    <span class="n">cutoff_RR</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
-<p><strong>Parameters:</strong></p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">df</span></code> (<em>pd.DataFrame</em>): DataFrame containing the results from the comorbidity_strength function.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">correction_phi</span></code> (<em>str, default=’bonferroni’</em>): Method for phi-correlation p-value correction from the statsmodels.stats.multitest.multipletests.</p>
-<ul>
-<li><p>Available methods are:</p>
-<ul>
-<li><p>none : no correction</p></li>
-<li><p>bonferroni : one-step correction</p></li>
-<li><p>sidak : one-step correction</p></li>
-<li><p>holm-sidak : step down method using Sidak adjustments</p></li>
-<li><p>holm : step-down method using Bonferroni adjustments</p></li>
-<li><p>simes-hochberg : step-up method (independent)</p></li>
-<li><p>hommel : closed method based on Simes tests (non-negative)</p></li>
-<li><p>fdr_bh : Benjamini/Hochberg (non-negative)</p></li>
-<li><p>fdr_by : Benjamini/Yekutieli (negative) fdr_tsbh : two stage fdr correction (non-negative)</p></li>
-<li><p>fdr_tsbky : two stage fdr correction (non-negative)</p></li>
-</ul>
-</li>
-<li><p>See https://www.statsmodels.org/dev/generated/statsmodels.stats.multitest.multipletests.html for more details.</p></li>
-</ul>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">cutoff_phi</span></code> (<em>float, default=0.05</em>): The significance threshold for adjusted phi-correlatio p-values.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">correction_RR</span></code> (<em>str, default=’bonferroni’</em>): Method for RR p-value correction from the statsmodels.stats.multitest.multipletests.</p>
-<ul>
-<li><p>Available methods are:</p>
-<ul>
-<li><p>none : no correction</p></li>
-<li><p>bonferroni : one-step correction</p></li>
-<li><p>sidak : one-step correction</p></li>
-<li><p>holm-sidak : step down method using Sidak adjustments</p></li>
-<li><p>holm : step-down method using Bonferroni adjustments</p></li>
-<li><p>simes-hochberg : step-up method (independent)</p></li>
-<li><p>hommel : closed method based on Simes tests (non-negative)</p></li>
-<li><p>fdr_bh : Benjamini/Hochberg (non-negative)</p></li>
-<li><p>fdr_by : Benjamini/Yekutieli (negative) fdr_tsbh : two stage fdr correction (non-negative)</p></li>
-<li><p>fdr_tsbky : two stage fdr correction (non-negative)</p></li>
-</ul>
-</li>
-<li><p>See https://www.statsmodels.org/dev/generated/statsmodels.stats.multitest.multipletests.html for more details.</p></li>
-</ul>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">cutoff_RR</span></code> (<em>float, default=0.05</em>): The significance threshold for adjusted RR p-values.</p></li>
-</ul>
+<p>Apply multiple-testing correction to <code class="docutils literal notranslate"><span class="pre">phi_p</span></code> and <code class="docutils literal notranslate"><span class="pre">RR_p</span></code>.</p>
 </section>
+<hr class="docutils" />
 <section id="function-binomial-test">
 <h3>Function: <code class="docutils literal notranslate"><span class="pre">binomial_test</span></code><a class="headerlink" href="#function-binomial-test" title="Link to this heading"></a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">binomial_test</span><span class="p">(</span>
@@ -655,358 +529,203 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
     <span class="n">comorbidity_network_result</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">n_process</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
     <span class="n">log_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">correction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;bonferroni&#39;</span><span class="p">,</span>
+    <span class="n">correction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;bonferroni&quot;</span><span class="p">,</span>
     <span class="n">cutoff</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
     <span class="n">enforce_temporal_order</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="o">**</span><span class="n">kwargs</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
-<p><strong>Parameters:</strong></p>
+<p>Test whether one temporal direction is more common than the reverse direction for disease pairs that are significant in comorbidity strength.</p>
+<p><strong>Parameters of interest:</strong></p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">data</span></code> (<em>DiseaseNetworkData</em>): DiseaseNetworkData object.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">comorbidity_strength_result</span></code> (<em>pd.DataFrame</em>): DataFrame containing comorbidity strength analysis results produced by the ‘DiNetxify.comorbidity_strength’ function.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">comorbidity_network_result</span></code> (<em>pd.DataFrame, default=None</em>): DataFrame containing comorbidity network analysis results produced by the ‘DiNetxify.comorbidity_network’ function. When provided, the binomial test is limited to disease pairs deemed significant in the comorbidity network analysis.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">n_process</span></code> (<em>int, default=1</em>): Multiprocessing is disabled for this analysis.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">correction</span></code> (<em>str, default=’bonferroni’</em>): Method for binomial p-value correction from the statsmodels.stats.multitest.multipletests.</p>
-<ul>
-<li><p>Available methods are:</p>
-<ul>
-<li><p>none : no correction</p></li>
-<li><p>bonferroni : one-step correction</p></li>
-<li><p>sidak : one-step correction</p></li>
-<li><p>holm-sidak : step down method using Sidak adjustments</p></li>
-<li><p>holm : step-down method using Bonferroni adjustments</p></li>
-<li><p>simes-hochberg : step-up method (independent)</p></li>
-<li><p>hommel : closed method based on Simes tests (non-negative)</p></li>
-<li><p>fdr_bh : Benjamini/Hochberg (non-negative)</p></li>
-<li><p>fdr_by : Benjamini/Yekutieli (negative) fdr_tsbh : two stage fdr correction (non-negative)</p></li>
-<li><p>fdr_tsbky : two stage fdr correction (non-negative)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">comorbidity_network_result</span></code>: Optional filter table. If supplied, only disease pairs retained by the network result are tested.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">enforce_temporal_order</span></code>: If <code class="docutils literal notranslate"><span class="pre">True</span></code>, exclude non-temporal D1-D2 pairs when forming the binomial test counts.</p></li>
 </ul>
-</li>
-<li><p>See https://www.statsmodels.org/dev/generated/statsmodels.stats.multitest.multipletests.html for more details.</p></li>
-</ul>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">cutoff</span></code> (<em>float, default=0.05</em>): The significance threshold for adjusted binomial p-values.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">log_file</span></code> (<em>str, default=None</em>): Path and prefix for the text file where log will be recorded. If None, the log will be written to the temporary files directory with file prefix of DiseaseNet_binomial_test_.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">enforce_temporal_order</span></code> (<em>bool, default=False</em>): If True, exclude individuals with non-temporal D1-D2 pair when performing the test. If False, include all individuals, including those with non-temporal D1-D2 pair.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">**kwargs</span></code></p>
-<ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">phecode_d1_col</span></code> : str, default=’phecode_d1’ Name of the column in ‘comorbidity_strength_result’ and ‘comorbidity_network_result’ that specifies the phecode identifiers for disease 1 of the disease pair.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">phecode_d2_col</span></code> : str, default=’phecode_d2’ Name of the column in ‘comorbidity_strength_result’ and ‘comorbidity_network_result’ that specifies the phecode identifiers for disease 2 of the disease pair.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">n_nontemporal_col</span></code> : str, default=’n_d1d2_nontemporal’ Name of the column in ‘comorbidity_strength_result’ that specifies the number of individuals with non-temporal d1-d2 disease pair</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">n_temporal_d1d2_col</span></code> : str, default=’n_d1d2_temporal’ Name of the column in ‘comorbidity_strength_result’ that specifies the number of individuals with temporal d1-&gt;d2 disease pair.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">n_temporal_d2d1_col</span></code> : str, default=’n_d2d1_temporal’ Name of the column in ‘comorbidity_strength_result’ that specifies the number of individuals with temporal d2-&gt;d1 disease pair.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">significance_phi_col</span></code> : str, default=’phi_p_significance’ Name of the column in ‘comorbidity_strength_result’ that indicates the significance of phi-correlation for each disease pair.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">significance_RR_col</span></code> : str, default=’RR_p_significance’ Name of the column in ‘comorbidity_strength_result’ that indicates the significance of RR for each disease pair.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">significance_coef_col</span></code> : str, default=’comorbidity_p_significance’ Name of the column in ‘comorbidity_network_result’ that indicates the significance of comorbidity network analysis for each disease pair.</p></li>
-</ul>
-</li>
+<p><strong>Notes:</strong></p>
+<ul class="simple">
+<li><p>Multiprocessing is currently disabled for this function.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">**kwargs</span></code> can be used to override relevant input-column names.</p></li>
 </ul>
 </section>
+<hr class="docutils" />
 <section id="function-binomial-multipletests">
 <h3>Function: <code class="docutils literal notranslate"><span class="pre">binomial_multipletests</span></code><a class="headerlink" href="#function-binomial-multipletests" title="Link to this heading"></a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">binomial_multipletests</span><span class="p">(</span>
     <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
-    <span class="n">correction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;bonferroni&#39;</span><span class="p">,</span>
-    <span class="n">cutoff</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span>
+    <span class="n">correction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;bonferroni&quot;</span><span class="p">,</span>
+    <span class="n">cutoff</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
-<p><strong>Parameters:</strong></p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">df</span></code> (<em>pd.DataFrame</em>): DataFrame containing the results from the comorbidity_strength function.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">correction</span></code> (<em>str, default=’bonferroni’</em>): Method for binomial p-value correction from the statsmodels.stats.multitest.multipletests.</p>
-<ul>
-<li><p>Available methods are:</p>
-<ul>
-<li><p>none : no correction</p></li>
-<li><p>bonferroni : one-step correction</p></li>
-<li><p>sidak : one-step correction</p></li>
-<li><p>holm-sidak : step down method using Sidak adjustments</p></li>
-<li><p>holm : step-down method using Bonferroni adjustments</p></li>
-<li><p>simes-hochberg : step-up method (independent)</p></li>
-<li><p>hommel : closed method based on Simes tests (non-negative)</p></li>
-<li><p>fdr_bh : Benjamini/Hochberg (non-negative)</p></li>
-<li><p>fdr_by : Benjamini/Yekutieli (negative) fdr_tsbh : two stage fdr correction (non-negative)</p></li>
-<li><p>fdr_tsbky : two stage fdr correction (non-negative)</p></li>
-</ul>
-</li>
-<li><p>See https://www.statsmodels.org/dev/generated/statsmodels.stats.multitest.multipletests.html for more details.</p></li>
-</ul>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">cutoff</span></code> (<em>float, default=0.05</em>): The significance threshold for adjusted binomial p-values.</p></li>
-</ul>
+<p>Apply multiple-testing correction to <code class="docutils literal notranslate"><span class="pre">binomial_p</span></code>.</p>
 </section>
+<hr class="docutils" />
 <section id="function-comorbidity-network">
 <h3>Function: <code class="docutils literal notranslate"><span class="pre">comorbidity_network</span></code><a class="headerlink" href="#function-comorbidity-network" title="Link to this heading"></a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">comorbidity_network</span><span class="p">(</span>
     <span class="n">data</span><span class="p">:</span> <span class="n">DiseaseNetworkData</span><span class="p">,</span>
     <span class="n">comorbidity_strength_result</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
     <span class="n">binomial_test_result</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;RPCN&#39;</span><span class="p">,</span>
+    <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;RPCN&quot;</span><span class="p">,</span>
     <span class="n">covariates</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">n_process</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
     <span class="n">log_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">correction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;bonferroni&#39;</span><span class="p">,</span>
+    <span class="n">correction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;bonferroni&quot;</span><span class="p">,</span>
     <span class="n">cutoff</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
-    <span class="o">**</span><span class="n">kwargs</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
-<p><strong>Parameters:</strong></p>
+<p>Fit pairwise non-temporal comorbidity models.</p>
+<p><strong>Supported methods:</strong></p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">data</span></code> (<em>DiseaseNetworkData</em>): DiseaseNetworkData object.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">comorbidity_strength_result</span></code> (<em>pd.DataFrame</em>): DataFrame containing comorbidity strength analysis results produced by the ‘DiNetxify.comorbidity_strength’ function.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">binomial_test_result</span></code> (<em>pd.DataFrame, default=None</em>): DataFrame containing binomial test analysis results produced by the <code class="docutils literal notranslate"><span class="pre">DiNetxify.binomial_test</span></code> function.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">method</span></code> (<em>str, default=’RPCN’</em>): Specifies the comorbidity network analysis method to use. Choices are: - ‘RPCN: Regularized Partial Correlation Network. - ‘PCN_PCA: Partial Correlation Network with PCA. - ‘CN’: Correlation Network. <strong>Additional Options for RPCN:</strong> - ‘alpha’ : non-negative scalar The weight multiplying the l1 penalty term for other diseases covariates. Ignored if ‘auto_penalty’ is enabled. - ‘auto_penalty’ : bool, default=True If ‘True’, automatically determine the optimal ‘alpha’ based on model AIC value. - ‘alpha_range’ : tuple, default=(1,15) When ‘auto_penalty’ is True, search the optimal ‘alpha’ in this range. - ‘scaling_factor’ : positive scalar, default=1 The scaling factor for the alpha when ‘auto_penalty’ is True. <strong>Additional Options for PCN_PCA:</strong> - ‘n_PC’ : int, default=5 Fixed number of principal components to include in each model. - ‘explained_variance’ : float Determines the number of principal components based on the cumulative explained variance. Overrides ‘n_PC’ if specified.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">covariates</span></code> (<em>list, default=None</em>): List of phenotypic covariates to include in the model. By default, includes [‘sex’] and all covariates specified in the <code class="docutils literal notranslate"><span class="pre">DiNetxify.DiseaseNetworkData.phenotype_data()</span></code> function. To include the required variable sex as a covariate, always use ‘sex’ instead of its original column name. For other covariates specified in the <code class="docutils literal notranslate"><span class="pre">DiNetxify.DiseaseNetworkData.phenotype_data()</span></code> function, use their original column names.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">n_process</span></code> (<em>int, default=1</em>): Specifies the number of parallel processes to use for the analysis. Multiprocessing is enabled when <code class="docutils literal notranslate"><span class="pre">n_process</span></code> is set to a value greater than one.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">correction</span></code> (<em>str, default=’bonferroni’</em>): Method for binomial p-value correction from the statsmodels.stats.multitest.multipletests.</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">'CN'</span></code>: correlation network</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'RPCN'</span></code>: regularized partial correlation network</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'PCN_PCA'</span></code>: partial correlation network with principal components</p></li>
+</ul>
+<p><strong>Supported kwargs:</strong></p>
+<ul class="simple">
+<li><p>Column-name overrides for the input result tables:</p>
 <ul>
-<li><p>Available methods are:</p>
-<ul>
-<li><p>none : no correction</p></li>
-<li><p>bonferroni : one-step correction</p></li>
-<li><p>sidak : one-step correction</p></li>
-<li><p>holm-sidak : step down method using Sidak adjustments</p></li>
-<li><p>holm : step-down method using Bonferroni adjustments</p></li>
-<li><p>simes-hochberg : step-up method (independent)</p></li>
-<li><p>hommel : closed method based on Simes tests (non-negative)</p></li>
-<li><p>fdr_bh : Benjamini/Hochberg (non-negative)</p></li>
-<li><p>fdr_by : Benjamini/Yekutieli (negative) fdr_tsbh : two stage fdr correction (non-negative)</p></li>
-<li><p>fdr_tsbky : two stage fdr correction (non-negative)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phecode_d1_col</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phecode_d2_col</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">significance_phi_col</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">significance_RR_col</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">significance_binomial_col</span></code></p></li>
 </ul>
 </li>
-<li><p>See https://www.statsmodels.org/dev/generated/statsmodels.stats.multitest.multipletests.html for more details.</p></li>
-</ul>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">cutoff</span></code> (<em>float, default=0.05</em>): The significance threshold for adjusted comorbidity network analysis p-values.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">log_file</span></code> (<em>str, default=None</em>): Path and prefix for the text file where log will be recorded. If None, the log will be written to the temporary files directory with file prefix of DiseaseNet_comorbidity_network_.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">**kwargs</span></code></p>
+<li><p>Method-specific options:</p>
 <ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">phecode_d1_col</span></code> : str, default=’phecode_d1’ Name of the column in ‘comorbidity_strength_result’ and ‘binomial_test_result’ that specifies the phecode identifiers for disease 1 of the disease pair.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">phecode_d2_col</span></code> : str, default=’phecode_d2’ Name of the column in ‘comorbidity_strength_result’ and ‘binomial_test_result’ that specifies the phecode identifiers for disease 2 of the disease pair.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">significance_phi_col</span></code> : str, default=’phi_p_significance’ Name of the column in ‘comorbidity_strength_result’ that indicates the significance of phi-correlation for each disease pair.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">significance_RR_col</span></code> : str, default=’RR_p_significance’ Name of the column in ‘comorbidity_strength_result’ that indicates the significance of RR for each disease pair.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">significance_binomial_col</span></code> : str default=’binomial_p_significance’ Name of the column in ‘binomial_test_result’ that indicates the significance of binomial test for each disease pair.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">alpha</span></code> : non-negative scalar The weight multiplying the l1 penalty term for other diseases covariates. Ignored if ‘auto_penalty’ is enabled.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">auto_penalty</span></code> : bool, default=True If ‘True’, automatically determines the best ‘alpha’ based on model AIC value.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">alpha_range</span></code> : tuple, default=(1,15) When ‘auto_penalty’ is True, search the optimal ‘alpha’ in this range.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">scaling_factor</span></code> : positive scalar, default=1 The scaling factor for the alpha when ‘auto_penalty’ is True.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">n_PC</span></code> : int, default=5 Fixed number of principal components to include in each model.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">explained_variance</span></code> : float Cumulative explained variance threshold to determine the number of principal components. Overrides <code class="docutils literal notranslate"><span class="pre">'n_PC'</span></code> if specified.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">alpha</span></code>, <code class="docutils literal notranslate"><span class="pre">auto_penalty</span></code>, <code class="docutils literal notranslate"><span class="pre">alpha_range</span></code>, <code class="docutils literal notranslate"><span class="pre">scaling_factor</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_PC</span></code>, <code class="docutils literal notranslate"><span class="pre">explained_variance</span></code></p></li>
 </ul>
 </li>
+<li><p><code class="docutils literal notranslate"><span class="pre">enforce_time_interval</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">True</span></code>)</p></li>
 </ul>
 </section>
+<hr class="docutils" />
 <section id="function-comorbidity-multipletests">
 <h3>Function: <code class="docutils literal notranslate"><span class="pre">comorbidity_multipletests</span></code><a class="headerlink" href="#function-comorbidity-multipletests" title="Link to this heading"></a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">comorbidity_multipletests</span><span class="p">(</span>
     <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
-    <span class="n">correction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;bonferroni&#39;</span><span class="p">,</span>
-    <span class="n">cutoff</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span>
+    <span class="n">correction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;bonferroni&quot;</span><span class="p">,</span>
+    <span class="n">cutoff</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
-<p><strong>Parameters:</strong></p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">df</span></code> (<em>pd.DataFrame</em>): DataFrame containing the results from the ‘comorbidity_network’ function.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">correction</span></code> (<em>str, default=’bonferroni’</em>): Method for binomial p-value correction from the statsmodels.stats.multitest.multipletests.</p>
-<ul>
-<li><p>Available methods are:</p>
-<ul>
-<li><p>none : no correction</p></li>
-<li><p>bonferroni : one-step correction</p></li>
-<li><p>sidak : one-step correction</p></li>
-<li><p>holm-sidak : step down method using Sidak adjustments</p></li>
-<li><p>holm : step-down method using Bonferroni adjustments</p></li>
-<li><p>simes-hochberg : step-up method (independent)</p></li>
-<li><p>hommel : closed method based on Simes tests (non-negative)</p></li>
-<li><p>fdr_bh : Benjamini/Hochberg (non-negative)</p></li>
-<li><p>fdr_by : Benjamini/Yekutieli (negative) fdr_tsbh : two stage fdr correction (non-negative)</p></li>
-<li><p>fdr_tsbky : two stage fdr correction (non-negative)</p></li>
-</ul>
-</li>
-<li><p>See https://www.statsmodels.org/dev/generated/statsmodels.stats.multitest.multipletests.html for more details.</p></li>
-</ul>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">cutoff</span></code> (<em>float, default=0.05</em>): The significance threshold for adjusted binomial p-values.</p></li>
-</ul>
+<p>Apply multiple-testing correction to <code class="docutils literal notranslate"><span class="pre">comorbidity_p</span></code>.</p>
 </section>
+<hr class="docutils" />
 <section id="function-disease-trajectory">
 <h3>Function: <code class="docutils literal notranslate"><span class="pre">disease_trajectory</span></code><a class="headerlink" href="#function-disease-trajectory" title="Link to this heading"></a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">disease_trajectory</span><span class="p">(</span>
     <span class="n">data</span><span class="p">:</span> <span class="n">DiseaseNetworkData</span><span class="p">,</span>
     <span class="n">comorbidity_strength_result</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
     <span class="n">binomial_test_result</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
-    <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;RPCN&#39;</span><span class="p">,</span>
-    <span class="n">matching_var_dict</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;sex&#39;</span><span class="p">:</span><span class="s1">&#39;exact&#39;</span><span class="p">},</span>
+    <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;RPCN&quot;</span><span class="p">,</span>
+    <span class="n">matching_var_dict</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;sex&quot;</span><span class="p">:</span> <span class="s2">&quot;exact&quot;</span><span class="p">},</span>
     <span class="n">matching_n</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
-    <span class="n">max_n_cases</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
+    <span class="n">max_n_cases</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
     <span class="n">global_sampling</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">covariates</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">n_process</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
     <span class="n">log_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">correction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;bonferroni&#39;</span><span class="p">,</span>
+    <span class="n">correction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;bonferroni&quot;</span><span class="p">,</span>
     <span class="n">cutoff</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
-    <span class="o">**</span><span class="n">kwargs</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
-<p><strong>Parameters:</strong></p>
+<p>Fit temporal disease-trajectory models using nested case-control sampling.</p>
+<p><strong>Parameters of interest:</strong></p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">data</span></code> (<em>DiseaseNetworkData</em>): DESCRIPTION.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">comorbidity_strength_result</span></code> (<em>pd.DataFrame</em>): DataFrame containing comorbidity strength analysis results produced by the <code class="docutils literal notranslate"><span class="pre">DiNetxify.comorbidity_strength()</span></code> function.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">binomial_test_result</span></code> (<em>pd.DataFrame</em>): DataFrame containing binomial test analysis results produced by the <code class="docutils literal notranslate"><span class="pre">DiNetxify.binomial_test()</span></code> function.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">method</span></code> (<em>str, default=’RPCN’</em>): Specifies the comorbidity network analysis method to use. Choices are:</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">matching_var_dict</span></code> (<code class="docutils literal notranslate"><span class="pre">dict</span></code>): Matching criteria for trajectory sampling. Use <code class="docutils literal notranslate"><span class="pre">'exact'</span></code> for categorical variables; use a positive numeric tolerance for continuous variables.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">matching_n</span></code> (<code class="docutils literal notranslate"><span class="pre">int</span></code>): Maximum number of matched controls per case.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_n_cases</span></code> (<code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">|</span> <span class="pre">np.inf</span></code>): Optional cap on the number of D2 cases.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">global_sampling</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): If <code class="docutils literal notranslate"><span class="pre">True</span></code>, sample once per unique D2 and fit separate D1 models within that sampled set.</p></li>
+</ul>
+<p><strong>Supported kwargs:</strong></p>
+<ul class="simple">
+<li><p>Column-name overrides for the input result tables:</p>
 <ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">'RPCN'</span></code>: Regularized Partial Correlation Network.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">'PCN_PCA'</span></code>: Partial Correlation Network with PCA.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">'CN'</span></code>: Correlation Network.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phecode_d1_col</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phecode_d2_col</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">significance_phi_col</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">significance_RR_col</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">significance_binomial_col</span></code></p></li>
 </ul>
 </li>
-<li><p><code class="docutils literal notranslate"><span class="pre">matching_var_dict</span></code> (<em>dict, default={‘sex’:’exact’}</em>): Specifies the matching variables and the criteria used for incidence density sampling. For categorical and binary variables, the matching criteria should always be <code class="docutils literal notranslate"><span class="pre">'exact'</span></code>. For continuous variables, provide a scalar greater than 0 as the matching criterion, indicating the maximum allowed difference when matching. To include the required variable sex as a matching variable, always use <code class="docutils literal notranslate"><span class="pre">'sex'</span></code> instead of its original column name. For other covariates specified in the <code class="docutils literal notranslate"><span class="pre">DiNetxify.DiseaseNetworkData.phenotype_data()</span></code> function, use their original column names.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">matching_n</span></code> (<em>int, default=2</em>): Specifies the maximum number of matched controls for each case.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">max_n_cases</span></code> (<em>int, default=np.inf</em>): Specifies the maximum number of D2 cases to include in the analysis. If the number of D2 cases exceeds this value, a random sample of cases will be selected.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">global_sampling</span></code> (<em>bool, default=False</em>): Indicates whether to perform independent incidence density sampling for each D1→D2 pair (if False), or to perform a single incidence density sampling for all Dx→D2 pairs with separate regression models for each D1→D2 pair (if True). Global sampling is recommended when processing large datasets, though it might reduce result heterogeneity.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">covariates</span></code> (<em>list, default=None</em>): List of phenotypic covariates to include in the model. By default, includes all covariates specified in the <code class="docutils literal notranslate"><span class="pre">DiNetxify.DiseaseNetworkData.phenotype_data()</span></code> function. Categorical and binary variables used for matching should not be included as covariates. Continuous variables used for matching can be included as covariates, but caution is advised. To include the required variable sex as a covariate, always use <code class="docutils literal notranslate"><span class="pre">sex</span></code> instead of its original column name. For other covariates specified in the <code class="docutils literal notranslate"><span class="pre">DiNetxify.DiseaseNetworkData.phenotype_data()</span></code> function, use their original column names.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">n_process</span></code> (<em>int, default=1</em>): Specifies the number of parallel processes to use for the analysis. Multiprocessing is enabled when <code class="docutils literal notranslate"><span class="pre">n_process</span></code> is set to a value greater than one.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">correction</span></code> (<em>str, default=’bonferroni’</em>): Method for binomial p-value correction from the statsmodels.stats.multitest.multipletests.</p>
+<li><p>Method-specific options:</p>
 <ul>
-<li><p>Available methods are:</p>
-<ul>
-<li><p>none : no correction</p></li>
-<li><p>bonferroni : one-step correction</p></li>
-<li><p>sidak : one-step correction</p></li>
-<li><p>holm-sidak : step down method using Sidak adjustments</p></li>
-<li><p>holm : step-down method using Bonferroni adjustments</p></li>
-<li><p>simes-hochberg : step-up method (independent)</p></li>
-<li><p>hommel : closed method based on Simes tests (non-negative)</p></li>
-<li><p>fdr_bh : Benjamini/Hochberg (non-negative)</p></li>
-<li><p>fdr_by : Benjamini/Yekutieli (negative) fdr_tsbh : two stage fdr correction (non-negative)</p></li>
-<li><p>fdr_tsbky : two stage fdr correction (non-negative)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">alpha</span></code>, <code class="docutils literal notranslate"><span class="pre">auto_penalty</span></code>, <code class="docutils literal notranslate"><span class="pre">alpha_range</span></code>, <code class="docutils literal notranslate"><span class="pre">scaling_factor</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_PC</span></code>, <code class="docutils literal notranslate"><span class="pre">explained_variance</span></code></p></li>
 </ul>
 </li>
-<li><p>See https://www.statsmodels.org/dev/generated/statsmodels.stats.multitest.multipletests.html for more details.</p></li>
-</ul>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">cutoff</span></code> (<em>float, default=0.05</em>): The significance threshold for adjusted comorbidity network analysis p-values.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">log_file</span></code> (<em>str, default=None</em>): Path and prefix for the text file where log will be recorded. If None, the log will be written to the temporary files directory with file prefix of DiseaseNet_trajectory_.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">**kwargs</span></code> Analysis option</p>
-<ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">enforce_time_interval</span></code> : bool, default=True If set to True, applies the specified minimum and maximum time intervals when determining the D2 outcome among individuals diagnosed with D1. These time interval requirements should be defined using the <code class="docutils literal notranslate"><span class="pre">DiNetxify.DiseaseNetworkData.disease_pair()</span></code> function.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">phecode_d1_col</span></code> : str, default=’phecode_d1’ Name of the column in <code class="docutils literal notranslate"><span class="pre">comorbidity_strength_result</span></code> and <code class="docutils literal notranslate"><span class="pre">binomial_test_result</span></code> that specifies the phecode identifiers for disease 1 of the disease pair.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">phecode_d2_col</span></code> : str, default=’phecode_d2’ Name of the column in <code class="docutils literal notranslate"><span class="pre">comorbidity_strength_result</span></code> and <code class="docutils literal notranslate"><span class="pre">binomial_test_result</span></code> that specifies the phecode identifiers for disease 2 of the disease pair.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">significance_phi_col</span></code> : str, default=’phi_p_significance’ Name of the column in <code class="docutils literal notranslate"><span class="pre">comorbidity_strength_result</span></code> that indicates the significance of phi-correlation for each disease pair.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">significance_RR_col</span></code> : str, default=’RR_p_significance’ Name of the column in <code class="docutils literal notranslate"><span class="pre">comorbidity_strength_result</span></code> that indicates the significance of RR for each disease pair.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">significance_binomial_col</span></code> : str default=’binomial_p_significance’ Name of the column in <code class="docutils literal notranslate"><span class="pre">binomial_test_result</span></code> that indicates the significance of binomial test for each disease pair.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">alpha</span></code> : non-negative scalar The weight multiplying the l1 penalty term for other diseases covariates. Ignored if <code class="docutils literal notranslate"><span class="pre">auto_penalty</span></code> is enabled.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">auto_penalty</span></code> : bool, default=True If <code class="docutils literal notranslate"><span class="pre">True</span></code>, automatically determines the best <code class="docutils literal notranslate"><span class="pre">alpha</span></code> based on model AIC value.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">alpha_range</span></code> : tuple, default=(1,15) When <code class="docutils literal notranslate"><span class="pre">auto_penalty</span></code> is True, search the optimal <code class="docutils literal notranslate"><span class="pre">alpha</span></code> in this range.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">scaling_factor</span></code> : positive scalar, default=1 The scaling factor for the <code class="docutils literal notranslate"><span class="pre">alpha</span></code> when ‘auto_penalty’ is True.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">n_PC</span></code> : int, default=5 Fixed number of principal components to include in each model.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">explained_variance</span></code> : float Cumulative explained variance threshold to determine the number of principal components. Overrides <code class="docutils literal notranslate"><span class="pre">'n_PC'</span></code> if specified.</p></li>
-</ul>
-</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">enforce_time_interval</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">True</span></code>)</p></li>
 </ul>
 </section>
+<hr class="docutils" />
 <section id="function-trajectory-multipletests">
 <h3>Function: <code class="docutils literal notranslate"><span class="pre">trajectory_multipletests</span></code><a class="headerlink" href="#function-trajectory-multipletests" title="Link to this heading"></a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">trajectory_multipletests</span><span class="p">(</span>
     <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
-    <span class="n">correction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;bonferroni&#39;</span><span class="p">,</span>
-    <span class="n">cutoff</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span>
+    <span class="n">correction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;bonferroni&quot;</span><span class="p">,</span>
+    <span class="n">cutoff</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
-<p><strong>Parameters:</strong></p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">df</span></code> (<em>pd.DataFrame</em>): DataFrame containing the results from the ‘disease_trajectory’ function.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">correction</span></code> (<em>str, default=’bonferroni’</em>): Method for binomial p-value correction from the statsmodels.stats.multitest.multipletests.</p>
-<ul>
-<li><p>Available methods are:</p>
-<ul>
-<li><p>none : no correction</p></li>
-<li><p>bonferroni : one-step correction</p></li>
-<li><p>sidak : one-step correction</p></li>
-<li><p>holm-sidak : step down method using Sidak adjustments</p></li>
-<li><p>holm : step-down method using Bonferroni adjustments</p></li>
-<li><p>simes-hochberg : step-up method (independent)</p></li>
-<li><p>hommel : closed method based on Simes tests (non-negative)</p></li>
-<li><p>fdr_bh : Benjamini/Hochberg (non-negative)</p></li>
-<li><p>fdr_by : Benjamini/Yekutieli (negative) fdr_tsbh : two stage fdr correction (non-negative)</p></li>
-<li><p>fdr_tsbky : two stage fdr correction (non-negative)</p></li>
-</ul>
-</li>
-<li><p>See https://www.statsmodels.org/dev/generated/statsmodels.stats.multitest.multipletests.html for more details.</p></li>
-</ul>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">cutoff</span></code> (<em>float, default=0.05</em>): The significance threshold for adjusted binomial p-values.</p></li>
-</ul>
+<p>Apply multiple-testing correction to <code class="docutils literal notranslate"><span class="pre">trajectory_p</span></code>.</p>
 </section>
 </section>
 <section id="class-plot">
 <h2>Class <code class="docutils literal notranslate"><span class="pre">Plot</span></code><a class="headerlink" href="#class-plot" title="Link to this heading"></a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Plot</span><span class="p">(</span>
+<p>Import with:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">DiNetxify.visualization</span> <span class="kn">import</span> <span class="n">Plot</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Plot</span><span class="p">(</span>
     <span class="n">phewas_result</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
     <span class="n">comorbidity_result</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
     <span class="n">trajectory_result</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
-    <span class="n">exposure_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">exposure_location</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">exposure_size</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">phecode_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;phecode&#39;</span><span class="p">,</span>
-    <span class="n">disease_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;disease&#39;</span><span class="p">,</span>
-    <span class="n">system_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;system&#39;</span><span class="p">,</span>
-    <span class="n">phewas_number_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;N_cases_exposed&#39;</span><span class="p">,</span>
-    <span class="n">phewas_coef_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;phewas_coef&#39;</span><span class="p">,</span>
-    <span class="n">phewas_se_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;phewas_se&#39;</span><span class="p">,</span>
-    <span class="n">source_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;phecode_d1&#39;</span><span class="p">,</span>
-    <span class="n">target_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;phecode_d2&#39;</span><span class="p">,</span>
-    <span class="n">disease_pair_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;name_disease_pair&#39;</span><span class="p">,</span>
-    <span class="n">comorbidity_beta_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;comorbidity_beta&#39;</span><span class="p">,</span>
-    <span class="n">trajectory_beta_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;trajectory_beta&#39;</span><span class="p">,</span>
-    <span class="n">phewas_significance_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;phewas_p_significance&#39;</span><span class="p">,</span>
-    <span class="n">comorbidity_significance_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;comorbidity_p_significance&#39;</span><span class="p">,</span>
-    <span class="n">trajectory_significance_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;trajectory_p_significance&#39;</span><span class="p">,</span>
-    <span class="o">**</span><span class="n">kwargs</span>
+    <span class="n">exposure_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">exposure_location</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">exposure_size</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">phecode_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;phecode&quot;</span><span class="p">,</span>
+    <span class="n">disease_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;disease&quot;</span><span class="p">,</span>
+    <span class="n">system_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;system&quot;</span><span class="p">,</span>
+    <span class="n">phewas_number_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;N_cases_exposed&quot;</span><span class="p">,</span>
+    <span class="n">phewas_coef_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;phewas_coef&quot;</span><span class="p">,</span>
+    <span class="n">phewas_se_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;phewas_se&quot;</span><span class="p">,</span>
+    <span class="n">source_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;phecode_d1&quot;</span><span class="p">,</span>
+    <span class="n">target_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;phecode_d2&quot;</span><span class="p">,</span>
+    <span class="n">disease_pair_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;name_disease_pair&quot;</span><span class="p">,</span>
+    <span class="n">comorbidity_beta_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;comorbidity_beta&quot;</span><span class="p">,</span>
+    <span class="n">trajectory_beta_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;trajectory_beta&quot;</span><span class="p">,</span>
+    <span class="n">phewas_significance_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;phewas_p_significance&quot;</span><span class="p">,</span>
+    <span class="n">comorbidity_significance_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;comorbidity_p_significance&quot;</span><span class="p">,</span>
+    <span class="n">trajectory_significance_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;trajectory_p_significance&quot;</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
-<p>A class for integrating and visualizing disease relationships from PheWAS, comorbidity network, and trajectory analyses.</p>
-<p><strong>Parameters:</strong></p>
+<p>Create a visualization object from PheWAS, comorbidity-network, and trajectory result tables.</p>
+<p><strong>Required inputs:</strong></p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">comorbidity_result</span></code> (<code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code>): Result DataFrame from comorbidity network analysis, includes non temporal disease pairs (D1, D2), association metrics for example beta coefficients and p values, and a boolean significance flag.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">trajectory_result</span></code> (<code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code>): Result DataFrame from temporal trajectory analysis, includes temporal disease pairs (source -&gt; target), temporal association metrics for example beta coefficients and p values, and a boolean significance flag.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">phewas_result</span></code> (<code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code>): PheWAS results, includes phecode, effect sizes for example hazard ratios, case counts, and disease system classifications.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">exposure_name</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>, optional): Identifier for the primary exposure. Set to <code class="docutils literal notranslate"><span class="pre">None</span></code> for exposed only cohort studies.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">exposure_location</span></code> (<code class="docutils literal notranslate"><span class="pre">Tuple[float,</span> <span class="pre">float,</span> <span class="pre">float]</span></code>, optional): Custom 3D coordinates x, y, z for the exposure node. Defaults to <code class="docutils literal notranslate"><span class="pre">(0,</span> <span class="pre">0,</span> <span class="pre">0)</span></code> if <code class="docutils literal notranslate"><span class="pre">None</span></code>. Ignored when <code class="docutils literal notranslate"><span class="pre">exposure_name</span></code> is <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">exposure_size</span></code> (<code class="docutils literal notranslate"><span class="pre">float</span></code>, optional): Relative size scaling for the exposure node. Ignored when <code class="docutils literal notranslate"><span class="pre">exposure_name</span></code> is <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phewas_result</span></code> (<code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">comorbidity_result</span></code> (<code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">trajectory_result</span></code> (<code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code>)</p></li>
 </ul>
-<p><em>If your result DataFrames use the default column names, keep these parameters as is.</em></p>
+<p><strong>Optional display inputs:</strong></p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">phecode_col</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>, optional): Column in <code class="docutils literal notranslate"><span class="pre">phewas_result</span></code> with phecodes, default <code class="docutils literal notranslate"><span class="pre">'phecode'</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">disease_col</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>, optional): Column in <code class="docutils literal notranslate"><span class="pre">phewas_result</span></code> with disease names, default <code class="docutils literal notranslate"><span class="pre">'disease'</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">system_col</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>, optional): Column in <code class="docutils literal notranslate"><span class="pre">phewas_result</span></code> with disease system labels, default <code class="docutils literal notranslate"><span class="pre">'system'</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">phewas_number_col</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>, optional): Column in <code class="docutils literal notranslate"><span class="pre">phewas_result</span></code> with case counts, default <code class="docutils literal notranslate"><span class="pre">'N_cases_exposed'</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">phewas_coef_col</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>, optional): Column in <code class="docutils literal notranslate"><span class="pre">phewas_result</span></code> with effect sizes, default <code class="docutils literal notranslate"><span class="pre">'phewas_coef'</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">phewas_se_col</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>, optional): Column in <code class="docutils literal notranslate"><span class="pre">phewas_result</span></code> with standard errors, default <code class="docutils literal notranslate"><span class="pre">'phewas_se'</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">source_col</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>, optional): Column in <code class="docutils literal notranslate"><span class="pre">comorbidity_result</span></code> and <code class="docutils literal notranslate"><span class="pre">trajectory_result</span></code> for source or antecedent diseases, default <code class="docutils literal notranslate"><span class="pre">'phecode_d1'</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">target_col</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>, optional): Column in <code class="docutils literal notranslate"><span class="pre">comorbidity_result</span></code> and <code class="docutils literal notranslate"><span class="pre">trajectory_result</span></code> for target or consequent diseases, default <code class="docutils literal notranslate"><span class="pre">'phecode_d2'</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">disease_pair_col</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>, optional): Column in <code class="docutils literal notranslate"><span class="pre">comorbidity_result</span></code> and <code class="docutils literal notranslate"><span class="pre">trajectory_result</span></code> with disease pair identifiers, default <code class="docutils literal notranslate"><span class="pre">'name_disease_pair'</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">comorbidity_beta_col</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>, optional): Column in <code class="docutils literal notranslate"><span class="pre">comorbidity_result</span></code> with effect sizes, default <code class="docutils literal notranslate"><span class="pre">'comorbidity_beta'</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">trajectory_beta_col</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>, optional): Column in <code class="docutils literal notranslate"><span class="pre">trajectory_result</span></code> with effect sizes, default <code class="docutils literal notranslate"><span class="pre">'trajectory_beta'</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">phewas_significance_col</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>, optional): Column in <code class="docutils literal notranslate"><span class="pre">phewas_result</span></code> used for significance filtering, default <code class="docutils literal notranslate"><span class="pre">'phewas_p_significance'</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">comorbidity_significance_col</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>, optional): Column in <code class="docutils literal notranslate"><span class="pre">comorbidity_result</span></code> used for significance filtering, default <code class="docutils literal notranslate"><span class="pre">'comorbidity_p_significance'</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">trajectory_significance_col</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>, optional): Column in <code class="docutils literal notranslate"><span class="pre">trajectory_result</span></code> used for significance filtering, default <code class="docutils literal notranslate"><span class="pre">'trajectory_p_significance'</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">**kwargs</span></code></p>
-<ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">SYSTEM</span></code> (<code class="docutils literal notranslate"><span class="pre">List[str]</span></code>, optional): Use with <code class="docutils literal notranslate"><span class="pre">COLOR</span></code> to assign colors by phecode system. If not provided, systems and their order are inferred from <code class="docutils literal notranslate"><span class="pre">phewas_result</span></code>. Default order:<br />
-<code class="docutils literal notranslate"><span class="pre">['neoplasms',</span> <span class="pre">'genitourinary',</span> <span class="pre">'digestive',</span> <span class="pre">'respiratory',</span> <span class="pre">'infectious</span> <span class="pre">diseases',</span> <span class="pre">'mental</span> <span class="pre">disorders',</span> <span class="pre">'musculoskeletal',</span> <span class="pre">'hematopoietic',</span> <span class="pre">'dermatologic',</span> <span class="pre">'circulatory</span> <span class="pre">system',</span> <span class="pre">'neurological',</span> <span class="pre">'endocrine/metabolic',</span> <span class="pre">'sense</span> <span class="pre">organs',</span> <span class="pre">'injuries</span> <span class="pre">&amp;</span> <span class="pre">poisonings',</span> <span class="pre">'congenital</span> <span class="pre">anomalies',</span> <span class="pre">'symptoms',</span> <span class="pre">'others']</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">COLOR</span></code> (<code class="docutils literal notranslate"><span class="pre">List[str]</span></code>, optional): Colors corresponding to <code class="docutils literal notranslate"><span class="pre">SYSTEM</span></code>, one to one. Length of <code class="docutils literal notranslate"><span class="pre">COLOR</span></code> must be at least the length of <code class="docutils literal notranslate"><span class="pre">SYSTEM</span></code>. Supported formats include <code class="docutils literal notranslate"><span class="pre">'red'</span></code>, <code class="docutils literal notranslate"><span class="pre">'#ED9A8D'</span></code>, and <code class="docutils literal notranslate"><span class="pre">'rgb(255,</span> <span class="pre">0,</span> <span class="pre">0)'</span></code>. Default palette:<br />
-<code class="docutils literal notranslate"><span class="pre">['#F46D5A',</span> <span class="pre">'#5DA5DA',</span> <span class="pre">'#5EBCD1',</span> <span class="pre">'#C1D37F',</span> <span class="pre">'#CE5A57',</span> <span class="pre">'#A5C5D9',</span> <span class="pre">'#F5B36D',</span> <span class="pre">'#7FCDBB',</span> <span class="pre">'#ED9A8D',</span> <span class="pre">'#94B447',</span> <span class="pre">'#8C564B',</span> <span class="pre">'#E7CB94',</span> <span class="pre">'#8C9EB2',</span> <span class="pre">'#E0E0E0',</span> <span class="pre">'#F1C40F',</span> <span class="pre">'#9B59B6',</span> <span class="pre">'#4ECDC4',</span> <span class="pre">'#6A5ACD']</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">exposure_name</span></code>: Name of the exposure node. Set to <code class="docutils literal notranslate"><span class="pre">None</span></code> for exposed-only analyses.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">exposure_location</span></code>: 3D location of the exposure node.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">exposure_size</span></code>: Marker size for the exposure node.</p></li>
 </ul>
-</li>
+<p><strong>Optional kwargs:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">SYSTEM</span></code>: Ordered list of disease systems to use in the legend and color mapping.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">COLOR</span></code>: Colors corresponding to <code class="docutils literal notranslate"><span class="pre">SYSTEM</span></code>.</p></li>
 </ul>
 <hr class="docutils" />
 <section id="id1">
@@ -1018,34 +737,19 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
     <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">max_radius</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">180.0</span><span class="p">,</span>
     <span class="n">min_radius</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">35.0</span><span class="p">,</span>
-    <span class="n">line_color</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;black&#39;</span><span class="p">,</span>
+    <span class="n">line_color</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;black&quot;</span><span class="p">,</span>
     <span class="n">line_width</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
     <span class="n">size_reduction</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
-    <span class="n">cluster_reduction_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.4</span><span class="p">,</span>
+    <span class="n">cluster_reduction_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
     <span class="n">layer_distance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">40.0</span><span class="p">,</span>
     <span class="n">layout_width</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">900.0</span><span class="p">,</span>
     <span class="n">layout_height</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">900.0</span><span class="p">,</span>
-    <span class="n">font_style</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;Times New Roman&#39;</span><span class="p">,</span>
-    <span class="n">font_size</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">15.0</span>
+    <span class="n">font_style</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Times New Roman&quot;</span><span class="p">,</span>
+    <span class="n">font_size</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">15.0</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
-<p>Generate and save a 3D interactive HTML visualization.</p>
-<p><strong>Parameters:</strong></p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">path</span></code>: File path to save the HTML visualization</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">max_radius</span></code>: Maximum radial distance for node placement (default: <code class="docutils literal notranslate"><span class="pre">180.0</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">min_radius</span></code>: Minimum radial distance for node placement (default: <code class="docutils literal notranslate"><span class="pre">35.0</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">line_color</span></code>: Color for trajectory lines (default: <code class="docutils literal notranslate"><span class="pre">&quot;black&quot;</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">line_width</span></code>: Width for trajectory lines (default: <code class="docutils literal notranslate"><span class="pre">1.0</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">size_reduction</span></code>: Scaling factor for node sizes (default: <code class="docutils literal notranslate"><span class="pre">0.5</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">cluster_reduction_ratio</span></code>: Cluster compression factor for layout (default: <code class="docutils literal notranslate"><span class="pre">0.4</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">layer_distance</span></code>: Vertical distance between layers (default: <code class="docutils literal notranslate"><span class="pre">40.0</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">layout_width</span></code>: Figure width in pixels (default: <code class="docutils literal notranslate"><span class="pre">900.0</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">layout_height</span></code>: Figure height in pixels (default: <code class="docutils literal notranslate"><span class="pre">900.0</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">font_style</span></code>: Font family for text elements (default: <code class="docutils literal notranslate"><span class="pre">'Times</span> <span class="pre">New</span> <span class="pre">Roman'</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">font_size</span></code>: Base font size in points (default: <code class="docutils literal notranslate"><span class="pre">15.0</span></code>)</p></li>
-</ul>
+<p>Generate an interactive 3D HTML disease-network plot.</p>
 </section>
 <hr class="docutils" />
 <section id="comorbidity-network-plot">
@@ -1056,27 +760,15 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
     <span class="n">max_radius</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">180.0</span><span class="p">,</span>
     <span class="n">min_radius</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">35.0</span><span class="p">,</span>
     <span class="n">size_reduction</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
-    <span class="n">cluster_reduction_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.4</span><span class="p">,</span>
+    <span class="n">cluster_reduction_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
     <span class="n">line_width</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
-    <span class="n">line_color</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;black&#39;</span><span class="p">,</span>
+    <span class="n">line_color</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;black&quot;</span><span class="p">,</span>
     <span class="n">layer_distance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">40.0</span><span class="p">,</span>
-    <span class="n">font_style</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;Times New Roman&#39;</span>
+    <span class="n">font_style</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Times New Roman&quot;</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
-<p>Generate and save a 2D HTML visualization of the comorbidity network.</p>
-<p><strong>Parameters:</strong></p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">path</span></code>: Output file path for saving HTML visualization</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">max_radius</span></code>: Maximum radial position for nodes (default: <code class="docutils literal notranslate"><span class="pre">90.0</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">min_radius</span></code>: Minimum radial position for nodes (default: <code class="docutils literal notranslate"><span class="pre">35.0</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">size_reduction</span></code>: Scaling factor for node sizes (default: <code class="docutils literal notranslate"><span class="pre">0.5</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">cluster_reduction_ratio</span></code>: Compression factor for cluster layout (default: <code class="docutils literal notranslate"><span class="pre">0.4</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">line_width</span></code>: Width of comorbidity lines (default: <code class="docutils literal notranslate"><span class="pre">1.0</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">line_color</span></code>: Color of comorbidity lines (default: <code class="docutils literal notranslate"><span class="pre">&quot;black&quot;</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">layer_distance</span></code>: Distance between concentric circles (default: <code class="docutils literal notranslate"><span class="pre">40.0</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">font_style</span></code>: Font family for text elements (default: <code class="docutils literal notranslate"><span class="pre">&quot;Times</span> <span class="pre">New</span> <span class="pre">Roman&quot;</span></code>)</p></li>
-</ul>
+<p>Generate an interactive 2D HTML comorbidity-network plot.</p>
 </section>
 <hr class="docutils" />
 <section id="trajectory-plot">
@@ -1084,16 +776,11 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">trajectory_plot</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">dpi</span><span class="p">:</span> <span class="nb">float</span><span class="o">=</span><span class="mi">500</span>
+    <span class="n">dpi</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">500</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
-<p>Generate and save trajectory plots per cluster as .png file.</p>
-<p><strong>Parameters:</strong></p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">path</span></code>: Directory path to save output images</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">dpi</span></code>: Image resolution in dots per inch for output files (default: <code class="docutils literal notranslate"><span class="pre">500</span></code>)</p></li>
-</ul>
+<p>Generate trajectory plots as PNG files, one cluster per image.</p>
 </section>
 <hr class="docutils" />
 <section id="phewas-plot">
@@ -1106,21 +793,11 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">'auto'<
     <span class="n">HR_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
     <span class="n">incident_number_max</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">exposed_only_cohort</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="n">dpi</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">200</span>
+    <span class="n">dpi</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
-<p>Creates a circular PheWAS polar bar plot across disease systems, outer ring shows individual diseases, inner segments group by system, color gradient encodes hazard ratio, text rotates automatically for readability.</p>
-<p><strong>Parameters:</strong></p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">path</span></code>: Output file path for saving the plot</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">system_font_size</span></code>: Font size for disease system or category labels (default: <code class="docutils literal notranslate"><span class="pre">17</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">disease_font_size</span></code>: Font size for disease labels (default: <code class="docutils literal notranslate"><span class="pre">10</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">HR_max</span></code>: Upper bound for the HR heatmap, values greater than or equal to this render as the same red, affects color only (default: <code class="docutils literal notranslate"><span class="pre">2</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">incident_number_max</span></code>: Upper bound for the incident count heatmap for exposure only cohorts, values greater than or equal to this render as the same red, <code class="docutils literal notranslate"><span class="pre">None</span></code> auto scales to the maximum observed count (default: <code class="docutils literal notranslate"><span class="pre">None</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">exposed_only_cohort</span></code>: Flag for exposed-only cohort, set to <code class="docutils literal notranslate"><span class="pre">True</span></code> for exposed-only cohort, <code class="docutils literal notranslate"><span class="pre">False</span></code> for standard cohort or matched cohort (default: <code class="docutils literal notranslate"><span class="pre">False</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">dpi</span></code>: Image resolution in dots per inch for output files (default: <code class="docutils literal notranslate"><span class="pre">200</span></code>)</p></li>
-</ul>
+<p>Generate a circular PheWAS plot as a static image.</p>
 </section>
 </section>
 </section>

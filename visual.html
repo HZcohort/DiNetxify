@@ -7,14 +7,14 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Visualization &mdash; DiNetxify  documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=92fd9be5" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -48,7 +48,13 @@
 <li class="toctree-l1"><a class="reference internal" href="data_harm.html">Data harmonization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="3d_analysis.html">Three-dimensional disease network analysis</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Visualization</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#initializing-the-plot-object">Initializing the Plot object</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#initialize-a-plot-object">Initialize a <code class="docutils literal notranslate"><span class="pre">Plot</span></code> object</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#standard-or-matched-cohort">Standard or matched cohort</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#exposed-only-cohort">Exposed-only cohort</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#default-result-columns">Default result columns</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#optional-system-colors">Optional system colors</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#phewas-plot">PheWAS plot</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#comorbidity-network-plot">Comorbidity network plot</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#disease-trajectory-plot">Disease trajectory plot</a></li>
@@ -86,151 +92,169 @@
              
   <section id="visualization">
 <h1>Visualization<a class="headerlink" href="#visualization" title="Link to this heading"></a></h1>
-<p>Following three-dimensional disease network analysis, <em><strong>DiNetxify</strong></em> provides visualization tools to facilitate the interpretation of results. These tools enable the visualization of key findings from PheWAS, comorbidity networks, and disease trajectory analysis. The main visualization class, <code class="docutils literal notranslate"><span class="pre">DiNetxify.visualization.Plot</span></code>, accepts results in the form of a <code class="docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code> and produces interactive plots.</p>
-<section id="initializing-the-plot-object">
-<h2>Initializing the Plot object<a class="headerlink" href="#initializing-the-plot-object" title="Link to this heading"></a></h2>
-<p>To create visualizations, you must initialize a <code class="docutils literal notranslate"><span class="pre">DiNetxify.visualization.Plot</span></code> object with your analysis results. You should pass in the PheWAS, comorbidity network, and disease trajectory results <code class="docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code>, and optionally specify how the “exposure” appear in the plots.</p>
-<p>For example:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">DiNetxify.visualization</span><span class="w"> </span><span class="kn">import</span> <span class="n">Plot</span>
-
-<span class="c1"># Suppose phewas_result, com_network_result, trajectory_result are obtained from three-dimensional disease network analysis</span>
-<span class="n">result_plot</span> <span class="o">=</span> <span class="n">Plot</span><span class="p">(</span>
-    <span class="n">phewas_result</span><span class="o">=</span><span class="n">phewas_result</span><span class="p">,</span>           <span class="c1"># Results of PheWAS analysis</span>
-    <span class="n">comorbidity_result</span><span class="o">=</span><span class="n">com_network_result</span><span class="p">,</span> <span class="c1"># Results of comorbidity network analysis</span>
-    <span class="n">trajectory_result</span><span class="o">=</span><span class="n">trajectory_result</span><span class="p">,</span>   <span class="c1"># Results of disease trajectory analysis</span>
-    <span class="n">exposure_name</span><span class="o">=</span><span class="s1">&#39;exposure&#39;</span><span class="p">,</span>              <span class="c1"># Name of the exposure (for labeling the exposure node). Use None for exposed-only cohorts</span>
-    <span class="n">exposure_size</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>                      <span class="c1"># Relative size scaling for the exposure node (to make it prominent). None for exposed-only cohorts</span>
-    <span class="n">exposure_location</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>            <span class="c1"># 3D coordinates for the exposure node. If None, it defaults to (0,0,0)</span>
-<span class="p">)</span>
-
-<span class="c1"># If this were an exposed-only cohort (no explicit exposure variable), you would set:</span>
-<span class="n">result_plot</span> <span class="o">=</span> <span class="n">Plot</span><span class="p">(</span>  
-    <span class="n">phewas_result</span><span class="o">=</span><span class="n">phewas_result</span><span class="p">,</span>  
-    <span class="n">comorbidity_result</span><span class="o">=</span><span class="n">com_network_result</span><span class="p">,</span>  
-    <span class="n">trajectory_result</span><span class="o">=</span><span class="n">trajectory_result</span><span class="p">,</span>  
-    <span class="n">exposure_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>                    <span class="c1"># No exposure for exposed-only cohorts</span>
-    <span class="n">exposure_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">exposure_location</span><span class="o">=</span><span class="kc">None</span>                
-<span class="p">)</span>  
+<p><code class="docutils literal notranslate"><span class="pre">DiNetxify.visualization.Plot</span></code> turns the result tables produced by DiNetxify into publication-ready static figures and interactive network views. The class combines three complementary outputs:</p>
+<ul class="simple">
+<li><p>PheWAS results</p></li>
+<li><p>Comorbidity network results</p></li>
+<li><p>Disease trajectory results</p></li>
+</ul>
+<p>The visualization module assumes these three result tables use consistent phecode identifiers. During initialization, <code class="docutils literal notranslate"><span class="pre">Plot</span></code> checks the required columns, verifies that diseases in the comorbidity and trajectory tables also appear in the PheWAS table, and keeps only significant positive associations for the comorbidity and trajectory networks.</p>
+<section id="initialize-a-plot-object">
+<h2>Initialize a <code class="docutils literal notranslate"><span class="pre">Plot</span></code> object<a class="headerlink" href="#initialize-a-plot-object" title="Link to this heading"></a></h2>
+<p>Import the plotting class from the visualization module:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">DiNetxify.visualization</span> <span class="kn">import</span> <span class="n">Plot</span>
 </pre></div>
 </div>
+<section id="standard-or-matched-cohort">
+<h3>Standard or matched cohort<a class="headerlink" href="#standard-or-matched-cohort" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result_plot</span> <span class="o">=</span> <span class="n">Plot</span><span class="p">(</span>
+    <span class="n">phewas_result</span><span class="o">=</span><span class="n">phewas_result</span><span class="p">,</span>
+    <span class="n">comorbidity_result</span><span class="o">=</span><span class="n">comorbidity_result</span><span class="p">,</span>
+    <span class="n">trajectory_result</span><span class="o">=</span><span class="n">trajectory_result</span><span class="p">,</span>
+    <span class="n">exposure_name</span><span class="o">=</span><span class="s2">&quot;Smoking&quot;</span><span class="p">,</span>
+    <span class="n">exposure_location</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="n">exposure_size</span><span class="o">=</span><span class="mi">15</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="exposed-only-cohort">
+<h3>Exposed-only cohort<a class="headerlink" href="#exposed-only-cohort" title="Link to this heading"></a></h3>
+<p>For an exposed-only cohort, set the exposure-related arguments to <code class="docutils literal notranslate"><span class="pre">None</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result_plot</span> <span class="o">=</span> <span class="n">Plot</span><span class="p">(</span>
+    <span class="n">phewas_result</span><span class="o">=</span><span class="n">phewas_result</span><span class="p">,</span>
+    <span class="n">comorbidity_result</span><span class="o">=</span><span class="n">comorbidity_result</span><span class="p">,</span>
+    <span class="n">trajectory_result</span><span class="o">=</span><span class="n">trajectory_result</span><span class="p">,</span>
+    <span class="n">exposure_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">exposure_location</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">exposure_size</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="default-result-columns">
+<h3>Default result columns<a class="headerlink" href="#default-result-columns" title="Link to this heading"></a></h3>
+<p>If you use the output generated by the DiNetxify analysis module without renaming columns, the defaults should work directly:</p>
 <ul class="simple">
-<li><p><strong>phewas_result</strong> – Result (pandas.DataFrame) from the PheWAS analysis (must include columns for phecode identifier, disease system identifier, case counts identifier, significance identifier).</p></li>
-<li><p><strong>comorbidity_result</strong> – Result (pandas.DataFrame) from the comorbidity network analysis. It must include columns for disease (D1, D2) identifiers, non-temporal pairs name identifier, the association metrics (beta) identifier, and significance identifier.</p></li>
-<li><p><strong>trajectory_result</strong> – Result (pandas.DataFrame) from the disease trajectory analysis. It must have columns for the disease (D1, D2) identifiers, temporal pairs name identifier, the association metrics (beta) identifier, and significance identifier.</p></li>
-<li><p><strong>exposure_name</strong> – Name for the exposure (the factor that defines exposed vs unexposed in the cohort). For an exposed-only study, use <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><strong>exposure_location</strong> – The (x, y, z) coordinates where the exposure node should be placed in the plots. By default, if None, the exposure node will be placed at the origin (0,0,0). This is relevant only for 3D plotting; if exposure is None, this is ignored.</p></li>
-<li><p><strong>exposure_size</strong> – A scaling factor for the exposure node’s size in the plots. Increase this to make the exposure node larger relative to disease nodes (to emphasize it). If None, in an exposed-only design, the exposure node is not present.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phecode_col='phecode'</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">disease_col='disease'</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">system_col='system'</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phewas_number_col='N_cases_exposed'</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phewas_coef_col='phewas_coef'</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phewas_se_col='phewas_se'</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">source_col='phecode_d1'</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">target_col='phecode_d2'</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">disease_pair_col='name_disease_pair'</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">comorbidity_beta_col='comorbidity_beta'</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">trajectory_beta_col='trajectory_beta'</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phewas_significance_col='phewas_p_significance'</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">comorbidity_significance_col='comorbidity_p_significance'</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">trajectory_significance_col='trajectory_p_significance'</span></code></p></li>
 </ul>
-<p>The <code class="docutils literal notranslate"><span class="pre">DiNetxify.visualization.Plot</span></code> class will internally verify that the required columns exist in the input <code class="docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code> (for example, it expects certain default column names like <code class="docutils literal notranslate"><span class="pre">'phecode_d1'</span></code>, <code class="docutils literal notranslate"><span class="pre">'phecode_d2'</span></code> for pair identifiers, <code class="docutils literal notranslate"><span class="pre">'phecode'</span></code> for disease codes in results of PheWAS analysis, <code class="docutils literal notranslate"><span class="pre">'system'</span></code> for disease system category, <code class="docutils literal notranslate"><span class="pre">'name_disease_pair'</span></code> for a unique pair name, <code class="docutils literal notranslate"><span class="pre">'..._significance'</span></code> for significance identifier, etc.) If you did not change column names, simply keep them as defaults. You can override these defaults by passing optional parameters if your DataFrame uses different column names.</p>
-<p>After initializing <code class="docutils literal notranslate"><span class="pre">DiNetxify.visualization.Plot</span></code>, you can generate all visualizations based on <code class="docutils literal notranslate"><span class="pre">result_plot</span></code>.</p>
+<p>If your tables use different column names, pass the alternatives when creating <code class="docutils literal notranslate"><span class="pre">Plot</span></code>.</p>
+</section>
+<section id="optional-system-colors">
+<h3>Optional system colors<a class="headerlink" href="#optional-system-colors" title="Link to this heading"></a></h3>
+<p>You can also customize the order and colors of phecode systems with <code class="docutils literal notranslate"><span class="pre">SYSTEM</span></code> and <code class="docutils literal notranslate"><span class="pre">COLOR</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result_plot</span> <span class="o">=</span> <span class="n">Plot</span><span class="p">(</span>
+    <span class="n">phewas_result</span><span class="o">=</span><span class="n">phewas_result</span><span class="p">,</span>
+    <span class="n">comorbidity_result</span><span class="o">=</span><span class="n">comorbidity_result</span><span class="p">,</span>
+    <span class="n">trajectory_result</span><span class="o">=</span><span class="n">trajectory_result</span><span class="p">,</span>
+    <span class="n">SYSTEM</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;circulatory system&quot;</span><span class="p">,</span> <span class="s2">&quot;neurological&quot;</span><span class="p">,</span> <span class="s2">&quot;others&quot;</span><span class="p">],</span>
+    <span class="n">COLOR</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;#94B447&quot;</span><span class="p">,</span> <span class="s2">&quot;#8C564B&quot;</span><span class="p">,</span> <span class="s2">&quot;#4ECDC4&quot;</span><span class="p">]</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
 </section>
 <section id="phewas-plot">
 <h2>PheWAS plot<a class="headerlink" href="#phewas-plot" title="Link to this heading"></a></h2>
-<p>The <code class="docutils literal notranslate"><span class="pre">DiNetxify.visualization.Plot.phewas_plot()</span></code> function generates a summary plot of the PheWAS results. In a standard or matched cohort study, this function will create a circular heatmap plot to show hazard ratios (HRs) for each significant disease outcome associated with the exposure. In an exposure-only group, this function will also generate a circular heatmap plot, but it is used to display the incident number of each disease. Additionally, diseases are classified by category/system, and the shade of color in the plots represent the value of HRs or incident number.</p>
-<p>For example:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Generate a PheWAS plot  </span>
-<span class="n">result_plot</span><span class="o">.</span><span class="n">phewas_plot</span><span class="p">(</span>  
-    <span class="n">path</span><span class="o">=</span><span class="s2">&quot;/your/project/path/phewas_plot.png&quot;</span><span class="p">,</span>  <span class="c1"># output file path (supports .png, .svg, .jpg)  </span>
-    <span class="n">exposed_only_cohort</span><span class="o">=</span><span class="kc">False</span>                      <span class="c1"># False for cohort/matched designs; True if this is an exposed-only cohort  </span>
+<p><code class="docutils literal notranslate"><span class="pre">Plot.phewas_plot()</span></code> creates a circular summary plot of significant PheWAS results.</p>
+<ul class="simple">
+<li><p>In standard or matched cohorts, the color scale represents hazard ratios.</p></li>
+<li><p>In exposed-only cohorts, the color scale represents incident counts.</p></li>
+</ul>
+<p>Example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result_plot</span><span class="o">.</span><span class="n">phewas_plot</span><span class="p">(</span>
+    <span class="n">path</span><span class="o">=</span><span class="s2">&quot;results/phewas_plot.png&quot;</span><span class="p">,</span>
+    <span class="n">exposed_only_cohort</span><span class="o">=</span><span class="kc">False</span>
 <span class="p">)</span>
 </pre></div>
 </div>
-<p>This function will save the plot to the specified file path. Supported formats include <code class="docutils literal notranslate"><span class="pre">.png</span></code> for static images (suitable for publications) and <code class="docutils literal notranslate"><span class="pre">.svg</span></code> for scalable vector graphics.</p>
-<p>Parameters for <code class="docutils literal notranslate"><span class="pre">phewas_plot()</span></code> include:</p>
+<p>Main parameters:</p>
 <ul class="simple">
-<li><p><strong>path</strong> – File path including filename and extension. Ensure the extension is one of the supported image types.</p></li>
-<li><p><strong>exposed_only_cohort</strong> – Boolean flag; set to <code class="docutils literal notranslate"><span class="pre">True</span></code> if your study is an exposed-only cohort. For a standard/matched cohort, it’s <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
-</ul>
-<p><strong>Optional parameters:</strong></p>
-<ul class="simple">
-<li><p><strong>disease_font_size</strong> - Font size for disease labels in the plot. <em>(Default: 10)</em>.</p></li>
-<li><p><strong>system_font_size</strong> - Font size for the disease system labels in the plot. <em>(Default: 17)</em>.</p></li>
-<li><p><strong>dpi</strong> – Resolution of the output image (dots per inch). <em>(Default: 200)</em>.</p></li>
-<li><p><strong>HR_max</strong> - Upper bound for the HR heatmap. Values greater than or equal to this render as the same red. Affects color only. <em>(Default: 2)</em>.</p></li>
-<li><p><strong>incident_number_max</strong> - Upper bound for the incident count heatmap for exposed-only cohort. Values greater than or equal to this render as the same red. None means auto scale to the max observed count. <em>(Default: None)</em>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">path</span></code>: Output file path. Any format supported by Matplotlib can be used, such as <code class="docutils literal notranslate"><span class="pre">.png</span></code>, <code class="docutils literal notranslate"><span class="pre">.svg</span></code>, or <code class="docutils literal notranslate"><span class="pre">.jpg</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">exposed_only_cohort</span></code>: Set to <code class="docutils literal notranslate"><span class="pre">True</span></code> for exposed-only analyses and <code class="docutils literal notranslate"><span class="pre">False</span></code> for standard or matched cohorts.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">system_font_size</span></code>: Font size for disease-system labels. Default: <code class="docutils literal notranslate"><span class="pre">17</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">disease_font_size</span></code>: Font size for disease labels. Default: <code class="docutils literal notranslate"><span class="pre">10</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">HR_max</span></code>: Upper bound of the hazard-ratio color scale for standard or matched cohorts. Default: <code class="docutils literal notranslate"><span class="pre">2</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">incident_number_max</span></code>: Upper bound of the incident-count color scale for exposed-only cohorts. <code class="docutils literal notranslate"><span class="pre">None</span></code> uses the maximum observed count. Default: <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dpi</span></code>: Output resolution. Default: <code class="docutils literal notranslate"><span class="pre">200</span></code>.</p></li>
 </ul>
 </section>
 <section id="comorbidity-network-plot">
 <h2>Comorbidity network plot<a class="headerlink" href="#comorbidity-network-plot" title="Link to this heading"></a></h2>
-<p>The <code class="docutils literal notranslate"><span class="pre">DiNetxify.visualization.Plot.comorbidity_network_plot()</span></code> function creates an network visualization for the comorbidity network. It clusters diseases into communities based on their network connections (using the Louvain community detection algorithm), often in a circular layout where each community occupies a sector. The nodes (diseases) are colored by their disease system, and edges represent significant associations from the comorbidity network analysis. This plot is output as an HTML file, and you can hover to see details, zoom, etc.</p>
-<p>For example:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Generate an interactive comorbidity network plot  </span>
-<span class="n">result_plot</span><span class="o">.</span><span class="n">comorbidity_network_plot</span><span class="p">(</span>  
-    <span class="n">path</span><span class="o">=</span><span class="s2">&quot;/your/project/path/comorbidity_network.html&quot;</span>  <span class="c1"># output file path (only supports .html)</span>
-<span class="p">)</span>  
-</pre></div>
-</div>
-<p>This function will generate an HTML file, which you can open with a web browser for viewing. In this plot, the nodes within the same community will cluster together.</p>
-<p>Parameters for <code class="docutils literal notranslate"><span class="pre">comorbidity_network_plot()</span></code> include:</p>
-<ul class="simple">
-<li><p><strong>path</strong> – File path including filename and extension.</p></li>
-</ul>
-<p><strong>Optional parameters:</strong></p>
-<ul class="simple">
-<li><p><strong>max_radius</strong> – Maximum radial distance (in pixels) from the center that nodes can be placed. <em>(Default: 90.0)</em>.</p></li>
-<li><p><strong>min_radius</strong> – Minimum radial distance (in pixels) from the center that nodes can be placed. <em>(Default: 35.0)</em>.</p></li>
-<li><p><strong>layer_distance</strong> – Distance between concentric circles. <em>(Default: 40.0)</em>.</p></li>
-<li><p><strong>size_reduction</strong> – A scaling factor (0 to 1) for node sizes to ensure they fit nicely (smaller values make nodes proportionally smaller). <em>(Default: 0.5)</em>.</p></li>
-<li><p><strong>line_width</strong> – Width (pixels) of the lines (edges) connecting nodes. <em>(Default: 1.0)</em>.</p></li>
-<li><p><strong>line_color</strong> – Color of the edges. Specify a named color (e.g., <code class="docutils literal notranslate"><span class="pre">'steelblue'</span></code>), hex code (<code class="docutils literal notranslate"><span class="pre">'#4682B4'</span></code>), or RGB tuple. <em>(Default: ‘black’)</em>.</p></li>
-</ul>
-<p>These parameters allow fine-tuning the appearance if needed (for example, if node labels overlap, you might reduce node sizes or adjust radii). Usually, the defaults produce a clear separation of communities.</p>
-</section>
-<section id="disease-trajectory-plot">
-<h2>Disease trajectory plot<a class="headerlink" href="#disease-trajectory-plot" title="Link to this heading"></a></h2>
-<p>The <code class="docutils literal notranslate"><span class="pre">DiNetxify.visualization.Plot.trajectory_plot()</span></code> function generates individual disease trajectory plot within each identified disease community, visualizing the disease trajectories contained within a single community. For each significant temporal disease pair, an arrow or directed edge is drawn from the antecedent disease to the consequent disease. The output is a set of static image files (one <code class="docutils literal notranslate"><span class="pre">.png</span></code> file per community).</p>
-<p>For example:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Generate disease trajectory plots (one per community)  </span>
-<span class="n">result_plot</span><span class="o">.</span><span class="n">trajectory_plot</span><span class="p">(</span>
-    <span class="n">path</span><span class="o">=</span><span class="s2">&quot;/your/project/path/trajectory_plots/&quot;</span>  <span class="c1"># output file path (just need a folder path and &quot;/&quot;)</span>
+<p><code class="docutils literal notranslate"><span class="pre">Plot.comorbidity_network_plot()</span></code> creates an interactive HTML view of the comorbidity network. Diseases are grouped into communities, colored by disease system, and connected by significant comorbidity edges.</p>
+<p>Example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result_plot</span><span class="o">.</span><span class="n">comorbidity_network_plot</span><span class="p">(</span>
+    <span class="n">path</span><span class="o">=</span><span class="s2">&quot;results/comorbidity_network.html&quot;</span>
 <span class="p">)</span>
 </pre></div>
 </div>
-<blockquote>
-<div><p><strong>Important:</strong> Here, <code class="docutils literal notranslate"><span class="pre">path</span></code> is a directory (you should include the trailing slash). The function will then save multiple files in this directory, named by community number sequentially. Ensure the directory exists.</p>
-</div></blockquote>
-<p>Parameters for <code class="docutils literal notranslate"><span class="pre">trajectory_plot()</span></code> include:</p>
+<p>Main parameters:</p>
 <ul class="simple">
-<li><p><strong>path</strong> – File path (a folder path).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">path</span></code>: Output HTML file path.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_radius</span></code>: Maximum radial distance for node placement. Default: <code class="docutils literal notranslate"><span class="pre">180.0</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">min_radius</span></code>: Minimum radial distance for node placement. Default: <code class="docutils literal notranslate"><span class="pre">35.0</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">size_reduction</span></code>: Scales node sizes. Default: <code class="docutils literal notranslate"><span class="pre">0.5</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cluster_reduction_ratio</span></code>: Controls spacing between module sectors. Default: <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">line_width</span></code>: Width of comorbidity edges. Default: <code class="docutils literal notranslate"><span class="pre">1.0</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">line_color</span></code>: Color of comorbidity edges. Default: <code class="docutils literal notranslate"><span class="pre">'black'</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">layer_distance</span></code>: Distance between concentric layers. Default: <code class="docutils literal notranslate"><span class="pre">40.0</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">font_style</span></code>: Font family used in the figure. Default: <code class="docutils literal notranslate"><span class="pre">'Times</span> <span class="pre">New</span> <span class="pre">Roman'</span></code>.</p></li>
 </ul>
-<p><strong>Optional parameters:</strong></p>
+</section>
+<section id="disease-trajectory-plot">
+<h2>Disease trajectory plot<a class="headerlink" href="#disease-trajectory-plot" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Plot.trajectory_plot()</span></code> generates one static <code class="docutils literal notranslate"><span class="pre">.png</span></code> figure per disease module, showing directed disease trajectories within that module.</p>
+<p>Example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result_plot</span><span class="o">.</span><span class="n">trajectory_plot</span><span class="p">(</span>
+    <span class="n">path</span><span class="o">=</span><span class="s2">&quot;results/trajectory_plots&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Notes:</p>
 <ul class="simple">
-<li><p><strong>dpi</strong> – Resolution of the output image (dots per inch). <em>(Default: 500 for these plots, to ensure high clarity since many arrows/labels might be present.)</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">path</span></code> must be an existing directory.</p></li>
+<li><p>The function writes one file per module using names such as <code class="docutils literal notranslate"><span class="pre">cluster_0.png</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dpi</span></code> controls output resolution and defaults to <code class="docutils literal notranslate"><span class="pre">500</span></code>.</p></li>
 </ul>
-<p>The plots will illustrate the progression of diseases. Within each community, you can see sa directed acyclic graph suggesting the temporal direction. The arrow from disease A to B indicates A tends to precede B. If a community has no significant trajectories, it is empty.</p>
 </section>
 <section id="three-dimensional-plot">
 <h2>Three-dimensional plot<a class="headerlink" href="#three-dimensional-plot" title="Link to this heading"></a></h2>
-<p>The <code class="docutils literal notranslate"><span class="pre">DiNetxify.visualization.Plot.three_dimension_plot()</span></code> function generates an integrated 3D interactive visualization combining both the comorbidity network and disease trajectory. In this representation, the comorbidity network is displayed on a horizontal plane, while disease trajectory are aligned along the vertical axis, providing a comprehensive three-dimensional perspective of both relationship types simultaneously. The exposure node (if present) is positioned at the center, with disease nodes arranged concentrically around it. The resulting plot is exported as an interactive HTML file, enabling user-driven rotation and zooming to facilitate detailed exploration of the 3D structure.</p>
-<p>For example:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Generate a combined 3D network plot  </span>
-<span class="n">result_plot</span><span class="o">.</span><span class="n">three_dimension_plot</span><span class="p">(</span>  
-    <span class="n">path</span><span class="o">=</span><span class="s2">&quot;/your/project/path/combined_network.html&quot;</span>  <span class="c1"># output file path (only supports .html)</span>
-<span class="p">)</span>  
+<p><code class="docutils literal notranslate"><span class="pre">Plot.three_dimension_plot()</span></code> builds an interactive 3D HTML visualization that combines the comorbidity network and disease trajectories in a single view. If <code class="docutils literal notranslate"><span class="pre">exposure_name</span></code> is provided, the exposure node is placed at the center and the trajectory layers are arranged relative to it.</p>
+<p>Example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result_plot</span><span class="o">.</span><span class="n">three_dimension_plot</span><span class="p">(</span>
+    <span class="n">path</span><span class="o">=</span><span class="s2">&quot;results/three_dimension_network.html&quot;</span>
+<span class="p">)</span>
 </pre></div>
 </div>
-<p>This function will save an HTML file with the interactive 3D visualization. When you open it, you can drag to rotate the network in 3D space. One plane (e.g., viewed from top-down) will show the clusters and connections akin to the comorbidity network, and the other plane (viewed from the side) will show the directed trajectories. Where they intersect, you get a full picture of how diseases group and progress.</p>
-<p>Parameters for <code class="docutils literal notranslate"><span class="pre">three_dimension_plot()</span></code> include:</p>
+<p>Main parameters:</p>
 <ul class="simple">
-<li><p><strong>path</strong> – File path including filename and extension.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">path</span></code>: Output HTML file path.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_radius</span></code>: Maximum radial distance for node placement. Default: <code class="docutils literal notranslate"><span class="pre">180.0</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">min_radius</span></code>: Minimum radial distance for node placement. Default: <code class="docutils literal notranslate"><span class="pre">35.0</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">line_color</span></code>: Color of trajectory edges. Default: <code class="docutils literal notranslate"><span class="pre">'black'</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">line_width</span></code>: Width of trajectory edges. Default: <code class="docutils literal notranslate"><span class="pre">1.0</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">size_reduction</span></code>: Scales node sizes. Default: <code class="docutils literal notranslate"><span class="pre">0.5</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cluster_reduction_ratio</span></code>: Controls spacing between module sectors. Default: <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">layer_distance</span></code>: Vertical spacing between trajectory layers. Default: <code class="docutils literal notranslate"><span class="pre">40.0</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">layout_width</span></code>: Figure width in pixels. Default: <code class="docutils literal notranslate"><span class="pre">900.0</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">layout_height</span></code>: Figure height in pixels. Default: <code class="docutils literal notranslate"><span class="pre">900.0</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">font_style</span></code>: Font family used in the figure. Default: <code class="docutils literal notranslate"><span class="pre">'Times</span> <span class="pre">New</span> <span class="pre">Roman'</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">font_size</span></code>: Base font size. Default: <code class="docutils literal notranslate"><span class="pre">15.0</span></code>.</p></li>
 </ul>
-<p><strong>Optional parameters:</strong></p>
-<ul class="simple">
-<li><p><strong>max_radius</strong> – Maximum radius for node placement from the center (similar to the 2D network plot). <em>(Default: 180.0)</em>.</p></li>
-<li><p><strong>min_radius</strong> – Minimum radius from center. <em>(Default: 35.0)</em>.</p></li>
-<li><p><strong>layer_distance</strong> – Distance between layers in the radial direction (similar concept to above). <em>(Default: 40.0)</em>.</p></li>
-<li><p><strong>layout_width</strong> – Width of the overall figure in pixels. <em>(Default: 900.0)</em>.</p></li>
-<li><p><strong>layout_height</strong> – Height of the figure in pixels. <em>(Default: 900.0)</em>.</p></li>
-<li><p><strong>line_color</strong> – Color for trajectory lines (since in 3D plot, maybe comorbidity edges are one style and trajectory edges another). <em>(Default: ‘black’)</em>.</p></li>
-<li><p><strong>line_width</strong> – Width of trajectory lines. <em>(Default: 1.0)</em>.</p></li>
-<li><p><strong>size_reduction</strong> – Node size scaling factor (0.1–1.0). <em>(Default: 0.5)</em>.</p></li>
-<li><p><strong>cluster_reduction_ratio</strong> – A factor (0.1–1.0) to compress or spread out clusters in the 3D space. Lower means clusters are more tightly grouped. <em>(Default: 1.0)</em>.</p></li>
-<li><p><strong>font_style</strong> – Font family for text elements (node labels, etc.). <em>(Default: ‘Times New Roman’)</em>.</p></li>
-<li><p><strong>font_size</strong> – Base font size for text. <em>(Default: 15.0)</em>.</p></li>
-</ul>
-<p>These basic visualization functions quickly turn results into intuitive plots, aiding interpretation and presentation.</p>
-<p>Next, we provide a quick reference to the API of the main classes and functions for convenience.</p>
+<p>The exported HTML supports rotation, zooming, and node-based trajectory highlighting.</p>
 </section>
 </section>
 

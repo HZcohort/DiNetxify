@@ -1,166 +1,178 @@
 # Visualization
 
-Following three-dimensional disease network analysis, ***DiNetxify*** provides visualization tools to facilitate the interpretation of results. These tools enable the visualization of key findings from PheWAS, comorbidity networks, and disease trajectory analysis. The main visualization class, `DiNetxify.visualization.Plot`, accepts results in the form of a `pandas.DataFrame` and produces interactive plots.
+`DiNetxify.visualization.Plot` turns the result tables produced by DiNetxify into publication-ready static figures and interactive network views. The class combines three complementary outputs:
 
-## Initializing the Plot object
+- PheWAS results
+- Comorbidity network results
+- Disease trajectory results
 
-To create visualizations, you must initialize a `DiNetxify.visualization.Plot` object with your analysis results. You should pass in the PheWAS, comorbidity network, and disease trajectory results `pandas.DataFrame`, and optionally specify how the “exposure” appear in the plots.
+The visualization module assumes these three result tables use consistent phecode identifiers. During initialization, `Plot` checks the required columns, verifies that diseases in the comorbidity and trajectory tables also appear in the PheWAS table, and keeps only significant positive associations for the comorbidity and trajectory networks.
 
-For example:
+## Initialize a `Plot` object
+
+Import the plotting class from the visualization module:
 
 ```python
 from DiNetxify.visualization import Plot
-
-# Suppose phewas_result, com_network_result, trajectory_result are obtained from three-dimensional disease network analysis
-result_plot = Plot(
-    phewas_result=phewas_result,           # Results of PheWAS analysis
-    comorbidity_result=com_network_result, # Results of comorbidity network analysis
-    trajectory_result=trajectory_result,   # Results of disease trajectory analysis
-    exposure_name='exposure',              # Name of the exposure (for labeling the exposure node). Use None for exposed-only cohorts
-    exposure_size=15,                      # Relative size scaling for the exposure node (to make it prominent). None for exposed-only cohorts
-    exposure_location=(0, 0, 0)            # 3D coordinates for the exposure node. If None, it defaults to (0,0,0)
-)
-
-# If this were an exposed-only cohort (no explicit exposure variable), you would set:
-result_plot = Plot(  
-    phewas_result=phewas_result,  
-    comorbidity_result=com_network_result,  
-    trajectory_result=trajectory_result,  
-    exposure_name=None,                    # No exposure for exposed-only cohorts
-    exposure_size=None,
-    exposure_location=None                
-)  
 ```
 
-- **phewas_result** – Result (pandas.DataFrame) from the PheWAS analysis (must include columns for phecode identifier, disease system identifier, case counts identifier, significance identifier).
-- **comorbidity_result** – Result (pandas.DataFrame) from the comorbidity network analysis. It must include columns for disease (D1, D2) identifiers, non-temporal pairs name identifier, the association metrics (beta) identifier, and significance identifier.
-- **trajectory_result** – Result (pandas.DataFrame) from the disease trajectory analysis. It must have columns for the disease (D1, D2) identifiers, temporal pairs name identifier, the association metrics (beta) identifier, and significance identifier.
-- **exposure_name** – Name for the exposure (the factor that defines exposed vs unexposed in the cohort). For an exposed-only study, use `None`.
-- **exposure_location** – The (x, y, z) coordinates where the exposure node should be placed in the plots. By default, if None, the exposure node will be placed at the origin (0,0,0). This is relevant only for 3D plotting; if exposure is None, this is ignored.
-- **exposure_size** – A scaling factor for the exposure node's size in the plots. Increase this to make the exposure node larger relative to disease nodes (to emphasize it). If None, in an exposed-only design, the exposure node is not present.
+### Standard or matched cohort
 
-The `DiNetxify.visualization.Plot` class will internally verify that the required columns exist in the input `pandas.DataFrame` (for example, it expects certain default column names like `'phecode_d1'`, `'phecode_d2'` for pair identifiers, `'phecode'` for disease codes in results of PheWAS analysis, `'system'` for disease system category, `'name_disease_pair'` for a unique pair name, `'..._significance'` for significance identifier, etc.) If you did not change column names, simply keep them as defaults. You can override these defaults by passing optional parameters if your DataFrame uses different column names.
+```python
+result_plot = Plot(
+    phewas_result=phewas_result,
+    comorbidity_result=comorbidity_result,
+    trajectory_result=trajectory_result,
+    exposure_name="Smoking",
+    exposure_location=(0, 0, 0),
+    exposure_size=15
+)
+```
 
-After initializing `DiNetxify.visualization.Plot`, you can generate all visualizations based on `result_plot`.
+### Exposed-only cohort
+
+For an exposed-only cohort, set the exposure-related arguments to `None`:
+
+```python
+result_plot = Plot(
+    phewas_result=phewas_result,
+    comorbidity_result=comorbidity_result,
+    trajectory_result=trajectory_result,
+    exposure_name=None,
+    exposure_location=None,
+    exposure_size=None
+)
+```
+
+### Default result columns
+
+If you use the output generated by the DiNetxify analysis module without renaming columns, the defaults should work directly:
+
+- `phecode_col='phecode'`
+- `disease_col='disease'`
+- `system_col='system'`
+- `phewas_number_col='N_cases_exposed'`
+- `phewas_coef_col='phewas_coef'`
+- `phewas_se_col='phewas_se'`
+- `source_col='phecode_d1'`
+- `target_col='phecode_d2'`
+- `disease_pair_col='name_disease_pair'`
+- `comorbidity_beta_col='comorbidity_beta'`
+- `trajectory_beta_col='trajectory_beta'`
+- `phewas_significance_col='phewas_p_significance'`
+- `comorbidity_significance_col='comorbidity_p_significance'`
+- `trajectory_significance_col='trajectory_p_significance'`
+
+If your tables use different column names, pass the alternatives when creating `Plot`.
+
+### Optional system colors
+
+You can also customize the order and colors of phecode systems with `SYSTEM` and `COLOR`:
+
+```python
+result_plot = Plot(
+    phewas_result=phewas_result,
+    comorbidity_result=comorbidity_result,
+    trajectory_result=trajectory_result,
+    SYSTEM=["circulatory system", "neurological", "others"],
+    COLOR=["#94B447", "#8C564B", "#4ECDC4"]
+)
+```
 
 ## PheWAS plot
 
-The `DiNetxify.visualization.Plot.phewas_plot()` function generates a summary plot of the PheWAS results. In a standard or matched cohort study, this function will create a circular heatmap plot to show hazard ratios (HRs) for each significant disease outcome associated with the exposure. In an exposure-only group, this function will also generate a circular heatmap plot, but it is used to display the incident number of each disease. Additionally, diseases are classified by category/system, and the shade of color in the plots represent the value of HRs or incident number.
+`Plot.phewas_plot()` creates a circular summary plot of significant PheWAS results.
 
-For example:
+- In standard or matched cohorts, the color scale represents hazard ratios.
+- In exposed-only cohorts, the color scale represents incident counts.
+
+Example:
 
 ```python
-# Generate a PheWAS plot  
-result_plot.phewas_plot(  
-    path="/your/project/path/phewas_plot.png",  # output file path (supports .png, .svg, .jpg)  
-    exposed_only_cohort=False                      # False for cohort/matched designs; True if this is an exposed-only cohort  
+result_plot.phewas_plot(
+    path="results/phewas_plot.png",
+    exposed_only_cohort=False
 )
 ```
 
-This function will save the plot to the specified file path. Supported formats include `.png` for static images (suitable for publications) and `.svg` for scalable vector graphics.
+Main parameters:
 
-Parameters for `phewas_plot()` include:
-
-- **path** – File path including filename and extension. Ensure the extension is one of the supported image types.
-- **exposed_only_cohort** – Boolean flag; set to `True` if your study is an exposed-only cohort. For a standard/matched cohort, it's `False`.
-
-**Optional parameters:**
-
-- **disease_font_size** - Font size for disease labels in the plot. *(Default: 10)*.
-- **system_font_size** - Font size for the disease system labels in the plot. *(Default: 17)*.
-- **dpi** – Resolution of the output image (dots per inch). *(Default: 200)*.
-- **HR_max** - Upper bound for the HR heatmap. Values greater than or equal to this render as the same red. Affects color only. *(Default: 2)*.
-- **incident_number_max** - Upper bound for the incident count heatmap for exposed-only cohort. Values greater than or equal to this render as the same red. None means auto scale to the max observed count. *(Default: None)*.
+- `path`: Output file path. Any format supported by Matplotlib can be used, such as `.png`, `.svg`, or `.jpg`.
+- `exposed_only_cohort`: Set to `True` for exposed-only analyses and `False` for standard or matched cohorts.
+- `system_font_size`: Font size for disease-system labels. Default: `17`.
+- `disease_font_size`: Font size for disease labels. Default: `10`.
+- `HR_max`: Upper bound of the hazard-ratio color scale for standard or matched cohorts. Default: `2`.
+- `incident_number_max`: Upper bound of the incident-count color scale for exposed-only cohorts. `None` uses the maximum observed count. Default: `None`.
+- `dpi`: Output resolution. Default: `200`.
 
 ## Comorbidity network plot
 
-The `DiNetxify.visualization.Plot.comorbidity_network_plot()` function creates an network visualization for the comorbidity network. It clusters diseases into communities based on their network connections (using the Louvain community detection algorithm), often in a circular layout where each community occupies a sector. The nodes (diseases) are colored by their disease system, and edges represent significant associations from the comorbidity network analysis. This plot is output as an HTML file, and you can hover to see details, zoom, etc.
+`Plot.comorbidity_network_plot()` creates an interactive HTML view of the comorbidity network. Diseases are grouped into communities, colored by disease system, and connected by significant comorbidity edges.
 
-For example:
-
-```python
-# Generate an interactive comorbidity network plot  
-result_plot.comorbidity_network_plot(  
-    path="/your/project/path/comorbidity_network.html"  # output file path (only supports .html)
-)  
-```
-
-This function will generate an HTML file, which you can open with a web browser for viewing. In this plot, the nodes within the same community will cluster together.
-
-Parameters for `comorbidity_network_plot()` include:
-
-- **path** – File path including filename and extension.
-
-**Optional parameters:**
-
-- **max_radius** – Maximum radial distance (in pixels) from the center that nodes can be placed. *(Default: 90.0)*.
-- **min_radius** – Minimum radial distance (in pixels) from the center that nodes can be placed. *(Default: 35.0)*.
-- **layer_distance** – Distance between concentric circles. *(Default: 40.0)*.
-- **size_reduction** – A scaling factor (0 to 1) for node sizes to ensure they fit nicely (smaller values make nodes proportionally smaller). *(Default: 0.5)*.
-- **line_width** – Width (pixels) of the lines (edges) connecting nodes. *(Default: 1.0)*.
-- **line_color** – Color of the edges. Specify a named color (e.g., `'steelblue'`), hex code (`'#4682B4'`), or RGB tuple. *(Default: 'black')*.
-
-These parameters allow fine-tuning the appearance if needed (for example, if node labels overlap, you might reduce node sizes or adjust radii). Usually, the defaults produce a clear separation of communities.
-
-## Disease trajectory plot
-
-The `DiNetxify.visualization.Plot.trajectory_plot()` function generates individual disease trajectory plot within each identified disease community, visualizing the disease trajectories contained within a single community. For each significant temporal disease pair, an arrow or directed edge is drawn from the antecedent disease to the consequent disease. The output is a set of static image files (one `.png` file per community).
-
-For example:
+Example:
 
 ```python
-# Generate disease trajectory plots (one per community)  
-result_plot.trajectory_plot(
-    path="/your/project/path/trajectory_plots/"  # output file path (just need a folder path and "/")
+result_plot.comorbidity_network_plot(
+    path="results/comorbidity_network.html"
 )
 ```
 
-> **Important:** Here, `path` is a directory (you should include the trailing slash). The function will then save multiple files in this directory, named by community number sequentially. Ensure the directory exists.
+Main parameters:
 
-Parameters for `trajectory_plot()` include:
+- `path`: Output HTML file path.
+- `max_radius`: Maximum radial distance for node placement. Default: `180.0`.
+- `min_radius`: Minimum radial distance for node placement. Default: `35.0`.
+- `size_reduction`: Scales node sizes. Default: `0.5`.
+- `cluster_reduction_ratio`: Controls spacing between module sectors. Default: `1`.
+- `line_width`: Width of comorbidity edges. Default: `1.0`.
+- `line_color`: Color of comorbidity edges. Default: `'black'`.
+- `layer_distance`: Distance between concentric layers. Default: `40.0`.
+- `font_style`: Font family used in the figure. Default: `'Times New Roman'`.
 
-- **path** – File path (a folder path).
+## Disease trajectory plot
 
-**Optional parameters:**
+`Plot.trajectory_plot()` generates one static `.png` figure per disease module, showing directed disease trajectories within that module.
 
-- **dpi** – Resolution of the output image (dots per inch). *(Default: 500 for these plots, to ensure high clarity since many arrows/labels might be present.)*
+Example:
 
-The plots will illustrate the progression of diseases. Within each community, you can see sa directed acyclic graph suggesting the temporal direction. The arrow from disease A to B indicates A tends to precede B. If a community has no significant trajectories, it is empty.
+```python
+result_plot.trajectory_plot(
+    path="results/trajectory_plots"
+)
+```
 
+Notes:
+
+- `path` must be an existing directory.
+- The function writes one file per module using names such as `cluster_0.png`.
+- `dpi` controls output resolution and defaults to `500`.
 
 ## Three-dimensional plot
 
-The `DiNetxify.visualization.Plot.three_dimension_plot()` function generates an integrated 3D interactive visualization combining both the comorbidity network and disease trajectory. In this representation, the comorbidity network is displayed on a horizontal plane, while disease trajectory are aligned along the vertical axis, providing a comprehensive three-dimensional perspective of both relationship types simultaneously. The exposure node (if present) is positioned at the center, with disease nodes arranged concentrically around it. The resulting plot is exported as an interactive HTML file, enabling user-driven rotation and zooming to facilitate detailed exploration of the 3D structure.
+`Plot.three_dimension_plot()` builds an interactive 3D HTML visualization that combines the comorbidity network and disease trajectories in a single view. If `exposure_name` is provided, the exposure node is placed at the center and the trajectory layers are arranged relative to it.
 
-For example:
+Example:
 
 ```python
-# Generate a combined 3D network plot  
-result_plot.three_dimension_plot(  
-    path="/your/project/path/combined_network.html"  # output file path (only supports .html)
-)  
+result_plot.three_dimension_plot(
+    path="results/three_dimension_network.html"
+)
 ```
 
-This function will save an HTML file with the interactive 3D visualization. When you open it, you can drag to rotate the network in 3D space. One plane (e.g., viewed from top-down) will show the clusters and connections akin to the comorbidity network, and the other plane (viewed from the side) will show the directed trajectories. Where they intersect, you get a full picture of how diseases group and progress.
+Main parameters:
 
-Parameters for `three_dimension_plot()` include:
+- `path`: Output HTML file path.
+- `max_radius`: Maximum radial distance for node placement. Default: `180.0`.
+- `min_radius`: Minimum radial distance for node placement. Default: `35.0`.
+- `line_color`: Color of trajectory edges. Default: `'black'`.
+- `line_width`: Width of trajectory edges. Default: `1.0`.
+- `size_reduction`: Scales node sizes. Default: `0.5`.
+- `cluster_reduction_ratio`: Controls spacing between module sectors. Default: `1`.
+- `layer_distance`: Vertical spacing between trajectory layers. Default: `40.0`.
+- `layout_width`: Figure width in pixels. Default: `900.0`.
+- `layout_height`: Figure height in pixels. Default: `900.0`.
+- `font_style`: Font family used in the figure. Default: `'Times New Roman'`.
+- `font_size`: Base font size. Default: `15.0`.
 
-- **path** – File path including filename and extension.
+The exported HTML supports rotation, zooming, and node-based trajectory highlighting.
 
-**Optional parameters:**
-
-- **max_radius** – Maximum radius for node placement from the center (similar to the 2D network plot). *(Default: 180.0)*.
-- **min_radius** – Minimum radius from center. *(Default: 35.0)*.
-- **layer_distance** – Distance between layers in the radial direction (similar concept to above). *(Default: 40.0)*.
-- **layout_width** – Width of the overall figure in pixels. *(Default: 900.0)*.
-- **layout_height** – Height of the figure in pixels. *(Default: 900.0)*.
-- **line_color** – Color for trajectory lines (since in 3D plot, maybe comorbidity edges are one style and trajectory edges another). *(Default: 'black')*.
-- **line_width** – Width of trajectory lines. *(Default: 1.0)*.
-- **size_reduction** – Node size scaling factor (0.1–1.0). *(Default: 0.5)*.
-- **cluster_reduction_ratio** – A factor (0.1–1.0) to compress or spread out clusters in the 3D space. Lower means clusters are more tightly grouped. *(Default: 1.0)*.
-- **font_style** – Font family for text elements (node labels, etc.). *(Default: 'Times New Roman')*.
-- **font_size** – Base font size for text. *(Default: 15.0)*.
-
-These basic visualization functions quickly turn results into intuitive plots, aiding interpretation and presentation.
-
-Next, we provide a quick reference to the API of the main classes and functions for convenience.
