@@ -35,11 +35,11 @@ data = dnt.DiseaseNetworkData(
 
 - **min_required_icd_codes**: Minimum number of ICD records mapping to the same phecode before that phecode is counted as present for an individual. Default is `1`.
 - **date_fmt**: Date format used in the phenotype file. This is also the default format for medical-record files unless overridden later. Default is `'%Y-%m-%d'`.
-- **phecode_version**: Phecode mapping version. `'1.2'` is the recommended general-purpose choice. `'1.3a'` and `'VL_autism'` are also available for special use cases.
+- **phecode_version**: Phecode mapping version. `'1.2'` is the recommended general-purpose choice. `'1.3a'` is also available for special use cases.
 
 ## Load phenotype data
 
-After creating the data object, use `phenotype_data()` to load the cohort metadata.
+After creating the data object, use `phenotype_data()` to load the cohort phenotype data.
 
 ```python
 # Matched cohort
@@ -119,7 +119,7 @@ table1_df = data.Table1()
 print(table1_df.head())
 ```
 
-`Table1()` summarizes continuous variables, categorical variables, and follow-up time. For `cohort` and `matched cohort`, the table compares exposed and unexposed groups; for `exposed-only cohort`, it produces a single-group summary.
+`Table1()` summarizes sex, covariates included and follow-up time. For `cohort` and `matched cohort`, the table compares exposed and unexposed groups; for `exposed-only cohort`, it produces a single-group summary.
 
 ## Load medical record data
 
