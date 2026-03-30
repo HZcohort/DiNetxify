@@ -3,6 +3,7 @@
 Created on Wed Jan 1 19:48:09 2025
 
 @author: Haowen Liu - Biomedical Big data center of West China Hospital, Sichuan University
+@author: Can Hou - Biomedical Big data center of West China Hospital, Sichuan University
 """
 import community as community_louvain
 import matplotlib.ticker as ticker
@@ -39,17 +40,19 @@ class Plot(object):
     3. Disease trajectory analysis
 
     Args:
-        comorbidity_result (pd.DataFrame): 
+        comorbidity_result (pd.DataFrame, optional): 
             Result dataframe from comorbidity network analysis containing:
             - Non-temporal disease pairs (D1-D2)
             - Association metrics (e.g., beta coefficients, p-values)
             - Significance identifier (Ture or False)
+            Required for comorbidity network, 3D network, and trajectory plots.
             
-        trajectory_result (pd.DataFrame): 
+        trajectory_result (pd.DataFrame, optional): 
             Result dataframe from temporal disease trajectory analysis containing:
             - Temporal disease pairs (source->target)
             - Temporal association metrics (e.g., beta coefficients, p-values)
             - Significance identifier (Ture or False)
+            Required for 3D network and trajectory plots.
             
         phewas_result (pd.DataFrame): 
             Result dataframe from PHEWAS analysis containing:
@@ -173,13 +176,24 @@ class Plot(object):
             '#6A5ACD']
 
         Notes:
-        - All input DataFrames should use consistent phecode identifiers.
+        - All provided DataFrames should use consistent phecode identifiers.
         - Comorbidity network and disease trajectory results are filtered based on significance identifier and effect size (keep positive effects).
         - Node sizes default to case counts.
         - By default, colors are assigned by disease system.
 
     Example:
-        1. cohort/matched cohort study
+        1. PheWAS only
+        >>> plot = Plot(
+            phewas_df,
+        )
+
+        2. PheWAS + comorbidity network
+        >>> plot = Plot(
+            phewas_df,
+            comorbidity_df,
+        )
+
+        3. cohort/matched cohort study
         >>> plot = Plot(
             phewas_df,
             comorbidity_df,
@@ -206,7 +220,7 @@ class Plot(object):
             exposure=495.2,
         )
 
-        2. exposed-only study
+        4. exposed-only study
         >>> plot = Plot(
             phewas_df, 
             comorbidity_df, 
@@ -235,8 +249,8 @@ class Plot(object):
     def __init__(
         self, 
         phewas_result: Df,
-        comorbidity_result: Df, 
-        trajectory_result: Df,
+        comorbidity_result: Optional[Df]=None, 
+        trajectory_result: Optional[Df]=None,
         exposure_name: Optional[str] | None=None,
         exposure_location: Optional[Tuple[float]] | None=None,
         exposure_size: Optional[float] | None=None,
@@ -257,18 +271,19 @@ class Plot(object):
         **kwargs
     ):
         
-        # Dictionary of variables to check (name: value)
-        variables_to_check = {
-            'phewas_result': phewas_result,
+        if not isinstance(phewas_result, pd.DataFrame):
+            raise TypeError(
+                f"phewas_result is NOT a pandas.DataFrame (type: {type(phewas_result)})"
+            )
+
+        optional_variables = {
             'comorbidity_result': comorbidity_result,
             'trajectory_result': trajectory_result
         }
-        # Check each variable's type whether is pd.DataFrame
-        for var_name, var in variables_to_check.items():
-            if isinstance(var, pd.DataFrame):
+        for var_name, var in optional_variables.items():
+            if var is None or isinstance(var, pd.DataFrame):
                 continue
-            else:
-                raise TypeError(f"{var_name} is NOT a pandas.DataFrame (type: {type(var)})")
+            raise TypeError(f"{var_name} is NOT a pandas.DataFrame (type: {type(var)})")
 
         # Dictionary of variables to check (name: value)
         validate_string_params = {
@@ -296,34 +311,79 @@ class Plot(object):
             else:
                 raise TypeError(f"{name} is NOT a string {type(value)}")
 
-        # check the variables whether in column names of the phewas_result
-        for col_name in [self.phecode_col, self.disease_col, self.system_col, self.phewas_number_col, self.phewas_significance_col]:
-            if col_name not in phewas_result.columns:
-                raise ValueError(f"{col_name} is NOT a column name in the phewas_result (pandas.DataFrame)")
+        self.__validate_result_columns(
+            phewas_result,
+            'phewas_result',
+            [
+                self.phecode_col,
+                self.disease_col,
+                self.system_col,
+                self.phewas_number_col,
+                self.phewas_significance_col
+            ]
+        )
+        if self.phewas_coef_col in phewas_result.columns:
+            self.__validate_result_columns(
+                phewas_result,
+                'phewas_result',
+                [self.phewas_coef_col]
+            )
+        if self.phewas_se_col in phewas_result.columns:
+            self.__validate_result_columns(
+                phewas_result,
+                'phewas_result',
+                [self.phewas_se_col]
+            )
 
-        # check the variables whether in column names of the comorbidity_result
-        for col_name in [self.source_col, self.target_col, self.disease_pair_col, self.comorbidity_significance_col]:
-            if col_name not in comorbidity_result.columns:
-                raise ValueError(f"{col_name} is NOT a column name in the comorbidity_result (pandas.DataFrame)")
+        if comorbidity_result is not None:
+            self.__validate_result_columns(
+                comorbidity_result,
+                'comorbidity_result',
+                [
+                    self.source_col,
+                    self.target_col,
+                    self.disease_pair_col,
+                    self.comorbidity_beta_col,
+                    self.comorbidity_significance_col
+                ]
+            )
 
-        # check the variables whether in column names of the trajectory_result
-        for col_name in [self.source_col, self.target_col, self.disease_pair_col, self.trajectory_significance_col]:
-            if col_name not in trajectory_result.columns:
-                raise ValueError(f"{col_name} is NOT a column name in the trajectory_result (pandas.DataFrame)") 
+        if trajectory_result is not None:
+            self.__validate_result_columns(
+                trajectory_result,
+                'trajectory_result',
+                [
+                    self.source_col,
+                    self.target_col,
+                    self.disease_pair_col,
+                    self.trajectory_beta_col,
+                    self.trajectory_significance_col
+                ]
+            )
         
         # all phecodes to analysis
-        diseases_phewas = phewas_result[self.phecode_col].to_list()
-        # check the disesaes of comorbidity result whether are included in phewas result
-        diseases_com = comorbidity_result[self.source_col].to_list() + comorbidity_result[self.target_col].to_list()
-        for disease in set(diseases_com):
-            if disease not in diseases_phewas:
-                raise ValueError(f"{disease} of comorbidity result is NOT in the phewas_result (pandas.DataFrame)")    
+        diseases_phewas = set(phewas_result[self.phecode_col].to_list())
+        if comorbidity_result is not None:
+            diseases_com = (
+                comorbidity_result[self.source_col].to_list() +
+                comorbidity_result[self.target_col].to_list()
+            )
+            for disease in set(diseases_com):
+                if disease not in diseases_phewas:
+                    raise ValueError(
+                        f"{disease} of comorbidity result is NOT in the phewas_result (pandas.DataFrame)"
+                    )
 
-        # check the disesaes of trajectory result whether are included in phewas result
-        diseases_tra = trajectory_result[self.source_col].to_list() + trajectory_result[self.target_col].to_list()
-        for disease in set(diseases_tra):
-            if disease not in diseases_phewas:
-                raise ValueError(f"{disease} of trajectory result is NOT in the phewas_result (pandas.DataFrame)")
+        if trajectory_result is not None:
+            diseases_tra = (
+                trajectory_result[self.source_col].to_list() +
+                trajectory_result[self.target_col].to_list()
+            )
+            for disease in set(diseases_tra):
+                if disease not in diseases_phewas:
+                    raise ValueError(
+                        f"{disease} of trajectory result is NOT in the phewas_result (pandas.DataFrame)"
+                    )
 
         # filter the results meeting some rules
         phewas_result, comorbidity_result, trajectory_result = self.__filter_significant(
@@ -408,77 +468,159 @@ class Plot(object):
         )
         system_color = kwargs.get("system_color", system_color)
 
-        # check the inclusion relation between trajectory and comorbidity
-        self.__check_disease_pairs(
-            trajectory_result,
-            comorbidity_result,
-            self.source_col,
-            self.target_col
-        )
-
-        # concat the trajectory and comorbidity in vertical level
-        df = trajectory_result[[self.source_col, self.target_col, self.disease_pair_col, self.trajectory_beta_col]].copy()
-        df = df.rename(columns={self.trajectory_beta_col: self.comorbidity_beta_col})
-        #retain only disease pairs not present in comorbidity_result for concatenation
-        df['temp_name'] = df.apply(lambda row: set(row[[self.source_col, self.target_col]]), axis=1)
-        comorbidity_result['temp_name'] = comorbidity_result.apply(
-            lambda row: set(row[[self.source_col, self.target_col]]), axis=1)
-        df = df[~df['temp_name'].isin(comorbidity_result['temp_name'])].drop(columns=['temp_name'])
-        #drop temp_name column from comorbidity_result
-        del comorbidity_result['temp_name']
-
-        comorbidity_result = pd.concat(
-            [comorbidity_result, df],
-            axis=0,
-            ignore_index=True
-        )
-
-        comorbidity_result.drop_duplicates(
-            subset=[self.source_col, self.target_col],
-            inplace=True,
-            ignore_index=True,
-            keep="first"
-        )
-
-        # If there is a exposure, address a first layer (exposure -> disease)
-        if exposure_name:
-            exposure = 1000
-            trajectory_result = self.__sequence(
-                trajectory_result,
-                exposure,
-                self.source_col,
-                self.target_col,
-                self.disease_pair_col
-            )
-        else:
-            exposure = None
-
         self.__init_attrs(
-            comorbidity = comorbidity_result,
-            trajectory = trajectory_result,
             phewas = phewas_result,
-            exposure = exposure,
+            base_comorbidity = comorbidity_result,
+            base_trajectory = trajectory_result,
+            comorbidity = pd.DataFrame(),
+            trajectory = pd.DataFrame(),
+            exposure = None,
             exposure_name = exposure_name,
             exposure_location = exposure_location,
             exposure_size = exposure_size,
             source = self.source_col,
             target = self.target_col,
             describe = phewas_result[[self.phecode_col, self.disease_col, self.system_col, self.phewas_number_col]].copy(),
-            commorbidity_nodes = self.__get_nodes(
-                comorbidity_result,
-                self.source_col,
-                self.target_col
-            ),
-            trajectory_nodes = self.__get_nodes(
-                trajectory_result,
-                self.source_col,
-                self.target_col
-            ),
+            commorbidity_nodes = set(),
+            trajectory_nodes = set(),
             system_color = system_color,
             nodes_attrs = {},
             network_attrs = {}
         )
-        
+
+    @staticmethod
+    def __validate_result_columns(
+        result: Df,
+        result_name: str,
+        columns: List[str]
+    ) -> None:
+        for col_name in columns:
+            if col_name not in result.columns:
+                raise ValueError(
+                    f"{col_name} is NOT a column name in the {result_name} (pandas.DataFrame)"
+                )
+
+    def __require_plot_results(
+        self,
+        plot_name: str,
+        require_comorbidity: bool=False,
+        require_trajectory: bool=False
+    ) -> None:
+        missing = []
+        if require_comorbidity and self._base_comorbidity is None:
+            missing.append("comorbidity_result")
+        if require_trajectory and self._base_trajectory is None:
+            missing.append("trajectory_result")
+
+        if missing:
+            missing_text = ", ".join(missing)
+            raise ValueError(f"{plot_name} requires {missing_text}.")
+
+    def __prepare_network_data(
+        self,
+        plot_name: str,
+        require_trajectory: bool=False
+    ) -> None:
+        self.__require_plot_results(
+            plot_name,
+            require_comorbidity=True,
+            require_trajectory=require_trajectory
+        )
+
+        comorbidity_result = self._base_comorbidity.copy()
+        trajectory_result = (
+            self._base_trajectory.copy()
+            if self._base_trajectory is not None else
+            pd.DataFrame()
+        )
+
+        if comorbidity_result.empty:
+            raise ValueError(
+                f"{plot_name} cannot be generated because comorbidity_result has no significant positive associations to plot."
+            )
+
+        exposure = None
+        if require_trajectory:
+            if trajectory_result.empty:
+                raise ValueError(
+                    f"{plot_name} cannot be generated because trajectory_result has no significant positive associations to plot."
+                )
+
+            self.__check_disease_pairs(
+                trajectory_result,
+                comorbidity_result,
+                self.source_col,
+                self.target_col
+            )
+
+            trajectory_edges = trajectory_result[
+                [
+                    self.source_col,
+                    self.target_col,
+                    self.disease_pair_col,
+                    self.trajectory_beta_col
+                ]
+            ].copy()
+            trajectory_edges = trajectory_edges.rename(
+                columns={self.trajectory_beta_col: self.comorbidity_beta_col}
+            )
+            trajectory_edges['temp_name'] = trajectory_edges.apply(
+                lambda row: set(row[[self.source_col, self.target_col]]),
+                axis=1
+            )
+            comorbidity_result['temp_name'] = comorbidity_result.apply(
+                lambda row: set(row[[self.source_col, self.target_col]]),
+                axis=1
+            )
+            trajectory_edges = trajectory_edges[
+                ~trajectory_edges['temp_name'].isin(comorbidity_result['temp_name'])
+            ].drop(columns=['temp_name'])
+            del comorbidity_result['temp_name']
+
+            comorbidity_result = pd.concat(
+                [comorbidity_result, trajectory_edges],
+                axis=0,
+                ignore_index=True
+            )
+            comorbidity_result.drop_duplicates(
+                subset=[self.source_col, self.target_col],
+                inplace=True,
+                ignore_index=True,
+                keep="first"
+            )
+
+            if self._exposure_name:
+                exposure = 1000
+                trajectory_result = self.__sequence(
+                    trajectory_result,
+                    exposure,
+                    self.source_col,
+                    self.target_col,
+                    self.disease_pair_col
+                )
+
+        self.__init_attrs(
+            comorbidity = comorbidity_result,
+            trajectory = trajectory_result,
+            exposure = exposure,
+            commorbidity_nodes = (
+                self.__get_nodes(
+                    comorbidity_result,
+                    self.source_col,
+                    self.target_col
+                ) if not comorbidity_result.empty else set()
+            ),
+            trajectory_nodes = (
+                self.__get_nodes(
+                    trajectory_result,
+                    self.source_col,
+                    self.target_col
+                ) if not trajectory_result.empty else set()
+            ),
+            nodes_attrs = {},
+            network_attrs = {}
+        )
+
         self.__make_node_basic_attrs(
             self.phecode_col,
             self.phewas_number_col,
@@ -866,9 +1008,9 @@ class Plot(object):
     def __filter_significant(
         self,
         phewas_result: Df,
-        comorbidity_result: Df,
-        trajectory_result: Df,
-    ) -> Df:
+        comorbidity_result: Optional[Df],
+        trajectory_result: Optional[Df],
+    ) -> Tuple[Df, Optional[Df], Optional[Df]]:
         """Filters input dataframes to only include statistically significant results.
 
         Applies boolean filters to each input dataframe based on specified significance
@@ -901,16 +1043,19 @@ class Plot(object):
             - None values for filter columns skip filtering for that dataframe
             - Original dataframes are not modified (returns filtered copies
         """
-        #keep original phewas result without filtering
+        phewas_result = phewas_result.copy()
 
-        comorbidity_result = comorbidity_result.loc[
-            (comorbidity_result[self.comorbidity_significance_col] == True) &
-            (comorbidity_result[self.comorbidity_beta_col] > 0)
-        ]
-        trajectory_result = trajectory_result.loc[
-            (trajectory_result[self.trajectory_significance_col] == True) &
-            (trajectory_result[self.trajectory_beta_col] > 0)
-        ]
+        if comorbidity_result is not None:
+            comorbidity_result = comorbidity_result.loc[
+                (comorbidity_result[self.comorbidity_significance_col] == True) &
+                (comorbidity_result[self.comorbidity_beta_col] > 0)
+            ].copy()
+
+        if trajectory_result is not None:
+            trajectory_result = trajectory_result.loc[
+                (trajectory_result[self.trajectory_significance_col] == True) &
+                (trajectory_result[self.trajectory_beta_col] > 0)
+            ].copy()
         
         return phewas_result, comorbidity_result, trajectory_result
     
@@ -1711,6 +1856,7 @@ class Plot(object):
         Example:
             >>> cluster_dict = result_plot.Louvain_cluster(max_attempts=1000)
         """
+        self.__prepare_network_data("get_louvain_clusters")
         if not self.__check_node_attrs("cluster"):
             self.__cluster(
                 self.comorbidity_beta_col,
@@ -1735,6 +1881,7 @@ class Plot(object):
     ) -> None:
         import plotly.graph_objects as go
 
+        self.__prepare_network_data("three_dimension_plot", require_trajectory=True)
         cluster_weight = self.comorbidity_beta_col
         if not self.__check_node_attrs("cluster"):
             self.__cluster(cluster_weight)
@@ -2035,11 +2182,18 @@ class Plot(object):
             - Hover shows disease name
 
         """
+        self.__prepare_network_data("comorbidity_network_plot")
         if not self.__check_node_attrs("cluster"):
             self.__cluster(self.comorbidity_beta_col)
         if not self.__check_node_attrs("order"):
-            self.__trajectory_order()
-            self.__comorbidity_order()
+            if self._trajectory.empty:
+                self.__update_node_attrs(
+                    order={node: 1 for node in self._nodes_attrs}
+                )
+                self._network_attrs.update({"order number": 1})
+            else:
+                self.__trajectory_order()
+                self.__comorbidity_order()
         self.__make_location_random(
             max_radius,
             min_radius,
@@ -2165,6 +2319,7 @@ class Plot(object):
         target = self.target_col
         cluster_weight = self.comorbidity_beta_col
 
+        self.__prepare_network_data("trajectory_plot", require_trajectory=True)
         if not self.__check_node_attrs("cluster"):
             self.__cluster(cluster_weight)
         if self._exposure:

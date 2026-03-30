@@ -134,6 +134,15 @@ from DiNetxify.visualization import Plot
 
 plot = Plot(
     phewas_result=phewas_result,
+)
+
+plot_with_comorbidity = Plot(
+    phewas_result=phewas_result,
+    comorbidity_result=com_network_result,
+)
+
+plot_with_all_results = Plot(
+    phewas_result=phewas_result,
     comorbidity_result=com_network_result,
     trajectory_result=trajectory_result,
     exposure_name="Exposure",
@@ -142,11 +151,13 @@ plot = Plot(
 )
 
 plot.phewas_plot("results/phewas_plot.png")
-plot.comorbidity_network_plot("results/comorbidity_network.html")
-plot.three_dimension_plot("results/three_dimension_network.html")
+plot_with_comorbidity.comorbidity_network_plot("results/comorbidity_network.html")
+plot_with_all_results.three_dimension_plot("results/three_dimension_network.html")
 ```
 
-For exposed-only cohorts, set `exposure_name=None`, `exposure_location=None`, and `exposure_size=None` when creating `Plot`.
+Only `phewas_result` is always required. Add `comorbidity_result` for the comorbidity network plot, and add both `comorbidity_result` and `trajectory_result` for the 3D network and trajectory plots.
+
+For exposed-only cohorts, set `exposure_name=None`, `exposure_location=None`, and `exposure_size=None` when creating the full network plot.
 
 ## Documentation
 
