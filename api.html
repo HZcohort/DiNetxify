@@ -7,14 +7,14 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>API Reference &mdash; DiNetxify  documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=92fd9be5" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="_static/doctools.js?v=9a2dae69"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -126,7 +126,7 @@
 <p>Below is a concise reference for <em><strong>DiNetxify</strong></em> classes and functions, based on the current package implementation.</p>
 <section id="class-diseasenetworkdata">
 <h2>Class <code class="docutils literal notranslate"><span class="pre">DiseaseNetworkData</span></code><a class="headerlink" href="#class-diseasenetworkdata" title="Link to this heading"></a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">DiseaseNetworkData</span><span class="p">(</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">DiseaseNetworkData</span><span class="p">(</span>
     <span class="n">study_design</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;cohort&quot;</span><span class="p">,</span>
     <span class="n">phecode_level</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
     <span class="n">min_required_icd_codes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
@@ -681,13 +681,13 @@
 <section id="class-plot">
 <h2>Class <code class="docutils literal notranslate"><span class="pre">Plot</span></code><a class="headerlink" href="#class-plot" title="Link to this heading"></a></h2>
 <p>Import with:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">DiNetxify.visualization</span> <span class="kn">import</span> <span class="n">Plot</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">DiNetxify.visualization</span><span class="w"> </span><span class="kn">import</span> <span class="n">Plot</span>
 </pre></div>
 </div>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Plot</span><span class="p">(</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Plot</span><span class="p">(</span>
     <span class="n">phewas_result</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
-    <span class="n">comorbidity_result</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
-    <span class="n">trajectory_result</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+    <span class="n">comorbidity_result</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">trajectory_result</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">exposure_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">exposure_location</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">exposure_size</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -709,12 +709,15 @@
 <span class="p">)</span>
 </pre></div>
 </div>
-<p>Create a visualization object from PheWAS, comorbidity-network, and trajectory result tables.</p>
+<p>Create a visualization object from PheWAS results, with optional comorbidity-network and trajectory result tables.</p>
 <p><strong>Required inputs:</strong></p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">phewas_result</span></code> (<code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">comorbidity_result</span></code> (<code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">trajectory_result</span></code> (<code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code>)</p></li>
+</ul>
+<p><strong>Optional network inputs:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">comorbidity_result</span></code> (<code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span> <span class="pre">|</span> <span class="pre">None</span></code>): Required for <code class="docutils literal notranslate"><span class="pre">comorbidity_network_plot()</span></code>, <code class="docutils literal notranslate"><span class="pre">three_dimension_plot()</span></code>, and <code class="docutils literal notranslate"><span class="pre">trajectory_plot()</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">trajectory_result</span></code> (<code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span> <span class="pre">|</span> <span class="pre">None</span></code>): Required for <code class="docutils literal notranslate"><span class="pre">three_dimension_plot()</span></code> and <code class="docutils literal notranslate"><span class="pre">trajectory_plot()</span></code>.</p></li>
 </ul>
 <p><strong>Optional display inputs:</strong></p>
 <ul class="simple">
@@ -749,7 +752,7 @@
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
-<p>Generate an interactive 3D HTML disease-network plot.</p>
+<p>Generate an interactive 3D HTML disease-network plot. Requires both <code class="docutils literal notranslate"><span class="pre">comorbidity_result</span></code> and <code class="docutils literal notranslate"><span class="pre">trajectory_result</span></code>.</p>
 </section>
 <hr class="docutils" />
 <section id="comorbidity-network-plot">
@@ -768,7 +771,7 @@
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
-<p>Generate an interactive 2D HTML comorbidity-network plot.</p>
+<p>Generate an interactive 2D HTML comorbidity-network plot. Requires <code class="docutils literal notranslate"><span class="pre">comorbidity_result</span></code>.</p>
 </section>
 <hr class="docutils" />
 <section id="trajectory-plot">
@@ -780,7 +783,7 @@
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
-<p>Generate trajectory plots as PNG files, one cluster per image.</p>
+<p>Generate trajectory plots as PNG files, one cluster per image. Requires both <code class="docutils literal notranslate"><span class="pre">comorbidity_result</span></code> and <code class="docutils literal notranslate"><span class="pre">trajectory_result</span></code>.</p>
 </section>
 <hr class="docutils" />
 <section id="phewas-plot">

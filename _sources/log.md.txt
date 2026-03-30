@@ -1,5 +1,10 @@
 # Changelog
 
+**0.1.13 - 2026-03-30**
+
+- Updated the `Plot` module so PheWAS, comorbidity, and trajectory plots can be created with only the result tables each plot type requires.
+
+
 **0.1.12 - 2026-03-11**
 
 - Fixed a bug in the visualization module.

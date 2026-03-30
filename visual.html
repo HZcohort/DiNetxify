@@ -7,14 +7,14 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Visualization &mdash; DiNetxify  documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=92fd9be5" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="_static/doctools.js?v=9a2dae69"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -49,6 +49,8 @@
 <li class="toctree-l1"><a class="reference internal" href="3d_analysis.html">Three-dimensional disease network analysis</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Visualization</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#initialize-a-plot-object">Initialize a <code class="docutils literal notranslate"><span class="pre">Plot</span></code> object</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#phewas-only">PheWAS only</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#phewas-plus-comorbidity-network">PheWAS plus comorbidity network</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#standard-or-matched-cohort">Standard or matched cohort</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#exposed-only-cohort">Exposed-only cohort</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#default-result-columns">Default result columns</a></li>
@@ -98,13 +100,30 @@
 <li><p>Comorbidity network results</p></li>
 <li><p>Disease trajectory results</p></li>
 </ul>
-<p>The visualization module assumes these three result tables use consistent phecode identifiers. During initialization, <code class="docutils literal notranslate"><span class="pre">Plot</span></code> checks the required columns, verifies that diseases in the comorbidity and trajectory tables also appear in the PheWAS table, and keeps only significant positive associations for the comorbidity and trajectory networks.</p>
+<p>The visualization module assumes all provided result tables use consistent phecode identifiers. During initialization, <code class="docutils literal notranslate"><span class="pre">Plot</span></code> always validates the PheWAS table, optionally validates the comorbidity and trajectory tables, verifies that diseases in provided network tables also appear in the PheWAS table, and keeps only significant positive associations for the comorbidity and trajectory networks.</p>
 <section id="initialize-a-plot-object">
 <h2>Initialize a <code class="docutils literal notranslate"><span class="pre">Plot</span></code> object<a class="headerlink" href="#initialize-a-plot-object" title="Link to this heading"></a></h2>
 <p>Import the plotting class from the visualization module:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">DiNetxify.visualization</span> <span class="kn">import</span> <span class="n">Plot</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">DiNetxify.visualization</span><span class="w"> </span><span class="kn">import</span> <span class="n">Plot</span>
 </pre></div>
 </div>
+<section id="phewas-only">
+<h3>PheWAS only<a class="headerlink" href="#phewas-only" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result_plot</span> <span class="o">=</span> <span class="n">Plot</span><span class="p">(</span>
+    <span class="n">phewas_result</span><span class="o">=</span><span class="n">phewas_result</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="phewas-plus-comorbidity-network">
+<h3>PheWAS plus comorbidity network<a class="headerlink" href="#phewas-plus-comorbidity-network" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result_plot</span> <span class="o">=</span> <span class="n">Plot</span><span class="p">(</span>
+    <span class="n">phewas_result</span><span class="o">=</span><span class="n">phewas_result</span><span class="p">,</span>
+    <span class="n">comorbidity_result</span><span class="o">=</span><span class="n">comorbidity_result</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
 <section id="standard-or-matched-cohort">
 <h3>Standard or matched cohort<a class="headerlink" href="#standard-or-matched-cohort" title="Link to this heading"></a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result_plot</span> <span class="o">=</span> <span class="n">Plot</span><span class="p">(</span>
@@ -152,6 +171,7 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">trajectory_significance_col='trajectory_p_significance'</span></code></p></li>
 </ul>
 <p>If your tables use different column names, pass the alternatives when creating <code class="docutils literal notranslate"><span class="pre">Plot</span></code>.</p>
+<p>Only <code class="docutils literal notranslate"><span class="pre">phewas_result</span></code> is always required. Add <code class="docutils literal notranslate"><span class="pre">comorbidity_result</span></code> for <code class="docutils literal notranslate"><span class="pre">Plot.comorbidity_network_plot()</span></code>, and add both <code class="docutils literal notranslate"><span class="pre">comorbidity_result</span></code> and <code class="docutils literal notranslate"><span class="pre">trajectory_result</span></code> for <code class="docutils literal notranslate"><span class="pre">Plot.three_dimension_plot()</span></code> and <code class="docutils literal notranslate"><span class="pre">Plot.trajectory_plot()</span></code>.</p>
 </section>
 <section id="optional-system-colors">
 <h3>Optional system colors<a class="headerlink" href="#optional-system-colors" title="Link to this heading"></a></h3>

@@ -589,8 +589,8 @@ from DiNetxify.visualization import Plot
 ```python
 class Plot(
     phewas_result: pd.DataFrame,
-    comorbidity_result: pd.DataFrame,
-    trajectory_result: pd.DataFrame,
+    comorbidity_result: pd.DataFrame | None = None,
+    trajectory_result: pd.DataFrame | None = None,
     exposure_name: str | None = None,
     exposure_location: Tuple[float] | None = None,
     exposure_size: float | None = None,
@@ -612,13 +612,16 @@ class Plot(
 )
 ```
 
-Create a visualization object from PheWAS, comorbidity-network, and trajectory result tables.
+Create a visualization object from PheWAS results, with optional comorbidity-network and trajectory result tables.
 
 **Required inputs:**
 
 - `phewas_result` (`pd.DataFrame`)
-- `comorbidity_result` (`pd.DataFrame`)
-- `trajectory_result` (`pd.DataFrame`)
+
+**Optional network inputs:**
+
+- `comorbidity_result` (`pd.DataFrame | None`): Required for `comorbidity_network_plot()`, `three_dimension_plot()`, and `trajectory_plot()`.
+- `trajectory_result` (`pd.DataFrame | None`): Required for `three_dimension_plot()` and `trajectory_plot()`.
 
 **Optional display inputs:**
 
@@ -655,7 +658,7 @@ three_dimension_plot(
 ) -> None
 ```
 
-Generate an interactive 3D HTML disease-network plot.
+Generate an interactive 3D HTML disease-network plot. Requires both `comorbidity_result` and `trajectory_result`.
 
 ---
 
@@ -676,7 +679,7 @@ comorbidity_network_plot(
 ) -> None
 ```
 
-Generate an interactive 2D HTML comorbidity-network plot.
+Generate an interactive 2D HTML comorbidity-network plot. Requires `comorbidity_result`.
 
 ---
 
@@ -690,7 +693,7 @@ trajectory_plot(
 ) -> None
 ```
 
-Generate trajectory plots as PNG files, one cluster per image.
+Generate trajectory plots as PNG files, one cluster per image. Requires both `comorbidity_result` and `trajectory_result`.
 
 ---
 
