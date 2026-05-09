@@ -15,6 +15,19 @@ from .utility import write_log, find_best_alpha_and_vars, check_variance_vif_sin
 import warnings
 warnings.filterwarnings('ignore')
 
+_threadpool_limiter = None
+
+def _limit_threadpools() -> None:
+    """Limit native math-library threads inside long-running model workers."""
+    global _threadpool_limiter
+    if _threadpool_limiter is not None:
+        return
+    try:
+        from threadpoolctl import threadpool_limits
+    except Exception:
+        return
+    _threadpool_limiter = threadpool_limits(limits=1)
+
 def logistic_model(args):
     """
     Fit a LR model to verify the comorbidity association between a disease pair.
@@ -227,6 +240,10 @@ def logistic_model(args):
     write_log(log_file_,message)
     return result_lst
 
+def logistic_model_indexed(args):
+    idx, d1, d2 = args
+    return idx, logistic_model((d1, d2))
+
 def logistic_model_wrapper(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,id_col,trajectory_ineligible:dict,
                             trajectory_eligible_withdate:dict,all_diagnosis_level:dict,covariates:list,
                             all_diseases_lst:list,log_file:str,parameters:dict):
@@ -272,6 +289,7 @@ def logistic_model_wrapper(d1:float,d2:float,phenotype_df_exposed:pd.DataFrame,i
     log_file_ = log_file
     parameters_ = parameters
     # Call the original function
+    _limit_threadpools()
     return logistic_model((d1, d2))
 
 def init_worker(phenotype_df_exposed:pd.DataFrame,id_col,trajectory_ineligible:dict,
@@ -317,6 +335,7 @@ def init_worker(phenotype_df_exposed:pd.DataFrame,id_col,trajectory_ineligible:d
     all_diseases_lst_ = all_diseases_lst
     log_file_ = log_file
     parameters_ = parameters
+    _limit_threadpools()
     
     
     

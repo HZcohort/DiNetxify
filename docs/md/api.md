@@ -355,6 +355,7 @@ phewas(
     phecode_exl: list = None,
     log_file: str = None,
     lifelines_disable: bool = False,
+    multiprocessing_start_method: str = None,
 ) -> pd.DataFrame
 ```
 
@@ -365,6 +366,7 @@ Run a phecode-wide association scan.
 - `n_threshold` and `proportion_threshold` are mutually exclusive.
 - For `cohort` and `matched cohort`, PheWAS fits Cox models.
 - For `exposed-only cohort`, significance is based on the case-count threshold rather than a model-based p-value.
+- `multiprocessing_start_method` (`"fork"`, `"spawn"`, or `"forkserver"`): optional override for PheWAS multiprocessing. On POSIX systems the default prefers `forkserver` when it is safe to use.
 
 ---
 
@@ -504,6 +506,7 @@ Fit pairwise non-temporal comorbidity models.
   - `alpha`, `auto_penalty`, `alpha_range`, `scaling_factor`
   - `n_PC`, `explained_variance`
 - `enforce_time_interval` (`bool`, default `True`)
+- `multiprocessing_start_method` (`"fork"`, `"spawn"`, or `"forkserver"`): optional override for Step 4 multiprocessing. On POSIX systems the default prefers `forkserver` when it is safe to use.
 
 ---
 
@@ -563,6 +566,7 @@ Fit temporal disease-trajectory models using nested case-control sampling.
   - `alpha`, `auto_penalty`, `alpha_range`, `scaling_factor`
   - `n_PC`, `explained_variance`
 - `enforce_time_interval` (`bool`, default `True`)
+- `multiprocessing_start_method` (`"fork"`, `"spawn"`, or `"forkserver"`): optional override for trajectory multiprocessing. On POSIX systems the default prefers `forkserver` when it is safe to use.
 
 ---
 
@@ -680,6 +684,7 @@ comorbidity_network_plot(
 ```
 
 Generate an interactive 2D HTML comorbidity-network plot. Requires `comorbidity_result`.
+When `trajectory_result` was also supplied to `Plot`, trajectory-only edges are included in module assignment so clusters match the trajectory and 3D plots.
 
 ---
 

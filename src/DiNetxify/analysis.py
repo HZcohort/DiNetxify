@@ -26,6 +26,34 @@ from .utility import (
 import warnings
 warnings.filterwarnings('ignore')
 
+def _resolve_multiprocessing_start_method(default_start_method, requested_start_method=None):
+    if requested_start_method is not None:
+        import multiprocessing
+        available_methods = multiprocessing.get_all_start_methods()
+        if requested_start_method not in available_methods:
+            raise ValueError(
+                f"Invalid multiprocessing_start_method '{requested_start_method}'. "
+                f"Available methods are: {available_methods}."
+            )
+        return requested_start_method
+
+    if default_start_method == 'fork':
+        import multiprocessing
+        import os
+        import __main__
+
+        main_file = getattr(__main__, '__file__', '')
+        main_file = str(main_file) if main_file is not None else ''
+        if (
+            'forkserver' in multiprocessing.get_all_start_methods() and
+            main_file and
+            not main_file.startswith('<') and
+            os.path.exists(main_file)
+        ):
+            return 'forkserver'
+
+    return default_start_method
+
 def phewas(
     data: DiseaseNetworkData, 
     covariates: list=None, 
@@ -39,7 +67,8 @@ def phewas(
     phecode_inc: list=None, 
     phecode_exl: list=None, 
     log_file: str=None, 
-    lifelines_disable: bool=False
+    lifelines_disable: bool=False,
+    multiprocessing_start_method: str=None
 ) -> pd.DataFrame:
     """
     Conducts Phenome-wide association studies (PheWAS) using the specified DiseaseNetworkData object.
@@ -123,6 +152,10 @@ def phewas(
         Whether to disable the use of lifelines. 
         While lifelines generally require a longer fitting time, they are more robust to violations of model assumptions.
 
+    multiprocessing_start_method : str, optional
+        Optional multiprocessing start method override when n_process > 1.
+        Supported values are those reported by multiprocessing.get_all_start_methods().
+
     Returns:
     ----------
     pd.DataFrame
@@ -169,8 +202,17 @@ def phewas(
     n_process,start_mehtod = n_process_check(n_process,'PheWAS')
     if n_process>1:
         import multiprocessing
-        from .cox import cox_conditional,cox_unconditional,init_worker #use original function as main function and init_worker to initialize global variables
+        default_start_method = start_mehtod
+        start_mehtod = _resolve_multiprocessing_start_method(
+            default_start_method,
+            multiprocessing_start_method
+        )
+        if start_mehtod != default_start_method:
+            print(f'Use {start_mehtod} start method for PheWAS analysis.')
+        from .cox import cox_conditional_indexed,cox_unconditional_indexed,init_worker
     else:
+        if multiprocessing_start_method is not None:
+            raise ValueError("'multiprocessing_start_method' can only be used when n_process > 1.")
         from .cox import cox_unconditional_wrapper,cox_conditional_wrapper #use wrapper function as main function
 
     time_start = time.time()
@@ -183,25 +225,38 @@ def phewas(
             else:
                 result_all.append(cox_unconditional_wrapper(phecode,data,covariates,n_threshold,log_file_final,lifelines_disable))
     elif n_process > 1:
-        with multiprocessing.get_context(start_mehtod).Pool(n_process, initializer=init_worker, initargs=(data,covariates,n_threshold,log_file_final,lifelines_disable)) as p:
-            if data.study_design == 'matched cohort':
-                result_all = list(
+        parameters_all = [
+            [idx, phecode] for idx, phecode in enumerate(phecode_lst_all)
+        ]
+        worker_func = (
+            cox_conditional_indexed
+            if data.study_design == 'matched cohort' else
+            cox_unconditional_indexed
+        )
+
+        def run_pool(start_method):
+            with multiprocessing.get_context(start_method).Pool(n_process, initializer=init_worker, initargs=(data,covariates,n_threshold,log_file_final,lifelines_disable)) as p:
+                indexed_results = list(
                     tqdm(
-                        p.imap(cox_conditional, phecode_lst_all), 
-                        total=len(phecode_lst_all),
-                        mininterval=15,
+                        p.imap_unordered(worker_func, parameters_all),
+                        total=len(parameters_all),
+                        miniters=1,
+                        mininterval=5,
                         smoothing=0
                     )
                 )
+            return [
+                result for _, result in sorted(indexed_results, key=lambda item: item[0])
+            ]
+
+        try:
+            result_all = run_pool(start_mehtod)
+        except Exception:
+            if multiprocessing_start_method is None and start_mehtod != default_start_method:
+                print(f'Multiprocessing with {start_mehtod} failed; retrying with {default_start_method}.')
+                result_all = run_pool(default_start_method)
             else:
-                result_all = list(
-                    tqdm(
-                        p.imap(cox_unconditional, phecode_lst_all), 
-                        total=len(phecode_lst_all),
-                        mininterval=15,
-                        smoothing=0
-                    )
-                )
+                raise
 
     time_end = time.time()
     time_spent = (time_end - time_start)/60
@@ -921,6 +976,11 @@ def comorbidity_network(
             explained_variance : float
                 Cumulative explained variance threshold to determine the number of principal components. 
                 Overrides 'n_PC' if specified.
+
+        Multiprocessing Parameters:
+            multiprocessing_start_method : str, optional
+                Optional multiprocessing start method override for this function.
+                Supported values are those reported by multiprocessing.get_all_start_methods().
                  
     Returns:
     ----------
@@ -955,6 +1015,8 @@ def comorbidity_network(
     if method not in allowed_methods:
         raise ValueError(f"Invalid method '{method}'. Allowed methods are: {allowed_methods}.")
 
+    multiprocessing_start_method = kwargs.pop('multiprocessing_start_method', None)
+
     # check covariates
     covariates = covariates_check(covariates,data.get_attribute('phenotype_info'))
     
@@ -962,8 +1024,17 @@ def comorbidity_network(
     n_process,start_mehtod = n_process_check(n_process,'comorbidity_network')
     if n_process>1:
         import multiprocessing
-        from .unconditional_logistic import logistic_model,init_worker #use original function as main function and init_worker to initialize global variables
+        default_start_method = start_mehtod
+        start_mehtod = _resolve_multiprocessing_start_method(
+            default_start_method,
+            multiprocessing_start_method
+        )
+        if start_mehtod != default_start_method:
+            print(f'Use {start_mehtod} start method for comorbidity_network analysis.')
+        from .unconditional_logistic import logistic_model_indexed,init_worker
     else:
+        if multiprocessing_start_method is not None:
+            raise ValueError("'multiprocessing_start_method' can only be used when n_process > 1.")
         from .unconditional_logistic import logistic_model_wrapper #use wrapper function as main function
 
     #check p-value correction method and cutoff
@@ -1007,26 +1078,40 @@ def comorbidity_network(
     #list of disease pair
     result_all = []
     if n_process == 1:
-        for d1,d2 in tqdm(comorbidity_sig[[phecode_d1_col,phecode_d2_col]].values, miniters=20,mininterval=60,smoothing=0):
+        for d1,d2 in tqdm(comorbidity_sig[[phecode_d1_col,phecode_d2_col]].values, miniters=1,mininterval=5,smoothing=0):
             result_all.append(logistic_model_wrapper(d1,d2,phenotype_df_exposed,id_col,trajectory_ineligible,trajectory_eligible_withdate,
                                                      all_diagnosis_level,covariates,all_diseases_lst,
                                                      log_file_final,parameter_dict))
     elif n_process > 1:
         parameters_all = []
-        for d1,d2 in comorbidity_sig[[phecode_d1_col,phecode_d2_col]].values:
-            parameters_all.append([d1,d2])
-        with multiprocessing.get_context(start_mehtod).Pool(n_process, initializer=init_worker, initargs=(phenotype_df_exposed,id_col,trajectory_ineligible,trajectory_eligible_withdate,
-                                                                                                            all_diagnosis_level,covariates,all_diseases_lst,
-                                                                                                            log_file_final,parameter_dict)) as p:
-            result_all = list(
-                tqdm(
-                    p.imap(logistic_model, parameters_all), 
-                    total=len(parameters_all),
-                    miniters=20,
-                    mininterval=60,
-                    smoothing=0,
+        for idx, (d1,d2) in enumerate(comorbidity_sig[[phecode_d1_col,phecode_d2_col]].values):
+            parameters_all.append([idx,d1,d2])
+
+        def run_pool(start_method):
+            with multiprocessing.get_context(start_method).Pool(n_process, initializer=init_worker, initargs=(phenotype_df_exposed,id_col,trajectory_ineligible,trajectory_eligible_withdate,
+                                                                                                                all_diagnosis_level,covariates,all_diseases_lst,
+                                                                                                                log_file_final,parameter_dict)) as p:
+                indexed_results = list(
+                    tqdm(
+                        p.imap_unordered(logistic_model_indexed, parameters_all), 
+                        total=len(parameters_all),
+                        miniters=1,
+                        mininterval=5,
+                        smoothing=0,
+                    )
                 )
-            )
+            return [
+                result for _, result in sorted(indexed_results, key=lambda item: item[0])
+            ]
+
+        try:
+            result_all = run_pool(start_mehtod)
+        except Exception:
+            if multiprocessing_start_method is None and start_mehtod != default_start_method:
+                print(f'Multiprocessing with {start_mehtod} failed; retrying with {default_start_method}.')
+                result_all = run_pool(default_start_method)
+            else:
+                raise
 
     time_end = time.time()
     time_spent = (time_end - time_start)/60
@@ -1248,6 +1333,10 @@ def disease_trajectory(
             enforce_time_interval : bool, default=True
                 If set to True, applies the specified minimum and maximum time intervals when determining the D2 outcome among individuals diagnosed with D1. 
                 These time interval requirements have been defined when calling the DiNetxify.DiseaseNetworkData.disease_pair() function.
+
+            multiprocessing_start_method : str, optional
+                Optional multiprocessing start method override when n_process > 1.
+                Supported values are those reported by multiprocessing.get_all_start_methods().
     
         Additional keyword argument to define the required columns in 'comorbidity_strength_result' and 'binomial_test_result':
             phecode_d1_col : str, default='phecode_d1'
@@ -1308,6 +1397,8 @@ def disease_trajectory(
     allowed_methods = {'RPCN', 'PCN_PCA', 'CN'}
     if method not in allowed_methods:
         raise ValueError(f"Invalid method '{method}'. Allowed methods are: {allowed_methods}.")
+
+    multiprocessing_start_method = kwargs.pop('multiprocessing_start_method', None)
     
     #check the matching variables and matching criteria
     matching_var_check(matching_var_dict,data.get_attribute('phenotype_info'))
@@ -1333,8 +1424,17 @@ def disease_trajectory(
     n_process,start_mehtod = n_process_check(n_process,'trajectory')
     if n_process>1:
         import multiprocessing
-        from .conditional_logistic import logistic_model,init_worker #use original function as main function and init_worker to initialize global variables
+        default_start_method = start_mehtod
+        start_mehtod = _resolve_multiprocessing_start_method(
+            default_start_method,
+            multiprocessing_start_method
+        )
+        if start_mehtod != default_start_method:
+            print(f'Use {start_mehtod} start method for trajectory analysis.')
+        from .conditional_logistic import logistic_model_indexed,init_worker
     else:
+        if multiprocessing_start_method is not None:
+            raise ValueError("'multiprocessing_start_method' can only be used when n_process > 1.")
         from .conditional_logistic import logistic_model_wrapper #use wrapper function as main function
 
     #check p-value correction method and cutoff
@@ -1407,18 +1507,35 @@ def disease_trajectory(
                                                     trajectory_eligible_withdate,all_diagnosis_level,covariates,all_diseases_lst,
                                                     matching_var_dict,matching_n,max_n_cases,log_file_final,parameter_dict))
     elif n_process > 1:
-        with multiprocessing.get_context(start_mehtod).Pool(n_process, initializer=init_worker, initargs=(phenotype_df_exposed,id_col,end_date_col,trajectory_ineligible,min_interval,max_interval,
-                                                                                                          trajectory_eligible_withdate,all_diagnosis_level,covariates,all_diseases_lst,
-                                                                                                          matching_var_dict,matching_n,max_n_cases,log_file_final,parameter_dict)) as p:
-            result_all = list(
-                tqdm(
-                    p.imap(logistic_model, parameters_all), 
-                    total=len(parameters_all),
-                    miniters=10,
-                    mininterval=60,
-                    smoothing=0,
+        parameters_indexed = [
+            [idx, d1_lst, d2] for idx, (d1_lst, d2) in enumerate(parameters_all)
+        ]
+
+        def run_pool(start_method):
+            with multiprocessing.get_context(start_method).Pool(n_process, initializer=init_worker, initargs=(phenotype_df_exposed,id_col,end_date_col,trajectory_ineligible,min_interval,max_interval,
+                                                                                                              trajectory_eligible_withdate,all_diagnosis_level,covariates,all_diseases_lst,
+                                                                                                              matching_var_dict,matching_n,max_n_cases,log_file_final,parameter_dict)) as p:
+                indexed_results = list(
+                    tqdm(
+                        p.imap_unordered(logistic_model_indexed, parameters_indexed), 
+                        total=len(parameters_indexed),
+                        miniters=1,
+                        mininterval=5,
+                        smoothing=0,
+                    )
                 )
-            )
+            return [
+                result for _, result in sorted(indexed_results, key=lambda item: item[0])
+            ]
+
+        try:
+            result_all = run_pool(start_mehtod)
+        except Exception:
+            if multiprocessing_start_method is None and start_mehtod != default_start_method:
+                print(f'Multiprocessing with {start_mehtod} failed; retrying with {default_start_method}.')
+                result_all = run_pool(default_start_method)
+            else:
+                raise
 
     time_end = time.time()
     time_spent = (time_end - time_start)/60

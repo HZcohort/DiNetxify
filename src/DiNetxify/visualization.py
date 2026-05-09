@@ -19,6 +19,7 @@ import itertools
 import random
 import math
 import os
+import warnings
 
 from collections import Counter
 
@@ -540,54 +541,16 @@ class Plot(object):
             )
 
         exposure = None
+        clustering_edges = self.__combined_clustering_edges(
+            comorbidity_result,
+            trajectory_result
+        )
+
         if require_trajectory:
             if trajectory_result.empty:
                 raise ValueError(
                     f"{plot_name} cannot be generated because trajectory_result has no significant positive associations to plot."
                 )
-
-            self.__check_disease_pairs(
-                trajectory_result,
-                comorbidity_result,
-                self.source_col,
-                self.target_col
-            )
-
-            trajectory_edges = trajectory_result[
-                [
-                    self.source_col,
-                    self.target_col,
-                    self.disease_pair_col,
-                    self.trajectory_beta_col
-                ]
-            ].copy()
-            trajectory_edges = trajectory_edges.rename(
-                columns={self.trajectory_beta_col: self.comorbidity_beta_col}
-            )
-            trajectory_edges['temp_name'] = trajectory_edges.apply(
-                lambda row: set(row[[self.source_col, self.target_col]]),
-                axis=1
-            )
-            comorbidity_result['temp_name'] = comorbidity_result.apply(
-                lambda row: set(row[[self.source_col, self.target_col]]),
-                axis=1
-            )
-            trajectory_edges = trajectory_edges[
-                ~trajectory_edges['temp_name'].isin(comorbidity_result['temp_name'])
-            ].drop(columns=['temp_name'])
-            del comorbidity_result['temp_name']
-
-            comorbidity_result = pd.concat(
-                [comorbidity_result, trajectory_edges],
-                axis=0,
-                ignore_index=True
-            )
-            comorbidity_result.drop_duplicates(
-                subset=[self.source_col, self.target_col],
-                inplace=True,
-                ignore_index=True,
-                keep="first"
-            )
 
             if self._exposure_name:
                 exposure = 1000
@@ -600,15 +563,15 @@ class Plot(object):
                 )
 
         self.__init_attrs(
-            comorbidity = comorbidity_result,
+            comorbidity = clustering_edges,
             trajectory = trajectory_result,
             exposure = exposure,
             commorbidity_nodes = (
                 self.__get_nodes(
-                    comorbidity_result,
+                    clustering_edges,
                     self.source_col,
                     self.target_col
-                ) if not comorbidity_result.empty else set()
+                ) if not clustering_edges.empty else set()
             ),
             trajectory_nodes = (
                 self.__get_nodes(
@@ -627,6 +590,55 @@ class Plot(object):
             self.disease_col,
             self.system_col,
         )
+
+    def __combined_clustering_edges(
+        self,
+        comorbidity_result: Df,
+        trajectory_result: Df
+    ) -> Df:
+        """Build the graph used for Louvain modules across all network plots."""
+        clustering_edges = comorbidity_result.copy()
+        if trajectory_result is None or trajectory_result.empty:
+            return clustering_edges
+
+        trajectory_edges = trajectory_result[
+            [
+                self.source_col,
+                self.target_col,
+                self.disease_pair_col,
+                self.trajectory_beta_col
+            ]
+        ].copy()
+        trajectory_edges = trajectory_edges.rename(
+            columns={self.trajectory_beta_col: self.comorbidity_beta_col}
+        )
+
+        pair_key_col = "__dinetxify_pair_key"
+        clustering_edges[pair_key_col] = clustering_edges.apply(
+            lambda row: frozenset(row[[self.source_col, self.target_col]]),
+            axis=1
+        )
+        trajectory_edges[pair_key_col] = trajectory_edges.apply(
+            lambda row: frozenset(row[[self.source_col, self.target_col]]),
+            axis=1
+        )
+        trajectory_edges = trajectory_edges[
+            ~trajectory_edges[pair_key_col].isin(clustering_edges[pair_key_col])
+        ]
+
+        clustering_edges = pd.concat(
+            [clustering_edges, trajectory_edges],
+            axis=0,
+            ignore_index=True
+        )
+        clustering_edges.drop_duplicates(
+            subset=[pair_key_col],
+            inplace=True,
+            ignore_index=True,
+            keep="first"
+        )
+        clustering_edges.drop(columns=[pair_key_col], inplace=True)
+        return clustering_edges
 
     @staticmethod
     def __check_disease_pairs(
@@ -662,9 +674,11 @@ class Plot(object):
 
         for pair in tra_pairs:
             if pair not in com_pairs:
-                Warning(
-                    "Disease pairs of trajectory network has \
-                    not been included comorbidity network"
+                warnings.warn(
+                    "Disease pairs in trajectory_result are not all present "
+                    "in comorbidity_result.",
+                    UserWarning,
+                    stacklevel=2
                 )
                 break
 
@@ -1584,6 +1598,32 @@ class Plot(object):
             {"cluster number":max(cluster_ans.values()) + 1}
         )
 
+    def __ensure_trajectory_nodes_clustered(self, plot_name: str) -> None:
+        if self._trajectory.empty:
+            return
+
+        trajectory_nodes = self.__get_nodes(
+            self._trajectory,
+            self._source,
+            self._target
+        )
+        if self._exposure is not None:
+            trajectory_nodes.discard(self._exposure)
+
+        missing_nodes = [
+            node for node in trajectory_nodes
+            if node not in self._nodes_attrs or "cluster" not in self._nodes_attrs[node]
+        ]
+        if missing_nodes:
+            missing_text = ", ".join(str(node) for node in sorted(missing_nodes, key=str))
+            raise ValueError(
+                f"{plot_name} cannot assign modules to trajectory node(s): {missing_text}. "
+                "Some nodes in trajectory_result do not appear in the comorbidity network "
+                "used for clustering. Create the Plot object with both comorbidity_result "
+                "and trajectory_result, then rerun comorbidity_network_plot() and the "
+                "trajectory/3D plot."
+            )
+
     def __make_location_random(
         self, 
         max_radius: float, 
@@ -1862,6 +1902,7 @@ class Plot(object):
                 self.comorbidity_beta_col,
                 max_attempts=max_attempts,
             )
+        self.__ensure_trajectory_nodes_clustered("get_louvain_clusters")
         return {node: attrs["cluster"] for node, attrs in self._nodes_attrs.items()}
     
     def three_dimension_plot(
@@ -1885,6 +1926,7 @@ class Plot(object):
         cluster_weight = self.comorbidity_beta_col
         if not self.__check_node_attrs("cluster"):
             self.__cluster(cluster_weight)
+        self.__ensure_trajectory_nodes_clustered("three_dimension_plot")
         if not self.__check_node_attrs("order"):
             self.__trajectory_order()
             self.__comorbidity_order()
@@ -2185,6 +2227,7 @@ class Plot(object):
         self.__prepare_network_data("comorbidity_network_plot")
         if not self.__check_node_attrs("cluster"):
             self.__cluster(self.comorbidity_beta_col)
+        self.__ensure_trajectory_nodes_clustered("comorbidity_network_plot")
         if not self.__check_node_attrs("order"):
             if self._trajectory.empty:
                 self.__update_node_attrs(
@@ -2322,6 +2365,7 @@ class Plot(object):
         self.__prepare_network_data("trajectory_plot", require_trajectory=True)
         if not self.__check_node_attrs("cluster"):
             self.__cluster(cluster_weight)
+        self.__ensure_trajectory_nodes_clustered("trajectory_plot")
         if self._exposure:
             exposure = self._exposure
         else:

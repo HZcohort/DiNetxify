@@ -125,6 +125,7 @@ Notes:
 
 - `output_dir` must already exist.
 - When using multiprocessing, keep the call inside `if __name__ == "__main__":`.
+- For standalone multiprocessing calls on Linux servers, `phewas()`, `comorbidity_network()`, and `disease_trajectory()` support `multiprocessing_start_method="forkserver"` or another available start method.
 - `method` can be `'RPCN'`, `'PCN_PCA'`, or `'CN'`.
 
 ### 3. Visualize the results
@@ -155,7 +156,7 @@ plot_with_comorbidity.comorbidity_network_plot("results/comorbidity_network.html
 plot_with_all_results.three_dimension_plot("results/three_dimension_network.html")
 ```
 
-Only `phewas_result` is always required. Add `comorbidity_result` for the comorbidity network plot, and add both `comorbidity_result` and `trajectory_result` for the 3D network and trajectory plots.
+Only `phewas_result` is always required. Add `comorbidity_result` for the comorbidity network plot, and add both `comorbidity_result` and `trajectory_result` for the 3D network and trajectory plots. When both network result tables are supplied, module assignment is shared across the comorbidity, trajectory, and 3D plots.
 
 For exposed-only cohorts, set `exposure_name=None`, `exposure_location=None`, and `exposure_size=None` when creating the full network plot.
 

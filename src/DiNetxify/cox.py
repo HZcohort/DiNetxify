@@ -15,6 +15,19 @@ from statsmodels.duration.hazard_regression import PHReg
 import warnings
 warnings.filterwarnings('ignore')
 
+_threadpool_limiter = None
+
+def _limit_threadpools() -> None:
+    """Limit native math-library threads inside Cox model workers."""
+    global _threadpool_limiter
+    if _threadpool_limiter is not None:
+        return
+    try:
+        from threadpoolctl import threadpool_limits
+    except Exception:
+        return
+    _threadpool_limiter = threadpool_limits(limits=1)
+
 
 def cox_conditional(phecode: float):
     """
@@ -306,7 +319,12 @@ def cox_conditional_wrapper(
     log_file_ = log_file
     lifelines_disable_ = lifelines_disable
     # Call the original function
+    _limit_threadpools()
     return cox_conditional(phecode)
+
+def cox_conditional_indexed(args):
+    idx, phecode = args
+    return idx, cox_conditional(phecode)
 
 def cox_unconditional(phecode:float):
     """
@@ -590,7 +608,12 @@ def cox_unconditional_wrapper(
     log_file_ = log_file
     lifelines_disable_ = lifelines_disable
     # Call the original function
+    _limit_threadpools()
     return cox_unconditional(phecode)
+
+def cox_unconditional_indexed(args):
+    idx, phecode = args
+    return idx, cox_unconditional(phecode)
 
 def init_worker(
     data:str,
@@ -633,6 +656,7 @@ def init_worker(
     n_threshold_ = n_threshold
     log_file_ = log_file
     lifelines_disable_ = lifelines_disable
+    _limit_threadpools()
 
 
     

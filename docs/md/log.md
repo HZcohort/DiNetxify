@@ -1,5 +1,12 @@
 # Changelog
 
+**0.1.14 - 2026-05-09**
+
+- Fixed inconsistent module assignments across comorbidity, trajectory, and 3D network plots when both comorbidity and trajectory results are provided.
+- Improved multiprocessing stability for PheWAS, comorbidity network, and disease trajectory model-fitting steps on Linux servers.
+- Added `multiprocessing_start_method` support for model-fitting steps and improved progress reporting for parallel runs.
+
+
 **0.1.13 - 2026-03-30**
 
 - Updated the `Plot` module so PheWAS, comorbidity, and trajectory plots can be created with only the result tables each plot type requires.
