@@ -223,7 +223,11 @@ def cox_conditional(phecode: float):
             status=np.asarray(dataset_analysis[outcome_col],dtype=int), 
             strata=np.asarray(dataset_analysis[matching_col])
         )
-        model_result = model.fit(method='bfgs',maxiter=300,disp=0)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            model_result = model.fit(method='bfgs',maxiter=300,disp=0)
+        #read convergence warning
+        converged = not any('converge' in str(x.message).lower()for x in w)
         if pd.isna(model_result.params[0]) or pd.isna(model_result.bse[0]):
             e_stats = 'No converge for statsmodels Cox'
             model = cph.fit(
@@ -237,7 +241,7 @@ def cox_conditional(phecode: float):
             result += [f'fitted_lifelines and delete the covariate(s): {del_covariates}',str_exp,str_noexp]
             result += [x for x in result_temp[['coef','se(coef)','p']]]
         else:
-            result += [f'fitted and delete the covariate(s): {del_covariates}',str_exp,str_noexp]
+            result += [f'fitted (converged={converged}) and delete the covariate(s): {del_covariates}',str_exp,str_noexp]
             result += [model_result.params[0],model_result.bse[0],model_result.pvalues[0]]
     except Exception as e:
         if e_stats:
@@ -514,7 +518,11 @@ def cox_unconditional(phecode:float):
             np.asarray(dataset_analysis[[exp_col]+final_covariates],dtype=float),
             status=np.asarray(dataset_analysis[outcome_col],dtype=int)
         )
-        model_result = model.fit(method='bfgs',maxiter=300,disp=0)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            model_result = model.fit(method='bfgs',maxiter=300,disp=0)
+        #read convergence warning
+        converged = not any('converge' in str(x.message).lower()for x in w)
         if pd.isna(model_result.params[0]) or pd.isna(model_result.bse[0]):
             e_stats = 'No converge for statsmodels Cox'
             model = cph.fit(
@@ -527,7 +535,7 @@ def cox_unconditional(phecode:float):
             result += [f'fitted_lifelines and delete the covariate(s): {del_covariates}',str_exp,str_noexp]
             result += [x for x in result_temp[['coef','se(coef)','p']]]
         else:
-            result += [f'fitted and delete the covariate(s): {del_covariates}',str_exp,str_noexp]
+            result += [f'fitted (converged={converged}) and delete the covariate(s): {del_covariates}',str_exp,str_noexp]
             result += [model_result.params[0],model_result.bse[0],model_result.pvalues[0]]
     except Exception as e:
         if e_stats:
