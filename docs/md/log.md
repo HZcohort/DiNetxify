@@ -1,6 +1,6 @@
 # Changelog
 
-**0.1.16 - 2026-08-26**
+**0.1.17 - 2026-08-26**
 
 - Added `method` and `maxiter` parameters to `phewas()` for configuring the `statsmodels` Cox optimizer.
 - Fixed forwarding of method-specific RPCN and PCN-PCA parameters in `disease_network_pipeline()`.
