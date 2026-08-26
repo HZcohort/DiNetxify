@@ -1,5 +1,10 @@
 # Changelog
 
+**0.1.15 - 2026-07-23**
+
+- enhance convergence warning handling in Cox model functions.
+
+
 **0.1.14 - 2026-05-09**
 
 - Fixed inconsistent module assignments across comorbidity, trajectory, and 3D network plots when both comorbidity and trajectory results are provided.
