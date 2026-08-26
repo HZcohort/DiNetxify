@@ -68,6 +68,8 @@ def cox_conditional(phecode: float):
     global covariates_
     global log_file_
     global lifelines_disable_
+    global method_
+    global maxiter_
 
     if lifelines_disable_:
         cph = None
@@ -225,7 +227,7 @@ def cox_conditional(phecode: float):
         )
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            model_result = model.fit(method='bfgs',maxiter=300,disp=0)
+            model_result = model.fit(method=method_,maxiter=maxiter_,disp=0)
         #read convergence warning
         converged = not any('converge' in str(x.message).lower()for x in w)
         if pd.isna(model_result.params[0]) or pd.isna(model_result.bse[0]):
@@ -279,12 +281,14 @@ def cox_conditional(phecode: float):
     return result
 
 def cox_conditional_wrapper(
-    phecode: str, 
-    data: DiseaseNetworkData, 
-    covariates: list, 
-    n_threshold: int, 
-    log_file: str, 
-    lifelines_disable: bool
+    phecode: str,
+    data: DiseaseNetworkData,
+    covariates: list,
+    n_threshold: int,
+    log_file: str,
+    lifelines_disable: bool,
+    method: str = 'newton',
+    maxiter: int = 300
 ) -> pd.DataFrame:
     """
     Wrapper for cox_conditional that assigns default values to global variables if needed.
@@ -302,9 +306,15 @@ def cox_conditional_wrapper(
     log_file : str
         Path and prefix for the log file.
     lifelines_disable : bool
-        Whether to disable the use of lifelines. 
-        While lifelines generally require a longer fitting time, they are more resilient to violations of model assumptions.    
-    
+        Whether to disable the use of lifelines.
+        While lifelines generally require a longer fitting time, they are more resilient to violations of model assumptions.
+    method : str, default='newton'
+        Optimization method passed to statsmodels PHReg.fit. See statsmodels docs for supported options
+        (e.g. 'newton', 'bfgs', 'lbfgs', 'nm', 'cg', 'ncg', 'powell'). Newton uses the exact Hessian and is
+        typically more reliable than BFGS, which can terminate at the starting values without progress.
+    maxiter : int, default=300
+        Maximum number of optimizer iterations passed to statsmodels PHReg.fit.
+
     Returns:
     ----------
     result : list
@@ -316,12 +326,16 @@ def cox_conditional_wrapper(
     global n_threshold_
     global log_file_
     global lifelines_disable_
+    global method_
+    global maxiter_
     # Set global variables if not already defined
     data_ = data
     covariates_ = covariates
     n_threshold_ = n_threshold
     log_file_ = log_file
     lifelines_disable_ = lifelines_disable
+    method_ = method
+    maxiter_ = maxiter
     # Call the original function
     _limit_threadpools()
     return cox_conditional(phecode)
@@ -368,13 +382,15 @@ def cox_unconditional(phecode:float):
     global n_threshold_
     global log_file_
     global lifelines_disable_
-    
+    global method_
+    global maxiter_
+
     if lifelines_disable_:
         cph = None
     else:
         from lifelines import CoxPHFitter
         cph = CoxPHFitter()
-    
+
     #phecode information
     phecode_dict = data_.phecode_info[phecode]
     disease_name = phecode_dict['phenotype']
@@ -520,7 +536,7 @@ def cox_unconditional(phecode:float):
         )
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            model_result = model.fit(method='bfgs',maxiter=300,disp=0)
+            model_result = model.fit(method=method_,maxiter=maxiter_,disp=0)
         #read convergence warning
         converged = not any('converge' in str(x.message).lower()for x in w)
         if pd.isna(model_result.params[0]) or pd.isna(model_result.bse[0]):
@@ -573,12 +589,14 @@ def cox_unconditional(phecode:float):
     return result
 
 def cox_unconditional_wrapper(
-    phecode:str, 
-    data:DiseaseNetworkData, 
-    covariates:list, 
-    n_threshold:int, 
-    log_file:str, 
-    lifelines_disable:bool
+    phecode:str,
+    data:DiseaseNetworkData,
+    covariates:list,
+    n_threshold:int,
+    log_file:str,
+    lifelines_disable:bool,
+    method: str = 'newton',
+    maxiter: int = 300
 ) -> None:
     """
     Wrapper for cox_unconditional that assigns default values to global variables if needed.
@@ -597,6 +615,12 @@ def cox_unconditional_wrapper(
         Path and prefix for the log file where output will be written.
     lifelines_disable : bool
         Whether to disable the use of lifelines.
+    method : str, default='newton'
+        Optimization method passed to statsmodels PHReg.fit. See statsmodels docs for supported options
+        (e.g. 'newton', 'bfgs', 'lbfgs', 'nm', 'cg', 'ncg', 'powell'). Newton uses the exact Hessian and is
+        typically more reliable than BFGS, which can terminate at the starting values without progress.
+    maxiter : int, default=300
+        Maximum number of optimizer iterations passed to statsmodels PHReg.fit.
 
     Returns:
     ----------
@@ -609,12 +633,16 @@ def cox_unconditional_wrapper(
     global n_threshold_
     global log_file_
     global lifelines_disable_
+    global method_
+    global maxiter_
     # Set global variables if not already defined
     data_ = data
     covariates_ = covariates
     n_threshold_ = n_threshold
     log_file_ = log_file
     lifelines_disable_ = lifelines_disable
+    method_ = method
+    maxiter_ = maxiter
     # Call the original function
     _limit_threadpools()
     return cox_unconditional(phecode)
@@ -628,7 +656,9 @@ def init_worker(
     covariates:list,
     n_threshold:int,
     log_file:str,
-    lifelines_disable:bool
+    lifelines_disable:bool,
+    method: str = 'newton',
+    maxiter: int = 300
 ) -> None:
     """
     This function sets up the necessary global variables for a worker process in a multiprocessing environment.
@@ -645,7 +675,11 @@ def init_worker(
     log_file : str
         Path and prefix for the log file where output will be written.
     lifelines_disable : bool
-        Whether to disable the use of lifelines. 
+        Whether to disable the use of lifelines.
+    method : str, default='newton'
+        Optimization method passed to statsmodels PHReg.fit inside each worker.
+    maxiter : int, default=300
+        Maximum number of optimizer iterations passed to statsmodels PHReg.fit inside each worker.
 
     Returns:
     ----------
@@ -658,12 +692,16 @@ def init_worker(
     global n_threshold_
     global log_file_
     global lifelines_disable_
+    global method_
+    global maxiter_
     #assign values
     data_ = data
     covariates_ = covariates
     n_threshold_ = n_threshold
     log_file_ = log_file
     lifelines_disable_ = lifelines_disable
+    method_ = method
+    maxiter_ = maxiter
     _limit_threadpools()
 
 
