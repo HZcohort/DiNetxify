@@ -356,6 +356,8 @@ phewas(
     log_file: str = None,
     lifelines_disable: bool = False,
     multiprocessing_start_method: str = None,
+    method: str = "bfgs",
+    maxiter: int = 300,
 ) -> pd.DataFrame
 ```
 
@@ -367,6 +369,9 @@ Run a phecode-wide association scan.
 - For `cohort` and `matched cohort`, PheWAS fits Cox models.
 - For `exposed-only cohort`, significance is based on the case-count threshold rather than a model-based p-value.
 - `multiprocessing_start_method` (`"fork"`, `"spawn"`, or `"forkserver"`): optional override for PheWAS multiprocessing. On POSIX systems the default prefers `forkserver` when it is safe to use.
+- `method`: optimizer passed to `statsmodels` Cox model fitting. Supported values are `"newton"`, `"bfgs"`, `"lbfgs"`, `"nm"`, `"cg"`, `"ncg"`, `"powell"`, and `"basinhopping"`.
+- `maxiter`: maximum number of optimizer iterations. The default is `300`.
+- This optimizer `method` is separate from `disease_network_pipeline(method=...)`, which selects `"RPCN"`, `"PCN_PCA"`, or `"CN"` for network analyses.
 
 ---
 

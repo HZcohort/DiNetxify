@@ -69,7 +69,7 @@ def phewas(
     log_file: str=None,
     lifelines_disable: bool=False,
     multiprocessing_start_method: str=None,
-    method: str='newton',
+    method: str='bfgs',
     maxiter: int=300
 ) -> pd.DataFrame:
     """
@@ -158,7 +158,7 @@ def phewas(
         Optional multiprocessing start method override when n_process > 1.
         Supported values are those reported by multiprocessing.get_all_start_methods().
 
-    method : str, default='newton'
+    method : str, default='bfgs'
         Optimization method for the Cox model fit (passed to statsmodels PHReg.fit).
         Supported values include 'newton', 'bfgs', 'lbfgs', 'nm', 'cg', 'ncg', 'powell'.
         'newton' computes the Hessian directly at each step and is more reliable than the

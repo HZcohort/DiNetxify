@@ -287,7 +287,7 @@ def cox_conditional_wrapper(
     n_threshold: int,
     log_file: str,
     lifelines_disable: bool,
-    method: str = 'newton',
+    method: str = 'bfgs',
     maxiter: int = 300
 ) -> pd.DataFrame:
     """
@@ -308,7 +308,7 @@ def cox_conditional_wrapper(
     lifelines_disable : bool
         Whether to disable the use of lifelines.
         While lifelines generally require a longer fitting time, they are more resilient to violations of model assumptions.
-    method : str, default='newton'
+    method : str, default='bfgs'
         Optimization method passed to statsmodels PHReg.fit. See statsmodels docs for supported options
         (e.g. 'newton', 'bfgs', 'lbfgs', 'nm', 'cg', 'ncg', 'powell'). Newton uses the exact Hessian and is
         typically more reliable than BFGS, which can terminate at the starting values without progress.
@@ -595,7 +595,7 @@ def cox_unconditional_wrapper(
     n_threshold:int,
     log_file:str,
     lifelines_disable:bool,
-    method: str = 'newton',
+    method: str = 'bfgs',
     maxiter: int = 300
 ) -> None:
     """
@@ -615,7 +615,7 @@ def cox_unconditional_wrapper(
         Path and prefix for the log file where output will be written.
     lifelines_disable : bool
         Whether to disable the use of lifelines.
-    method : str, default='newton'
+    method : str, default='bfgs'
         Optimization method passed to statsmodels PHReg.fit. See statsmodels docs for supported options
         (e.g. 'newton', 'bfgs', 'lbfgs', 'nm', 'cg', 'ncg', 'powell'). Newton uses the exact Hessian and is
         typically more reliable than BFGS, which can terminate at the starting values without progress.
@@ -657,7 +657,7 @@ def init_worker(
     n_threshold:int,
     log_file:str,
     lifelines_disable:bool,
-    method: str = 'newton',
+    method: str = 'bfgs',
     maxiter: int = 300
 ) -> None:
     """
@@ -676,7 +676,7 @@ def init_worker(
         Path and prefix for the log file where output will be written.
     lifelines_disable : bool
         Whether to disable the use of lifelines.
-    method : str, default='newton'
+    method : str, default='bfgs'
         Optimization method passed to statsmodels PHReg.fit inside each worker.
     maxiter : int, default=300
         Maximum number of optimizer iterations passed to statsmodels PHReg.fit inside each worker.

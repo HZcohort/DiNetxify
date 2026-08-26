@@ -127,6 +127,7 @@ Notes:
 - When using multiprocessing, keep the call inside `if __name__ == "__main__":`.
 - For standalone multiprocessing calls on Linux servers, `phewas()`, `comorbidity_network()`, and `disease_trajectory()` support `multiprocessing_start_method="forkserver"` or another available start method.
 - `method` can be `'RPCN'`, `'PCN_PCA'`, or `'CN'`.
+- For standalone PheWAS, `phewas(method="bfgs", maxiter=300)` controls the `statsmodels` Cox optimizer. This is separate from the pipeline `method`, which selects the network-analysis method.
 
 ### 3. Visualize the results
 
