@@ -55,20 +55,22 @@ def _resolve_multiprocessing_start_method(default_start_method, requested_start_
     return default_start_method
 
 def phewas(
-    data: DiseaseNetworkData, 
-    covariates: list=None, 
-    proportion_threshold: float=None, 
-    n_threshold: int=None, 
-    n_process: int=1, 
-    correction: str='bonferroni', 
-    cutoff: float=0.05, 
-    system_inc: list=None, 
-    system_exl: list=None, 
-    phecode_inc: list=None, 
-    phecode_exl: list=None, 
-    log_file: str=None, 
+    data: DiseaseNetworkData,
+    covariates: list=None,
+    proportion_threshold: float=None,
+    n_threshold: int=None,
+    n_process: int=1,
+    correction: str='bonferroni',
+    cutoff: float=0.05,
+    system_inc: list=None,
+    system_exl: list=None,
+    phecode_inc: list=None,
+    phecode_exl: list=None,
+    log_file: str=None,
     lifelines_disable: bool=False,
-    multiprocessing_start_method: str=None
+    multiprocessing_start_method: str=None,
+    method: str='newton',
+    maxiter: int=300
 ) -> pd.DataFrame:
     """
     Conducts Phenome-wide association studies (PheWAS) using the specified DiseaseNetworkData object.
@@ -156,6 +158,17 @@ def phewas(
         Optional multiprocessing start method override when n_process > 1.
         Supported values are those reported by multiprocessing.get_all_start_methods().
 
+    method : str, default='newton'
+        Optimization method for the Cox model fit (passed to statsmodels PHReg.fit).
+        Supported values include 'newton', 'bfgs', 'lbfgs', 'nm', 'cg', 'ncg', 'powell'.
+        'newton' computes the Hessian directly at each step and is more reliable than the
+        quasi-Newton 'bfgs', which can silently terminate at the starting values when a
+        step fails to improve the objective (mistaking the failed step for convergence).
+
+    maxiter : int, default=300
+        Maximum number of optimizer iterations for the Cox model fit
+        (passed to statsmodels PHReg.fit).
+
     Returns:
     ----------
     pd.DataFrame
@@ -182,6 +195,16 @@ def phewas(
     #check lifelines_disable
     if not isinstance(lifelines_disable,bool):
         raise TypeError("The input 'lifelines_disable' must be a bool.")
+
+    #check optimizer method and maxiter
+    _allowed_methods = {'newton','bfgs','lbfgs','nm','cg','ncg','powell','basinhopping'}
+    if not isinstance(method,str):
+        raise TypeError("The input 'method' must be a string.")
+    if method.lower() not in _allowed_methods:
+        raise ValueError(f"The input 'method' must be one of {sorted(_allowed_methods)}.")
+    method = method.lower()
+    if not isinstance(maxiter,int) or isinstance(maxiter,bool) or maxiter <= 0:
+        raise ValueError("The input 'maxiter' must be a positive integer.")
     
     #check threshold
     n_exposed = data.get_attribute('phenotype_statistics')['n_exposed']
@@ -221,9 +244,9 @@ def phewas(
     if n_process == 1:
         for phecode in tqdm(phecode_lst_all, mininterval=15,smoothing=0):
             if data.study_design == 'matched cohort':
-                result_all.append(cox_conditional_wrapper(phecode,data,covariates,n_threshold,log_file_final,lifelines_disable))
+                result_all.append(cox_conditional_wrapper(phecode,data,covariates,n_threshold,log_file_final,lifelines_disable,method,maxiter))
             else:
-                result_all.append(cox_unconditional_wrapper(phecode,data,covariates,n_threshold,log_file_final,lifelines_disable))
+                result_all.append(cox_unconditional_wrapper(phecode,data,covariates,n_threshold,log_file_final,lifelines_disable,method,maxiter))
     elif n_process > 1:
         parameters_all = [
             [idx, phecode] for idx, phecode in enumerate(phecode_lst_all)
@@ -235,7 +258,7 @@ def phewas(
         )
 
         def run_pool(start_method):
-            with multiprocessing.get_context(start_method).Pool(n_process, initializer=init_worker, initargs=(data,covariates,n_threshold,log_file_final,lifelines_disable)) as p:
+            with multiprocessing.get_context(start_method).Pool(n_process, initializer=init_worker, initargs=(data,covariates,n_threshold,log_file_final,lifelines_disable,method,maxiter)) as p:
                 indexed_results = list(
                     tqdm(
                         p.imap_unordered(worker_func, parameters_all),
