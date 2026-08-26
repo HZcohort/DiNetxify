@@ -211,15 +211,15 @@ def disease_network_pipeline(
     #pipeline_mode check
     if pipeline_mode not in ['v1','v2']:
         raise ValueError("Invalid pipeline_mode. Must be either 'v1' or 'v2'.")
-        #method and kwargs check
-        if kwargs:
-            method_kwargs = kwargs.copy()
-            parameter_dict = validate_method_specific_kwargs(method, method_kwargs)
-            parameter_dict.pop('method', None)
-            if method_kwargs:
-                raise ValueError(f"Unexpected keyword arguments provided: {method_kwargs.keys()}")
-        else:
-            parameter_dict = {}
+    #method and kwargs check
+    if kwargs:
+        method_kwargs = kwargs.copy()
+        parameter_dict = validate_method_specific_kwargs(method, method_kwargs)
+        parameter_dict.pop('method', None)
+        if method_kwargs:
+            raise ValueError(f"Unexpected keyword arguments provided: {method_kwargs.keys()}")
+    else:
+        parameter_dict = {}
     #check covariates
     # covariates = covariates_check(covariates,data.get_attribute('phenotype_info'))
     #check matching_var_dict
