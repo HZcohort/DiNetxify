@@ -126,7 +126,7 @@ Main parameters:
 
 ## Comorbidity network plot
 
-`Plot.comorbidity_network_plot()` creates an interactive HTML view of the comorbidity network. Diseases are grouped into communities, colored by disease system, and connected by significant comorbidity edges.
+`Plot.comorbidity_network_plot()` creates an interactive HTML view of the comorbidity network. Diseases are grouped into communities, colored by disease system, and connected by significant network edges. If the `Plot` object was initialized with both `comorbidity_result` and `trajectory_result`, trajectory-only edges are included when assigning modules so module labels stay consistent with `trajectory_plot()` and `three_dimension_plot()`. If only `comorbidity_result` was provided, modules are based on comorbidity edges only.
 
 Example:
 

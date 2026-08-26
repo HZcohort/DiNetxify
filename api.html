@@ -460,6 +460,9 @@
     <span class="n">phecode_exl</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">log_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">lifelines_disable</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">multiprocessing_start_method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;bfgs&quot;</span><span class="p">,</span>
+    <span class="n">maxiter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">300</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
@@ -469,6 +472,10 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">n_threshold</span></code> and <code class="docutils literal notranslate"><span class="pre">proportion_threshold</span></code> are mutually exclusive.</p></li>
 <li><p>For <code class="docutils literal notranslate"><span class="pre">cohort</span></code> and <code class="docutils literal notranslate"><span class="pre">matched</span> <span class="pre">cohort</span></code>, PheWAS fits Cox models.</p></li>
 <li><p>For <code class="docutils literal notranslate"><span class="pre">exposed-only</span> <span class="pre">cohort</span></code>, significance is based on the case-count threshold rather than a model-based p-value.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">multiprocessing_start_method</span></code> (<code class="docutils literal notranslate"><span class="pre">&quot;fork&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;spawn&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;forkserver&quot;</span></code>): optional override for PheWAS multiprocessing. On POSIX systems the default prefers <code class="docutils literal notranslate"><span class="pre">forkserver</span></code> when it is safe to use.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">method</span></code>: optimizer passed to <code class="docutils literal notranslate"><span class="pre">statsmodels</span></code> Cox model fitting. Supported values are <code class="docutils literal notranslate"><span class="pre">&quot;newton&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;bfgs&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;lbfgs&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;nm&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;cg&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;ncg&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;powell&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">&quot;basinhopping&quot;</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">maxiter</span></code>: maximum number of optimizer iterations. The default is <code class="docutils literal notranslate"><span class="pre">300</span></code>.</p></li>
+<li><p>This optimizer <code class="docutils literal notranslate"><span class="pre">method</span></code> is separate from <code class="docutils literal notranslate"><span class="pre">disease_network_pipeline(method=...)</span></code>, which selects <code class="docutils literal notranslate"><span class="pre">&quot;RPCN&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;PCN_PCA&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;CN&quot;</span></code> for network analyses.</p></li>
 </ul>
 </section>
 <hr class="docutils" />
@@ -602,6 +609,7 @@
 </ul>
 </li>
 <li><p><code class="docutils literal notranslate"><span class="pre">enforce_time_interval</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">True</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">multiprocessing_start_method</span></code> (<code class="docutils literal notranslate"><span class="pre">&quot;fork&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;spawn&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;forkserver&quot;</span></code>): optional override for Step 4 multiprocessing. On POSIX systems the default prefers <code class="docutils literal notranslate"><span class="pre">forkserver</span></code> when it is safe to use.</p></li>
 </ul>
 </section>
 <hr class="docutils" />
@@ -663,6 +671,7 @@
 </ul>
 </li>
 <li><p><code class="docutils literal notranslate"><span class="pre">enforce_time_interval</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">True</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">multiprocessing_start_method</span></code> (<code class="docutils literal notranslate"><span class="pre">&quot;fork&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;spawn&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;forkserver&quot;</span></code>): optional override for trajectory multiprocessing. On POSIX systems the default prefers <code class="docutils literal notranslate"><span class="pre">forkserver</span></code> when it is safe to use.</p></li>
 </ul>
 </section>
 <hr class="docutils" />
@@ -771,7 +780,8 @@
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
-<p>Generate an interactive 2D HTML comorbidity-network plot. Requires <code class="docutils literal notranslate"><span class="pre">comorbidity_result</span></code>.</p>
+<p>Generate an interactive 2D HTML comorbidity-network plot. Requires <code class="docutils literal notranslate"><span class="pre">comorbidity_result</span></code>.
+When <code class="docutils literal notranslate"><span class="pre">trajectory_result</span></code> was also supplied to <code class="docutils literal notranslate"><span class="pre">Plot</span></code>, trajectory-only edges are included in module assignment so clusters match the trajectory and 3D plots.</p>
 </section>
 <hr class="docutils" />
 <section id="trajectory-plot">

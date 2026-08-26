@@ -78,6 +78,22 @@
              
   <section id="changelog">
 <h1>Changelog<a class="headerlink" href="#changelog" title="Link to this heading"></a></h1>
+<p><strong>0.1.16 - 2026-08-26</strong></p>
+<ul class="simple">
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">method</span></code> and <code class="docutils literal notranslate"><span class="pre">maxiter</span></code> parameters to <code class="docutils literal notranslate"><span class="pre">phewas()</span></code> for configuring the <code class="docutils literal notranslate"><span class="pre">statsmodels</span></code> Cox optimizer.</p></li>
+<li><p>Fixed forwarding of method-specific RPCN and PCN-PCA parameters in <code class="docutils literal notranslate"><span class="pre">disease_network_pipeline()</span></code>.</p></li>
+<li><p>Updated the analysis API documentation to distinguish the PheWAS optimizer method from the pipeline network-analysis method.</p></li>
+</ul>
+<p><strong>0.1.15 - 2026-07-23</strong></p>
+<ul class="simple">
+<li><p>enhance convergence warning handling in Cox model functions.</p></li>
+</ul>
+<p><strong>0.1.14 - 2026-05-09</strong></p>
+<ul class="simple">
+<li><p>Fixed inconsistent module assignments across comorbidity, trajectory, and 3D network plots when both comorbidity and trajectory results are provided.</p></li>
+<li><p>Improved multiprocessing stability for PheWAS, comorbidity network, and disease trajectory model-fitting steps on Linux servers.</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">multiprocessing_start_method</span></code> support for model-fitting steps and improved progress reporting for parallel runs.</p></li>
+</ul>
 <p><strong>0.1.13 - 2026-03-30</strong></p>
 <ul class="simple">
 <li><p>Updated the <code class="docutils literal notranslate"><span class="pre">Plot</span></code> module so PheWAS, comorbidity, and trajectory plots can be created with only the result tables each plot type requires.</p></li>
