@@ -287,8 +287,8 @@ def cox_conditional_wrapper(
     n_threshold: int,
     log_file: str,
     lifelines_disable: bool,
-    method: str = 'bfgs',
-    maxiter: int = 300
+    method: str,
+    maxiter: int
 ) -> pd.DataFrame:
     """
     Wrapper for cox_conditional that assigns default values to global variables if needed.
@@ -595,8 +595,8 @@ def cox_unconditional_wrapper(
     n_threshold:int,
     log_file:str,
     lifelines_disable:bool,
-    method: str = 'bfgs',
-    maxiter: int = 300
+    method: str,
+    maxiter: int
 ) -> None:
     """
     Wrapper for cox_unconditional that assigns default values to global variables if needed.
@@ -657,8 +657,8 @@ def init_worker(
     n_threshold:int,
     log_file:str,
     lifelines_disable:bool,
-    method: str = 'bfgs',
-    maxiter: int = 300
+    method: str,
+    maxiter: int
 ) -> None:
     """
     This function sets up the necessary global variables for a worker process in a multiprocessing environment.
