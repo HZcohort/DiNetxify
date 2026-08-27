@@ -245,9 +245,9 @@ def logistic_model(args):
                     result_final = MyConditionalResultsWrapper(result_final) #add aic property
                     beta,se,p,aic = result_final.params[0], result_final.bse[0],result_final.pvalues[0],result_final.aic
                     #get the z-value dictionary
-                    z_value_dict = {var:z for var,z in zip(final_model_vars,result_final.tvalues)}
+                    zvalue_dict = {var:z for var,z in zip(final_model_vars,result_final.tvalues)}
                     result_lst += [f'{method}_auto',f'fitted and delete the diseases variable(s): {del_diseases_var} and covariate(s): {del_covariates}',
-                                f'{final_model_vars}',f'{z_value_dict}',final_best_alpha,beta,se,p,aic]
+                                f'{final_model_vars}',f'{zvalue_dict}',final_best_alpha,beta,se,p,aic]
                     message += f'method={method}_auto (alpha={final_best_alpha}, number of other disease included as covariates: {len(final_disease_vars)}); successfully fitted; '
                 except Exception as e:
                     result_lst += [f'{method}_auto', str(e)]
@@ -274,7 +274,7 @@ def logistic_model(args):
                     result_final = MyConditionalResultsWrapper(result_final) #add aic property
                     beta,se,p,aic = result_final.params[0],result_final.bse[0],result_final.pvalues[0],result_final.aic
                     #get the z-value dictionary
-                    z_value_dict = {var:z for var,z in zip(final_model_vars,result_final.tvalues)}
+                    zvalue_dict = {var:z for var,z in zip(final_model_vars,result_final.tvalues)}
                     result_lst += [f'{method}_auto',f'fitted and delete the diseases variable(s): {del_diseases_var} and covariate(s): {del_covariates}',
                                 f'{final_model_vars}',f'{zvalue_dict}',alpha_single,beta,se,p,aic]
                     message += f'method={method}_fixed_alpha (alpha={alpha_single}, number of other disease included as covariates: {len(final_disease_vars)}); successfully fitted; '
