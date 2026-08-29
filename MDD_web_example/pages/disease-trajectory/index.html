@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Interactive visualization of recorded disease ordering.">
+  <title>Interactive Disease Trajectory</title>
+  <link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <span class="eyebrow">DiNetxify results</span>
+    <h1>Interactive Disease Trajectory</h1>
+    <p>Interactive visualization of recorded disease ordering.</p>
+  </header>
+  <nav class="site-nav" aria-label="Visualization navigation">
+    <a href="../../index.html">Home</a>
+<a href="../../pages/phewas/index.html">PheWAS</a>
+<a href="../../pages/comorbidity-network/index.html">Comorbidity Network</a>
+<a href="../../pages/disease-trajectory/index.html" class="active">Disease Trajectory</a>
+<a href="../../pages/3d-disease-network/index.html">3D Disease Network</a>
+  </nav>
+  <main>
+    <section class="section-panel"><h2>Within-module Temporal Ordering of Recorded Diagnoses</h2><p>Arrows indicate recorded temporal ordering and do not establish causality.</p>
+      <div class="metric-grid"><div class="metric-card"><strong>8</strong><span>Modules with temporal ordering</span></div><div class="metric-card"><strong>87</strong><span>Trajectory nodes</span></div><div class="metric-card"><strong>127</strong><span>Directed temporal pairs</span></div></div></section>
+    <section class="network-control-grid" aria-label="Disease-trajectory controls">
+      <div class="settings-card"><h2>Analysis and module</h2><label for="trajectoryAnalysisSelect">Analysis</label><select id="trajectoryAnalysisSelect"></select><label for="trajectoryModuleSelect">Comorbidity module</label><select id="trajectoryModuleSelect"></select></div>
+      <div class="settings-card"><h2>Search and labeling</h2><label for="trajectorySearch">Search condition or Phecode</label><input id="trajectorySearch" type="search" list="trajectoryNodeOptions" placeholder="Example: anxiety or 300.1"><datalist id="trajectoryNodeOptions"></datalist><label for="trajectoryLabelMode">Labels</label><select id="trajectoryLabelMode"><option value="all">All visible nodes</option><option value="major">Major nodes</option><option value="selected">Selected and connected</option><option value="none">No labels</option></select></div>
+      <div class="settings-card"><h2>Display settings</h2><label for="trajectoryEdgeFilter">Minimum temporal-ordering OR <span id="trajectoryEdgeFilterValue" class="network-range-value">1</span></label><input id="trajectoryEdgeFilter" type="range"><label for="trajectoryNodeScale">Node size <span id="trajectoryNodeScaleValue" class="network-range-value">100%</span></label><input id="trajectoryNodeScale" type="range" min="0.45" max="1.6" step="0.05" value="1"><button id="trajectoryResetFilters" type="button" class="secondary">Reset settings</button></div>
+    </section>
+    <section class="status-row"><span><strong id="trajectoryAnalysisName"></strong></span><span><strong id="trajectoryModuleName"></strong></span><span><strong id="trajectoryVisibleNodes">0</strong> visible nodes</span><span><strong id="trajectoryVisibleEdges">0</strong> visible temporal pairs</span><span>Selected condition: <strong id="trajectorySelectedNode">None</strong></span></section>
+    <section class="plot-card"><div class="plot-toolbar"><button id="trajectoryDownloadPng" type="button">PNG</button><button id="trajectoryDownloadSvg" type="button">SVG</button><button id="trajectoryZoomIn" type="button">+</button><button id="trajectoryZoomOut" type="button">-</button><button id="trajectoryResetView" type="button">Reset</button></div>
+      <div class="network-viewer"><div class="network-canvas-wrap"><svg id="trajectoryNetworkSvg"><defs><marker id="trajectoryArrow" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L7,3 z" fill="#475467"></path></marker></defs><g id="trajectoryNetworkViewport"><g id="trajectoryEdges"></g><g id="trajectoryNodes"></g><g id="trajectoryLabels"></g></g></svg><div id="trajectoryTooltip" class="tooltip"></div></div>
+      <aside class="network-side"><section class="network-panel"><h3>Selected Condition</h3><div id="trajectoryDetails" class="empty-state">No condition selected.</div></section><section class="network-panel"><h3>Earlier-recorded Conditions</h3><div id="trajectoryEarlier" class="empty-state">No condition selected.</div></section><section class="network-panel"><h3>Later-recorded Conditions</h3><div id="trajectoryLater" class="empty-state">No condition selected.</div></section><section class="network-panel"><h3>Physiological Systems</h3><div id="trajectoryLegend" class="network-legend"></div></section></aside></div>
+    </section>
+    <p class="plot-note">Arrows point from the earlier-recorded condition to the later-recorded condition. Node size reflects the number of exposed individuals with the condition; node color indicates physiological system.</p>
+    </main>
+  <footer>Interactive visualization generated by DiNetxify.</footer>
+  <script src="../../data/trajectory_data.js"></script><script src="../../assets/trajectory_app.js"></script><script>window.TrajectoryApp.init();</script>
+</body>
+</html>

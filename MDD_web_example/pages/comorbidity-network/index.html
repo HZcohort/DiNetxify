@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Interactive visualization of comorbidity associations.">
+  <title>Interactive Comorbidity Network</title>
+  <link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <span class="eyebrow">DiNetxify results</span>
+    <h1>Interactive Comorbidity Network</h1>
+    <p>Interactive visualization of comorbidity associations.</p>
+  </header>
+  <nav class="site-nav" aria-label="Visualization navigation">
+    <a href="../../index.html">Home</a>
+<a href="../../pages/phewas/index.html">PheWAS</a>
+<a href="../../pages/comorbidity-network/index.html" class="active">Comorbidity Network</a>
+<a href="../../pages/disease-trajectory/index.html">Disease Trajectory</a>
+<a href="../../pages/3d-disease-network/index.html">3D Disease Network</a>
+  </nav>
+  <main>
+    <section class="section-panel"><h2>Comorbidity Network Explorer</h2><p>Nodes represent modeled medical conditions and edges represent statistically significant positive comorbidity associations retained by Plot filtering.</p>
+      <div class="metric-grid"><div class="metric-card"><strong>146</strong><span>Network nodes</span></div><div class="metric-card"><strong>663</strong><span>Network edges</span></div><div class="metric-card"><strong>8</strong><span>Detected modules</span></div></div></section>
+    <section class="network-control-grid" aria-label="Comorbidity-network controls">
+      <div class="settings-card"><h2>Network selection</h2><label for="networkSelect">Analysis</label><select id="networkSelect"></select>
+        <div class="field-row"><div><label for="networkSystemFilter">Physiological system</label><select id="networkSystemFilter"></select></div><div><label for="networkModuleFilter">Comorbidity module</label><select id="networkModuleFilter"></select></div></div></div>
+      <div class="settings-card"><h2>Search and labeling</h2><label for="networkSearch">Search condition or Phecode</label><input id="networkSearch" type="search" list="networkNodeOptions" placeholder="Example: chronic pain or 338.2"><datalist id="networkNodeOptions"></datalist>
+        <div class="field-row"><div><label for="networkLabelMode">Labels</label><select id="networkLabelMode"><option value="selected">Selected and neighbors</option><option value="major">Major nodes</option><option value="all">All visible nodes</option><option value="none">No labels</option></select></div>
+        <div><label for="networkNodeScale">Node size <span id="networkNodeScaleValue" class="network-range-value">100%</span></label><input id="networkNodeScale" type="range" min="0.5" max="1.75" step="0.05" value="1"></div></div></div>
+      <div class="settings-card"><h2>Edge filtering</h2><label for="networkEdgeFilter"><span id="networkEdgeFilterLabel">Minimum displayed edge strength</span> <span id="networkEdgeFilterValue" class="network-range-value">0</span></label><input id="networkEdgeFilter" type="range">
+        <div class="network-inline"><label for="networkHideIsolated"><input id="networkHideIsolated" type="checkbox" checked> Hide nodes without visible edges</label><button id="networkResetFilters" type="button" class="secondary">Reset filters</button></div></div>
+    </section>
+    <section class="status-row"><span><strong id="networkName"></strong></span><span><strong id="networkVisibleNodes">0</strong> visible nodes</span><span><strong id="networkVisibleEdges">0</strong> visible edges</span><span><strong id="networkModuleCount">0</strong> modules</span><span><strong id="networkHiddenIsolated">0</strong> hidden nodes</span><span>Selected condition: <strong id="networkSelectedNode">None</strong></span></section>
+    <section class="plot-card"><div class="plot-toolbar"><button id="networkDownloadPng" type="button">PNG</button><button id="networkDownloadSvg" type="button">SVG</button><button id="networkZoomIn" type="button">+</button><button id="networkZoomOut" type="button">-</button><button id="networkResetView" type="button">Reset</button></div>
+      <div class="network-viewer"><div class="network-canvas-wrap"><svg id="comorbidityNetworkSvg"><g id="comorbidityNetworkViewport"><g id="comorbidityNetworkEdges"></g><g id="comorbidityNetworkNodes"></g><g id="comorbidityNetworkLabels"></g></g></svg><div id="comorbidityNetworkTooltip" class="tooltip"></div></div>
+      <aside class="network-side"><section class="network-panel"><h3>Selected Condition</h3><div id="networkDetails" class="empty-state">No condition selected.</div></section><section class="network-panel"><h3>Strongest Visible Neighbors</h3><div id="networkNeighbors" class="empty-state">No condition selected.</div></section><section class="network-panel"><h3>Physiological Systems</h3><div id="networkLegend" class="network-legend"></div></section></aside></div>
+    </section>
+    <p class="plot-note">Node size reflects the number of exposed individuals with the condition, and node color indicates physiological system. Edge thickness reflects the capped comorbidity effect ratio.</p>
+    </main>
+  <footer>Interactive visualization generated by DiNetxify.</footer>
+  <script src="../../data/comorbidity_data.js"></script><script src="../../assets/network_app.js"></script><script>window.ComorbidityNetworkApp.init();</script>
+</body>
+</html>
