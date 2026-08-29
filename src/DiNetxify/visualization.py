@@ -5,7 +5,6 @@ Created on Wed Jan 1 19:48:09 2025
 @author: Haowen Liu - Biomedical Big data center of West China Hospital, Sichuan University
 @author: Can Hou - Biomedical Big data center of West China Hospital, Sichuan University
 """
-import community as community_louvain
 import matplotlib.ticker as ticker
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
@@ -20,6 +19,8 @@ import random
 import math
 import os
 import warnings
+import gc
+from networkx.algorithms import community as nx_community
 
 from collections import Counter
 
@@ -35,24 +36,42 @@ Df = pd.DataFrame
 
 class Plot(object):
     """Initialize the Plot class.
-    This class integrates and visualizes disease relationships from three complementary analyses:
+
+    This class integrates and visualizes disease relationships from three
+    complementary analyses:
     1. Phenome-Wide Association Study (PHEWAS) results
     2. Comorbidity network analysis
     3. Disease trajectory analysis
+
+    Two visualization styles are supported:
+    - After-exposure analysis: specify ``exposure_name`` to show the exposure as
+      the origin node of downstream disease trajectories.
+    - Before-outcome analysis: specify ``outcome_name`` instead of
+      ``exposure_name`` to show a terminal outcome node below the disease
+      network in the 3D and trajectory plots.
+
+    Disease modules are shared across related network plots. If both
+    comorbidity_result and trajectory_result are provided, the module graph is
+    prepared from the comorbidity network plus trajectory-only disease pairs.
+    Modules are detected by repeated direct NetworkX Louvain runs and the
+    partition with highest NetworkX modularity is retained. Node positions for
+    3D and comorbidity plots use bounded random placement within cluster
+    sectors, matching the traditional visual style while avoiding long retry
+    loops.
 
     Args:
         comorbidity_result (pd.DataFrame, optional): 
             Result dataframe from comorbidity network analysis containing:
             - Non-temporal disease pairs (D1-D2)
             - Association metrics (e.g., beta coefficients, p-values)
-            - Significance identifier (Ture or False)
+            - Significance identifier (True or False)
             Required for comorbidity network, 3D network, and trajectory plots.
             
         trajectory_result (pd.DataFrame, optional): 
             Result dataframe from temporal disease trajectory analysis containing:
             - Temporal disease pairs (source->target)
             - Temporal association metrics (e.g., beta coefficients, p-values)
-            - Significance identifier (Ture or False)
+            - Significance identifier (True or False)
             Required for 3D network and trajectory plots.
             
         phewas_result (pd.DataFrame): 
@@ -64,7 +83,8 @@ class Plot(object):
         
         exposure_name (str, optional):
             Identifier for the primary exposure variable of interest.
-            Set to None if the study design is exposed-only cohort.
+            Use for the traditional after-exposure visualization style.
+            Do not specify together with outcome_name.
             
         exposure_location (Tuple[float], optional): 
             Custom 3D coordinates (x,y,z) for positioning the exposure node.
@@ -74,6 +94,19 @@ class Plot(object):
         exposure_size (float, optional): 
             Relative size scaling factor for the exposure node in the plot.
             If exposure_name is None, this parameter is ignored.
+
+        outcome_name (str, optional):
+            Identifier for the terminal outcome in before-outcome analysis.
+            Use instead of exposure_name for the before-outcome visualization
+            style. In 3D and trajectory plots, the outcome is drawn as a
+            terminal node below the disease network.
+
+        outcome_location (Tuple[float], optional):
+            Custom 3D coordinates (x,y,z) for positioning the terminal outcome node.
+            If None, the outcome is automatically positioned below the disease network.
+
+        outcome_size (float, optional):
+            Relative size scaling factor for the terminal outcome node.
         
         Additional parameters:
         If your result DataFrames use the default column names, keep these parameters as is.
@@ -92,7 +125,9 @@ class Plot(object):
 
         phewas_number_col (str, optional):
             Column in the PheWAS DataFrame with case counts.
-            Default 'N_cases_exposed'.
+            Default ``N_cases_exposed``. When ``outcome_name`` is supplied and
+            that default column is absent, ``N_cases_outcome_group`` is selected
+            automatically.
 
         phewas_coef_col (str, optional):
             Column in the PheWAS DataFrame with effect sizes.
@@ -182,70 +217,29 @@ class Plot(object):
         - Node sizes default to case counts.
         - By default, colors are assigned by disease system.
 
-    Example:
-        1. PheWAS only
-        >>> plot = Plot(
-            phewas_df,
-        )
+    Examples:
+        After-exposure visualization using standard result columns:
 
-        2. PheWAS + comorbidity network
         >>> plot = Plot(
-            phewas_df,
-            comorbidity_df,
-        )
+        ...     phewas_df,
+        ...     comorbidity_df,
+        ...     trajectory_df,
+        ...     exposure_name="Study exposure",
+        ... )
 
-        3. cohort/matched cohort study
-        >>> plot = Plot(
-            phewas_df,
-            comorbidity_df,
-            trajectory_df,
-            exposure_size=15,
-            exposure_location=(0,0,0),
-            source_col: Optional[str]='phecode_d1',
-            target_col: Optional[str]='phecode_d2',
-            phecode_col: Optional[str]='phecode',
-            phewas_number_col: Optional[str]='N_cases_exposed',
-            system_col: Optional[str]='system',
-            disease_pair_col: Optional[str]='name_disease_pair',
-            phewas_significance_col: Optional[str]='phewas_p_significance',
-            comorbidity_significance_col: Optional[str]='comorbidity_p_significance',
-            trajectory_significance_col: Optional[str]='trajectory_p_significance',
-        )
+        Before-outcome visualization:
 
-        if there are no changes of column name of pd.DataFrame of the results 
-        in data analysis module, it will be simplified like that:
         >>> plot = Plot(
-            phewas_df, 
-            comorbidity_df, 
-            trajectory_df,
-            exposure=495.2,
-        )
+        ...     outcome_phewas_df,
+        ...     outcome_comorbidity_df,
+        ...     outcome_trajectory_df,
+        ...     outcome_name="Terminal outcome",
+        ... )
 
-        4. exposed-only study
-        >>> plot = Plot(
-            phewas_df, 
-            comorbidity_df, 
-            trajectory_df,
-            exposure_name=None,
-            exposure_size=None,
-            exposure_location=None,
-            source_col: Optional[str]='phecode_d1',
-            target_col: Optional[str]='phecode_d2',
-            phecode_col: Optional[str]='phecode',
-            phewas_number_col: Optional[str]='N_cases_exposed',
-            system_col: Optional[str]='system',
-            disease_pair_col: Optional[str]='name_disease_pair',
-            phewas_significance_col: Optional[str]='phewas_p_significance',
-            comorbidity_significance_col: Optional[str]='comorbidity_p_significance',
-            trajectory_significance_col: Optional[str]='trajectory_p_significance',
-        )
-        if there are no changes of column name of pd.DataFrame of the results 
-        in data analysis module, it will be simplified like that:
-        >>> plot = Plot(
-            phewas_df,
-            comorbidity_df,
-            trajectory_df,
-        )
+        For PheWAS-only or exposed-only results, omit network tables and the
+        exposure/outcome node as appropriate:
+
+        >>> plot = Plot(phewas_df)
     """
     def __init__(
         self, 
@@ -255,6 +249,9 @@ class Plot(object):
         exposure_name: Optional[str] | None=None,
         exposure_location: Optional[Tuple[float]] | None=None,
         exposure_size: Optional[float] | None=None,
+        outcome_name: Optional[str] | None=None,
+        outcome_location: Optional[Tuple[float]] | None=None,
+        outcome_size: Optional[float] | None=None,
         phecode_col: Optional[str]='phecode',
         disease_col: Optional[str]='disease',
         system_col: Optional[str]='system',
@@ -276,6 +273,17 @@ class Plot(object):
             raise TypeError(
                 f"phewas_result is NOT a pandas.DataFrame (type: {type(phewas_result)})"
             )
+        if exposure_name is not None and outcome_name is not None:
+            raise ValueError("Specify either 'exposure_name' or 'outcome_name', not both.")
+        if (
+            outcome_name is not None
+            and phewas_number_col == 'N_cases_exposed'
+            and phewas_number_col not in phewas_result.columns
+            and 'N_cases_outcome_group' in phewas_result.columns
+        ):
+            phewas_number_col = 'N_cases_outcome_group'
+        if outcome_name is not None and outcome_size is None:
+            outcome_size = 15
 
         optional_variables = {
             'comorbidity_result': comorbidity_result,
@@ -479,6 +487,9 @@ class Plot(object):
             exposure_name = exposure_name,
             exposure_location = exposure_location,
             exposure_size = exposure_size,
+            outcome_name = outcome_name,
+            outcome_location = outcome_location,
+            outcome_size = outcome_size,
             source = self.source_col,
             target = self.target_col,
             describe = phewas_result[[self.phecode_col, self.disease_col, self.system_col, self.phewas_number_col]].copy(),
@@ -488,6 +499,8 @@ class Plot(object):
             nodes_attrs = {},
             network_attrs = {}
         )
+        self._cluster_cache = {}
+        self._prepared_cluster_key = None
 
     @staticmethod
     def __validate_result_columns(
@@ -545,6 +558,14 @@ class Plot(object):
             comorbidity_result,
             trajectory_result
         )
+        clustering_edges = self.__clean_clustering_edges(
+            clustering_edges,
+            self.comorbidity_beta_col,
+        )
+        cluster_key = self.__network_cache_key(
+            clustering_edges,
+            self.comorbidity_beta_col,
+        )
 
         if require_trajectory:
             if trajectory_result.empty:
@@ -590,6 +611,10 @@ class Plot(object):
             self.disease_col,
             self.system_col,
         )
+        self._prepared_cluster_key = cluster_key
+        cached_cluster = self._cluster_cache.get(cluster_key)
+        if cached_cluster is not None:
+            self.__apply_cluster(cached_cluster)
 
     def __combined_clustering_edges(
         self,
@@ -639,6 +664,85 @@ class Plot(object):
         )
         clustering_edges.drop(columns=[pair_key_col], inplace=True)
         return clustering_edges
+
+    def __clean_clustering_edges(
+        self,
+        clustering_edges: Df,
+        weight_col: str
+    ) -> Df:
+        clustering_edges = clustering_edges.copy()
+        cleaned_weights = []
+        for idx, value in clustering_edges[weight_col].items():
+            cleaned_weights.append(
+                self.__coerce_edge_weight(value, row_index=idx, weight_col=weight_col)
+            )
+        clustering_edges[weight_col] = cleaned_weights
+        return clustering_edges
+
+    @staticmethod
+    def __coerce_node_key(value: Any) -> Any:
+        if isinstance(value, np.generic):
+            return value.item()
+        return value
+
+    @staticmethod
+    def __coerce_edge_weight(
+        value: Any,
+        row_index: Any,
+        weight_col: str
+    ) -> float:
+        if isinstance(value, dict):
+            if weight_col in value:
+                value = value[weight_col]
+            elif "weight" in value:
+                value = value["weight"]
+            else:
+                raise ValueError(
+                    f"Invalid edge weight at row {row_index}: expected a number, "
+                    f"but got a dictionary without '{weight_col}' or 'weight'."
+                )
+
+        try:
+            weight = float(value)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(
+                f"Invalid edge weight at row {row_index}: expected a number in "
+                f"column '{weight_col}', but got {type(value).__name__}."
+            ) from exc
+
+        if not np.isfinite(weight):
+            raise ValueError(
+                f"Invalid edge weight at row {row_index}: column '{weight_col}' "
+                "contains a non-finite value."
+            )
+        return weight
+
+    def __network_cache_key(
+        self,
+        clustering_edges: Df,
+        weight_col: str
+    ) -> Tuple[Tuple[Any, Any, float], ...]:
+        edge_records = []
+        for _, row in clustering_edges[[self._source, self._target, weight_col]].iterrows():
+            source = row[self._source]
+            target = row[self._target]
+            ordered_nodes = tuple(sorted([source, target], key=str))
+            edge_records.append(
+                (ordered_nodes[0], ordered_nodes[1], float(row[weight_col]))
+            )
+        return tuple(sorted(edge_records, key=lambda x: (str(x[0]), str(x[1]), x[2])))
+
+    def __apply_cluster(
+        self,
+        cluster_ans: Dict[Any, int]
+    ) -> None:
+        self.__update_node_attrs(
+            cluster=dict(cluster_ans)
+        )
+        if cluster_ans:
+            self._network_attrs.update(
+                {"cluster number": max(cluster_ans.values()) + 1}
+            )
 
     @staticmethod
     def __check_disease_pairs(
@@ -1012,8 +1116,7 @@ class Plot(object):
             setattr(self, f"_{key}", value)
     
     def __update_node_attrs(self, **kwargs) -> None:
-        """_summary_
-        """
+        """Update stored node-attribute dictionaries from keyed mappings."""
         for key, value in kwargs.items():
             for node, attr in value.items():
                 if node in self._nodes_attrs.keys():
@@ -1175,6 +1278,35 @@ class Plot(object):
                     None
                 ]
         return edge_attrs
+
+    def __terminal_trajectory_nodes(self) -> List[Any]:
+        """Return trajectory sink nodes for terminal-outcome visualization."""
+        if self._trajectory.empty:
+            return []
+        source_nodes = set(self._trajectory[self._source].to_list())
+        target_nodes = set(self._trajectory[self._target].to_list())
+        terminal_nodes = target_nodes - source_nodes
+        if len(terminal_nodes) == 0:
+            terminal_nodes = target_nodes or source_nodes
+        if self._exposure is not None:
+            terminal_nodes.discard(self._exposure)
+        return [
+            node for node in sorted(terminal_nodes, key=str)
+            if node in self._nodes_attrs
+        ]
+
+    def __outcome_3d_location(self, layer_distance: float) -> Tuple[float, float, float]:
+        """Return explicit or automatic 3D location for the terminal outcome node."""
+        if self._outcome_location is not None:
+            return self._outcome_location
+        if not self._nodes_attrs:
+            return (0, 0, 0)
+        min_z = min(attrs["location"][2] for attrs in self._nodes_attrs.values())
+        return (
+            self._exposure_location[0],
+            self._exposure_location[1],
+            min_z - layer_distance,
+        )
 
     def __sig_nodes(self) -> List[List[float]]:
         """Identifies significant disease progression paths in the trajectory network.
@@ -1343,15 +1475,16 @@ class Plot(object):
             cluster_reduction_ratio :float,
             z_axis: float,
             cluster_ratio :Dict[int, float],
-            max_attempts :Optional[int]=10000
+            max_attempts :Optional[int]=200
         ) -> None:
-        """Randomly calculates and assigns 3D locations for nodes in a clustered network.
+        """Randomly calculates and assigns 3D locations for clustered nodes.
 
         Distributes nodes in 3D space with the following characteristics:
         - Nodes are positioned in circular sectors based on their cluster
         - Radial distance is randomized between min/max radius
         - Z-coordinate decreases with node order (hierarchy)
-        - Ensures nodes don't overlap based on their size attributes
+        - A bounded collision check avoids obvious overlap without the long
+          retry loops used by earlier versions
 
         Args:
             max_radius: Maximum radial distance from center
@@ -1360,18 +1493,18 @@ class Plot(object):
             z_axis: Z-axis spacing between different orders
             cluster_ratio: Dictionary mapping clusters to their angular proportion
                         (e.g., {0: 0.3, 1: 0.7} for 30%/70% split)
-            max_attempts: Maximum attempts to find non-overlapping positions (default: 10000)
+            max_attempts: Maximum random placements tried per node. Defaults
+                to 200 to keep layout generation bounded.
 
         Returns:
             None: Updates node locations directly in self._nodes_attrs
 
         Algorithm:
             1. Assigns exposure location as (0, 0, 0) if not set
-            2. For each node:
-            a. Calculates angular range based on cluster
-            b. Randomly selects radius and angle within cluster sector
-            c. Checks for collisions with existing nodes
-            d. Updates location if valid position found
+            2. Calculates angular range based on cluster
+            3. Randomly samples radius and angle within the cluster sector
+            4. Uses a coarse spatial index for fast overlap checks
+            5. Updates node locations
 
         Example:
             >>> self._calculate_location_random(
@@ -1387,49 +1520,75 @@ class Plot(object):
         if self._exposure_location is None:
             self._exposure_location = (0, 0, 0)
 
-        cluster_location = {x:{} for x in range(self._network_attrs["cluster number"])}
-        interval_ratio = (self._network_attrs["cluster number"]) * 0.05 * cluster_reduction_ratio
+        cluster_number = self._network_attrs["cluster number"]
+        interval_ratio = min(cluster_number * 0.05 * cluster_reduction_ratio, 0.8)
+        gap_angle = interval_ratio / cluster_number * 2 * math.pi
+        cluster_location = {x:{} for x in range(cluster_number)}
+        cluster_bins = {x:{} for x in range(cluster_number)}
+        attempts = max(1, int(max_attempts))
+        max_node_size = max(
+            [attrs["size"] for attrs in self._nodes_attrs.values()] or [1.0]
+        )
+        bin_size = max(max_node_size * 2, 1.0)
+
+        def _bin_key(loc: Tuple[float, float, float]) -> Tuple[int, int]:
+            return (
+                math.floor(loc[0] / bin_size),
+                math.floor(loc[1] / bin_size)
+            )
+
+        def _nearby_nodes(cluster: int, loc: Tuple[float, float, float]):
+            bin_x, bin_y = _bin_key(loc)
+            for x_offset in (-1, 0, 1):
+                for y_offset in (-1, 0, 1):
+                    for oth_node in cluster_bins[cluster].get(
+                        (bin_x + x_offset, bin_y + y_offset),
+                        []
+                    ):
+                        yield oth_node, cluster_location[cluster][oth_node]
+
         for node, attrs in self._nodes_attrs.items():
-            is_sep = True
             order = attrs["order"]
             cluster = attrs["cluster"]
-            max_ang = 2*math.pi*sum([cluster_ratio[i] for i in range(cluster+1)])*(1-interval_ratio)
-            min_ang = max_ang - 2*math.pi*cluster_ratio[cluster]*(1-interval_ratio)
+            previous_ratio = sum(
+                cluster_ratio.get(i, 0)
+                for i in range(cluster)
+            )
+            min_ang = 2 * math.pi * previous_ratio * (1 - interval_ratio) + cluster * gap_angle
+            max_ang = min_ang + 2 * math.pi * cluster_ratio.get(cluster, 0) * (1 - interval_ratio)
+            if max_ang <= min_ang:
+                max_ang = min_ang + 1e-8
 
-            for _ in range(max_attempts):
+            node_loc = None
+            for _ in range(attempts):
                 radius = random.uniform(min_radius, max_radius)
-                node_ang = random.uniform(
-                    min_ang + cluster*interval_ratio/(self._network_attrs["cluster number"])*2*math.pi,
-                    max_ang + cluster*interval_ratio/(self._network_attrs["cluster number"])*2*math.pi
-                )
-                node_loc = (
+                node_ang = random.uniform(min_ang, max_ang)
+                candidate_loc = (
                     radius * math.cos(node_ang),
                     radius * math.sin(node_ang),
-                    self._exposure_location[2] - order*z_axis
+                    self._exposure_location[2] - order * z_axis
                 )
-
-                for oth_node, loc in cluster_location[cluster].items():
+                node_loc = candidate_loc
+                is_separate = True
+                for oth_node, loc in _nearby_nodes(cluster, candidate_loc):
                     distance = math.sqrt(
-                        (loc[0]-node_loc[0])**2+
-                        (loc[1]-node_loc[1])**2
+                        (loc[0] - candidate_loc[0])**2 +
+                        (loc[1] - candidate_loc[1])**2
                     )
-                    sum_length = sum(
-                        [
-                            self._nodes_attrs[node]["size"],
-                            self._nodes_attrs[oth_node]["size"],
-                        ]
+                    min_distance = (
+                        self._nodes_attrs[node]["size"] +
+                        self._nodes_attrs[oth_node]["size"]
                     )
-                    if sum_length < distance:
-                        is_sep = False
+                    if distance < min_distance:
+                        is_separate = False
                         break
 
-                if is_sep:
-                    cluster_location[cluster].update({node:node_loc})
-                    self._nodes_attrs[node].update({"location":node_loc})
+                if is_separate:
                     break
 
-            cluster_location[cluster].update({node:node_loc})
-            self._nodes_attrs[node].update({"location":node_loc})
+            cluster_location[cluster].update({node: node_loc})
+            cluster_bins[cluster].setdefault(_bin_key(node_loc), []).append(node)
+            self._nodes_attrs[node].update({"location": node_loc})
     
     def __make_node_basic_attrs(
         self,
@@ -1520,20 +1679,21 @@ class Plot(object):
     def __cluster(
         self,
         weight: str,
-        max_attempts: Optional[int]=5000,
+        max_attempts: Optional[int]=100,
     ) -> None:
-        """Performs Louvain community detection on the comorbidity network.
+        """Performs Louvain community detection on the prepared module graph.
 
-        Identifies disease clusters based on comorbidity relationships using:
-        - Multiple runs of Louvain algorithm with different random seeds
-        - Selection of the highest modularity partition
-        - Updates node attributes with cluster assignments
+        Identifies disease modules from the prepared clustering graph using a
+        simple direct NetworkX workflow. Louvain is run repeatedly with seeds
+        ``0`` through ``max_attempts - 1`` and the partition with the highest
+        NetworkX modularity is retained. No external community package,
+        multiprocessing, or subprocess worker is used.
 
         Args:
-            weight: Edge weight column name from comorbidity data
-            max_attempts: Maximum number of Louvain runs with different seeds.
-                        Higher values may find better partitions but take longer.
-                        Defaults to 5000.
+            weight: Edge weight column name from the prepared clustering data.
+            max_attempts: Number of random seeds evaluated by NetworkX Louvain.
+                The partition with highest modularity is retained.
+                Defaults to 100.
 
         Returns:
             None: Updates self._nodes_attrs and self._network_attrs in place with:
@@ -1541,11 +1701,11 @@ class Plot(object):
                 - Total number of clusters found
 
         Algorithm Steps:
-            1. Constructs undirected graph from comorbidity data
-            2. Runs Louvain algorithm multiple times with different random seeds
-            3. Selects partition with highest modularity score
+            1. Constructs an undirected NetworkX graph from prepared disease pairs
+            2. Runs NetworkX Louvain with different random seeds
+            3. Selects the partition with highest NetworkX modularity
             4. Stores cluster assignments in node attributes
-            5. Records total cluster count in network attributes
+            5. Records total cluster count and modularity in network attributes
 
         Example:
             >>> self.__cluster(weight='comorbidity_beta')
@@ -1553,50 +1713,55 @@ class Plot(object):
             # - self._nodes_attrs with 'cluster' assignments
             # - self._network_attrs['cluster number'] with cluster count
         """
-        # create network class and add the edges
-        Graph_position = nx.Graph()
-        [
-            Graph_position.add_edge(
-                row[self._source],
-                row[self._target],
-                weight=row[weight]
-            ) 
-            for _, row in self._comorbidity.iterrows()
-        ]
+        if max_attempts < 1:
+            raise ValueError("max_attempts must be at least 1")
 
-        result = []
-        for i in range(max_attempts):
-            partition = community_louvain.best_partition(
-                Graph_position, 
-                random_state=i
+        cluster_key = getattr(self, "_prepared_cluster_key", None)
+        cached_cluster = getattr(self, "_cluster_cache", {}).get(cluster_key)
+        if cached_cluster is not None:
+            self.__apply_cluster(cached_cluster)
+            return
+
+        Graph_position = nx.Graph()
+        for idx, row in self._comorbidity.iterrows():
+            source = self.__coerce_node_key(row[self._source])
+            target = self.__coerce_node_key(row[self._target])
+            edge_weight = self.__coerce_edge_weight(
+                row[weight],
+                row_index=idx,
+                weight_col=weight,
+            )
+            Graph_position.add_edge(
+                source,
+                target,
+                weight=edge_weight
             )
 
-            result.append([
-                i, community_louvain.modularity(
-                    partition, 
-                    Graph_position
-                )
-            ])
+        best_modularity = -np.inf
+        best_communities = None
+        for i in range(max_attempts):
+            communities = nx_community.louvain_communities(
+                Graph_position,
+                weight="weight",
+                seed=i
+            )
+            modularity = nx_community.modularity(
+                Graph_position,
+                communities,
+                weight="weight"
+            )
+            if modularity >= best_modularity:
+                best_modularity = modularity
+                best_communities = communities
 
-        result_df = pd.DataFrame(
-            result, 
-            columns=['rs', 'modularity']
-        ).sort_values(by='modularity')
-        best_rs = result_df.iloc[-1, 0]
-
-        # final result with the best score
-        cluster_ans = community_louvain.best_partition(
-            Graph_position, 
-            random_state=best_rs
-        )
-
-        self.__update_node_attrs(
-            cluster = dict(cluster_ans)
-        )
-
-        self._network_attrs.update(
-            {"cluster number":max(cluster_ans.values()) + 1}
-        )
+        cluster_ans = {}
+        for cluster_id, community_nodes in enumerate(best_communities):
+            for node in community_nodes:
+                cluster_ans[node] = cluster_id
+        self.__apply_cluster(cluster_ans)
+        self._network_attrs.update({"modularity": best_modularity})
+        if cluster_key is not None:
+            self._cluster_cache[cluster_key] = cluster_ans
 
     def __ensure_trajectory_nodes_clustered(self, plot_name: str) -> None:
         if self._trajectory.empty:
@@ -1631,14 +1796,15 @@ class Plot(object):
         distance: float,
         cluster_reduction_ratio: float
     ) -> None:
-        """Distributes nodes in 3D space with cluster-based sector arrangement.
+        """Distributes nodes in 3D space with random cluster-sector placement.
 
         Assigns 3D coordinates to nodes with the following spatial organization:
         - Nodes from the same cluster are grouped in circular sectors in x-y plane
-        - Nodes are radially distributed between min_radius and max_radius
+        - Nodes are randomly distributed between min_radius and max_radius
         - Z-coordinate represents hierarchy/layer (lower values for higher orders)
-        - Cluster sectors are proportionally sized based on node counts
+        - Cluster sectors are proportionally sized based on total node size
         - Includes buffer spacing between clusters via reduction ratio
+        - Uses a bounded random placement loop with a coarse spatial index
 
         Args:
             max_radius: Maximum distance from origin in x-y plane (must be > min_radius)
@@ -1653,7 +1819,7 @@ class Plot(object):
         Spatial Organization:
             - x-y plane: Nodes distributed in radial sectors by cluster
             - z-axis: Represents hierarchical order (exposure on top)
-            - Cluster sectors sized proportionally to their node counts
+            - Cluster sectors sized proportionally to total node size
 
         Example:
             >>> self.__make_location_random(
@@ -1877,24 +2043,26 @@ class Plot(object):
     
     def get_louvain_clusters(
         self,
-        max_attempts: Optional[int]=5000,
+        max_attempts: Optional[int]=100,
     ) -> Dict[Any, int]:
-        """Runs Louvain clustering for the comorbidity network and returns node labels.
+        """Runs Louvain clustering and returns disease-module labels.
 
         This public method computes community labels using the internal ``__cluster``
-        workflow and the configured comorbidity edge-weight column. If cluster labels
-        are already available in node attributes, existing labels are reused.
+        workflow and the configured comorbidity edge-weight column. If both
+        comorbidity and trajectory results are present, the prepared module graph
+        includes comorbidity pairs plus trajectory-only pairs. If cluster labels are
+        already available in node attributes, existing labels are reused.
 
         Args:
-            max_attempts: Maximum number of random seeds evaluated by Louvain.
-                Higher values may improve modularity but increase runtime.
-                Defaults to 5000.
+            max_attempts: Number of random seeds evaluated by NetworkX Louvain.
+                The partition with highest modularity is retained.
+                Defaults to 100.
 
         Returns:
             Dictionary mapping each node ID to its assigned cluster ID.
 
         Example:
-            >>> cluster_dict = result_plot.Louvain_cluster(max_attempts=1000)
+            >>> cluster_dict = result_plot.get_louvain_clusters()
         """
         self.__prepare_network_data("get_louvain_clusters")
         if not self.__check_node_attrs("cluster"):
@@ -1904,7 +2072,61 @@ class Plot(object):
             )
         self.__ensure_trajectory_nodes_clustered("get_louvain_clusters")
         return {node: attrs["cluster"] for node, attrs in self._nodes_attrs.items()}
-    
+
+    def interactive_website(self, path: str) -> None:
+        """Generate an offline interactive website for available analysis results.
+
+        The generated directory contains a landing page and full PheWAS scatter
+        and forest explorers with system filters, disease selection, tooltips,
+        zoom, and image export. ``phewas_result`` is always visualized. A
+        comorbidity-network section is added when
+        ``comorbidity_result`` was supplied to :class:`Plot`; disease-trajectory
+        and 3D sections are added only when both comorbidity and trajectory
+        results were supplied.
+
+        The comorbidity page uses the same Louvain modules as the existing Plot
+        methods. Its two-dimensional layout is generated automatically with
+        deterministic module-aware spring layouts and collision resolution.
+        Disease-node radius is derived from the PheWAS case/exposed count, and
+        its default display scale is normalized to the network canvas. Edge
+        width is derived from the adjusted association strength capped at an
+        odds ratio of 10. The resulting graph is also saved as
+        ``data/comorbidity.gexf``. The trajectory explorer uses the same module
+        assignments, count-based node sizing, and directed temporal paths as the
+        standalone trajectory view. The responsive 3D page embeds the output of
+        :meth:`three_dimension_plot` with disease-sphere sizes normalized to the
+        displayed network, preserving the configured ``exposure_name`` or
+        ``outcome_name`` behavior.
+
+        The website is self-contained: Plotly, cleaned result payloads, CSS, and
+        JavaScript are written under the output directory and can be opened from
+        ``index.html`` without a web server or internet connection. On repeated
+        calls, the generated ``assets``, ``data``, and ``pages`` directories are
+        replaced; unrelated files directly under ``path`` are preserved.
+
+        Args:
+            path: Output directory for the generated website.
+
+        Returns:
+            None.
+
+        Examples:
+            >>> plot = Plot(
+            ...     phewas_result=phewas_result,
+            ...     comorbidity_result=comorbidity_result,
+            ...     trajectory_result=trajectory_result,
+            ...     exposure_name="Exposure",
+            ... )
+            >>> plot.interactive_website("results/interactive_site")
+
+            For a before-outcome analysis, construct ``Plot`` with
+            ``outcome_name`` instead of ``exposure_name`` and call the same
+            method.
+        """
+        from .interactive_visualization import build_interactive_website
+
+        build_interactive_website(self, path)
+
     def three_dimension_plot(
         self,
         path: str,
@@ -1919,13 +2141,43 @@ class Plot(object):
         layout_height: Optional[float]=900.0,
         font_style: Optional[str]='Times New Roman',
         font_size: Optional[float]=15.0,
+        cluster_max_attempts: Optional[int]=100,
     ) -> None:
+        """Generates an interactive 3D disease trajectory network.
+
+        The plot uses shared disease-module labels from direct NetworkX Louvain
+        clustering. If cluster labels are not already cached, Louvain is run
+        ``cluster_max_attempts`` times with different seeds and the highest
+        modularity partition is retained. Disease nodes are then positioned with
+        bounded random sampling inside cluster sectors.
+
+        For after-exposure analysis, specifying ``exposure_name`` draws the
+        exposure as the origin of trajectories. For before-outcome analysis,
+        specifying ``outcome_name`` draws a terminal outcome node below the
+        disease network and connects terminal disease nodes to it.
+
+        Args:
+            path: Output path for the interactive HTML file.
+            max_radius: Maximum radial distance for disease nodes.
+            min_radius: Minimum radial distance for disease nodes.
+            line_color: Color used for trajectory and outcome-link lines.
+            line_width: Width used for trajectory and outcome-link lines.
+            size_reduction: Scaling factor applied to disease-node sizes.
+            cluster_reduction_ratio: Amount of angular spacing between modules.
+            layer_distance: Vertical distance between trajectory-order layers.
+            layout_width: Plotly layout width.
+            layout_height: Plotly layout height.
+            font_style: Font family used in the plot.
+            font_size: Font size for labels.
+            cluster_max_attempts: Number of seeded NetworkX Louvain runs used
+                when clusters are not already cached. Defaults to 100.
+        """
         import plotly.graph_objects as go
 
         self.__prepare_network_data("three_dimension_plot", require_trajectory=True)
         cluster_weight = self.comorbidity_beta_col
         if not self.__check_node_attrs("cluster"):
-            self.__cluster(cluster_weight)
+            self.__cluster(cluster_weight, max_attempts=cluster_max_attempts)
         self.__ensure_trajectory_nodes_clustered("three_dimension_plot")
         if not self.__check_node_attrs("order"):
             self.__trajectory_order()
@@ -1959,6 +2211,43 @@ class Plot(object):
 
         #spheres (Surface) + trajectory edges (Scatter3d lines)
         plot_data += self.__plot(line_width, line_color, size_reduction)
+
+        if self._outcome_name:
+            outcome_location = self.__outcome_3d_location(layer_distance)
+            terminal_nodes = self.__terminal_trajectory_nodes()
+            ox, oy, oz = [], [], []
+            for node in terminal_nodes:
+                node_location = self._nodes_attrs[node]["location"]
+                ox += [node_location[0], outcome_location[0], None]
+                oy += [node_location[1], outcome_location[1], None]
+                oz += [node_location[2], outcome_location[2], None]
+            if terminal_nodes:
+                plot_data.append(
+                    go.Scatter3d(
+                        x=ox,
+                        y=oy,
+                        z=oz,
+                        mode="lines",
+                        line=dict(color=line_color, width=line_width),
+                        name="Outcome links",
+                        showlegend=True,
+                        hoverinfo="skip",
+                    )
+                )
+            plot_data.append(
+                go.Scatter3d(
+                    x=[outcome_location[0]],
+                    y=[outcome_location[1]],
+                    z=[outcome_location[2]],
+                    mode="markers",
+                    marker=dict(symbol="circle", size=self._outcome_size, color="black"),
+                    name=self._outcome_name,
+                    legendgrouptitle_text="Terminal Outcome",
+                    showlegend=True,
+                    customdata=["outcome"],
+                    hovertemplate=f"{self._outcome_name}<extra></extra>",
+                )
+            )
 
         #locate the base trajectory edge trace created by __plot
         edge_trace_idx = None
@@ -2168,6 +2457,8 @@ class Plot(object):
             include_plotlyjs=True,
             full_html=True,
             post_script=post_script)
+        del fig, plot_data
+        gc.collect()
 
     def comorbidity_network_plot(
         self, 
@@ -2179,31 +2470,37 @@ class Plot(object):
         line_width: Optional[float]=1.0,
         line_color: Optional[str]="black",
         layer_distance: Optional[float]=40.0,
-        font_style: Optional[str]="Times New Roman"
+        font_style: Optional[str]="Times New Roman",
+        cluster_max_attempts: Optional[int]=100
     ) -> None:
         """Generates a 2D visualization of the comorbidity network.
 
-        Creates an plot showing disease comorbidities as:
+        Creates a plot showing disease comorbidities as:
         - Disease nodes (phecodes) as colored circles (grouped by disease system)
         - Comorbidity relationships as connecting lines between nodes
         - Node sizes proportional to disease significance
         - Color coding by disease system/category
+        - Random cluster-sector positions shared with the 3D plot
 
         Args:
             path: Output file path for saving HTML visualization
-            max_radius: Maximum radial position for nodes (default: 90.0)
+            max_radius: Maximum radial position for nodes (default: 180.0)
             min_radius: Minimum radial position for nodes (default: 35.0)
             size_reduction: Scaling factor for node sizes (default: 0.5)
-            cluster_reduction_ratio: Compression factor for cluster layout (default: 0.4)
+            cluster_reduction_ratio: Amount of angular spacing between modules
+                (default: 1)
             line_width: Width of comorbidity lines (default: 1.0)
             line_color: Color of comorbidity lines (default: "black")
-            layer_distance: Distance between concentric circles (default: 40.0)
+            layer_distance: Vertical spacing used when trajectory order is
+                available (default: 40.0)
             font_style: Font family for text elements (default: "Times New Roman")
+            cluster_max_attempts: Number of seeded NetworkX Louvain runs used
+                when clusters are not already cached. Defaults to 100.
 
         Workflow:
-            1. Checks/calculates cluster assignments if missing
+            1. Checks/calculates shared module assignments if missing
             2. Computes node orders if missing
-            3. Generates 2D node positions if missing
+            3. Generates bounded random node positions
             4. Creates visualization with:
             - Comorbidity edges as connecting lines
             - Disease nodes as colored circles
@@ -2222,11 +2519,16 @@ class Plot(object):
             - All distance parameters are in arbitrary units
             - First node in each system shows in legend (others hidden)
             - Hover shows disease name
+            - ``outcome_name`` does not add an outcome node to this
+              comorbidity-only network view
 
         """
         self.__prepare_network_data("comorbidity_network_plot")
         if not self.__check_node_attrs("cluster"):
-            self.__cluster(self.comorbidity_beta_col)
+            self.__cluster(
+                self.comorbidity_beta_col,
+                max_attempts=cluster_max_attempts
+            )
         self.__ensure_trajectory_nodes_clustered("comorbidity_network_plot")
         if not self.__check_node_attrs("order"):
             if self._trajectory.empty:
@@ -2318,25 +2620,32 @@ class Plot(object):
             height=900.0,
         )
 
-        py.plot(fig, filename=path)
+        py.plot(fig, filename=path, auto_open=False)
+        del fig
+        gc.collect()
 
     def trajectory_plot(
         self, 
         path: str,
-        dpi: Optional[float]=500
+        dpi: Optional[float]=500,
+        cluster_max_attempts: Optional[int]=100
     ) -> None:
         """Generates and saves trajectory visualizations for each disease cluster.
 
         Creates 2D network plots showing disease trajectories within each cluster,
         with nodes positioned hierarchically based on trajectory relationships.
-        Each cluster is saved as a separate image file.
+        Each cluster is saved as a separate image file. If ``outcome_name`` is
+        specified, a terminal outcome node is added below each cluster trajectory
+        and terminal disease nodes are linked to it.
 
         Args:
             path: Directory path to save output images
             dpi: Image resolution in dots per inch for output files (default: 500)
+            cluster_max_attempts: Number of seeded NetworkX Louvain runs used
+                when clusters are not already cached. Defaults to 100.
 
         Workflow:
-            1. Performs cluster analysis if not already done
+            1. Performs shared NetworkX Louvain module detection if not already done
             2. Identifies significant trajectories
             3. For each cluster:
             - Creates hierarchical layout
@@ -2344,6 +2653,7 @@ class Plot(object):
                 * Nodes colored by disease type
                 * Edges weighted by trajectory strength
                 * Exposure disease marked specially (if exists)
+                * Terminal outcome node marked specially (if outcome_name exists)
             - Saves as PNG image
 
         Example:
@@ -2355,6 +2665,7 @@ class Plot(object):
             - Outputs one PNG file per cluster (named 'cluster_<number>.png')
             - Uses matplotlib for static visualization
             - Exposure disease (if exists) appears as grey node
+            - Outcome disease (if exists) appears as a grey terminal node
             - Node sizes proportional to disease significance
             - Edge widths proportional to trajectory strength
         """
@@ -2364,7 +2675,7 @@ class Plot(object):
 
         self.__prepare_network_data("trajectory_plot", require_trajectory=True)
         if not self.__check_node_attrs("cluster"):
-            self.__cluster(cluster_weight)
+            self.__cluster(cluster_weight, max_attempts=cluster_max_attempts)
         self.__ensure_trajectory_nodes_clustered("trajectory_plot")
         if self._exposure:
             exposure = self._exposure
@@ -2589,6 +2900,23 @@ class Plot(object):
                     y_bottom = 1500
                 position.update(sort_arc(missing, y_bottom))
 
+            outcome_node = "__dinetxify_outcome__"
+            outcome_edges = []
+            if self._outcome_name:
+                terminal_nodes = [
+                    node for node in graph.nodes
+                    if node != exposure and graph.out_degree(node) == 0 and node in self._nodes_attrs
+                ]
+                if len(terminal_nodes) == 0:
+                    terminal_nodes = [
+                        node for node in graph.nodes
+                        if node != exposure and node in self._nodes_attrs
+                    ]
+                if terminal_nodes:
+                    y_bottom = min(y for _, y in position.values()) - height
+                    position[outcome_node] = (500, y_bottom)
+                    outcome_edges = [(node, outcome_node) for node in terminal_nodes]
+
             fig, ax_nx = plt.subplots(dpi=600, figsize=(6,4))
             plt.axis("off")
 
@@ -2652,11 +2980,42 @@ class Plot(object):
                 nodelist=nodes
             )
 
+            if outcome_edges:
+                outcome_graph = nx.DiGraph()
+                outcome_graph.add_edges_from(outcome_edges)
+                nx.draw_networkx_edges(
+                    outcome_graph,
+                    position,
+                    edgelist=outcome_edges,
+                    arrowsize=6,
+                    width=[1] * len(outcome_edges),
+                    edge_color=["grey"] * len(outcome_edges),
+                    ax=ax_nx,
+                    style=":",
+                )
+                nx.draw_networkx_nodes(
+                    outcome_graph,
+                    position,
+                    nodelist=[outcome_node],
+                    node_color=["grey"],
+                    node_size=[np.pi * self._outcome_size ** 2],
+                    ax=ax_nx,
+                )
+                nx.draw_networkx_labels(
+                    outcome_graph,
+                    position,
+                    labels={outcome_node: self._outcome_name},
+                    font_size=4,
+                    ax=ax_nx,
+                )
+
             fig.savefig(
                 path+'/cluster_%i.png' % (cluster),
                 bbox_inches='tight',
                 dpi=dpi
                 )
+            plt.close(fig)
+        gc.collect()
 
     def phewas_plot(
         self,
@@ -2671,17 +3030,23 @@ class Plot(object):
         """Generates a circular PheWAS (Phenome-Wide Association Study) plot.
 
         Creates a polar bar plot visualizing disease associations across different
-        disease categories (systems), with:
+        disease categories (systems). Before-outcome cohort results display
+        hazard ratios from time-varying Cox models, while nested case-control
+        results display odds ratios from conditional logistic models. Node
+        counts come from ``N_cases_outcome_group`` when automatically selected
+        by ``Plot``.
+
+        The plot includes:
         - Outer ring showing individual disease associations
         - Inner segments grouping by disease system
-        - Color gradient indicating effect size (hazard ratio)
+        - Color gradient indicating effect size (hazard ratio or odds ratio)
         - Automatic text rotation for readability
 
         Args:
             path: Output file path for saving the plot
             system_font_size: Font size for disease system/category labels (default: 17)
             disease_font_size: Font size for disease labels (default: 10)
-            HR_max: Upper bound for the HR heatmap. Values greater than or equal to this render as the same red. Affects color only. (default: 2)
+            HR_max: Upper bound for the exponentiated-effect heatmap. Values greater than or equal to this render as the same red. Affects color only. (default: 2)
             incident_number_max: Upper bound for the incident count heatmap for exposed-only cohort. Values greater than or equal to this render as the same red. None means auto scale to the max observed count. (default: None)
             exposed_only_cohort: Whether the PheWAS is performed in an exposed-only cohort. If True, the incident count heatmap will be used instead of HR heatmap. (default: False)
             dpi: Image resolution in dots per inch for output files (default: 200)
@@ -2694,7 +3059,7 @@ class Plot(object):
         Note:
             - Uses random effects model for system-level estimates
             - Positive associations shown in red, negative in green
-            - Output is a high-resolution PNG (1200 DPI)
+            - Output resolution is controlled by ``dpi``
             - Plot includes:
             * Color bar legend for effect sizes
             * System category labels
@@ -2706,6 +3071,11 @@ class Plot(object):
         col_disease = self.disease_col
         col_system = self.system_col
         col_exposure = self.phewas_number_col
+        effect_label = 'Hazard ratio'
+        if 'model_type' in self._phewas.columns:
+            model_types = self._phewas['model_type'].astype(str).str.lower()
+            if model_types.str.contains('conditional logistic').any():
+                effect_label = 'Odds ratio'
         #for exposed only cohort, HR_max is not used
         if exposed_only_cohort:
             HR_max = None
@@ -2748,7 +3118,7 @@ class Plot(object):
             sys_dict_ += [x for x in sys_dict.values() if x not in sys_dict_]
             return sys_dict_
         
-        _, ax = plt.subplots(
+        fig, ax = plt.subplots(
             subplot_kw=dict(polar=True),
             figsize=(20, 20),
             nrows=1,
@@ -2888,7 +3258,7 @@ class Plot(object):
                 sm, 
                 ax=ax,
                 location='bottom', 
-                label='Hazard ratio', 
+                label=effect_label,
                 shrink=0.4
             )
 
@@ -2908,3 +3278,5 @@ class Plot(object):
             dpi=dpi, 
             bbox_inches='tight'
         )
+        plt.close(fig)
+        gc.collect()

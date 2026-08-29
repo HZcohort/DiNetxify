@@ -30,6 +30,24 @@ pip install dinetxify
 
 Core dependencies include `numpy`, `pandas`, `matplotlib`, `plotly`, `python_louvain`, `networkx`, `scikit_learn`, `scipy`, `statsmodels>=0.14.4`, `lifelines>=0.27.0`, and `tqdm`.
 
+## New in *DiNetxify* v0.2.0: Interactive visualization websites
+
+***DiNetxify*** v0.2.0 introduces `Plot.interactive_website()`, which converts analysis result tables into a self-contained, multi-page visualization website. The generated site can be opened locally without a web server or internet connection. See the [interactive example](https://hzcohort.github.io/DiNetxify/MDD_web_example/), which presents results from our [previous depression study](https://www.nature.com/articles/s41380-025-03120-y).
+
+```python
+from DiNetxify.visualization import Plot
+
+plot = Plot(
+    phewas_result=phewas_result,
+    comorbidity_result=com_network_result,
+    trajectory_result=trajectory_result,
+    exposure_name="MDD diagnosis",
+)
+plot.interactive_website("results/interactive_website")
+```
+
+The PheWAS section is always generated. Supplying `comorbidity_result` adds the interactive comorbidity network, while supplying both `comorbidity_result` and `trajectory_result` also adds the disease-trajectory and 3D network sections. The website includes filtering, search, tooltips, zoom controls, and figure export where applicable.
+
 ## Quick Start
 
 ### 1. Load phenotype data and medical records
@@ -129,21 +147,22 @@ Notes:
 - `method` can be `'RPCN'`, `'PCN_PCA'`, or `'CN'`.
 - For standalone PheWAS, `phewas(method="bfgs", maxiter=300)` controls the `statsmodels` Cox optimizer. This is separate from the pipeline `method`, which selects the network-analysis method.
 
-### 3. Visualize the results
+### 3. Visualize results
+
+The `Plot` class can generate individual figures or a complete interactive website. `phewas_result` is required; `comorbidity_result` and `trajectory_result` add the corresponding network views.
+
+#### Create individual plots
 
 ```python
+from pathlib import Path
+
 from DiNetxify.visualization import Plot
 
+results_dir = Path("results")
+trajectory_dir = results_dir / "trajectory_plots"
+trajectory_dir.mkdir(parents=True, exist_ok=True)
+
 plot = Plot(
-    phewas_result=phewas_result,
-)
-
-plot_with_comorbidity = Plot(
-    phewas_result=phewas_result,
-    comorbidity_result=com_network_result,
-)
-
-plot_with_all_results = Plot(
     phewas_result=phewas_result,
     comorbidity_result=com_network_result,
     trajectory_result=trajectory_result,
@@ -152,14 +171,35 @@ plot_with_all_results = Plot(
     exposure_size=15,
 )
 
-plot.phewas_plot("results/phewas_plot.png")
-plot_with_comorbidity.comorbidity_network_plot("results/comorbidity_network.html")
-plot_with_all_results.three_dimension_plot("results/three_dimension_network.html")
+plot.phewas_plot(str(results_dir / "phewas_plot.png"))
+plot.comorbidity_network_plot(str(results_dir / "comorbidity_network.html"))
+plot.trajectory_plot(str(trajectory_dir))
+plot.three_dimension_plot(str(results_dir / "three_dimension_network.html"))
 ```
 
-Only `phewas_result` is always required. Add `comorbidity_result` for the comorbidity network plot, and add both `comorbidity_result` and `trajectory_result` for the 3D network and trajectory plots. When both network result tables are supplied, module assignment is shared across the comorbidity, trajectory, and 3D plots.
+When both network result tables are supplied, module assignments are shared across the comorbidity, trajectory, and 3D plots.
 
-For exposed-only cohorts, set `exposure_name=None`, `exposure_location=None`, and `exposure_size=None` when creating the full network plot.
+#### Build an interactive website
+
+```python
+plot.interactive_website("results/interactive_website")
+```
+
+The generated sections depend on the result tables supplied when constructing `Plot`:
+
+| Supplied results                                             | Generated website sections                                   |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| `phewas_result`                                              | PheWAS scatter and, when effect estimates are available, forest plots |
+| `phewas_result` + `comorbidity_result`                       | PheWAS and comorbidity network                               |
+| `phewas_result` + `comorbidity_result` + `trajectory_result` | PheWAS, comorbidity network, disease trajectories, and 3D network |
+
+The PheWAS pages provide system-ordered scatter and selectable forest plots. The network pages provide module and system filters, condition search, labels, tooltips, zoom controls, and figure export. Comorbidity node sizes reflect the configured PheWAS count column, and edge widths reflect the retained association strength, capped at an effect ratio of 10 for display. The site also writes cleaned data payloads and an automatically positioned `data/comorbidity.gexf` file.
+
+Open the generated `index.html` in a modern browser. The website bundles its required assets and does not require a web server or internet connection.
+
+To customize disease-system colors, pass `SYSTEM=[...]` and the corresponding `COLOR=[...]` list when constructing `Plot`. Every disease system present in `phewas_result` must be included in `SYSTEM`.
+
+For exposed-only cohorts, omit `exposure_name`, `exposure_location`, and `exposure_size`.
 
 ## Documentation
 

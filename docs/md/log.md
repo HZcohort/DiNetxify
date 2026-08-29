@@ -1,5 +1,9 @@
 # Changelog
 
+**0.2.0 - 2026-08-29**
+
+- Added `Plot.interactive_website()` for generating self-contained offline websites from available PheWAS, comorbidity-network, disease-trajectory, and 3D network results.
+
 **0.1.17 - 2026-08-26**
 
 - Added `method` and `maxiter` parameters to `phewas()` for configuring the `statsmodels` Cox optimizer.
