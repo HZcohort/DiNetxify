@@ -84,6 +84,11 @@ If your tables use different column names, pass the alternatives when creating `
 
 Only `phewas_result` is always required. Add `comorbidity_result` for `Plot.comorbidity_network_plot()`, and add both `comorbidity_result` and `trajectory_result` for `Plot.three_dimension_plot()` and `Plot.trajectory_plot()`.
 
+When an outcome-style PheWAS table does not contain the default
+`N_cases_exposed` column, `Plot` automatically uses
+`N_cases_outcome_group`. Nested conditional-logistic results also switch the
+PheWAS effect legend from hazard ratio to odds ratio through `model_type`.
+
 ### Optional system colors
 
 You can also customize the order and colors of phecode systems with `SYSTEM` and `COLOR`:
@@ -102,7 +107,8 @@ result_plot = Plot(
 
 `Plot.phewas_plot()` creates a circular summary plot of significant PheWAS results.
 
-- In standard or matched cohorts, the color scale represents hazard ratios.
+- In cohort and matched-cohort Cox analyses, the color scale represents hazard ratios.
+- In nested case-control analyses, the color scale represents conditional odds ratios when the PheWAS result includes `model_type`.
 - In exposed-only cohorts, the color scale represents incident counts.
 
 Example:
@@ -120,7 +126,7 @@ Main parameters:
 - `exposed_only_cohort`: Set to `True` for exposed-only analyses and `False` for standard or matched cohorts.
 - `system_font_size`: Font size for disease-system labels. Default: `17`.
 - `disease_font_size`: Font size for disease labels. Default: `10`.
-- `HR_max`: Upper bound of the hazard-ratio color scale for standard or matched cohorts. Default: `2`.
+- `HR_max`: Upper bound of the exponentiated-effect color scale (hazard ratio or conditional odds ratio). Default: `2`.
 - `incident_number_max`: Upper bound of the incident-count color scale for exposed-only cohorts. `None` uses the maximum observed count. Default: `None`.
 - `dpi`: Output resolution. Default: `200`.
 
@@ -151,6 +157,8 @@ Main parameters:
 ## Disease trajectory plot
 
 `Plot.trajectory_plot()` generates one static `.png` figure per disease module, showing directed disease trajectories within that module.
+
+For before-outcome analysis, initialize `Plot` with `outcome_name` rather than `exposure_name`. The outcome node is then placed at the bottom of the 3D and trajectory plots without modifying the result tables.
 
 Example:
 
@@ -195,3 +203,27 @@ Main parameters:
 
 The exported HTML supports rotation, zooming, and node-based trajectory highlighting.
 
+## Interactive visualization website
+
+`Plot.interactive_website()` generates a self-contained, multi-page website from the result tables available in the `Plot` object. The website combines interactive result exploration with downloadable figures and cleaned data payloads.
+
+Example:
+
+```python
+result_plot.interactive_website(
+    path="results/interactive_website"
+)
+```
+
+The generated sections depend on the supplied results:
+
+- `phewas_result`: PheWAS scatter plot and, when effect estimates are available, forest plot.
+- `phewas_result` and `comorbidity_result`: PheWAS and comorbidity-network sections.
+- `phewas_result`, `comorbidity_result`, and `trajectory_result`: PheWAS, comorbidity network, disease trajectories, and 3D network sections.
+
+The PheWAS pages support disease-system filtering and condition selection. The network pages add module and system filters, search, labels, tooltips, zoom, and figure export. The website also saves cleaned result payloads and an automatically positioned `data/comorbidity.gexf` file when a comorbidity result is supplied.
+
+For after-exposure analyses, `exposure_name` is displayed as the starting endpoint of the interactive disease trajectories. For before-outcome analyses,
+set `outcome_name` instead; it is displayed as the terminal endpoint. The 3D page retains the corresponding exposure or outcome configuration from the `Plot` object.
+
+Open the generated `index.html` in a modern browser. All required website assets are written to `path`, so no web server or internet connection is required. If `trajectory_result` is supplied without `comorbidity_result`, the website contains only the PheWAS section because trajectory modules cannot be constructed without the comorbidity network.

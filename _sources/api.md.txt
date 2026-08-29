@@ -18,7 +18,7 @@ Create a data container for phenotype data, medical records, phecode mappings, a
 
 **Parameters:**
 
-- `study_design` (`str`): One of `"cohort"`, `"matched cohort"`, or `"exposed-only cohort"`.
+- `study_design` (`str`): One of `"cohort"`, `"matched cohort"`, `"exposed-only cohort"`, or `"nested case-control"`.
 - `phecode_level` (`int`): Phecode granularity, either `1` or `2`.
 - `min_required_icd_codes` (`int`): Minimum mapped ICD count required before a phecode is counted as present.
 - `date_fmt` (`str`): Default date format used for phenotype data and, unless overridden, medical-record data.
@@ -46,7 +46,7 @@ Load phenotype data into the object.
 **Parameters:**
 
 - `phenotype_data_path` (`str`): Path to a CSV or TSV phenotype file.
-- `column_names` (`dict`): Mapping from DiNetxify-required field names to dataset columns. Required keys depend on `study_design`.
+- `column_names` (`dict`): Mapping from DiNetxify-required field names to dataset columns. A cohort accepts exactly one of `Exposure` or `Outcome`; matched cohorts require `Exposure` and `Match ID`; nested case-control samples require `Outcome` and `Match ID`.
 - `covariates` (`list`): Additional phenotype variables to load.
 - `is_single_sex` (`bool`): Set to `True` if the cohort contains only one sex.
 - `force` (`bool`): Overwrite existing phenotype and medical-record data if `True`.
@@ -187,7 +187,7 @@ disease_pair(
 ) -> None
 ```
 
-Construct temporal and non-temporal disease pairs from significant PheWAS phecodes among exposed individuals.
+Construct temporal and non-temporal disease pairs from significant PheWAS phecodes among exposed participants after an exposure or outcome cases before an outcome.
 
 **Parameters:**
 
@@ -297,7 +297,10 @@ disease_network_pipeline(
     project_prefix: str,
     keep_positive_associations: bool = False,
     save_intermediate_data: bool = False,
+    system_inc: list = None,
     system_exl: list = None,
+    phecode_inc: list = None,
+    phecode_exl: list = None,
     pipeline_mode: str = "v1",
     method: str = "RPCN",
     covariates: list = None,
@@ -308,6 +311,7 @@ disease_network_pipeline(
     enforce_temporal_order: bool = False,
     correction: str = "bonferroni",
     cutoff=0.05,
+    phewas_penalizer: float = 0.0,
     **kwargs,
 ) -> tuple
 ```
@@ -315,6 +319,11 @@ disease_network_pipeline(
 Run the main workflow:
 
 `PheWAS -> disease_pair -> comorbidity_strength -> binomial/comorbidity_network -> disease_trajectory`
+
+The loaded analysis group determines the workflow. Exposure data retain the
+original after-exposure analysis. Outcome cohorts use time-varying Cox PheWAS,
+and Outcome-only nested case-control data use conditional logistic PheWAS
+within `Match ID` sets. Downstream stages use the analysis-positive group.
 
 **Returns:**
 
@@ -355,6 +364,7 @@ phewas(
     phecode_exl: list = None,
     log_file: str = None,
     lifelines_disable: bool = False,
+    penalizer: float = 0.0,
     multiprocessing_start_method: str = None,
     method: str = "bfgs",
     maxiter: int = 300,
@@ -366,12 +376,50 @@ Run a phecode-wide association scan.
 **Notes:**
 
 - `n_threshold` and `proportion_threshold` are mutually exclusive.
-- For `cohort` and `matched cohort`, PheWAS fits Cox models.
+- For after-exposure `cohort` and `matched cohort` data, PheWAS fits Cox models.
 - For `exposed-only cohort`, significance is based on the case-count threshold rather than a model-based p-value.
-- `multiprocessing_start_method` (`"fork"`, `"spawn"`, or `"forkserver"`): optional override for PheWAS multiprocessing. On POSIX systems the default prefers `forkserver` when it is safe to use.
-- `method`: optimizer passed to `statsmodels` Cox model fitting. Supported values are `"newton"`, `"bfgs"`, `"lbfgs"`, `"nm"`, `"cg"`, `"ncg"`, `"powell"`, and `"basinhopping"`.
-- `maxiter`: maximum number of optimizer iterations. The default is `300`.
-- This optimizer `method` is separate from `disease_network_pipeline(method=...)`, which selects `"RPCN"`, `"PCN_PCA"`, or `"CN"` for network analyses.
+- For before-outcome cohort data loaded with `Outcome`, `phewas()` runs the time-varying Cox PheWAS with statsmodels by default and lifelines fallback when `lifelines_disable=False`.
+- For `nested case-control` data, `phewas()` codes incident phecodes between `Index date` and the matched case diagnosis `End date`, then fits conditional logistic regression within `Match ID` sets. Its coefficient is a conditional log odds ratio.
+- `multiprocessing_start_method` (`"fork"`, `"spawn"`, or `"forkserver"`): optional override for multiprocessing. On POSIX systems the default prefers `forkserver` when it is safe to use.
+- `method`: optimizer passed to Statsmodels Cox fitting for after-exposure Cox models and before-outcome cohort time-varying Cox models. Supported values are `"newton"`, `"bfgs"`, `"lbfgs"`, `"nm"`, `"cg"`, `"ncg"`, `"powell"`, and `"basinhopping"`.
+- `maxiter`: maximum number of Statsmodels Cox optimizer iterations. The default is `300`.
+- The PheWAS optimizer `method` is separate from `disease_network_pipeline(method=...)`, which selects `"RPCN"`, `"PCN_PCA"`, or `"CN"`. The Cox optimizer settings do not change nested case-control conditional logistic regression.
+
+---
+
+### Function: `phewas_before_outcome_nested_case_control`
+
+```python
+phewas_before_outcome_nested_case_control(
+    data: DiseaseNetworkData,
+    covariates: list = None,
+    proportion_threshold: float = None,
+    n_threshold: int = None,
+    n_process: int = 1,
+    correction: str = "bonferroni",
+    cutoff: float = 0.05,
+    system_inc: list = None,
+    system_exl: list = None,
+    phecode_inc: list = None,
+    phecode_exl: list = None,
+    log_file: str = None,
+    multiprocessing_start_method: str = None,
+) -> pd.DataFrame
+```
+
+Run the dedicated Outcome-only nested case-control PheWAS. Incident phecodes
+between `Index date` and the matched case diagnosis `End date` are compared by
+conditional logistic regression within `Match ID` sets. The common public
+`phewas()` function dispatches here automatically for this study design.
+
+---
+
+### Function: `disease_network_before_outcome_pipeline`
+
+Run the explicit before-outcome workflow for either a cohort or nested
+case-control `DiseaseNetworkData` object. Its five returned DataFrames and
+outcome-prefixed output files match the before-outcome branch of
+`disease_network_pipeline()`.
 
 ---
 
@@ -405,7 +453,7 @@ comorbidity_strength(
 ) -> pd.DataFrame
 ```
 
-Estimate disease-pair strength among exposed individuals using phi correlation and relative risk.
+Estimate disease-pair strength in the analysis-positive group using phi correlation and relative risk.
 
 **Notes:**
 
@@ -603,6 +651,9 @@ class Plot(
     exposure_name: str | None = None,
     exposure_location: Tuple[float] | None = None,
     exposure_size: float | None = None,
+    outcome_name: str | None = None,
+    outcome_location: Tuple[float] | None = None,
+    outcome_size: float | None = None,
     phecode_col: str = "phecode",
     disease_col: str = "disease",
     system_col: str = "system",
@@ -637,6 +688,9 @@ Create a visualization object from PheWAS results, with optional comorbidity-net
 - `exposure_name`: Name of the exposure node. Set to `None` for exposed-only analyses.
 - `exposure_location`: 3D location of the exposure node.
 - `exposure_size`: Marker size for the exposure node.
+- `outcome_name`: Name of the terminal outcome node for before-outcome analyses. Do not specify it together with `exposure_name`.
+- `outcome_location`: 3D location of the outcome node.
+- `outcome_size`: Marker size for the outcome node.
 
 **Optional kwargs:**
 
@@ -646,6 +700,29 @@ Create a visualization object from PheWAS results, with optional comorbidity-net
 ---
 
 ### Instance Methods
+
+#### `interactive_website`
+
+```python
+interactive_website(
+    self,
+    path: str,
+) -> None
+```
+
+Generate a self-contained, multi-page interactive visualization website. The PheWAS section is always included. A comorbidity-network section is added when `comorbidity_result` is available, and disease-trajectory and 3D network sections are added when both `comorbidity_result` and `trajectory_result` are available. The generated website supports both `exposure_name` and `outcome_name` endpoint displays.
+
+- `path`: Output directory for the website. Open the generated `index.html` in a modern browser; no web server or internet connection is required.
+
+Example:
+
+```python
+result_plot.interactive_website(
+    path="results/interactive_website"
+)
+```
+
+---
 
 #### `three_dimension_plot`
 
@@ -689,7 +766,6 @@ comorbidity_network_plot(
 ```
 
 Generate an interactive 2D HTML comorbidity-network plot. Requires `comorbidity_result`.
-When `trajectory_result` was also supplied to `Plot`, trajectory-only edges are included in module assignment so clusters match the trajectory and 3D plots.
 
 ---
 

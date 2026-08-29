@@ -61,6 +61,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#comorbidity-network-plot">Comorbidity network plot</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#disease-trajectory-plot">Disease trajectory plot</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#three-dimensional-plot">Three-dimensional plot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#interactive-visualization-website">Interactive visualization website</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="table.html">Result tables description</a></li>
@@ -172,6 +173,10 @@
 </ul>
 <p>If your tables use different column names, pass the alternatives when creating <code class="docutils literal notranslate"><span class="pre">Plot</span></code>.</p>
 <p>Only <code class="docutils literal notranslate"><span class="pre">phewas_result</span></code> is always required. Add <code class="docutils literal notranslate"><span class="pre">comorbidity_result</span></code> for <code class="docutils literal notranslate"><span class="pre">Plot.comorbidity_network_plot()</span></code>, and add both <code class="docutils literal notranslate"><span class="pre">comorbidity_result</span></code> and <code class="docutils literal notranslate"><span class="pre">trajectory_result</span></code> for <code class="docutils literal notranslate"><span class="pre">Plot.three_dimension_plot()</span></code> and <code class="docutils literal notranslate"><span class="pre">Plot.trajectory_plot()</span></code>.</p>
+<p>When an outcome-style PheWAS table does not contain the default
+<code class="docutils literal notranslate"><span class="pre">N_cases_exposed</span></code> column, <code class="docutils literal notranslate"><span class="pre">Plot</span></code> automatically uses
+<code class="docutils literal notranslate"><span class="pre">N_cases_outcome_group</span></code>. Nested conditional-logistic results also switch the
+PheWAS effect legend from hazard ratio to odds ratio through <code class="docutils literal notranslate"><span class="pre">model_type</span></code>.</p>
 </section>
 <section id="optional-system-colors">
 <h3>Optional system colors<a class="headerlink" href="#optional-system-colors" title="Link to this heading"></a></h3>
@@ -191,7 +196,8 @@
 <h2>PheWAS plot<a class="headerlink" href="#phewas-plot" title="Link to this heading"></a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Plot.phewas_plot()</span></code> creates a circular summary plot of significant PheWAS results.</p>
 <ul class="simple">
-<li><p>In standard or matched cohorts, the color scale represents hazard ratios.</p></li>
+<li><p>In cohort and matched-cohort Cox analyses, the color scale represents hazard ratios.</p></li>
+<li><p>In nested case-control analyses, the color scale represents conditional odds ratios when the PheWAS result includes <code class="docutils literal notranslate"><span class="pre">model_type</span></code>.</p></li>
 <li><p>In exposed-only cohorts, the color scale represents incident counts.</p></li>
 </ul>
 <p>Example:</p>
@@ -207,7 +213,7 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">exposed_only_cohort</span></code>: Set to <code class="docutils literal notranslate"><span class="pre">True</span></code> for exposed-only analyses and <code class="docutils literal notranslate"><span class="pre">False</span></code> for standard or matched cohorts.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">system_font_size</span></code>: Font size for disease-system labels. Default: <code class="docutils literal notranslate"><span class="pre">17</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">disease_font_size</span></code>: Font size for disease labels. Default: <code class="docutils literal notranslate"><span class="pre">10</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">HR_max</span></code>: Upper bound of the hazard-ratio color scale for standard or matched cohorts. Default: <code class="docutils literal notranslate"><span class="pre">2</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">HR_max</span></code>: Upper bound of the exponentiated-effect color scale (hazard ratio or conditional odds ratio). Default: <code class="docutils literal notranslate"><span class="pre">2</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">incident_number_max</span></code>: Upper bound of the incident-count color scale for exposed-only cohorts. <code class="docutils literal notranslate"><span class="pre">None</span></code> uses the maximum observed count. Default: <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">dpi</span></code>: Output resolution. Default: <code class="docutils literal notranslate"><span class="pre">200</span></code>.</p></li>
 </ul>
@@ -237,6 +243,7 @@
 <section id="disease-trajectory-plot">
 <h2>Disease trajectory plot<a class="headerlink" href="#disease-trajectory-plot" title="Link to this heading"></a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Plot.trajectory_plot()</span></code> generates one static <code class="docutils literal notranslate"><span class="pre">.png</span></code> figure per disease module, showing directed disease trajectories within that module.</p>
+<p>For before-outcome analysis, initialize <code class="docutils literal notranslate"><span class="pre">Plot</span></code> with <code class="docutils literal notranslate"><span class="pre">outcome_name</span></code> rather than <code class="docutils literal notranslate"><span class="pre">exposure_name</span></code>. The outcome node is then placed at the bottom of the 3D and trajectory plots without modifying the result tables.</p>
 <p>Example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result_plot</span><span class="o">.</span><span class="n">trajectory_plot</span><span class="p">(</span>
     <span class="n">path</span><span class="o">=</span><span class="s2">&quot;results/trajectory_plots&quot;</span>
@@ -275,6 +282,26 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">font_size</span></code>: Base font size. Default: <code class="docutils literal notranslate"><span class="pre">15.0</span></code>.</p></li>
 </ul>
 <p>The exported HTML supports rotation, zooming, and node-based trajectory highlighting.</p>
+</section>
+<section id="interactive-visualization-website">
+<h2>Interactive visualization website<a class="headerlink" href="#interactive-visualization-website" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Plot.interactive_website()</span></code> generates a self-contained, multi-page website from the result tables available in the <code class="docutils literal notranslate"><span class="pre">Plot</span></code> object. The website combines interactive result exploration with downloadable figures and cleaned data payloads.</p>
+<p>Example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result_plot</span><span class="o">.</span><span class="n">interactive_website</span><span class="p">(</span>
+    <span class="n">path</span><span class="o">=</span><span class="s2">&quot;results/interactive_website&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>The generated sections depend on the supplied results:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">phewas_result</span></code>: PheWAS scatter plot and, when effect estimates are available, forest plot.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phewas_result</span></code> and <code class="docutils literal notranslate"><span class="pre">comorbidity_result</span></code>: PheWAS and comorbidity-network sections.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phewas_result</span></code>, <code class="docutils literal notranslate"><span class="pre">comorbidity_result</span></code>, and <code class="docutils literal notranslate"><span class="pre">trajectory_result</span></code>: PheWAS, comorbidity network, disease trajectories, and 3D network sections.</p></li>
+</ul>
+<p>The PheWAS pages support disease-system filtering and condition selection. The network pages add module and system filters, search, labels, tooltips, zoom, and figure export. The website also saves cleaned result payloads and an automatically positioned <code class="docutils literal notranslate"><span class="pre">data/comorbidity.gexf</span></code> file when a comorbidity result is supplied.</p>
+<p>For after-exposure analyses, <code class="docutils literal notranslate"><span class="pre">exposure_name</span></code> is displayed as the starting endpoint of the interactive disease trajectories. For before-outcome analyses,
+set <code class="docutils literal notranslate"><span class="pre">outcome_name</span></code> instead; it is displayed as the terminal endpoint. The 3D page retains the corresponding exposure or outcome configuration from the <code class="docutils literal notranslate"><span class="pre">Plot</span></code> object.</p>
+<p>Open the generated <code class="docutils literal notranslate"><span class="pre">index.html</span></code> in a modern browser. All required website assets are written to <code class="docutils literal notranslate"><span class="pre">path</span></code>, so no web server or internet connection is required. If <code class="docutils literal notranslate"><span class="pre">trajectory_result</span></code> is supplied without <code class="docutils literal notranslate"><span class="pre">comorbidity_result</span></code>, the website contains only the PheWAS section because trajectory modules cannot be constructed without the comorbidity network.</p>
 </section>
 </section>
 

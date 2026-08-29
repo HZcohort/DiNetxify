@@ -71,6 +71,8 @@
 <li class="toctree-l2"><a class="reference internal" href="#analysis-functions">Analysis Functions</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#function-disease-network-pipeline">Function: <code class="docutils literal notranslate"><span class="pre">disease_network_pipeline</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#function-phewas">Function: <code class="docutils literal notranslate"><span class="pre">phewas</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#function-phewas-before-outcome-nested-case-control">Function: <code class="docutils literal notranslate"><span class="pre">phewas_before_outcome_nested_case_control</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#function-disease-network-before-outcome-pipeline">Function: <code class="docutils literal notranslate"><span class="pre">disease_network_before_outcome_pipeline</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#function-phewas-multipletests">Function: <code class="docutils literal notranslate"><span class="pre">phewas_multipletests</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#function-comorbidity-strength">Function: <code class="docutils literal notranslate"><span class="pre">comorbidity_strength</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#function-comorbidity-strength-multipletests">Function: <code class="docutils literal notranslate"><span class="pre">comorbidity_strength_multipletests</span></code></a></li>
@@ -84,6 +86,7 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#class-plot">Class <code class="docutils literal notranslate"><span class="pre">Plot</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#id1">Instance Methods</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#interactive-website"><code class="docutils literal notranslate"><span class="pre">interactive_website</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#three-dimension-plot"><code class="docutils literal notranslate"><span class="pre">three_dimension_plot</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#comorbidity-network-plot"><code class="docutils literal notranslate"><span class="pre">comorbidity_network_plot</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#trajectory-plot"><code class="docutils literal notranslate"><span class="pre">trajectory_plot</span></code></a></li>
@@ -138,7 +141,7 @@
 <p>Create a data container for phenotype data, medical records, phecode mappings, and downstream pair-construction results.</p>
 <p><strong>Parameters:</strong></p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">study_design</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): One of <code class="docutils literal notranslate"><span class="pre">&quot;cohort&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;matched</span> <span class="pre">cohort&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;exposed-only</span> <span class="pre">cohort&quot;</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">study_design</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): One of <code class="docutils literal notranslate"><span class="pre">&quot;cohort&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;matched</span> <span class="pre">cohort&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;exposed-only</span> <span class="pre">cohort&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;nested</span> <span class="pre">case-control&quot;</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">phecode_level</span></code> (<code class="docutils literal notranslate"><span class="pre">int</span></code>): Phecode granularity, either <code class="docutils literal notranslate"><span class="pre">1</span></code> or <code class="docutils literal notranslate"><span class="pre">2</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">min_required_icd_codes</span></code> (<code class="docutils literal notranslate"><span class="pre">int</span></code>): Minimum mapped ICD count required before a phecode is counted as present.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">date_fmt</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Default date format used for phenotype data and, unless overridden, medical-record data.</p></li>
@@ -163,7 +166,7 @@
 <p><strong>Parameters:</strong></p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">phenotype_data_path</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Path to a CSV or TSV phenotype file.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">column_names</span></code> (<code class="docutils literal notranslate"><span class="pre">dict</span></code>): Mapping from DiNetxify-required field names to dataset columns. Required keys depend on <code class="docutils literal notranslate"><span class="pre">study_design</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">column_names</span></code> (<code class="docutils literal notranslate"><span class="pre">dict</span></code>): Mapping from DiNetxify-required field names to dataset columns. A cohort accepts exactly one of <code class="docutils literal notranslate"><span class="pre">Exposure</span></code> or <code class="docutils literal notranslate"><span class="pre">Outcome</span></code>; matched cohorts require <code class="docutils literal notranslate"><span class="pre">Exposure</span></code> and <code class="docutils literal notranslate"><span class="pre">Match</span> <span class="pre">ID</span></code>; nested case-control samples require <code class="docutils literal notranslate"><span class="pre">Outcome</span></code> and <code class="docutils literal notranslate"><span class="pre">Match</span> <span class="pre">ID</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">covariates</span></code> (<code class="docutils literal notranslate"><span class="pre">list</span></code>): Additional phenotype variables to load.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">is_single_sex</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): Set to <code class="docutils literal notranslate"><span class="pre">True</span></code> if the cohort contains only one sex.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">force</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): Overwrite existing phenotype and medical-record data if <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
@@ -293,7 +296,7 @@
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
-<p>Construct temporal and non-temporal disease pairs from significant PheWAS phecodes among exposed individuals.</p>
+<p>Construct temporal and non-temporal disease pairs from significant PheWAS phecodes among exposed participants after an exposure or outcome cases before an outcome.</p>
 <p><strong>Parameters:</strong></p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">phewas_result</span></code> (<code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code>): Result table from <code class="docutils literal notranslate"><span class="pre">phewas()</span></code>.</p></li>
@@ -396,7 +399,10 @@
     <span class="n">project_prefix</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">keep_positive_associations</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">save_intermediate_data</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">system_inc</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">system_exl</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">phecode_inc</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">phecode_exl</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">pipeline_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;v1&quot;</span><span class="p">,</span>
     <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;RPCN&quot;</span><span class="p">,</span>
     <span class="n">covariates</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -407,12 +413,17 @@
     <span class="n">enforce_temporal_order</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">correction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;bonferroni&quot;</span><span class="p">,</span>
     <span class="n">cutoff</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+    <span class="n">phewas_penalizer</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
     <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span>
 </pre></div>
 </div>
 <p>Run the main workflow:</p>
 <p><code class="docutils literal notranslate"><span class="pre">PheWAS</span> <span class="pre">-&gt;</span> <span class="pre">disease_pair</span> <span class="pre">-&gt;</span> <span class="pre">comorbidity_strength</span> <span class="pre">-&gt;</span> <span class="pre">binomial/comorbidity_network</span> <span class="pre">-&gt;</span> <span class="pre">disease_trajectory</span></code></p>
+<p>The loaded analysis group determines the workflow. Exposure data retain the
+original after-exposure analysis. Outcome cohorts use time-varying Cox PheWAS,
+and Outcome-only nested case-control data use conditional logistic PheWAS
+within <code class="docutils literal notranslate"><span class="pre">Match</span> <span class="pre">ID</span></code> sets. Downstream stages use the analysis-positive group.</p>
 <p><strong>Returns:</strong></p>
 <ul class="simple">
 <li><p>A 5-tuple in this order:</p>
@@ -460,6 +471,7 @@
     <span class="n">phecode_exl</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">log_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">lifelines_disable</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">penalizer</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
     <span class="n">multiprocessing_start_method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;bfgs&quot;</span><span class="p">,</span>
     <span class="n">maxiter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">300</span><span class="p">,</span>
@@ -470,13 +482,48 @@
 <p><strong>Notes:</strong></p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">n_threshold</span></code> and <code class="docutils literal notranslate"><span class="pre">proportion_threshold</span></code> are mutually exclusive.</p></li>
-<li><p>For <code class="docutils literal notranslate"><span class="pre">cohort</span></code> and <code class="docutils literal notranslate"><span class="pre">matched</span> <span class="pre">cohort</span></code>, PheWAS fits Cox models.</p></li>
+<li><p>For after-exposure <code class="docutils literal notranslate"><span class="pre">cohort</span></code> and <code class="docutils literal notranslate"><span class="pre">matched</span> <span class="pre">cohort</span></code> data, PheWAS fits Cox models.</p></li>
 <li><p>For <code class="docutils literal notranslate"><span class="pre">exposed-only</span> <span class="pre">cohort</span></code>, significance is based on the case-count threshold rather than a model-based p-value.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">multiprocessing_start_method</span></code> (<code class="docutils literal notranslate"><span class="pre">&quot;fork&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;spawn&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;forkserver&quot;</span></code>): optional override for PheWAS multiprocessing. On POSIX systems the default prefers <code class="docutils literal notranslate"><span class="pre">forkserver</span></code> when it is safe to use.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">method</span></code>: optimizer passed to <code class="docutils literal notranslate"><span class="pre">statsmodels</span></code> Cox model fitting. Supported values are <code class="docutils literal notranslate"><span class="pre">&quot;newton&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;bfgs&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;lbfgs&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;nm&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;cg&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;ncg&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;powell&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">&quot;basinhopping&quot;</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">maxiter</span></code>: maximum number of optimizer iterations. The default is <code class="docutils literal notranslate"><span class="pre">300</span></code>.</p></li>
-<li><p>This optimizer <code class="docutils literal notranslate"><span class="pre">method</span></code> is separate from <code class="docutils literal notranslate"><span class="pre">disease_network_pipeline(method=...)</span></code>, which selects <code class="docutils literal notranslate"><span class="pre">&quot;RPCN&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;PCN_PCA&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;CN&quot;</span></code> for network analyses.</p></li>
+<li><p>For before-outcome cohort data loaded with <code class="docutils literal notranslate"><span class="pre">Outcome</span></code>, <code class="docutils literal notranslate"><span class="pre">phewas()</span></code> runs the time-varying Cox PheWAS with statsmodels by default and lifelines fallback when <code class="docutils literal notranslate"><span class="pre">lifelines_disable=False</span></code>.</p></li>
+<li><p>For <code class="docutils literal notranslate"><span class="pre">nested</span> <span class="pre">case-control</span></code> data, <code class="docutils literal notranslate"><span class="pre">phewas()</span></code> codes incident phecodes between <code class="docutils literal notranslate"><span class="pre">Index</span> <span class="pre">date</span></code> and the matched case diagnosis <code class="docutils literal notranslate"><span class="pre">End</span> <span class="pre">date</span></code>, then fits conditional logistic regression within <code class="docutils literal notranslate"><span class="pre">Match</span> <span class="pre">ID</span></code> sets. Its coefficient is a conditional log odds ratio.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">multiprocessing_start_method</span></code> (<code class="docutils literal notranslate"><span class="pre">&quot;fork&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;spawn&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;forkserver&quot;</span></code>): optional override for multiprocessing. On POSIX systems the default prefers <code class="docutils literal notranslate"><span class="pre">forkserver</span></code> when it is safe to use.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">method</span></code>: optimizer passed to Statsmodels Cox fitting for after-exposure Cox models and before-outcome cohort time-varying Cox models. Supported values are <code class="docutils literal notranslate"><span class="pre">&quot;newton&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;bfgs&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;lbfgs&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;nm&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;cg&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;ncg&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;powell&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">&quot;basinhopping&quot;</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">maxiter</span></code>: maximum number of Statsmodels Cox optimizer iterations. The default is <code class="docutils literal notranslate"><span class="pre">300</span></code>.</p></li>
+<li><p>The PheWAS optimizer <code class="docutils literal notranslate"><span class="pre">method</span></code> is separate from <code class="docutils literal notranslate"><span class="pre">disease_network_pipeline(method=...)</span></code>, which selects <code class="docutils literal notranslate"><span class="pre">&quot;RPCN&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;PCN_PCA&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;CN&quot;</span></code>. The Cox optimizer settings do not change nested case-control conditional logistic regression.</p></li>
 </ul>
+</section>
+<hr class="docutils" />
+<section id="function-phewas-before-outcome-nested-case-control">
+<h3>Function: <code class="docutils literal notranslate"><span class="pre">phewas_before_outcome_nested_case_control</span></code><a class="headerlink" href="#function-phewas-before-outcome-nested-case-control" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phewas_before_outcome_nested_case_control</span><span class="p">(</span>
+    <span class="n">data</span><span class="p">:</span> <span class="n">DiseaseNetworkData</span><span class="p">,</span>
+    <span class="n">covariates</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">proportion_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">n_threshold</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">n_process</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">correction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;bonferroni&quot;</span><span class="p">,</span>
+    <span class="n">cutoff</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
+    <span class="n">system_inc</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">system_exl</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">phecode_inc</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">phecode_exl</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">log_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">multiprocessing_start_method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+<p>Run the dedicated Outcome-only nested case-control PheWAS. Incident phecodes
+between <code class="docutils literal notranslate"><span class="pre">Index</span> <span class="pre">date</span></code> and the matched case diagnosis <code class="docutils literal notranslate"><span class="pre">End</span> <span class="pre">date</span></code> are compared by
+conditional logistic regression within <code class="docutils literal notranslate"><span class="pre">Match</span> <span class="pre">ID</span></code> sets. The common public
+<code class="docutils literal notranslate"><span class="pre">phewas()</span></code> function dispatches here automatically for this study design.</p>
+</section>
+<hr class="docutils" />
+<section id="function-disease-network-before-outcome-pipeline">
+<h3>Function: <code class="docutils literal notranslate"><span class="pre">disease_network_before_outcome_pipeline</span></code><a class="headerlink" href="#function-disease-network-before-outcome-pipeline" title="Link to this heading"></a></h3>
+<p>Run the explicit before-outcome workflow for either a cohort or nested
+case-control <code class="docutils literal notranslate"><span class="pre">DiseaseNetworkData</span></code> object. Its five returned DataFrames and
+outcome-prefixed output files match the before-outcome branch of
+<code class="docutils literal notranslate"><span class="pre">disease_network_pipeline()</span></code>.</p>
 </section>
 <hr class="docutils" />
 <section id="function-phewas-multipletests">
@@ -506,7 +553,7 @@
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
-<p>Estimate disease-pair strength among exposed individuals using phi correlation and relative risk.</p>
+<p>Estimate disease-pair strength in the analysis-positive group using phi correlation and relative risk.</p>
 <p><strong>Notes:</strong></p>
 <ul class="simple">
 <li><p>Requires disease pairs to have already been built with <code class="docutils literal notranslate"><span class="pre">DiseaseNetworkData.disease_pair()</span></code>.</p></li>
@@ -700,6 +747,9 @@
     <span class="n">exposure_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">exposure_location</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">exposure_size</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">outcome_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">outcome_location</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">outcome_size</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">phecode_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;phecode&quot;</span><span class="p">,</span>
     <span class="n">disease_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;disease&quot;</span><span class="p">,</span>
     <span class="n">system_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;system&quot;</span><span class="p">,</span>
@@ -733,6 +783,9 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">exposure_name</span></code>: Name of the exposure node. Set to <code class="docutils literal notranslate"><span class="pre">None</span></code> for exposed-only analyses.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">exposure_location</span></code>: 3D location of the exposure node.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">exposure_size</span></code>: Marker size for the exposure node.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">outcome_name</span></code>: Name of the terminal outcome node for before-outcome analyses. Do not specify it together with <code class="docutils literal notranslate"><span class="pre">exposure_name</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">outcome_location</span></code>: 3D location of the outcome node.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">outcome_size</span></code>: Marker size for the outcome node.</p></li>
 </ul>
 <p><strong>Optional kwargs:</strong></p>
 <ul class="simple">
@@ -742,6 +795,26 @@
 <hr class="docutils" />
 <section id="id1">
 <h3>Instance Methods<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<section id="interactive-website">
+<h4><code class="docutils literal notranslate"><span class="pre">interactive_website</span></code><a class="headerlink" href="#interactive-website" title="Link to this heading"></a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">interactive_website</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</pre></div>
+</div>
+<p>Generate a self-contained, multi-page interactive visualization website. The PheWAS section is always included. A comorbidity-network section is added when <code class="docutils literal notranslate"><span class="pre">comorbidity_result</span></code> is available, and disease-trajectory and 3D network sections are added when both <code class="docutils literal notranslate"><span class="pre">comorbidity_result</span></code> and <code class="docutils literal notranslate"><span class="pre">trajectory_result</span></code> are available. The generated website supports both <code class="docutils literal notranslate"><span class="pre">exposure_name</span></code> and <code class="docutils literal notranslate"><span class="pre">outcome_name</span></code> endpoint displays.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">path</span></code>: Output directory for the website. Open the generated <code class="docutils literal notranslate"><span class="pre">index.html</span></code> in a modern browser; no web server or internet connection is required.</p></li>
+</ul>
+<p>Example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result_plot</span><span class="o">.</span><span class="n">interactive_website</span><span class="p">(</span>
+    <span class="n">path</span><span class="o">=</span><span class="s2">&quot;results/interactive_website&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<hr class="docutils" />
 <section id="three-dimension-plot">
 <h4><code class="docutils literal notranslate"><span class="pre">three_dimension_plot</span></code><a class="headerlink" href="#three-dimension-plot" title="Link to this heading"></a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">three_dimension_plot</span><span class="p">(</span>
@@ -780,8 +853,7 @@
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
-<p>Generate an interactive 2D HTML comorbidity-network plot. Requires <code class="docutils literal notranslate"><span class="pre">comorbidity_result</span></code>.
-When <code class="docutils literal notranslate"><span class="pre">trajectory_result</span></code> was also supplied to <code class="docutils literal notranslate"><span class="pre">Plot</span></code>, trajectory-only edges are included in module assignment so clusters match the trajectory and 3D plots.</p>
+<p>Generate an interactive 2D HTML comorbidity-network plot. Requires <code class="docutils literal notranslate"><span class="pre">comorbidity_result</span></code>.</p>
 </section>
 <hr class="docutils" />
 <section id="trajectory-plot">
