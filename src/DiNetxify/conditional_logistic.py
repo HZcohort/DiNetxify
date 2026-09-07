@@ -29,6 +29,27 @@ def _limit_threadpools() -> None:
         return
     _threadpool_limiter = threadpool_limits(limits=1)
 
+def _add_timed_disease_covariates(df_matched:pd.DataFrame,
+                                  phenotype_df_exposed:pd.DataFrame,
+                                  id_col:str,outcome_date_col:str,
+                                  disease_columns:list) -> pd.DataFrame:
+    """Convert diagnosis dates to matched-reference-date disease indicators."""
+    if not disease_columns:
+        return df_matched
+    if phenotype_df_exposed[id_col].duplicated().any():
+        raise ValueError("Participant IDs must be unique in phenotype data.")
+
+    diagnosis_lookup = phenotype_df_exposed.set_index(id_col)[disease_columns]
+    diagnosis_dates = diagnosis_lookup.reindex(df_matched[id_col].to_list())
+    diagnosis_dates.index = df_matched.index
+    diagnosis_dates = diagnosis_dates.apply(pd.to_datetime)
+    reference_dates = pd.to_datetime(df_matched[outcome_date_col])
+    disease_values = diagnosis_dates.notna() & diagnosis_dates.lt(reference_dates,axis=0)
+
+    df_matched = df_matched.copy()
+    df_matched[disease_columns] = disease_values.astype('uint8')
+    return df_matched
+
 def logistic_model(args):
     """
     Fit a conditional LR model to verify the comorbidity association between a temporal disease pair.
@@ -46,7 +67,7 @@ def logistic_model(args):
     trajectory_ineligible : dict, trajectory ineligible disease dictionary.
     trajectory_temporal : dict, temporal disease pair dictionary
     trajectory_eligible_withdate : dict, trajectory eligible disease (with date) dictionary.
-    all_diagnosis_level : list, list of all diagnosed phecodes, with phecode truncated to corresponding level
+    Disease columns in phenotype_df_exposed contain count-qualified diagnosis dates.
     covariates : list, list of covariates to be included in the model.
     all_diseases_lst : list, list of other diseases to be included.
     matching_var_dict : dict, matching variables and the criteria used for incidence density sampling.
@@ -62,12 +83,12 @@ def logistic_model(args):
     #shared global data
     global phenotype_df_exposed_
     global id_col_
+    global index_date_col_
     global end_date_col_
     global trajectory_ineligible_
     global min_interval_
     global max_interval_
     global trajectory_eligible_withdate_
-    global all_diagnosis_level_
     global covariates_
     global all_diseases_lst_
     global matching_var_dict_
@@ -104,7 +125,9 @@ def logistic_model(args):
     
     #filtering the dataframe first
     N = len(phenotype_df_exposed_)
-    vars_for_matching = [id_col_,end_date_col_]+list(matching_var_dict_.keys())
+    vars_for_matching = list(dict.fromkeys(
+        [id_col_,index_date_col_,end_date_col_]+list(matching_var_dict_.keys())
+    ))
     d2_eligible_lst = [id_ for id_,vals in trajectory_ineligible_.items() if d2 not in vals]
     df_for_matching = phenotype_df_exposed_[phenotype_df_exposed_[id_col_].isin(d2_eligible_lst)][vars_for_matching]
 
@@ -118,8 +141,13 @@ def logistic_model(args):
         df_for_matching = pd.concat([cases,controls])
 
     #matching
-    df_matched = matching_ids(df_for_matching,matching_var_dict_,matching_n_,id_col_,d2_date_col,end_date_col_,
+    df_matched = matching_ids(df_for_matching,matching_var_dict_,matching_n_,id_col_,d2_date_col,index_date_col_,end_date_col_,
                               d2_col,outcome_date_col,mathcing_id_col)
+    if method in ['RPCN','PCN_PCA']:
+        disease_columns = [str(disease) for disease in all_diseases_lst_]
+        df_matched = _add_timed_disease_covariates(
+            df_matched,phenotype_df_exposed_,id_col_,outcome_date_col,disease_columns
+        )
     del df_for_matching
     gc.collect()
 
@@ -146,11 +174,6 @@ def logistic_model(args):
         d1_eligible_lst = [id_ for id_,vals in trajectory_ineligible_.items() if d1 not in vals]
         df_matched_d1 = df_matched[df_matched[id_col_].isin(d1_eligible_lst)]
 
-        #remove groups with no outcomes
-        group_sd = df_matched_d1.groupby(mathcing_id_col)[d2_col].std()
-        group_id = group_sd[group_sd>0].index
-        df_matched_d1 = df_matched_d1[df_matched_d1[mathcing_id_col].isin(group_id)]
-
         #create other diseases variable (already generated in the main function)
         if method in ['RPCN','PCN_PCA']:
             diseases_lst_ = [x for x in all_diseases_lst_ if x!=d1 and x!=d2]
@@ -158,8 +181,8 @@ def logistic_model(args):
         else:
             all_diseases_var = []
     
-        df_analysis = pd.merge(df_matched_d1,phenotype_df_exposed_[[id_col_]+covariates_+all_diseases_var],
-                               on=id_col_,how='left')
+        df_analysis = pd.merge(df_matched_d1,phenotype_df_exposed_[[id_col_]+covariates_],
+                               on=id_col_,how='left',validate='many_to_one')
         del df_matched_d1
         gc.collect()
         df_analysis[d1_date_col] = df_analysis[id_col_].apply(lambda x: trajectory_eligible_withdate_[x].get(d1,pd.NaT))
@@ -172,6 +195,10 @@ def logistic_model(args):
             df_analysis['flag']  = df_analysis.apply(lambda row: 1 if (row[outcome_date_col]-row[d1_date_col]).days<=min_interval_ else 0, axis=1)
             #exclude those with flag=1 and d1_col=1
             df_analysis = df_analysis[(df_analysis['flag']==0) | (df_analysis[d1_col]==0)]
+
+        group_sd = df_analysis.groupby(mathcing_id_col)[d2_col].std()
+        group_id = group_sd[group_sd>0].index
+        df_analysis = df_analysis[df_analysis[mathcing_id_col].isin(group_id)]
         
         #statistics
         n = len(df_analysis) #number of individuals in the matched case-control study
@@ -225,7 +252,23 @@ def logistic_model(args):
             alpha_lst = np.array([0]*len(forcedin_vars) + [1]*len(all_diseases_var))
             #variables for first model for selecting disease variables
             model_1_vars = forcedin_vars+all_diseases_var
-            if auto_penalty:
+            if not all_diseases_var:
+                model_name = f'{method}_auto' if auto_penalty else f'{method}_fixed_alpha'
+                try:
+                    final_model_vars = [x for x in forcedin_vars if x!=constant_col]+final_covariates
+                    model_final = ConditionalLogit(np.asarray(df_analysis[d2_col],dtype=int),
+                                                np.asarray(df_analysis[final_model_vars],dtype=float),
+                                                groups=df_analysis[mathcing_id_col].values)
+                    result_final = MyConditionalResultsWrapper(model_final.fit(disp=False, method='bfgs'))
+                    beta,se,p,aic = result_final.params[0],result_final.bse[0],result_final.pvalues[0],result_final.aic
+                    zvalue_dict = {var:z for var,z in zip(final_model_vars,result_final.tvalues)}
+                    result_lst += [model_name,f'fitted and delete the diseases variable(s): {del_diseases_var} and covariate(s): {del_covariates}',
+                                f'{final_model_vars}',f'{zvalue_dict}',np.nan,beta,se,p,aic]
+                    message += f'method={model_name} (no informative other disease covariates); successfully fitted; '
+                except Exception as e:
+                    result_lst += [model_name,str(e)]
+                    message += f'method={model_name}; error encountered: {e}; '
+            elif auto_penalty:
                 alpha_lst = alpha_lst * scaling_factor
                 try:
                     # model
@@ -285,41 +328,48 @@ def logistic_model(args):
             gc.collect()
 
         elif method == 'PCN_PCA':
-            from sklearn.decomposition import PCA # type: ignore
+            del_diseases_var = [var for var in all_diseases_var if df_analysis[var].nunique() <= 1]
+            all_diseases_var = [var for var in all_diseases_var if var not in del_diseases_var]
             try:
-                #generate PC from other diseases variables
-                pca = PCA(n_components=pca_number)
-                #fit PCA model with unduplicated samples
-                pca_model = pca.fit(np.asarray(df_analysis.drop_duplicates(subset=[id_col_])[all_diseases_var],dtype=int))
-                #transform the original variables
-                disease_vars_transformed = pca_model.transform(np.asarray(df_analysis[all_diseases_var],dtype=int))
-                all_pca_vars = [f'PCA_{i}' for i in range(disease_vars_transformed.shape[1])]
-                disease_vars_transformed = pd.DataFrame(disease_vars_transformed,columns=all_pca_vars)
-                disease_vars_transformed.index = df_analysis.index
-                df_analysis = pd.concat([df_analysis,disease_vars_transformed],axis=1)
-                del disease_vars_transformed
-                gc.collect()
-                variance_explained = sum(pca.explained_variance_ratio_)
-                #fit model with PCA covariates
-                del_pca_var = check_variance_vif_single(df_analysis,
-                                                        forcedin_vars,all_pca_vars,
-                                                        vif_cutoff='pca_covar',
-                                                        group_col=mathcing_id_col)
-                final_pca_var = [x for x in all_pca_vars if x not in del_pca_var]
-                #fit the final model
-                #remove constant variables before final model fitting
-                forcedin_vars = [x for x in forcedin_vars if x!=constant_col]
-                final_model_vars = forcedin_vars+final_pca_var+final_covariates
-                model_final = ConditionalLogit(np.asarray(df_analysis[d2_col],dtype=int),
-                                            np.asarray(df_analysis[final_model_vars],dtype=float),
-                                            groups=df_analysis[mathcing_id_col].values)
-                result_final = model_final.fit(disp=False, method='bfgs')
-                result_final = MyConditionalResultsWrapper(result_final) #add aic property
-                beta,se,p,aic = result_final.params[0], result_final.bse[0], result_final.pvalues[0], result_final.aic
-                z_value_dict = {var:z for var,z in zip(final_model_vars,result_final.tvalues)}
-                result_lst += [f'{method}_n_components={pca_number}',f'fitted and delete the pca variable(s): {del_pca_var} and covariate(s): {del_covariates}',
-                            f'{final_model_vars}',f'{z_value_dict}',variance_explained,beta,se,p,aic]
-                message += f'method={method}_n_components={pca_number} (number of PC included as covariates: {len(final_pca_var)}, total variance explained by PC: {variance_explained:.3f}); successfully fitted; '
+                if not all_diseases_var:
+                    final_model_vars = [x for x in forcedin_vars if x!=constant_col]+final_covariates
+                    model_final = ConditionalLogit(np.asarray(df_analysis[d2_col],dtype=int),
+                                                np.asarray(df_analysis[final_model_vars],dtype=float),
+                                                groups=df_analysis[mathcing_id_col].values)
+                    result_final = MyConditionalResultsWrapper(model_final.fit(disp=False, method='bfgs'))
+                    beta,se,p,aic = result_final.params[0],result_final.bse[0],result_final.pvalues[0],result_final.aic
+                    z_value_dict = {var:z for var,z in zip(final_model_vars,result_final.tvalues)}
+                    result_lst += [f'{method}_n_components={pca_number}',f'fitted and delete the disease variable(s): {del_diseases_var} and covariate(s): {del_covariates}',
+                                f'{final_model_vars}',f'{z_value_dict}',np.nan,beta,se,p,aic]
+                    message += f'method={method}_n_components={pca_number} (no informative other disease covariates); successfully fitted; '
+                else:
+                    from sklearn.decomposition import PCA # type: ignore
+                    pca = PCA(n_components=pca_number)
+                    pca_model = pca.fit(np.asarray(df_analysis.drop_duplicates(subset=[id_col_,outcome_date_col])[all_diseases_var],dtype=int))
+                    disease_vars_transformed = pca_model.transform(np.asarray(df_analysis[all_diseases_var],dtype=int))
+                    all_pca_vars = [f'PCA_{i}' for i in range(disease_vars_transformed.shape[1])]
+                    disease_vars_transformed = pd.DataFrame(disease_vars_transformed,columns=all_pca_vars)
+                    disease_vars_transformed.index = df_analysis.index
+                    df_analysis = pd.concat([df_analysis,disease_vars_transformed],axis=1)
+                    del disease_vars_transformed
+                    gc.collect()
+                    variance_explained = sum(pca.explained_variance_ratio_)
+                    del_pca_var = check_variance_vif_single(df_analysis,
+                                                            forcedin_vars,all_pca_vars,
+                                                            vif_cutoff='pca_covar',
+                                                            group_col=mathcing_id_col)
+                    final_pca_var = [x for x in all_pca_vars if x not in del_pca_var]
+                    forcedin_vars = [x for x in forcedin_vars if x!=constant_col]
+                    final_model_vars = forcedin_vars+final_pca_var+final_covariates
+                    model_final = ConditionalLogit(np.asarray(df_analysis[d2_col],dtype=int),
+                                                np.asarray(df_analysis[final_model_vars],dtype=float),
+                                                groups=df_analysis[mathcing_id_col].values)
+                    result_final = MyConditionalResultsWrapper(model_final.fit(disp=False, method='bfgs'))
+                    beta,se,p,aic = result_final.params[0],result_final.bse[0],result_final.pvalues[0],result_final.aic
+                    z_value_dict = {var:z for var,z in zip(final_model_vars,result_final.tvalues)}
+                    result_lst += [f'{method}_n_components={pca_number}',f'fitted and delete the pca variable(s): {del_pca_var} and covariate(s): {del_covariates}',
+                                f'{final_model_vars}',f'{z_value_dict}',variance_explained,beta,se,p,aic]
+                    message += f'method={method}_n_components={pca_number} (number of PC included as covariates: {len(final_pca_var)}, total variance explained by PC: {variance_explained:.3f}); successfully fitted; '
             except Exception as e:
                 result_lst += [f'{method}_n_components={pca_number}',str(e)]
                 message += f'method={method}_n_components={pca_number}; error encountered: {e}; '
@@ -341,8 +391,8 @@ def logistic_model_indexed(args):
     idx, d1_lst, d2 = args
     return idx, logistic_model((d1_lst, d2))
 
-def logistic_model_wrapper(d1_lst:list,d2:float,phenotype_df_exposed:pd.DataFrame,id_col,end_date_col,trajectory_ineligible:dict,
-                            min_interval:int,max_interval:int,trajectory_eligible_withdate:dict,all_diagnosis_level:dict,covariates:list,
+def logistic_model_wrapper(d1_lst:list,d2:float,phenotype_df_exposed:pd.DataFrame,id_col,index_date_col,end_date_col,trajectory_ineligible:dict,
+                            min_interval:int,max_interval:int,trajectory_eligible_withdate:dict,covariates:list,
                             all_diseases_lst:list,matching_var_dict:dict,matching_n:int,max_n_cases:int,log_file:str,parameters:dict):
     """
     Wrapper for logistic_model that assigns default values to global variables if needed.
@@ -352,11 +402,11 @@ def logistic_model_wrapper(d1_lst:list,d2:float,phenotype_df_exposed:pd.DataFram
     phenotype_df_exposed : pd.DataFrame, phenotypic data for exposed individuals only.
     trajectory_ineligible : dict, trajectory ineligible disease dictionary.
     id_col : str, id column
+    index_date_col : str, date of follow-up start
     end_date_col : str, date of end follow-up
     min_interval : int, minimum interval required for d1-d2 disease pair construction.
     max_interval : int, maximum interval allowed for d1-d2 disease pair construction
     trajectory_eligible_withdate : dict, trajectory eligible disease (with date) dictionary.
-    all_diagnosis_level : list, list of all diagnosed phecodes, with phecode truncated to corresponding level
     covariates : list, list of covariates to be included in the model.
     all_diseases_lst : list, list of other diseases to be included.
     log_file : str, Path and prefix for the log file
@@ -370,12 +420,12 @@ def logistic_model_wrapper(d1_lst:list,d2:float,phenotype_df_exposed:pd.DataFram
     #shared global data
     global phenotype_df_exposed_
     global id_col_
+    global index_date_col_
     global end_date_col_
     global trajectory_ineligible_
     global min_interval_
     global max_interval_
     global trajectory_eligible_withdate_
-    global all_diagnosis_level_
     global covariates_
     global all_diseases_lst_
     global matching_var_dict_
@@ -387,12 +437,12 @@ def logistic_model_wrapper(d1_lst:list,d2:float,phenotype_df_exposed:pd.DataFram
     #assign values
     phenotype_df_exposed_ = phenotype_df_exposed
     id_col_ = id_col
+    index_date_col_ = index_date_col
     end_date_col_ = end_date_col
     trajectory_ineligible_ = trajectory_ineligible
     min_interval_ = min_interval
     max_interval_ = max_interval
     trajectory_eligible_withdate_ = trajectory_eligible_withdate
-    all_diagnosis_level_ = all_diagnosis_level
     covariates_ = covariates
     all_diseases_lst_ = all_diseases_lst
     matching_var_dict_ = matching_var_dict
@@ -404,8 +454,8 @@ def logistic_model_wrapper(d1_lst:list,d2:float,phenotype_df_exposed:pd.DataFram
     _limit_threadpools()
     return logistic_model((d1_lst, d2))
 
-def init_worker(phenotype_df_exposed:pd.DataFrame,id_col,end_date_col,trajectory_ineligible:dict,
-                min_interval:int,max_interval:int,trajectory_eligible_withdate:dict,all_diagnosis_level:dict,covariates:list,
+def init_worker(phenotype_df_exposed:pd.DataFrame,id_col,index_date_col,end_date_col,trajectory_ineligible:dict,
+                min_interval:int,max_interval:int,trajectory_eligible_withdate:dict,covariates:list,
                 all_diseases_lst:list,matching_var_dict:dict,matching_n:int,max_n_cases:int,log_file:str,parameters:dict):
     """
     This function sets up the necessary global variables for a worker process in a multiprocessing environment.
@@ -416,11 +466,11 @@ def init_worker(phenotype_df_exposed:pd.DataFrame,id_col,end_date_col,trajectory
     phenotype_df_exposed : pd.DataFrame, phenotypic data for exposed individuals only.
     trajectory_ineligible : dict, trajectory ineligible disease dictionary.
     id_col : str, id column
+    index_date_col : str, date of follow-up start
     end_date_col : str, date of end follow-up
     min_interval : int, minimum interval required for d1-d2 disease pair construction.
     max_interval : int, maximum interval allowed for d1-d2 disease pair construction
     trajectory_eligible_withdate : dict, trajectory eligible disease (with date) dictionary.
-    all_diagnosis_level : list, list of all diagnosed phecodes, with phecode truncated to corresponding level
     covariates : list, list of covariates to be included in the model.
     all_diseases_lst : list, list of other diseases to be included.
     log_file : str, Path and prefix for the log file
@@ -434,12 +484,12 @@ def init_worker(phenotype_df_exposed:pd.DataFrame,id_col,end_date_col,trajectory
     #shared global data
     global phenotype_df_exposed_
     global id_col_
+    global index_date_col_
     global end_date_col_
     global trajectory_ineligible_
     global min_interval_
     global max_interval_
     global trajectory_eligible_withdate_
-    global all_diagnosis_level_
     global covariates_
     global all_diseases_lst_
     global matching_var_dict_
@@ -450,12 +500,12 @@ def init_worker(phenotype_df_exposed:pd.DataFrame,id_col,end_date_col,trajectory
     #assign values
     phenotype_df_exposed_ = phenotype_df_exposed
     id_col_ = id_col
+    index_date_col_ = index_date_col
     end_date_col_ = end_date_col
     trajectory_ineligible_ = trajectory_ineligible
     min_interval_ = min_interval
     max_interval_ = max_interval
     trajectory_eligible_withdate_ = trajectory_eligible_withdate
-    all_diagnosis_level_ = all_diagnosis_level
     covariates_ = covariates
     all_diseases_lst_ = all_diseases_lst
     matching_var_dict_ = matching_var_dict
@@ -491,7 +541,7 @@ def determine_best_range(aic_dict):
     else:  # Best alpha is between two values
         return (alpha_values[min_aic_index - 1], alpha_values[min_aic_index + 1])
 
-def matching_ids(df:pd.DataFrame,matching_var_dict:dict,matching_n:int,id_col,outcome_date_col:str,end_date_col:str,
+def matching_ids(df:pd.DataFrame,matching_var_dict:dict,matching_n:int,id_col,outcome_date_col:str,index_date_col:str,end_date_col:str,
                  save_outcome_col:str,save_outcome_date_col:str, save_matching_col:str):
     """
     Incidence density sampling matching.
@@ -503,6 +553,7 @@ def matching_ids(df:pd.DataFrame,matching_var_dict:dict,matching_n:int,id_col,ou
     matching_n : int, number of matched controls
     id_col : str, id column
     outcome_date_col : str, date of outcome
+    index_date_col : str, date of follow-up start
     end_date_col : str, date of end follow-up
     
     #the following columns are used for saving the results
@@ -517,10 +568,16 @@ def matching_ids(df:pd.DataFrame,matching_var_dict:dict,matching_n:int,id_col,ou
     """
     result = []
     iter_ = 0
-    case = df.loc[~df[outcome_date_col].isna()]
+    case = df.loc[
+        ~df[outcome_date_col].isna() &
+        (df[index_date_col] < df[outcome_date_col]) &
+        (df[outcome_date_col] <= df[end_date_col])
+    ]
     for index in case.index:
         outcome_time = case.loc[index,outcome_date_col]
-        sample = df[(df[end_date_col]>outcome_time) & ~(df[outcome_date_col]<=outcome_time)]
+        sample = df[(df[index_date_col]<outcome_time) &
+                    (df[end_date_col]>outcome_time) &
+                    ~(df[outcome_date_col]<=outcome_time)]
         for var in matching_var_dict:
             var_value = case.loc[index,var]
             if matching_var_dict[var] == 'exact':

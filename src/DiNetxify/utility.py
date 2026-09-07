@@ -878,6 +878,64 @@ def get_exclison_lst(exl_range_str):
     
     return set(exl_list)
 
+def _build_trajectory_disease_covariates(data, phenotype_df_exposed:pd.DataFrame,
+                                         all_diseases_lst:list) -> pd.DataFrame:
+    """
+    Add count-qualified diagnosis dates for trajectory disease covariates.
+
+    Qualifying history is represented by the participant's Index date minus
+    one day. Otherwise, the earliest retained diagnosis date is used. The
+    returned DataFrame is analysis-local and the DiseaseNetworkData object is
+    not modified.
+    """
+    phenotype_info = data.get_attribute('phenotype_info')
+    column_dict = phenotype_info['phenotype_col_dict']
+    id_col = column_dict['Participant ID']
+    index_date_col = column_dict['Index date']
+    end_date_col = column_dict['End date']
+    disease_columns = [str(disease) for disease in all_diseases_lst]
+
+    if len(disease_columns) != len(set(disease_columns)):
+        raise ValueError("Disease identifiers must produce unique trajectory covariate columns.")
+    duplicate_columns = [column for column in disease_columns if column in phenotype_df_exposed.columns]
+    if duplicate_columns:
+        raise ValueError(
+            f"Trajectory disease covariate columns overlap existing phenotype columns: {duplicate_columns}."
+        )
+
+    required_columns = [id_col,index_date_col,end_date_col]
+    missing_columns = [column for column in required_columns if column not in phenotype_df_exposed.columns]
+    if missing_columns:
+        raise ValueError(f"Missing columns required for trajectory disease covariates: {missing_columns}.")
+
+    participant_ids = phenotype_df_exposed[id_col].to_list()
+    index_dates = dict(phenotype_df_exposed[[id_col,index_date_col]].values)
+    end_dates = dict(phenotype_df_exposed[[id_col,end_date_col]].values)
+    history = {patient_id:set(data.history[patient_id]) for patient_id in participant_ids}
+    minimum_count = data.min_required_icd_codes
+
+    disease_dates = {}
+    for disease,column in zip(all_diseases_lst,disease_columns):
+        leaf_list = data.phecode_info[disease]['leaf_list']
+        values = []
+        for patient_id in participant_ids:
+            count = sum(data.n_diagnosis[patient_id].get(leaf,0) for leaf in leaf_list)
+            if count < minimum_count:
+                values.append(pd.NaT)
+            elif any(leaf in history[patient_id] for leaf in leaf_list):
+                values.append(pd.Timestamp(index_dates[patient_id]) - pd.Timedelta(days=1))
+            else:
+                dates = [data.diagnosis[patient_id].get(leaf,pd.NaT) for leaf in leaf_list]
+                dates = [pd.Timestamp(date) for date in dates
+                         if not pd.isna(date) and pd.Timestamp(date) <= end_dates[patient_id]]
+                values.append(min(dates) if dates else pd.NaT)
+        disease_dates[column] = pd.to_datetime(values)
+
+    if disease_dates:
+        date_matrix = pd.DataFrame(disease_dates,index=phenotype_df_exposed.index)
+        phenotype_df_exposed = pd.concat([phenotype_df_exposed,date_matrix],axis=1)
+    return phenotype_df_exposed
+
 def d1d2_from_diagnosis_history(df:pd.DataFrame, id_col:str, sex_col:str, sex_value_dict:dict, 
                                 phecode_lst:list, disease_pair_index:dict, history_dict:dict, diagnosis_dict:dict, n_diagnosis_dict:dict,
                                 phecode_info_dict:dict, min_interval_days:int, max_interval_days:int, min_icd_num:int) -> dict:

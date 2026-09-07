@@ -20,7 +20,8 @@ from .utility import (
     states_p_adjust,
     check_kwargs_com_tra,
     covariates_check,
-    matching_var_check
+    matching_var_check,
+    _build_trajectory_disease_covariates
 )
 
 import warnings
@@ -1253,12 +1254,13 @@ def disease_trajectory(
     Depending on the selected 'method', the function applies different statistical models to estimate the correlations for each disease pair:
     - **RPCN (Regularized Partial Correlation Network):**
         Utilizes L1-regularized conditional logistic regression to estimate partial correlations for each disease pair.
-        Includes both phenotypic variables and other diseases present in the network as covariates.
+        Includes both phenotypic variables and other diseases present in the network as covariates. A count-qualified
+        disease covariate is positive only when its first diagnosis, or historical placeholder, precedes the matched D2 date.
         The L1 regularization term selects important confounding disease variables.
         After variable selection, a standard conditional logistic regression model is refitted to accurately estimate partial correlations, adjusting for phenotypic variables and the selected confounding diseases.
     - **PCN_PCA (Partial Correlation Network with PCA):**
         Applies a standard conditional logistic regression model for each disease pair.
-        Adjusts for phenotypic variables and the top principal components (PCs) of other diseases in the network to estimate partial correlations.
+        Adjusts for phenotypic variables and the top principal components (PCs) of the matched-date disease indicators to estimate partial correlations.
     - **CN (Correlation Network):**
         Uses a standard conditional logistic regression to estimate simple correlations for each disease pair. Adjusts only for phenotypic variables.
 
@@ -1474,14 +1476,17 @@ def disease_trajectory(
     phecode_info = data.phecode_info
     
     trajectory_ineligible = data.trajectory['ineligible_disease']
-    all_diagnosis_level = data.trajectory['all_diagnosis_level'] #extract the new history list
     trajectory_eligible_withdate = data.trajectory['eligible_disease_withdate']
     phenotype_df = data.phenotype_df
     exp_col = data.get_attribute('phenotype_info')['phenotype_col_dict']['Exposure']
     id_col = data.get_attribute('phenotype_info')['phenotype_col_dict']['Participant ID']
+    index_date_col = data.get_attribute('phenotype_info')['phenotype_col_dict']['Index date']
     end_date_col = data.get_attribute('phenotype_info')['phenotype_col_dict']['End date']
     exposed_index = phenotype_df[phenotype_df[exp_col]==1].index
-    phenotype_df_exposed = data.phenotype_df.loc[exposed_index,[id_col,end_date_col]+covariates+list(matching_var_dict.keys())]
+    phenotype_columns = list(dict.fromkeys(
+        [id_col,index_date_col,end_date_col]+covariates+list(matching_var_dict.keys())
+    ))
+    phenotype_df_exposed = data.phenotype_df.loc[exposed_index,phenotype_columns].copy()
     min_interval = data.min_interval_days
     max_interval = data.max_interval_days
     
@@ -1500,9 +1505,10 @@ def disease_trajectory(
         raise ValueError(f"The following phecode from the 'comorbidity_strength_result' are not in the list of PheWAS significant phecode: {invalid_disease}.")
     
     #create other diseases variables
-    if parameter_dict['method'] in ['RPCN','PCN_PCA']:        
-        for disease in all_diseases_lst:
-            phenotype_df_exposed[str(disease)] = phenotype_df_exposed[id_col].apply(lambda x: 1 if disease in all_diagnosis_level[x] else 0)
+    if parameter_dict['method'] in ['RPCN','PCN_PCA']:
+        phenotype_df_exposed = _build_trajectory_disease_covariates(
+            data,phenotype_df_exposed,all_diseases_lst
+        )
 
     #create list of disease pairs for loop
     #if global sampling is True, the list of disease pairs will be based on the unique d2
@@ -1526,8 +1532,8 @@ def disease_trajectory(
             mininterval=60,
             smoothing=0
         ):
-            result_all.append(logistic_model_wrapper(d1_lst,d2,phenotype_df_exposed,id_col,end_date_col,trajectory_ineligible,min_interval,max_interval,
-                                                    trajectory_eligible_withdate,all_diagnosis_level,covariates,all_diseases_lst,
+            result_all.append(logistic_model_wrapper(d1_lst,d2,phenotype_df_exposed,id_col,index_date_col,end_date_col,trajectory_ineligible,min_interval,max_interval,
+                                                    trajectory_eligible_withdate,covariates,all_diseases_lst,
                                                     matching_var_dict,matching_n,max_n_cases,log_file_final,parameter_dict))
     elif n_process > 1:
         parameters_indexed = [
@@ -1535,8 +1541,8 @@ def disease_trajectory(
         ]
 
         def run_pool(start_method):
-            with multiprocessing.get_context(start_method).Pool(n_process, initializer=init_worker, initargs=(phenotype_df_exposed,id_col,end_date_col,trajectory_ineligible,min_interval,max_interval,
-                                                                                                              trajectory_eligible_withdate,all_diagnosis_level,covariates,all_diseases_lst,
+            with multiprocessing.get_context(start_method).Pool(n_process, initializer=init_worker, initargs=(phenotype_df_exposed,id_col,index_date_col,end_date_col,trajectory_ineligible,min_interval,max_interval,
+                                                                                                              trajectory_eligible_withdate,covariates,all_diseases_lst,
                                                                                                               matching_var_dict,matching_n,max_n_cases,log_file_final,parameter_dict)) as p:
                 indexed_results = list(
                     tqdm(
