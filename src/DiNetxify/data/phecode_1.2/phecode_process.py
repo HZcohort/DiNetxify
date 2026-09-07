@@ -103,9 +103,9 @@ def get_d_lst(lower,upper):
     if lower>=upper:
         raise ValueError("The larger phecode is larger or equal to lower phecode.")
     
-    n_step = int(round(upper - lower,3) / 0.01 + 1)
-    d_lst = np.linspace(lower, upper, n_step)
-    d_lst = [round(x,3) for x in d_lst]
+    lower_int = int(round(lower * 100))
+    upper_int = int(round(upper * 100))
+    d_lst = [x / 100 for x in range(lower_int, upper_int + 1)]
 
     return d_lst
 
@@ -276,7 +276,6 @@ for icd,phe in who_10[['ICD','PHECODE']].values:
 np.save(r'src/DiNetxify/data/phecode_1.2/ICD-10-WHO.npy',who_10_dict)
 
 #[x for x in who_9_dict if x in who_10_dict]
-
 
 
 

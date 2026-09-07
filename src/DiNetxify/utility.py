@@ -486,10 +486,7 @@ def diagnosis_history_update(diagnosis_dict:dict, n_diagnosis_dict:dict, history
     for patient_id in phecode_dict:
         for phecode,[date,n] in phecode_dict[patient_id].items():
             if date > end_date_dict[patient_id]:
-                try:
-                    n_invalid[patient_id] += 1
-                except:
-                    n_invalid[patient_id] = 1
+                n_invalid[patient_id] = n_invalid.get(patient_id, 0) + 1
                 continue
             #first update the number of phecode occurence
             n_diagnosis_dict[patient_id][phecode] = n_diagnosis_dict[patient_id].get(phecode,0) + n

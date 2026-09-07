@@ -44,9 +44,9 @@ def get_d_lst(lower,upper):
     if lower>=upper:
         raise ValueError("The larger phecode is larger or equal to lower phecode.")
     
-    n_step = int(round(upper - lower,3) / 0.01 + 1)
-    d_lst = np.linspace(lower, upper, n_step)
-    d_lst = [round(x,3) for x in d_lst]
+    lower_int = int(round(lower * 100))
+    upper_int = int(round(upper * 100))
+    d_lst = [x / 100 for x in range(lower_int, upper_int + 1)]
 
     return d_lst
 
@@ -95,7 +95,7 @@ def group_by_integer(codes):
     # Convert dictionary values to a list of lists and return
     return list(grouped.values())
 
-phecode_definition = pd.read_csv(r'src/DiNetxify/data/phecode_1.2/phecode_info.csv')
+phecode_definition = pd.read_csv(r'src/DiNetxify/data/phecode_1.3a/phecode_info.csv')
 phecode_definition['level'] = phecode_definition['phecode'].apply(lambda x: level_number(x))
 phecode_definition.fillna({'sex':'Both','category':'others'},inplace=True)
 all_phecode = set(phecode_definition['phecode'].to_list())
@@ -122,7 +122,7 @@ for i in phecode_definition_level1.index:
     temp_dict['exclude_list'] = exl_list
     phecode_dict[phecode] = temp_dict
     
-np.save(r'src/DiNetxify/data/phecode_1.2/level1_info.npy',phecode_dict)
+np.save(r'src/DiNetxify/data/phecode_1.3a/level1_info.npy',phecode_dict)
 
 
 #dict for level 2 list
@@ -154,7 +154,7 @@ for i in phecode_definition_level2.index:
     temp_dict['exclude_list'] = exl_list
     phecode_dict[phecode] = temp_dict
 
-np.save(r'src/DiNetxify/data/phecode_1.2/level2_info.npy',phecode_dict)
+np.save(r'src/DiNetxify/data/phecode_1.3a/level2_info.npy',phecode_dict)
 
 # %% mapping files
 def decimal_to_short(code):
@@ -166,7 +166,7 @@ def decimal_to_short(code):
     return "".join(parts)
 
 #WHO mapping
-who_9 = pd.read_excel(r'src\DiNetxify\data\phecode_1.3a\phecode_map_who_icd9.xlsx')
+who_9 = pd.read_excel(r'src/DiNetxify/data/phecode_1.3a/phecode_map_who_icd9.xlsx')
 who_9['ICD'] = who_9['icd9'].apply(lambda x: decimal_to_short(str(x)))
 #who_9[who_9['ICD'].apply(lambda x: len(x)<=2)]
 
@@ -176,9 +176,9 @@ for icd,phe in who_9[['ICD','phecode']].values:
         who_9_dict[icd].append(phe)
     except:
         who_9_dict[icd] = [phe]
-np.save(r'src\DiNetxify\data\phecode_1.3a\ICD-9-WHO.npy',who_9_dict)
+np.save(r'src/DiNetxify/data/phecode_1.3a/ICD-9-WHO.npy',who_9_dict)
 
-who_10 = pd.read_excel(r'src\DiNetxify\data\phecode_1.3a\phecode_map_who_icd10.xlsx')
+who_10 = pd.read_excel(r'src/DiNetxify/data/phecode_1.3a/phecode_map_who_icd10.xlsx')
 who_10['ICD'] = who_10['ICD10'].apply(lambda x: x.replace('.',''))
 #who_10[who_10['ICD'].apply(lambda x: len(x)<=2)]
 
@@ -188,4 +188,4 @@ for icd,phe in who_10[['ICD','PHECODE']].values:
         who_10_dict[icd].append(phe)
     except:
         who_10_dict[icd] = [phe]
-np.save(r'src\DiNetxify\data\phecode_1.3a\ICD-10-WHO.npy',who_10_dict)
+np.save(r'src/DiNetxify/data/phecode_1.3a/ICD-10-WHO.npy',who_10_dict)
