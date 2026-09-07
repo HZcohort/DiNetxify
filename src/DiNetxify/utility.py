@@ -315,7 +315,8 @@ def medical_records_process(
     seperator,
     exclusion_list:list,
     all_phecode_dict:dict,
-    phecode_map:dict
+    phecode_map:dict,
+    end_date_dict:dict
 ):
     """
     Read the medical records dataframe (in chunks), mapped to phecode and update the provided nested dictionary.
@@ -349,10 +350,13 @@ def medical_records_process(
     phecode_map : dict
         Phecode map dictionary. Keys are ICD codes, and values are list of mapped phecodes.
 
+    end_date_dict : dict
+        Follow-up end date for each participant. Retain records on or before this date before counting and mapping.
+
     Returns : tuple
     -------
         Update the "all_phecode_dict" with the provided medical records data.
-        Also return tuple of some statistics.
+        Also return a tuple of record/mapping statistics and a dictionary of excluded post-follow-up record counts by participant.
 
     """
     eid_col = col_dict['Participant ID']
@@ -367,6 +371,7 @@ def medical_records_process(
     n_total_no_trunc = 0
     n_total_no_mapping = 0
     no_mapping_list = {}
+    n_invalid = {}
     
     chunks = pd.read_csv(medical_records,sep=seperator,iterator=True,chunksize=chunk_n,
                          usecols=[eid_col,icd_col,date_col])
@@ -386,7 +391,12 @@ def medical_records_process(
         chunk.dropna(how='any', inplace=True)
         n_missing = len_valid - len(chunk)
         #comvert the date column to datetime
-        chunk[date_col] = chunk[date_col].apply(lambda x: datetime.strptime(x,date_fmt))
+        chunk[date_col] = pd.to_datetime(chunk[date_col], format=date_fmt)
+        within_follow_up = chunk[date_col] <= chunk[eid_col].map(end_date_dict)
+        for patient_id, n in chunk.loc[~within_follow_up, eid_col].value_counts().items():
+            n_invalid[patient_id] = n_invalid.get(patient_id, 0) + int(n)
+        len_valid -= int((~within_follow_up).sum())
+        chunk = chunk.loc[within_follow_up].copy()
         if 'ICD-9' in code_type: 
             chunk[icd_col] = chunk[icd_col].apply(lambda x: decimal_to_short(x))
         elif 'ICD-10' in code_type:
@@ -396,7 +406,7 @@ def medical_records_process(
         n_total_read += len_before
         n_total_missing += n_missing
         n_total_records += len_valid
-        print(f'{n_total_read:,} records read, {n_total_records:,} left after filltering on participant ID/exclusion list of diagnosis codes, {n_total_missing:,} records with missing values excluded.')
+        print(f'{n_total_read:,} records read, {n_total_records:,} left after filltering on participant ID/exclusion list of diagnosis codes/follow-up end date, {n_total_missing:,} records with missing values excluded.')
         #drop records not in the list
         #sort and drop duplicates
         chunk = chunk.sort_values(by=[date_col],ascending=True).drop_duplicates()
@@ -439,7 +449,7 @@ def medical_records_process(
     print(f'{n_total_trunc_4:,} diagnosis records mapped to phecode after truncating to 4 digits.')
     print(f'{n_total_trunc_3:,} diagnosis records mapped to phecode after truncating to 3 digits.')
     print(f'{n_total_no_mapping:,} diagnosis records not mapped to any phecode.')
-    return n_total_records,n_total_missing,n_total_trunc_4,n_total_trunc_3,n_total_no_mapping,no_mapping_list
+    return n_total_records,n_total_missing,n_total_trunc_4,n_total_trunc_3,n_total_no_mapping,no_mapping_list,n_invalid
     
 
 def diagnosis_history_update(diagnosis_dict:dict, n_diagnosis_dict:dict, history_dict:dict, start_date_dict:dict, end_date_dict:dict, phecode_dict:dict):
@@ -464,7 +474,7 @@ def diagnosis_history_update(diagnosis_dict:dict, n_diagnosis_dict:dict, history
         A dictionary recording the date of follow-up end for each participant.
     
     phecode_dict : dict
-        A phecode dictionary from func medical_records_process().
+        A phecode dictionary from func medical_records_process(), with counts restricted to records on or before follow-up end.
 
     Returns : int
     -------
@@ -475,15 +485,16 @@ def diagnosis_history_update(diagnosis_dict:dict, n_diagnosis_dict:dict, history
     n_invalid = {}
     for patient_id in phecode_dict:
         for phecode,[date,n] in phecode_dict[patient_id].items():
-            #first update the number of phecode occurence
-            n_diagnosis_dict[patient_id][phecode] = n_diagnosis_dict[patient_id].get(phecode,0) + n
-            #then update the diangosis and history dictionary
             if date > end_date_dict[patient_id]:
                 try:
                     n_invalid[patient_id] += 1
                 except:
                     n_invalid[patient_id] = 1
-            elif date <= start_date_dict[patient_id]:
+                continue
+            #first update the number of phecode occurence
+            n_diagnosis_dict[patient_id][phecode] = n_diagnosis_dict[patient_id].get(phecode,0) + n
+            #then update the diangosis and history dictionary
+            if date <= start_date_dict[patient_id]:
                 if phecode in diagnosis_dict[patient_id]:
                     del diagnosis_dict[patient_id][phecode]
                     history_dict[patient_id].append(phecode)

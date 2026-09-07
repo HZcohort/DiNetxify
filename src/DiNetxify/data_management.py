@@ -38,6 +38,7 @@ class DiseaseNetworkData:
     min_required_icd_codes : int, default=1
         The minimum number of ICD codes mapping to a specific phecode required for the phecode to be considered valid.
         For example, if set to 2, a single diagnosis record will not be sufficient to count as an occurrence.
+        Counts include historical records and follow-up records on or before each participant's End date.
         Ensure that your medical records are complete (i.e., not limited to only the first occurrence for each code) when using this parameter.
     
     date_fmt : str, default='%Y-%m-%d'
@@ -438,6 +439,8 @@ class DiseaseNetworkData:
         """
         Reading one or more medical records data into the DiseaseNetworkData object after the phenotypic data has been loaded.
         If you have multiple medical records data to merge (e.g., with different diagnosis code types), you can call this function multiple times.
+        Records after each participant's End date are excluded before diagnosis dates and counts are calculated.
+        Records on or before Index date remain available as medical history.
 
         Parameters
         ----------
@@ -566,16 +569,17 @@ class DiseaseNetworkData:
             self._medical_records_info['sep'],
             self._medical_records_info['diagnosis_code_exclusion'],
             self._phecode_dict,
-            self._phecode_mapping
+            self._phecode_mapping,
+            dict(self.phenotype_df[[self.__id_col,self.__end_date_col]].values)
         )
-        self._medical_records_info['n_total_records'],self._medical_records_info['n_total_missing'],self._medical_records_info['n_total_trunc_4'],self._medical_records_info['n_total_trunc_3'],self._medical_records_info['n_total_no_mapping'],self._medical_records_info['no_mapping_list'] = result_tuple
+        self._medical_records_info['n_total_records'],self._medical_records_info['n_total_missing'],self._medical_records_info['n_total_trunc_4'],self._medical_records_info['n_total_trunc_3'],self._medical_records_info['n_total_no_mapping'],self._medical_records_info['no_mapping_list'],self._medical_records_info['n_invalid'] = result_tuple
         #print some warning information for the current medical records dataset
-        prop_missing = self._medical_records_info['n_total_missing']/self._medical_records_info['n_total_records']
+        prop_missing = self._medical_records_info['n_total_missing']/self._medical_records_info['n_total_records'] if self._medical_records_info['n_total_records'] else 0
 
         if prop_missing >= 0.001:
             self.__warning_medical_records.append(f"Warning: {prop_missing*100:.2f}% of diagnosis records have missing values for file {medical_records_data_path}.")
             print(self.__warning_medical_records[-1])
-        prop_nomapping = self._medical_records_info['n_total_no_mapping']/self._medical_records_info['n_total_records']
+        prop_nomapping = self._medical_records_info['n_total_no_mapping']/self._medical_records_info['n_total_records'] if self._medical_records_info['n_total_records'] else 0
         if prop_nomapping >= 0.001:
             self.__warning_medical_records.append(f"Warning: {prop_nomapping*100:.2f}% of {self._medical_records_info['diagnosis_code']} codes were not mapped to phecodes for file {medical_records_data_path}.")
         
@@ -586,14 +590,14 @@ class DiseaseNetworkData:
             self.history = {id_:[] for id_ in self.phenotype_df[self.__id_col].values}
 
         #update new or exsiting diagnosis/diagnosis_n and history data
-        self._medical_records_info['n_invalid'] = diagnosis_history_update(
+        self._medical_records_info['n_invalid'].update(diagnosis_history_update(
             self.diagnosis,
             self.n_diagnosis,
             self.history,
             dict(self.phenotype_df[[self.__id_col,self.__index_date_col]].values),
             dict(self.phenotype_df[[self.__id_col,self.__end_date_col]].values),
             self._phecode_dict
-        )
+        ))
 
         del self._phecode_dict #save memory
         self.__medical_records_info[medical_records_data_path] = self._medical_records_info
