@@ -100,8 +100,10 @@ data.phenotype_data(
 - For `cohort` and `matched cohort`, `Exposure` must be coded as `1` for exposed and `0` for unexposed.
 - `Sex` must be coded as `1` for female and `0` for male.
 - Required columns cannot contain missing values.
+- Every participant's `End date` must be strictly later than their `Index date`; loading raises `ValueError` otherwise.
 - Continuous covariates with missing values will remove those participants during loading.
 - Categorical covariates with missing values are retained and treated as an `"NA"` category.
+- High-cardinality covariates are continuous only when their source dtype is numeric; high-cardinality text remains categorical.
 - Column names used for covariates must not conflict with DiNetxify reserved variables.
 
 **After loading phenotype data:**
@@ -165,6 +167,9 @@ data.merge_medical_records(
 - Do not mix CM and WHO coding systems in one file.
 - Do not restrict records to first occurrences only.
 - Do not pre-filter records to the follow-up period; DiNetxify handles follow-up filtering internally.
+- Rows missing participant ID, diagnosis code, or diagnosis date are removed before code processing.
+- Diagnosis codes and exclusion values are normalized before exclusion matching and Phecode mapping.
+- Records after each participant's `End date` are excluded before diagnosis counts are formed.
 
 **During loading, the package reports:**
 

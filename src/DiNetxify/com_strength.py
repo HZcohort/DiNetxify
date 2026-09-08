@@ -13,6 +13,12 @@ from .utility import write_log
 
 def com_rr(n:int,c:int,p1:int,p2:int):
     """
+    Calculate relative risk and its two-sided significance test.
+
+    'n' is the disease-pair-specific eligible sub-cohort size. The test uses
+    the log-RR standard-error expression implemented below and a Student's t
+    distribution with 'n' degrees of freedom.
+
     Parameters
     ----------
     n : int
@@ -39,9 +45,11 @@ def com_phi(n:int,c:int,p1:int,p2:int):
     """
     Calculate phi-correlation and its two-sided significance test.
 
-    The test statistic uses ``max(p1, p2)`` as the effective sample size:
-    ``phi * sqrt(max(p1, p2) - 2) / sqrt(1 - phi**2)``. The P-value is
-    evaluated against a Student's t distribution with ``n`` degrees of freedom.
+    The test statistic uses 'max(p1, p2)' as the effective sample size:
+    'phi * sqrt(max(p1, p2) - 2) / sqrt(1 - phi**2)'. The P-value is
+    evaluated against a Student's t distribution with 'n' degrees of freedom.
+    A coefficient exactly equal to -1 or 1 is preserved; only its test
+    statistic is handled as an infinite boundary value.
 
     Parameters
     ----------
@@ -94,7 +102,10 @@ def com_phi_rr(args) -> list:
     DiseaseNetworkData.trajectory dictionary
 
     threshold_config : tuple
-        Proportion and absolute count threshold configuration.
+        (proportion_threshold, n_threshold) configuration. The
+        proportional threshold is calculated from this disease pair's
+        eligible sub-cohort after history and sex restrictions; the absolute
+        threshold is used unchanged.
     
     log_file : str
         Path and prefix for the log file
@@ -169,7 +180,9 @@ def com_phi_rr_wrapper(trajectory:dict,
         additional comment
     
     threshold_config : tuple
-        Proportion and absolute count threshold configuration.
+        (proportion_threshold, n_threshold) configuration. The
+        proportional threshold is calculated from this disease pair's
+        eligible sub-cohort after history and sex restrictions.
     
     log_file : str
         Path and prefix for the log file
@@ -204,7 +217,8 @@ def init_worker(trajectory:dict,
         DiseaseNetworkData.trajectory dictionary
     
     threshold_config : tuple
-        Proportion and absolute count threshold configuration.
+        (proportion_threshold, n_threshold) configuration passed to each
+        worker for pair-specific threshold calculation.
     
     log_file : str
         Path and prefix for the log file

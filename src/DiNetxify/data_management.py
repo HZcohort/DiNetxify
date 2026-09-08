@@ -187,11 +187,15 @@ class DiseaseNetworkData:
             The 'Sex' variable must be coded as 1 (female) and 0 (male).
             Dates must be formatted as '%Y-%m-%d' unless specified otherwise.
             Records with missing values in any required columns are not allowed.
+            Every participant's 'End date' must be strictly later than their
+            'Index date'.
         
         covariates : list
             A list of variable names representing additional covariates, such as ['age', 'BMI']. 
             Provide an empty list if no additional covariates are included. 
-            The function will automatically detect and convert variable types. 
+            The function will automatically detect and convert variable types.
+            High-cardinality covariates are treated as continuous only when
+            their source dtype is numeric; text covariates remain categorical.
             Individuals with missing values in continuous variables will be removed, while those missing in categorical variables will be categorized separately.
         
         is_single_sex : bool, default=False
@@ -451,6 +455,8 @@ class DiseaseNetworkData:
         If you have multiple medical records data to merge (e.g., with different diagnosis code types), you can call this function multiple times.
         Records after each participant's End date are excluded before diagnosis dates and counts are calculated.
         Records on or before Index date remain available as medical history.
+        Records after each participant's End date are excluded before diagnosis dates and counts are calculated.
+        Records on or before Index date remain available as medical history.
 
         Parameters
         ----------
@@ -489,7 +495,10 @@ class DiseaseNetworkData:
             List of diagnosis codes to exclude from being merged. 
             Codes should follow the same ICD system as specified in 'diagnosis_code'. 
             You may supply codes at the 3-, 4-, or 5-character level.
-            Records matching any of these codes will be omitted.
+            Diagnosis codes and this exclusion list are normalized before
+            exclusion matching and Phecode mapping. Records matching any of
+            these codes will be omitted. Records missing participant ID,
+            diagnosis code, or diagnosis date are removed before normalization.
         
         Returns
         -------

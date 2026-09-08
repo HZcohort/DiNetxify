@@ -43,8 +43,11 @@ def cox_conditional(phecode: float):
     data : DiseaseNetworkData
         An DiseaseNetworkData object.
 
-    n_threshold : int
-        Number of cases threshold. Cox analysis are only conducted when number of cases larger than this threshold among exposed group.
+    n_threshold : tuple
+        (proportion_threshold, n_threshold) configuration. A proportional
+        threshold is converted separately for this phecode using the exposed
+        participants remaining after history, sex, matched-set, and positive
+        follow-up restrictions; an absolute threshold is used unchanged.
     
     covariates : list
         List of covariates to be adjusted in the Cox model.
@@ -294,8 +297,11 @@ def cox_conditional_wrapper(
         The outcome phecode for running the Cox analysis.
     data : DiseaseNetworkData
         An DiseaseNetworkData object.
-    n_threshold : int
-        Number of cases threshold. Cox analysis are only conducted when number of cases larger than this threshold among exposed group.
+    n_threshold : tuple
+        (proportion_threshold, n_threshold) configuration. A proportional
+        threshold is converted separately for this phecode using the exposed
+        participants remaining after history, sex, matched-set, and positive
+        follow-up restrictions; an absolute threshold is used unchanged.
     covariates : list
         List of covariates to be adjusted in the Cox model.
     log_file : str
@@ -353,8 +359,11 @@ def cox_unconditional(phecode:float):
     data : DiseaseNetworkData
         An DiseaseNetworkData object.
     
-    n_threshold : int
-        Number of cases threshold. Cox analysis are only conducted when number of cases larger than this threshold among exposed group.
+    n_threshold : tuple
+        (proportion_threshold, n_threshold) configuration. A proportional
+        threshold is converted separately for this phecode using the exposed
+        participants remaining after history, sex, and positive follow-up
+        restrictions; an absolute threshold is used unchanged.
     
     covariates : list
         List of covariates to be adjusted in the Cox model.
@@ -598,8 +607,11 @@ def cox_unconditional_wrapper(
         The outcome phecode for running the Cox analysis.
     data : DiseaseNetworkData
         An DiseaseNetworkData object.
-    n_threshold : int
-        Number of cases threshold. Cox analysis are only conducted when number of cases larger than this threshold among exposed group.
+    n_threshold : tuple
+        (proportion_threshold, n_threshold) configuration. A proportional
+        threshold is converted separately for this phecode using the exposed
+        participants remaining after history, sex, and positive follow-up
+        restrictions; an absolute threshold is used unchanged.
     covariates : list
         List of covariates to be adjusted in the Cox model.
     log_file : str
@@ -659,8 +671,10 @@ def init_worker(
     ----------
     data : DiseaseNetworkData
         An DiseaseNetworkData object.
-    n_threshold : int
-        Number of cases threshold. Cox analysis are only conducted when number of cases larger than this threshold among exposed group.
+    n_threshold : tuple
+        (proportion_threshold, n_threshold) configuration passed to each
+        worker. The worker converts a proportional threshold from its
+        disease-eligible exposed group.
     covariates : list
         List of covariates to be adjusted in the Cox model.
     log_file : str

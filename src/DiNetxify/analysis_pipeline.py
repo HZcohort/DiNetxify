@@ -128,6 +128,8 @@ def disease_network_pipeline(
         If set to True, exclude individuals with non-temporal D1-D2 pair when performing the binomial test;
         also applies the specified minimum and maximum time intervals when performing disease trajectory analysis.
         See 'enforce_temporal_order' parameter in binomial_test function and 'enforce_time_interval' parameter in disease_trajectory function.
+        Do not also pass the deprecated duplicate enforce_time_interval
+        keyword to this pipeline.
     
     correction : str, default='bonferroni'
         Method for p-value correction from the statsmodels.stats.multitest.multipletests.
@@ -158,7 +160,9 @@ def disease_network_pipeline(
             alpha_range : tuple, default=(1,15)
                 When 'auto_penalty' is True, search the optimal 'alpha' in this range.
             scaling_factor : positive scalar, default=1
-                The scaling factor for the alpha when 'auto_penalty' is True.
+                Multiplies candidate disease-covariate penalties during
+                automatic alpha selection. Selection uses the unscaled search
+                key and output reports the effective scaled alpha.
 
         PCN_PCA Method Parameters:
             n_PC : int, default=5
@@ -170,7 +174,11 @@ def disease_network_pipeline(
     Returns
     -------
     tuple
-        A tuple of DataFrames for result of PheWAS, comorbidity strength estimation, comorbidity network analysis, binomial test, and disease trajectory analysis.
+        A tuple of DataFrames for result of PheWAS, comorbidity strength
+        estimation, comorbidity network analysis, binomial test, and disease
+        trajectory analysis. Every returned DataFrame records
+        ``pipeline_mode`` and the human-readable ``stage_order`` in
+        ``DataFrame.attrs``; the same values are written to the pipeline log.
     """
     
     # --------check each parameter--------

@@ -142,9 +142,10 @@ def diff_date_years(dataframe,date1:str,date2:str,rounding:int=4):
 def convert_column(dataframe, column:str):
     """
     
-    The convert_column function is designed to analyze a specified column in a 
-    given DataFrame, detect its data type (binary, continuous, or categorical),
-    and convert it accordingly. 
+    Analyze a DataFrame column and convert it to a binary, continuous, or
+    categorical representation. A high-cardinality column is classified as
+    continuous only when its source dtype is numeric; high-cardinality text is
+    retained as categorical and dummy encoded.
     
     Parameters
     ----------
@@ -319,7 +320,12 @@ def medical_records_process(
     end_date_dict:dict
 ):
     """
-    Read the medical records dataframe (in chunks), mapped to phecode and update the provided nested dictionary.
+    Read medical records in chunks, map diagnosis codes to Phecodes, and update
+    the provided nested dictionary.
+
+    Rows missing participant ID, diagnosis code, or diagnosis date are removed
+    first. Codes and exclusion values are then normalized before exclusion and
+    mapping, and records after the participant-specific End date are omitted.
 
     Parameters
     ----------
@@ -1281,13 +1287,13 @@ def find_best_alpha_and_vars(model, best_range, alpha_lst, co_vars):
     Parameters:
         model (statsmodels object): The statistical model to be fitted.
         best_range (tuple): A tuple (min_alpha, max_alpha) defining the range to explore.
-        alpha_lst (float): The alpha multiplier applied during regularization.
+        alpha_lst (array-like): Per-variable penalty multipliers. 
+                   Forced-in variables normally have multiplier zero and candidate disease covariates have the requested scaling factor.
         co_vars (list): List of variable names in the model.
     
     Returns:
-        tuple: (final_best_alpha, final_disease_vars) where 'final_best_alpha' is the alpha value that
-               results in the lowest AIC before AIC starts to increase consistently, and 'final_disease_vars'
-               is a list of variables that are non-zero at this alpha level.
+        tuple: (final_best_alpha, final_disease_vars). Variables are looked up with the unscaled search-grid key that minimized AIC;
+                                                       final_best_alpha reports that raw key multiplied by the non-zero disease-covariate penalty multiplier.
     """
     refined_alphas = np.linspace(best_range[0], best_range[1], num=best_range[1]-best_range[0]+1)
     refined_aic_dict = {}

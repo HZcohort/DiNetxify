@@ -74,7 +74,12 @@ def phewas(
     maxiter: int=300
 ) -> pd.DataFrame:
     """
-    Conducts Phenome-wide association studies (PheWAS) using the specified DiseaseNetworkData object.
+    Conduct a PheWAS in an after-exposure cohort, matched cohort, or
+    exposed-only cohort.
+
+    Each Phecode-specific risk set applies Phecode-history exclusions,
+    sex-specific eligibility, and valid follow-up before proportional
+    thresholds, summaries, and model fitting are evaluated.
 
     Parameters:
     ----------
@@ -380,8 +385,14 @@ def comorbidity_strength(
     cutoff_RR:float=0.05
 ) -> pd.DataFrame:
     """
-    Conducts comorbidity strength estimation among exposed individuals on all possible disease pairs using the specified DiseaseNetworkData object.
-    For each disease pair, we evaluated its relative risk (RR) and phi-correlation as measurement of comorbidity strength.
+    Estimate comorbidity strength among exposed participants for all disease
+    pairs created by DiseaseNetworkData.disease_pair.
+
+    Proportional thresholds are calculated separately from the eligible
+    sub-cohort for each disease pair after history and sex restrictions;
+    absolute count thresholds are unchanged. Phi is reported without boundary
+    clipping, and its test statistic uses max(C_i, C_j) with a two-sided
+    Student's t test. RR uses the pair-specific sub-cohort size.
 
     Parameters:
     ----------
@@ -933,7 +944,9 @@ def comorbidity_network(
         - 'alpha_range' : tuple, default=(1,15)
             When 'auto_penalty' is True, search the optimal 'alpha' in this range.
         - 'scaling_factor' : positive scalar, default=1
-            The scaling factor for the alpha when 'auto_penalty' is True.
+            Multiplies candidate disease-covariate penalties during automatic
+            alpha selection. Selection uses the unscaled search-grid key and
+            the output reports the effective scaled alpha.
         
         **Additional Options for PCN_PCA:**
         - 'n_PC' : int, default=5
@@ -997,7 +1010,10 @@ def comorbidity_network(
             alpha_range : tuple, default=(1,15)
                 When 'auto_penalty' is True, search the optimal 'alpha' in this range.
             scaling_factor : positive scalar, default=1
-                The scaling factor for the alpha when 'auto_penalty' is True.
+                Multiplier applied to candidate disease-covariate penalties
+                during automatic alpha selection. Variables are retrieved at
+                the unscaled search-grid key and the reported alpha is the
+                effective scaled penalty.
 
         PCN_PCA Method Parameters:
             n_PC : int, default=5
@@ -1279,6 +1295,9 @@ def disease_trajectory(
     
     binomial_test_result : pd.DataFrame
         DataFrame containing binomial test analysis results produced by the 'DiNetxify.binomial_test' function.
+        Every significant binomial pair must also occur among the significant
+        comorbidity-strength pairs. Pair matching is unordered; otherwise the
+        function raises ValueError before model fitting.
 
     method : str, default='RPCN'
         Specifies the comorbidity network analysis method to use. Choices are:
@@ -1295,7 +1314,9 @@ def disease_trajectory(
         - 'alpha_range' : tuple, default=(1,15)
             When 'auto_penalty' is True, search the optimal 'alpha' in this range.
         - 'scaling_factor' : positive scalar, default=1
-            The scaling factor for the alpha when 'auto_penalty' is True.
+            Multiplies candidate disease-covariate penalties during automatic
+            alpha selection. Selection uses the unscaled search-grid key and
+            the output reports the effective scaled alpha.
         
         **Additional Options for PCN_PCA:**
         - 'n_PC' : int, default=5
@@ -1389,7 +1410,10 @@ def disease_trajectory(
             alpha_range : tuple, default=(1,15)
                 When 'auto_penalty' is True, search the optimal 'alpha' in this range.
             scaling_factor : positive scalar, default=1
-                The scaling factor for the alpha when 'auto_penalty' is True.
+                Multiplier applied to candidate disease-covariate penalties
+                during automatic alpha selection. Variables are retrieved at
+                the unscaled search-grid key and the reported alpha is the
+                effective scaled penalty.
 
         PCN_PCA Method Parameters:
             n_PC : int, default=5

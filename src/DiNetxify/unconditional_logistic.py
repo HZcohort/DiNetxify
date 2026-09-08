@@ -46,7 +46,9 @@ def logistic_model(args):
     covariates : list, list of covariates to be included in the model.
     all_diseases_lst : list, list of other diseases to be included.
     log_file : str, Path and prefix for the log file
-    parameters : dict, other arguments, including method and the associated parameters.
+    parameters : dict, Model and method-specific settings. 
+                For fixed-penalty RPCN, alpha penalizes candidate disease covariates while forced predictors remain unpenalized. 
+                For automatic RPCN, scaling_factor modifies those candidate penalties and the reported alpha is the effective penalty.
 
     Returns
     -------

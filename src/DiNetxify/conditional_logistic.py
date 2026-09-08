@@ -73,7 +73,11 @@ def logistic_model(args):
     matching_var_dict : dict, matching variables and the criteria used for incidence density sampling.
     matching_n : int, the maximum number of matched controls for each case.
     log_file : str, Path and prefix for the log file
-    parameters : dict, other arguments, including method and the associated parameters.
+    parameters : dict
+        Model and method-specific settings. For automatic RPCN,
+        'scaling_factor' modifies candidate disease-covariate penalties;
+        variable selection uses the unscaled search-grid key and the reported
+        alpha is the effective scaled penalty.
 
     Returns
     -------
