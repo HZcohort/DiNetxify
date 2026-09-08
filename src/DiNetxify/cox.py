@@ -147,25 +147,6 @@ def cox_conditional(phecode: float):
     dataset_analysis = dataset_analysis[(dataset_analysis[exl_flag_col]==0) & 
                                         ~(dataset_analysis[matching_col].isin(match_id_exl))]
     
-    #check number
-    if len(dataset_analysis) == 0:
-        result += [0, 'Potentially sex specific']
-        write_log(log_file_,f'No individuals remaining after filtering for phecode {phecode}\n')
-        return result
-    
-    #check number
-    number_exposed = len(dataset_analysis[dataset_analysis[exp_col]==1])
-    number_unexposed = len(dataset_analysis[dataset_analysis[exp_col]==0])
-    if number_exposed == 0:
-        result += [0, 'Disease specific (zero exposed)']
-        write_log(log_file_,f'No exposed individuals remaining after filtering for phecode {phecode}\n')
-        return result
-    
-    if number_unexposed == 0:
-        result += [0, 'Disease specific (zero unexposed)']
-        write_log(log_file_,f'No unexposed individuals remaining after filtering for phecode {phecode}\n')
-        return result
-    
     #define diagnosis time and outcome
     outcome_time_lst = []
     for id_ in dataset_analysis[id_col].values:
@@ -175,12 +156,29 @@ def cox_conditional(phecode: float):
     dataset_analysis[outcome_col] = dataset_analysis[outcome_time_col].apply(lambda x: 0 if pd.isna(x) else 1)
     dataset_analysis[end_date_col] = dataset_analysis[[end_date_col,outcome_time_col]].min(axis=1)
     
-    #length
-    length = len(dataset_analysis[(dataset_analysis[exp_col]==1) & (dataset_analysis[outcome_col]==1)])
-    result += [length]
-    
     #calculate time in years
     dataset_analysis[time_col] = (dataset_analysis[end_date_col] - dataset_analysis[index_date_col]).dt.days/365.25
+
+    #use the same positive-follow-up population for thresholds, summaries, and fitting
+    dataset_analysis = dataset_analysis[dataset_analysis[time_col]>0]
+    if len(dataset_analysis) == 0:
+        result += [0, 'Potentially sex specific or invalid follow-up']
+        write_log(log_file_,f'No individuals with positive follow-up remaining for phecode {phecode}\n')
+        return result
+    number_exposed = len(dataset_analysis[dataset_analysis[exp_col]==1])
+    number_unexposed = len(dataset_analysis[dataset_analysis[exp_col]==0])
+    if number_exposed == 0:
+        result += [0, 'Disease specific (zero exposed)']
+        write_log(log_file_,f'No exposed individuals remaining after filtering for phecode {phecode}\n')
+        return result
+    if number_unexposed == 0:
+        result += [0, 'Disease specific (zero unexposed)']
+        write_log(log_file_,f'No unexposed individuals remaining after filtering for phecode {phecode}\n')
+        return result
+    disease_threshold = (int(number_exposed * n_threshold_[0])
+                         if n_threshold_[0] is not None else n_threshold_[1])
+    length = len(dataset_analysis[(dataset_analysis[exp_col]==1) & (dataset_analysis[outcome_col]==1)])
+    result += [length]
     
     #calculate time at risk
     n_exp = len(dataset_analysis.loc[(dataset_analysis[exp_col]==1) & (dataset_analysis[outcome_col]==1)])
@@ -191,13 +189,10 @@ def cox_conditional(phecode: float):
     str_noexp = '%i/%.2f (%.2f)' % (n_unexp,time_unexp,n_unexp/time_unexp)
     
     #return and save results if less than threshold
-    if length < n_threshold_:
-        result += [f'Less than threshold of {n_threshold_}',str_exp,str_noexp]
-        write_log(log_file_,f'Number of cases {length} less than threshold {n_threshold_} for phecode {phecode}\n')
+    if length < disease_threshold:
+        result += [f'Less than threshold of {disease_threshold}',str_exp,str_noexp]
+        write_log(log_file_,f'Number of cases {length} less than threshold {disease_threshold} for phecode {phecode}\n')
         return result
-    
-    #exclude those with negative time
-    dataset_analysis = dataset_analysis[dataset_analysis[time_col]>0]
     
     #restricted to groups with at least one case
     match_id = dataset_analysis[dataset_analysis[outcome_col]==1][matching_col].to_list()
@@ -284,7 +279,7 @@ def cox_conditional_wrapper(
     phecode: str,
     data: DiseaseNetworkData,
     covariates: list,
-    n_threshold: int,
+    n_threshold: tuple, 
     log_file: str,
     lifelines_disable: bool,
     method: str,
@@ -450,30 +445,11 @@ def cox_unconditional(phecode:float):
         dataset_analysis[exl_flag_col] = exl_flag_lst
     
     #sex specific
-    if sex_code:
+    if sex_code is not None:
         dataset_analysis[exl_flag_col] = dataset_analysis.apply(lambda row: 1 if row[sex_col] != sex_code 
                                                                 else row[exl_flag_col],axis=1)
     #exclude eligible individuals
     dataset_analysis = dataset_analysis.loc[dataset_analysis[exl_flag_col]==0]
-    
-    #check number
-    if len(dataset_analysis) == 0:
-        result += [0,'Sex specific potentially']
-        write_log(log_file_,f'No individuals remaining after filtering for phecode {phecode}\n')
-        return result
-
-    if data_.study_design != "exposed-only cohort":
-    #check number
-        number_exposed = len(dataset_analysis[dataset_analysis[exp_col]==1])
-        number_unexposed = len(dataset_analysis[dataset_analysis[exp_col]==0])
-        if number_exposed == 0:
-            result += [0,'Disease specific (zero exposed)']
-            write_log(log_file_,f'No exposed individuals remaining after filtering for phecode {phecode}\n')
-            return result
-        if number_unexposed == 0:
-            result += [0,'Disease specific (zero unexposed)']
-            write_log(log_file_,f'No unexposed individuals remaining after filtering for phecode {phecode}\n')
-            return result
     
     #define diagnosis time and outcome
     outcome_time_lst = []
@@ -484,12 +460,30 @@ def cox_unconditional(phecode:float):
     dataset_analysis[outcome_col] = dataset_analysis[outcome_time_col].apply(lambda x: 0 if pd.isna(x) else 1)
     dataset_analysis[end_date_col] = dataset_analysis[[end_date_col,outcome_time_col]].min(axis=1)
     
-    #length
-    length = len(dataset_analysis[(dataset_analysis[exp_col]==1) & (dataset_analysis[outcome_col]==1)])
-    result += [length]
-    
     #calculate time in years
     dataset_analysis[time_col] = (dataset_analysis[end_date_col] - dataset_analysis[index_date_col]).dt.days/365.25
+
+    #use the same positive-follow-up population for thresholds, summaries, and fitting
+    dataset_analysis = dataset_analysis[dataset_analysis[time_col]>0]
+    if len(dataset_analysis) == 0:
+        result += [0,'Sex specific potentially or invalid follow-up']
+        write_log(log_file_,f'No individuals with positive follow-up remaining for phecode {phecode}\n')
+        return result
+    number_exposed = len(dataset_analysis[dataset_analysis[exp_col]==1])
+    if number_exposed == 0:
+        result += [0,'Disease specific (zero exposed)']
+        write_log(log_file_,f'No exposed individuals remaining after filtering for phecode {phecode}\n')
+        return result
+    if data_.study_design != "exposed-only cohort":
+        number_unexposed = len(dataset_analysis[dataset_analysis[exp_col]==0])
+        if number_unexposed == 0:
+            result += [0,'Disease specific (zero unexposed)']
+            write_log(log_file_,f'No unexposed individuals remaining after filtering for phecode {phecode}\n')
+            return result
+    disease_threshold = (int(number_exposed * n_threshold_[0])
+                         if n_threshold_[0] is not None else n_threshold_[1])
+    length = len(dataset_analysis[(dataset_analysis[exp_col]==1) & (dataset_analysis[outcome_col]==1)])
+    result += [length]
     
     #calculate time at risk
     n_exp = len(dataset_analysis.loc[(dataset_analysis[exp_col]==1) & (dataset_analysis[outcome_col]==1)])
@@ -501,21 +495,18 @@ def cox_unconditional(phecode:float):
         str_noexp = '%i/%.2f (%.2f)' % (n_unexp,time_unexp,n_unexp/time_unexp)
     
     #return and save results if less than threshold
-    if length < n_threshold_ and data_.study_design != "exposed-only cohort":
-        result += [f'Less than the threshold of {n_threshold_}',str_exp,str_noexp]
-        write_log(log_file_, f'Number of cases {length} less than the threshold of {n_threshold_} for phecode {phecode}\n')
+    if length < disease_threshold and data_.study_design != "exposed-only cohort":
+        result += [f'Less than the threshold of {disease_threshold}',str_exp,str_noexp]
+        write_log(log_file_, f'Number of cases {length} less than the threshold of {disease_threshold} for phecode {phecode}\n')
         return result
-    elif length < n_threshold_ and data_.study_design == "exposed-only cohort":
-        result += [f'Less than the threshold of {n_threshold_}',str_exp]
-        write_log(log_file_, f'Number of cases {length} less than the threshold of {n_threshold_} for phecode {phecode}\n')
+    elif length < disease_threshold and data_.study_design == "exposed-only cohort":
+        result += [f'Less than the threshold of {disease_threshold}',str_exp]
+        write_log(log_file_, f'Number of cases {length} less than the threshold of {disease_threshold} for phecode {phecode}\n')
         return result
-    elif length >= n_threshold_ and data_.study_design == "exposed-only cohort":
-        result += [f"Reached the threshold of {n_threshold_}",str_exp]
-        write_log(log_file_, f"Number of cases reached the threshold of {n_threshold_} for phecode {phecode}\n")
+    elif length >= disease_threshold and data_.study_design == "exposed-only cohort":
+        result += [f"Reached the threshold of {disease_threshold}",str_exp]
+        write_log(log_file_, f"Number of cases reached the threshold of {disease_threshold} for phecode {phecode}\n")
         return result
-    
-    #exclude those with negative time
-    dataset_analysis = dataset_analysis[dataset_analysis[time_col]>0]
     
     #check the covariates vif
     del_covariates = check_variance_vif_single(dataset_analysis,
@@ -592,7 +583,7 @@ def cox_unconditional_wrapper(
     phecode:str,
     data:DiseaseNetworkData,
     covariates:list,
-    n_threshold:int,
+    n_threshold:tuple, 
     log_file:str,
     lifelines_disable:bool,
     method: str,
@@ -654,7 +645,7 @@ def cox_unconditional_indexed(args):
 def init_worker(
     data:str,
     covariates:list,
-    n_threshold:int,
+    n_threshold:tuple,
     log_file:str,
     lifelines_disable:bool,
     method: str,

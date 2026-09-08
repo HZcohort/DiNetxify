@@ -37,6 +37,12 @@ def com_rr(n:int,c:int,p1:int,p2:int):
 
 def com_phi(n:int,c:int,p1:int,p2:int):
     """
+    Calculate phi-correlation and its two-sided significance test.
+
+    The test statistic uses ``max(p1, p2)`` as the effective sample size:
+    ``phi * sqrt(max(p1, p2) - 2) / sqrt(1 - phi**2)``. The P-value is
+    evaluated against a Student's t distribution with ``n`` degrees of freedom.
+
     Parameters
     ----------
     n : int
@@ -50,22 +56,21 @@ def com_phi(n:int,c:int,p1:int,p2:int):
 
     Returns
     -------
-        phi and p-value
+        phi, its standard-error term, and p-value
 
     """
     try:
         phi = (c*n-p1*p2)/(((p1*p2)*(n-p1)*(n-p2))**0.5)
     except:
         raise ValueError('phi correlation calculation error, either number of individuals with d1/d2 diagnosis is zero or equalt to total number of individuals.')
-    try:
-        z_phi = 0.5*np.log((1+phi)/(1-phi))
-    except:
-        phi -= 1e-3 #when phi == exactly 1 in some cases
-        z_phi = 0.5*np.log((1+phi)/(1-phi))
-    z_phi_theta = (1/(n-3))**0.5
-    z_phi_t = abs(z_phi/z_phi_theta)
-    p_phi = (1-t.cdf(z_phi_t,n))*2
-    return phi,z_phi_theta,p_phi
+    if abs(phi) == 1:
+        phi_theta = 0.0
+        phi_t = np.inf
+    else:
+        phi_theta = ((1-phi**2)/(max(p1,p2)-2))**0.5
+        phi_t = abs(phi/phi_theta)
+    p_phi = (1-t.cdf(phi_t,n))*2
+    return phi,phi_theta,p_phi
     
 
 def com_phi_rr(args) -> list:
@@ -88,8 +93,8 @@ def com_phi_rr(args) -> list:
     trajectory : dictionary
     DiseaseNetworkData.trajectory dictionary
 
-    n_threshold : int
-        Number of individuals threshold
+    threshold_config : tuple
+        Proportion and absolute count threshold configuration.
     
     log_file : str
         Path and prefix for the log file
@@ -100,7 +105,7 @@ def com_phi_rr(args) -> list:
     """
     # shared global data
     global trajectory_
-    global n_threshold_
+    global threshold_config_
     global log_file_
 
     d1, d2, message = args
@@ -116,6 +121,8 @@ def com_phi_rr(args) -> list:
     N = len(ineligible_d_dict) #total number of exposed individuals
     sub_individual = [id_ for id_,x in ineligible_d_dict.items() if d1 not in x and d2 not in x]
     n = len(sub_individual) #total number of sub-cohort
+    pair_threshold = (int(n * threshold_config_[0])
+                      if threshold_config_[0] is not None else threshold_config_[1])
     #filter eligible_d_dict_withdate
     n_p1p2 = sum([d1 in x and d2 in x for x in eligible_d_dict_withdate.values()]) #number of individuals with both d1 and d2 diagnosis.
     p1 = sum([d1 in eligible_d_dict_withdate[id_] for id_ in sub_individual]) #number of individuals with d1 diagnosis.
@@ -128,9 +135,9 @@ def com_phi_rr(args) -> list:
     if message:
         write_log(log_file_,f'{d1} and {d2}: {message}\n')
         return [d1,d2,f'{d1}-{d2}',N,n,n_p1p2,p1,p2,n_com,n_tra_d1_d2,n_tra_d2_d1,c]
-    elif c<n_threshold_:
-        write_log(log_file_,f'{d1} and {d2}: Less than threshold of {n_threshold_}\n')
-        return [d1,d2,f'{d1}-{d2}',N,n,n_p1p2,p1,p2,n_com,n_tra_d1_d2,n_tra_d2_d1,c,f'Less than threshold of {n_threshold_}']
+    elif c<pair_threshold:
+        write_log(log_file_,f'{d1} and {d2}: Less than threshold of {pair_threshold}\n')
+        return [d1,d2,f'{d1}-{d2}',N,n,n_p1p2,p1,p2,n_com,n_tra_d1_d2,n_tra_d2_d1,c,f'Less than threshold of {pair_threshold}']
     else:
         phi,phi_theta,phi_p = com_phi(n,c,p1,p2)
         rr,rr_theta,rr_p = com_rr(n,c,p1,p2)
@@ -142,7 +149,7 @@ def com_phi_rr_wrapper(trajectory:dict,
                        d1:float,
                        d2:float,
                        message:str,
-                       n_threshold:int,
+                       threshold_config:tuple,
                        log_file:str) -> list:
     """
     Wrapper for com_phi_rr that assigns default values to global variables if needed.
@@ -161,8 +168,8 @@ def com_phi_rr_wrapper(trajectory:dict,
     message : string
         additional comment
     
-    n_threshold : int
-        Number of individuals threshold
+    threshold_config : tuple
+        Proportion and absolute count threshold configuration.
     
     log_file : str
         Path and prefix for the log file
@@ -175,17 +182,17 @@ def com_phi_rr_wrapper(trajectory:dict,
     """
     # shared global data
     global trajectory_
-    global n_threshold_
+    global threshold_config_
     global log_file_
     # set global variables if not already defined
     trajectory_ = trajectory
-    n_threshold_ = n_threshold
+    threshold_config_ = threshold_config
     log_file_ = log_file
     # call the original function
     return com_phi_rr((d1,d2,message))
 
 def init_worker(trajectory:dict,
-                n_threshold:int,
+                threshold_config:tuple,
                 log_file:str):
     """
     This function sets up the necessary global variables for a worker process in a multiprocessing environment.
@@ -196,8 +203,8 @@ def init_worker(trajectory:dict,
     trajectory : dictionary
         DiseaseNetworkData.trajectory dictionary
     
-    n_threshold : int
-        Number of individuals threshold
+    threshold_config : tuple
+        Proportion and absolute count threshold configuration.
     
     log_file : str
         Path and prefix for the log file
@@ -209,11 +216,11 @@ def init_worker(trajectory:dict,
     """
     # shared global data
     global trajectory_
-    global n_threshold_
+    global threshold_config_
     global log_file_
     # set global variables if not already defined
     trajectory_ = trajectory
-    n_threshold_ = n_threshold
+    threshold_config_ = threshold_config
     log_file_ = log_file
 
 

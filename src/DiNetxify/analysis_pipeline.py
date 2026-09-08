@@ -7,7 +7,7 @@ from .analysis import (
 from .data_management import DiseaseNetworkData
 import numpy as np
 import os
-from .utility import n_process_check,threshold_check,validate_method_specific_kwargs,matching_var_check
+from .utility import n_process_check,threshold_check,validate_method_specific_kwargs,matching_var_check,log_file_detect,write_log
 from .utility import correction_method_check
 import time
 import pandas as pd
@@ -211,6 +211,8 @@ def disease_network_pipeline(
     #pipeline_mode check
     if pipeline_mode not in ['v1','v2']:
         raise ValueError("Invalid pipeline_mode. Must be either 'v1' or 'v2'.")
+    if 'enforce_time_interval' in kwargs:
+        raise ValueError("Use 'enforce_temporal_order' to control interval enforcement in both temporal stages.")
     #method and kwargs check
     if kwargs:
         method_kwargs = kwargs.copy()
@@ -244,6 +246,15 @@ def disease_network_pipeline(
 
     # time used
     time_start = time.time()
+    stage_order = (
+        'PheWAS -> comorbidity strength -> binomial test -> comorbidity network -> disease trajectory'
+        if pipeline_mode == 'v1' else
+        'PheWAS -> comorbidity strength -> comorbidity network -> binomial test -> disease trajectory'
+    )
+    pipeline_log_file, _ = log_file_detect(
+        os.path.join(output_dir,f'{project_prefix}_pipeline.log'),'pipeline'
+    )
+    write_log(pipeline_log_file,f'pipeline_mode={pipeline_mode}\nstage_order={stage_order}\n')
 
     # --------run the pipeline--------
     #run PheWAS
@@ -361,6 +372,7 @@ def disease_network_pipeline(
                                             n_process=n_process, method=method, 
                                             covariates=covariates,
                                             matching_var_dict=matching_var_dict, matching_n=matching_n,
+                                            enforce_time_interval=enforce_temporal_order,
                                             correction=correction, cutoff=cutoff,
                                             log_file=trajectory_log_file, **parameter_dict)
     else:
@@ -369,6 +381,7 @@ def disease_network_pipeline(
                                             n_process=n_process, method=method, 
                                             covariates=covariates,
                                             matching_var_dict=matching_var_dict, matching_n=matching_n,
+                                            enforce_time_interval=enforce_temporal_order,
                                             correction=correction, cutoff=cutoff,
                                             log_file=trajectory_log_file)
         
@@ -381,6 +394,10 @@ def disease_network_pipeline(
     time_end = time.time()
     time_used = round((time_end-time_start)/60,2)
     print(f'The disease network analysis pipeline has been completed, total time: {time_used} mins.')
+
+    for result_df in [phewas_result,com_strength_result,com_network_result,binomial_result,trajectory_result]:
+        result_df.attrs['pipeline_mode'] = pipeline_mode
+        result_df.attrs['stage_order'] = stage_order
     
     #return all the results df in order
     return phewas_result, com_strength_result, com_network_result, binomial_result, trajectory_result

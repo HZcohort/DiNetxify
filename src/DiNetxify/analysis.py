@@ -89,7 +89,8 @@ def phewas(
         For matched cohort study, including a matching variable as covariate could cause issue of Singular Matrix in model fitting.
     
     proportion_threshold : float
-        The minimum proportion of cases within the exposed group required for a phecode to be included in the PheWAS analysis.
+        The minimum proportion of cases among disease-eligible exposed
+        participants after history, sex, and follow-up filtering.
         If the proportion of cases is below this threshold, the phecode is excluded from the analysis.
         proportion_threshold and n_threshold are mutually exclusive.
     
@@ -207,9 +208,10 @@ def phewas(
     if not isinstance(maxiter,int) or isinstance(maxiter,bool) or maxiter <= 0:
         raise ValueError("The input 'maxiter' must be a positive integer.")
     
-    #check threshold
+    #validate threshold and retain its form for disease-specific eligibility
     n_exposed = data.get_attribute('phenotype_statistics')['n_exposed']
-    n_threshold = threshold_check(proportion_threshold,n_threshold,n_exposed)
+    threshold_check(proportion_threshold,n_threshold,n_exposed)
+    threshold_config = (proportion_threshold,n_threshold)
     
     #check p-value correction method and cutoff
     correction_method_check(correction, cutoff)
@@ -245,9 +247,9 @@ def phewas(
     if n_process == 1:
         for phecode in tqdm(phecode_lst_all, mininterval=15,smoothing=0):
             if data.study_design == 'matched cohort':
-                result_all.append(cox_conditional_wrapper(phecode,data,covariates,n_threshold,log_file_final,lifelines_disable,method,maxiter))
+                result_all.append(cox_conditional_wrapper(phecode,data,covariates,threshold_config,log_file_final,lifelines_disable,method,maxiter))
             else:
-                result_all.append(cox_unconditional_wrapper(phecode,data,covariates,n_threshold,log_file_final,lifelines_disable,method,maxiter))
+                result_all.append(cox_unconditional_wrapper(phecode,data,covariates,threshold_config,log_file_final,lifelines_disable,method,maxiter))
     elif n_process > 1:
         parameters_all = [
             [idx, phecode] for idx, phecode in enumerate(phecode_lst_all)
@@ -259,7 +261,7 @@ def phewas(
         )
 
         def run_pool(start_method):
-            with multiprocessing.get_context(start_method).Pool(n_process, initializer=init_worker, initargs=(data,covariates,n_threshold,log_file_final,lifelines_disable,method,maxiter)) as p:
+            with multiprocessing.get_context(start_method).Pool(n_process, initializer=init_worker, initargs=(data,covariates,threshold_config,log_file_final,lifelines_disable,method,maxiter)) as p:
                 indexed_results = list(
                     tqdm(
                         p.imap_unordered(worker_func, parameters_all),
@@ -294,7 +296,7 @@ def phewas(
     phewas_df = pd.DataFrame(result_all, columns=columns_selected)
     
     if data.study_design == "exposed-only cohort":
-        phewas_df["phewas_p_significance"] = phewas_df["N_cases_exposed"].apply(lambda x:True if x>=n_threshold else False)
+        phewas_df["phewas_p_significance"] = phewas_df["describe"].str.startswith("Reached the threshold")
         return phewas_df
 
     #p-value correction
@@ -387,7 +389,9 @@ def comorbidity_strength(
         DiseaseNetworkData object.
 
     proportion_threshold : float
-        The minimum proportion of individuals in the exposed group in which a disease pair must co-occur (temporal or non-temporal) to be included in the comorbidity strength estimation.
+        The minimum proportion of disease-pair-eligible exposed individuals in
+        which a disease pair must co-occur (temporal or non-temporal) to be
+        included in the comorbidity strength estimation.
         If the proportion of co-occurrence is below this threshold, the disease pair is excluded from the analysis.
         proportion_threshold and n_threshold are mutually exclusive.
     
@@ -464,9 +468,10 @@ def comorbidity_strength(
     phecode_info = data.phecode_info
     trajectory_dict = data.trajectory
 
-    #check threshold
+    #validate threshold and retain its form for disease-pair-specific eligibility
     n_exposed = data.get_attribute('phenotype_statistics')['n_exposed']
-    n_threshold = threshold_check(proportion_threshold,n_threshold,n_exposed)
+    threshold_check(proportion_threshold,n_threshold,n_exposed)
+    threshold_config = (proportion_threshold,n_threshold)
     
     #check p-value correction method and cutoff
     correction_method_check(correction_phi,cutoff_phi)
@@ -502,13 +507,13 @@ def comorbidity_strength(
     result_all = []
     if n_process == 1:
         for d1,d2,describe in tqdm(d1d2_pair_lst, mininterval=15,smoothing=0):
-            result_all.append(com_phi_rr_wrapper(trajectory_dict,d1,d2,describe,n_threshold,log_file_final))
+            result_all.append(com_phi_rr_wrapper(trajectory_dict,d1,d2,describe,threshold_config,log_file_final))
     elif n_process > 1:
         parameters_all = []
         for d1,d2,describe in d1d2_pair_lst:
-            # parameters_all.append([trajectory_dict,d1,d2,describe,n_threshold,log_file_final])
+            # parameters_all.append([trajectory_dict,d1,d2,describe,threshold_config,log_file_final])
             parameters_all.append((d1,d2,describe))
-        with multiprocessing.get_context(start_mehtod).Pool(n_process, initializer=init_worker, initargs=(trajectory_dict,n_threshold,log_file_final)) as p:
+        with multiprocessing.get_context(start_mehtod).Pool(n_process, initializer=init_worker, initargs=(trajectory_dict,threshold_config,log_file_final)) as p:
             result_all = list(
                 tqdm(
                     p.imap(com_phi_rr, parameters_all),
@@ -728,7 +733,7 @@ def binomial_test(
     n_temporal_d1d2_col = kwargs.get('n_temporal_d1d2_col', 'n_d1d2_temporal')
     n_temporal_d2d1_col = kwargs.get('n_temporal_d2d1_col', 'n_d2d1_temporal')
     significance_phi_col = kwargs.get('significance_phi_col', 'phi_p_significance')
-    significance_RR_col = kwargs.get('significance_coef_col', 'RR_p_significance')
+    significance_RR_col = kwargs.get('significance_RR_col', 'RR_p_significance')
     for col in [phecode_d1_col, phecode_d2_col, significance_phi_col, significance_RR_col, 
                 n_nontemporal_col, n_temporal_d1d2_col, n_temporal_d2d1_col]:
         if col not in comorbidity_strength_result.columns:
@@ -1498,6 +1503,20 @@ def disease_trajectory(
     
     if len(trajectory_sig) == 0 or len(comorbidity_sig) == 0:
         raise ValueError("No disease pair remained after filtering on significance of phi-correlation/RR or binomial test.")
+    strength_pairs = {
+        frozenset((d1,d2))
+        for d1,d2 in comorbidity_sig[[phecode_d1_col,phecode_d2_col]].values
+    }
+    uncoupled_pairs = [
+        (d1,d2)
+        for d1,d2 in trajectory_sig[[phecode_d1_col,phecode_d2_col]].values
+        if frozenset((d1,d2)) not in strength_pairs
+    ]
+    if uncoupled_pairs:
+        raise ValueError(
+            "Significant binomial disease pairs are missing from the significant "
+            f"comorbidity-strength result: {uncoupled_pairs[:10]}."
+        )
     all_diseases_lst = list(set(comorbidity_sig[phecode_d1_col].to_list() + comorbidity_sig[phecode_d2_col].to_list()))
     phecode_sig = data.get_attribute('significant_phecodes')
     invalid_disease = [x for x in all_diseases_lst if x not in phecode_sig]

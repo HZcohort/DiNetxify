@@ -1,3 +1,5 @@
+"""Deprecated parallel disease-pair construction; not used by DiseaseNetworkData."""
+
 import multiprocessing
 import pandas as pd
 import gc

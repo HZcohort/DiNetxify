@@ -186,7 +186,7 @@ def logistic_model(args):
                 #restrict the dataset to the final model variables
                 df_analysis = df_analysis[final_model_vars+[d2_col]]
                 model_final = Logit(np.asarray(df_analysis[d2_col],dtype=int),
-                                    np.asarray(df_analysis[final_model_vars]),dtype=float)
+                                    np.asarray(df_analysis[final_model_vars],dtype=float))
                 result_final = model_final.fit(disp=False,method='bfgs')
                 beta,se,p,aic = result_final.params[0], result_final.bse[0],result_final.pvalues[0],result_final.aic
                 #get the z-value dictionary

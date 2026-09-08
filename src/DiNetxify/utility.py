@@ -191,7 +191,7 @@ def convert_column(dataframe, column:str):
             print(f"'{column}' converted to binary variable with mapping: {mapping}")
             df[new_column] = df[new_column].map(mapping)
             return df[[new_column]],'binary'
-    elif (df[new_column].dtype == float or df[new_column].dtype == int or df[new_column].dtype == object) and n_unique_vals>=10:
+    elif pd.api.types.is_numeric_dtype(df[new_column]) and n_unique_vals>=10:
         # Treat as continuous
         n_missing_before = df[new_column].isna().sum()
         df[new_column] = pd.to_numeric(df[new_column], errors='coerce')
@@ -373,23 +373,32 @@ def medical_records_process(
     no_mapping_list = {}
     n_invalid = {}
     
+    if 'ICD-9' in code_type:
+        normalize_code = lambda value: decimal_to_short(str(value).strip().upper())
+    elif 'ICD-10' in code_type:
+        normalize_code = lambda value: str(value).strip().upper().replace('.','')
+    else:
+        raise ValueError(f'unrecognized diagnosis code type {code_type}')
+    normalized_exclusion_list = {normalize_code(code) for code in exclusion_list}
+
     chunks = pd.read_csv(medical_records,sep=seperator,iterator=True,chunksize=chunk_n,
                          usecols=[eid_col,icd_col,date_col])
     for chunk in chunks:
         len_before = len(chunk)
-        #convert the icd_col to string
-        chunk[icd_col] = chunk[icd_col].astype(str)
+        #remove missing required values before converting diagnosis codes to strings
+        missing_required = chunk[[eid_col,icd_col,date_col]].isna().any(axis=1)
+        n_missing = int(missing_required.sum())
+        chunk = chunk.loc[~missing_required].copy()
+        #normalize diagnosis codes before exclusion and mapping
+        chunk[icd_col] = chunk[icd_col].map(normalize_code)
         #filtering the participant ID
         chunk = chunk[chunk[eid_col].isin(all_phecode_dict)]
         #drop records in the exclusion list
-        if exclusion_list:
-            chunk = chunk[~chunk[icd_col].str[:5].isin(exclusion_list) & 
-                          ~chunk[icd_col].str[:4].isin(exclusion_list) & 
-                          ~chunk[icd_col].str[:3].isin(exclusion_list)]
+        if normalized_exclusion_list:
+            chunk = chunk[~chunk[icd_col].str[:5].isin(normalized_exclusion_list) & 
+                          ~chunk[icd_col].str[:4].isin(normalized_exclusion_list) & 
+                          ~chunk[icd_col].str[:3].isin(normalized_exclusion_list)]
         len_valid = len(chunk)
-        #drop na values
-        chunk.dropna(how='any', inplace=True)
-        n_missing = len_valid - len(chunk)
         #comvert the date column to datetime
         chunk[date_col] = pd.to_datetime(chunk[date_col], format=date_fmt)
         within_follow_up = chunk[date_col] <= chunk[eid_col].map(end_date_dict)
@@ -397,12 +406,6 @@ def medical_records_process(
             n_invalid[patient_id] = n_invalid.get(patient_id, 0) + int(n)
         len_valid -= int((~within_follow_up).sum())
         chunk = chunk.loc[within_follow_up].copy()
-        if 'ICD-9' in code_type: 
-            chunk[icd_col] = chunk[icd_col].apply(lambda x: decimal_to_short(x))
-        elif 'ICD-10' in code_type:
-            chunk[icd_col] = chunk[icd_col].apply(lambda x: x.replace('.',''))
-        else:
-            raise ValueError(f'unrecognized diagnosis code type {code_type}')
         n_total_read += len_before
         n_total_missing += n_missing
         n_total_records += len_valid
@@ -1321,12 +1324,12 @@ def find_best_alpha_and_vars(model, best_range, alpha_lst, co_vars):
         if counter >= thresold:
             break
 
-    final_best_alpha = min(refined_aic_dict, key=refined_aic_dict.get)
-    if refined_aic_dict[final_best_alpha] == float('inf'):
+    raw_best_alpha = min(refined_aic_dict, key=refined_aic_dict.get)
+    if refined_aic_dict[raw_best_alpha] == float('inf'):
         raise ValueError(f"Models failed to fit when trying to find the best alpha for L1 regularization, consider change the 'alpha_range' or 'scaling_factor'.")
     else:
-        final_best_alpha = final_best_alpha * alpha_lst[-1]
-        final_disease_vars = refined_vars_dict[final_best_alpha]
+        final_disease_vars = refined_vars_dict[raw_best_alpha]
+        final_best_alpha = raw_best_alpha * alpha_lst[-1]
     return final_best_alpha, final_disease_vars
 
 #decprecated function

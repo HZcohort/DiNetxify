@@ -287,6 +287,16 @@ class DiseaseNetworkData:
             is_single_sex,
             self.__sex_value_dict
         )
+        nonpositive_follow_up = phenotype_data_[
+            phenotype_data_[self.__end_date_col]
+            <= phenotype_data_[self.__index_date_col]
+        ]
+        if not nonpositive_follow_up.empty:
+            invalid_ids = nonpositive_follow_up[self.__id_col].tolist()
+            raise ValueError(
+                "All participants must have End date after Index date. "
+                f"Invalid Participant IDs include: {invalid_ids[:10]}"
+            )
         #convert covariates
         self.__phenotype_info['phenotype_covariates_converted'] = {}
         self.__phenotype_info['phenotype_covariates_list'] = []
@@ -764,8 +774,8 @@ class DiseaseNetworkData:
             The default is False, which will raise an error if data already exists.
         
         n_process : int, default=1
-            Number of processes to use for parallel processing.
-            Multiprocessing is enabled when `n_process` is set to a value greater than one.
+            Must be 1. Parallel disease-pair construction is disabled because it
+            does not preserve the serial interval-classification behavior.
         
         **kwargs
             Additional keyword argument to define the required columns in 'phewas_result':
@@ -826,6 +836,8 @@ class DiseaseNetworkData:
         # Check multiprocessing parameters
         if not isinstance(n_process, int) or n_process < 1:
             raise TypeError("The provided input 'n_processes' must be an integer>=1.")
+        if n_process > 1:
+            raise ValueError("Multiprocessing has been disabled for disease-pair construction; use n_process=1.")
         
         #get list of significant phecodes
         significant_phecodes = phewas_result[phewas_result[significance_col]==True][phecode_col].to_list()
@@ -846,43 +858,22 @@ class DiseaseNetworkData:
         exp_col = self.__phenotype_info['phenotype_col_dict']['Exposure']
         exposed_df = self.phenotype_df[self.phenotype_df[exp_col]==1]
         
-        if n_process > 1:
-            # Parallel processing
-            from .utility_data_parallel import parallel_d1d2_from_diagnosis_history
-            self.trajectory = parallel_d1d2_from_diagnosis_history(
-                exposed_df,
-                self.__phenotype_info['phenotype_col_dict']['Participant ID'],
-                self.__phenotype_info['phenotype_col_dict']['Sex'],
-                self.__sex_value_dict,
-                self.__significant_phecodes,
-                d1d2_index,
-                self.history,
-                self.diagnosis,
-                self.n_diagnosis,
-                self.phecode_info,
-                self.min_interval_days,
-                self.max_interval_days,
-                self.min_required_icd_codes,
-                n_process
-                )
-        else:
-            # traditional way to process
-            from .utility import d1d2_from_diagnosis_history
-            self.trajectory = d1d2_from_diagnosis_history(
-                exposed_df,
-                self.__phenotype_info['phenotype_col_dict']['Participant ID'],
-                self.__phenotype_info['phenotype_col_dict']['Sex'],
-                self.__sex_value_dict,
-                self.__significant_phecodes,
-                d1d2_index,
-                self.history,
-                self.diagnosis,
-                self.n_diagnosis,
-                self.phecode_info,
-                self.min_interval_days,
-                self.max_interval_days,
-                self.min_required_icd_codes
-                )
+        from .utility import d1d2_from_diagnosis_history
+        self.trajectory = d1d2_from_diagnosis_history(
+            exposed_df,
+            self.__phenotype_info['phenotype_col_dict']['Participant ID'],
+            self.__phenotype_info['phenotype_col_dict']['Sex'],
+            self.__sex_value_dict,
+            self.__significant_phecodes,
+            d1d2_index,
+            self.history,
+            self.diagnosis,
+            self.n_diagnosis,
+            self.phecode_info,
+            self.min_interval_days,
+            self.max_interval_days,
+            self.min_required_icd_codes
+            )
     
 
     def medical_records_to_dataframe(self, phecode_list:list, medical_history:bool=False) -> pd.DataFrame:
