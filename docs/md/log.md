@@ -1,5 +1,27 @@
 # Changelog
 
+**0.3.0 - 2026-09-08**
+
+- Added follow-up end-date checks to medical-record processing and corrected invalid-record summaries.
+- Made disease-covariate adjustment in trajectory analyses time-aware to prevent the use of future diagnoses.
+- Updated the Phecode mapping and information `.npy` files to correct exclusion definitions.
+- Required each participant's end date to be later than their index date.
+- Improved automatic classification of categorical and continuous covariates.
+- Removed incomplete medical records before diagnosis-code processing.
+- Standardized ICD codes before exclusion filtering and Phecode mapping.
+- Corrected sex-specific disease filtering in PheWAS.
+- Excluded participants with invalid follow-up periods before PheWAS summaries, thresholds, and model fitting.
+- Calculated proportional PheWAS thresholds from each disease-eligible population.
+- Corrected the relative-risk and phi-coefficient significance tests, including boundary handling for phi values of 1.
+- Restricted disease-pair construction to serial execution to prevent inconsistent results.
+- Corrected RPCN fitting when a user-specified penalty is provided.
+- Corrected automatic scaling of the RPCN penalty.
+- Corrected handling of custom relative-risk significance columns.
+- Applied temporal-order settings consistently across analysis stages.
+- Validated that trajectory and comorbidity results contain matching disease pairs.
+- Harmonized pipeline execution modes and recorded the selected stage order.
+- Calculated proportional comorbidity-strength thresholds from each disease-pair-eligible population.
+
 **0.2.0 - 2026-08-29**
 
 - Added `Plot.interactive_website()` for generating self-contained offline websites from available PheWAS, comorbidity-network, disease-trajectory, and 3D network results.

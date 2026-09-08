@@ -20,6 +20,8 @@
 
 ![architecture](https://github.com/HZcohort/DiNetxify/blob/main/docs/img/architecture.png)
 
+
+
 ## Installation
 
 ***DiNetxify*** requires **Python 3.10+**.
@@ -30,7 +32,15 @@ pip install dinetxify
 
 Core dependencies include `numpy`, `pandas`, `matplotlib`, `plotly`, `python_louvain`, `networkx`, `scikit_learn`, `scipy`, `statsmodels>=0.14.4`, `lifelines>=0.27.0`, and `tqdm`.
 
-## New in *DiNetxify* v0.2.0: Interactive visualization websites
+
+
+## Recent Major Updates
+
+### *DiNetxify* v0.3.0: More reliable data processing and analysis
+
+Following a comprehensive review of the data-processing and analysis workflow, ***DiNetxify*** v0.3.0 introduces important corrections to Phecode exclusion, longitudinal EHR processing, PheWAS eligibility and thresholding, comorbidity-strength estimation, RPCN fitting, and time-aware adjustment for disease covariates in trajectory analyses. Together, these updates improve methodological reliability and consistency across analysis stages. See the Changelog in [https://hzcohort.github.io/DiNetxify/](https://hzcohort.github.io/DiNetxify/) and commit history for the complete list of corrections.
+
+### *DiNetxify* v0.2.0: Interactive visualization websites
 
 ***DiNetxify*** v0.2.0 introduces `Plot.interactive_website()`, which converts analysis result tables into a self-contained, multi-page visualization website. The generated site can be opened locally without a web server or internet connection. See the [interactive example](https://hzcohort.github.io/DiNetxify/MDD_web_example/), which presents results from our [previous depression study](https://www.nature.com/articles/s41380-025-03120-y).
 
@@ -47,6 +57,8 @@ plot.interactive_website("results/interactive_website")
 ```
 
 The PheWAS section is always generated. Supplying `comorbidity_result` adds the interactive comorbidity network, while supplying both `comorbidity_result` and `trajectory_result` also adds the disease-trajectory and 3D network sections. The website includes filtering, search, tooltips, zoom controls, and figure export where applicable.
+
+
 
 ## Quick Start
 
@@ -201,6 +213,8 @@ To customize disease-system colors, pass `SYSTEM=[...]` and the corresponding `C
 
 For exposed-only cohorts, omit `exposure_name`, `exposure_location`, and `exposure_size`.
 
+
+
 ## Documentation
 
 Full documentation is available at:
@@ -215,12 +229,16 @@ It includes guides for:
 - table generation
 - API reference
 
+
+
 ## Citation
 
 If you use this software in your research, please cite:
 
 1. [DiNetxify: a python package for three-dimensional disease network analysis based on electronic health record data](https://link.springer.com/article/10.1007/s10654-025-01360-4) ([PMID: 41579291](https://pubmed.ncbi.nlm.nih.gov/41579291/))
 2. [Disease clusters and their genetic determinants following a diagnosis of depression: analyses based on a novel three-dimensional disease network approach](https://www.nature.com/articles/s41380-025-03120-y) ([PMID: 40681841](https://pubmed.ncbi.nlm.nih.gov/40681841/))
+
+
 
 ## Contact
 

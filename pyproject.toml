@@ -1,29 +1,30 @@
 [build-system]
-requires = ["setuptools>=42", "wheel"]
+requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "DiNetxify"
-version = "0.2.0"
+version = "0.3.0"
 authors = [
   { name="Can Hou", email="houcan@wchscu.cn" },
   { name="Haowen Liu", email="haowenliu81@gmail.com" },
 ]
-description = "DiNetxify"
+description = "Python package for conducting comprehensive three-dimensional (3D) disease network analysis on large-scale electronic health record (EHR) data"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.10,<3.14"
 dependencies = [
-    "python_louvain>=0.15",
-    "matplotlib>=3.5.0",
-    "lifelines>=0.27.0",
+    "python-louvain>=0.16",
+    "matplotlib>=3.10.0",
+    "lifelines>=0.30.0",
     "statsmodels>=0.14.4",
     "networkx>=3.4.2",
-    "numpy>=1.21.5",
-    "pandas>=1.3.5",
-    "plotly>=5.4.0",
-    "scikit_learn>=1.0.2",
-    "scipy>=1.7.2",
-    "tqdm>=4.62.3"
+    "numpy>=1.26.4,<3; python_version < '3.13'",
+    "numpy>=2.1.0,<3; python_version >= '3.13'",
+    "pandas>=2.2.3,<3",
+    "plotly>=5.24.0",
+    "scikit-learn>=1.6.0",
+    "scipy>=1.14.1",
+    "tqdm>=4.66.0",
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -40,6 +41,8 @@ include-package-data = true
 
 [tool.setuptools.package-data]
 DiNetxify = [
+    "interactive_assets/*.css",
+    "interactive_assets/*.js",
     "data/phecode_1.2/ICD-9-WHO.npy",
     "data/phecode_1.2/ICD-10-CM.npy",
     "data/phecode_1.2/ICD-10-WHO.npy",
