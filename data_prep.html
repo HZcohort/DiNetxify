@@ -168,7 +168,9 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">Exposure</span></code> must be coded as <code class="docutils literal notranslate"><span class="pre">1</span></code> for exposed and <code class="docutils literal notranslate"><span class="pre">0</span></code> for unexposed when the study design includes an exposure group.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Sex</span></code> must be coded as <code class="docutils literal notranslate"><span class="pre">1</span></code> for female and <code class="docutils literal notranslate"><span class="pre">0</span></code> for male.</p></li>
 <li><p>Dates must use a consistent format.</p></li>
+<li><p>Every participant’s <code class="docutils literal notranslate"><span class="pre">End</span> <span class="pre">date</span></code> must be strictly later than their <code class="docutils literal notranslate"><span class="pre">Index</span> <span class="pre">date</span></code>; loading raises <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> otherwise.</p></li>
 <li><p>Covariate types are detected automatically and converted internally.</p></li>
+<li><p>High-cardinality covariates are continuous only when their source dtype is numeric; high-cardinality text remains categorical.</p></li>
 <li><p>Continuous covariates with missing values lead to participant removal during loading.</p></li>
 <li><p>Covariate names must not conflict with reserved internal variable names.</p></li>
 </ul>
@@ -234,6 +236,9 @@
 <li><p>Do not mix CM and WHO code systems in one file.</p></li>
 <li><p>Do not pre-filter diagnoses to first occurrence only.</p></li>
 <li><p>Do not pre-filter diagnoses to the follow-up period; <code class="docutils literal notranslate"><span class="pre">DiNetxify</span></code> handles follow-up filtering internally.</p></li>
+<li><p>Rows missing participant ID, diagnosis code, or diagnosis date are removed before code processing.</p></li>
+<li><p>Diagnosis codes and <code class="docutils literal notranslate"><span class="pre">diagnosis_code_exclusion</span></code> values are normalized before exclusion matching and Phecode mapping.</p></li>
+<li><p>Records after each participant’s <code class="docutils literal notranslate"><span class="pre">End</span> <span class="pre">date</span></code> are excluded before diagnosis counts are formed.</p></li>
 <li><p>ICD-10 codes may be provided with or without decimal points.</p></li>
 <li><p>ICD-9 codes may be provided in decimal or short format.</p></li>
 </ul>
@@ -268,7 +273,7 @@
 <ul class="simple">
 <li><p>If <code class="docutils literal notranslate"><span class="pre">date_fmt=None</span></code>, the medical-record file uses the same date format as the phenotype file.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">chunksize</span></code> controls how many rows are processed at a time and is useful for large files.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">diagnosis_code_exclusion</span></code> lets you exclude specific diagnosis codes before mapping.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">diagnosis_code_exclusion</span></code> lets you exclude specific diagnosis codes before mapping; values are normalized to the selected ICD format first.</p></li>
 <li><p>After each merge, the package updates diagnosis, diagnosis-count, and history information inside the <code class="docutils literal notranslate"><span class="pre">DiseaseNetworkData</span></code> object.</p></li>
 </ul>
 </section>

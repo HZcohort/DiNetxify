@@ -152,6 +152,7 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">keep_positive_associations=True</span></code> keeps PheWAS results with <code class="docutils literal notranslate"><span class="pre">phewas_coef</span> <span class="pre">&gt;=</span> <span class="pre">0</span></code> for non-exposed-only designs, and keeps comorbidity pairs with <code class="docutils literal notranslate"><span class="pre">phi</span> <span class="pre">&gt;</span> <span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">RR</span> <span class="pre">&gt;</span> <span class="pre">1</span></code>.</p></li>
 <li><p>The pipeline writes result tables and log files to <code class="docutils literal notranslate"><span class="pre">output_dir</span></code>, in addition to returning the result DataFrames.</p></li>
 <li><p>If <code class="docutils literal notranslate"><span class="pre">save_intermediate_data=True</span></code>, the intermediate <code class="docutils literal notranslate"><span class="pre">DiseaseNetworkData</span></code> object created after disease-pair generation is saved with the prefix <code class="docutils literal notranslate"><span class="pre">project_prefix</span></code>.</p></li>
+<li><p>Every returned DataFrame stores <code class="docutils literal notranslate"><span class="pre">pipeline_mode</span></code> and the human-readable <code class="docutils literal notranslate"><span class="pre">stage_order</span></code> in <code class="docutils literal notranslate"><span class="pre">DataFrame.attrs</span></code>; the pipeline log records the same values.</p></li>
 </ul>
 <section id="core-pipeline-arguments">
 <h3>Core pipeline arguments<a class="headerlink" href="#core-pipeline-arguments" title="Link to this heading"></a></h3>
@@ -166,7 +167,7 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">matching_var_dict</span></code>: Matching rules for trajectory analysis. Use <code class="docutils literal notranslate"><span class="pre">'sex'</span></code> for sex.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">matching_n</span></code>: Maximum number of matched controls per case in trajectory analysis.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">min_interval_days</span></code>, <code class="docutils literal notranslate"><span class="pre">max_interval_days</span></code>: Time-window settings used when building disease pairs.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">enforce_temporal_order</span></code>: Passed to <code class="docutils literal notranslate"><span class="pre">binomial_test()</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">enforce_temporal_order</span></code>: Controls non-temporal-pair handling in <code class="docutils literal notranslate"><span class="pre">binomial_test()</span></code> and the same interval enforcement in <code class="docutils literal notranslate"><span class="pre">disease_trajectory()</span></code>. Do not also pass <code class="docutils literal notranslate"><span class="pre">enforce_time_interval</span></code> to the pipeline.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">correction</span></code>, <code class="docutils literal notranslate"><span class="pre">cutoff</span></code>: Multiple-testing correction method and significance threshold.</p></li>
 </ul>
 </section>
@@ -176,7 +177,7 @@
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">auto_penalty=True</span></code> by default</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">alpha_range=(1,</span> <span class="pre">15)</span></code> by default when <code class="docutils literal notranslate"><span class="pre">auto_penalty=True</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">scaling_factor=1</span></code> by default</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">scaling_factor=1</span></code> by default; it multiplies candidate disease-covariate penalties, while selection uses the unscaled search-grid key and output reports the effective scaled alpha</p></li>
 <li><p>If <code class="docutils literal notranslate"><span class="pre">auto_penalty=False</span></code>, you must provide <code class="docutils literal notranslate"><span class="pre">alpha</span></code></p></li>
 </ul>
 <p>For <code class="docutils literal notranslate"><span class="pre">method=&quot;PCN_PCA&quot;</span></code>:</p>
@@ -218,6 +219,8 @@
 <p>Notes:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">n_threshold</span></code> and <code class="docutils literal notranslate"><span class="pre">proportion_threshold</span></code> are mutually exclusive.</p></li>
+<li><p>A proportional threshold is calculated separately for each Phecode from disease-eligible exposed participants after history, sex, matched-set, and valid-follow-up restrictions. An absolute threshold is unchanged.</p></li>
+<li><p>Thresholds, incidence summaries, and Cox fitting use the same positive-follow-up risk set, including sex-specific eligibility.</p></li>
 <li><p>If <code class="docutils literal notranslate"><span class="pre">covariates=None</span></code>, DiNetxify uses <code class="docutils literal notranslate"><span class="pre">'sex'</span></code> plus the covariates provided in <code class="docutils literal notranslate"><span class="pre">phenotype_data()</span></code>.</p></li>
 <li><p>In matched cohorts, including matching variables as covariates may cause singular-model issues.</p></li>
 </ul>
@@ -239,13 +242,14 @@
     <span class="n">min_interval_days</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
     <span class="n">max_interval_days</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">),</span>
     <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">n_process</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+    <span class="n">n_process</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
 <p>Notes:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">force=True</span></code> is needed if <code class="docutils literal notranslate"><span class="pre">data.trajectory</span></code> already exists and you want to rebuild the pairs.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_process</span></code> must be <code class="docutils literal notranslate"><span class="pre">1</span></code>; parallel pair construction is disabled because it did not preserve serial interval classification.</p></li>
 <li><p>By default, the method expects <code class="docutils literal notranslate"><span class="pre">phewas_result</span></code> to contain <code class="docutils literal notranslate"><span class="pre">phecode</span></code> and <code class="docutils literal notranslate"><span class="pre">phewas_p_significance</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">min_interval_days</span></code> and <code class="docutils literal notranslate"><span class="pre">max_interval_days</span></code> are stored on the data object and reused later by trajectory analysis.</p></li>
 </ul>
@@ -269,6 +273,8 @@
 <p>Notes:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">n_threshold</span></code> and <code class="docutils literal notranslate"><span class="pre">proportion_threshold</span></code> are mutually exclusive.</p></li>
+<li><p>A proportional threshold is calculated separately for each pair from the disease-pair-eligible exposed sub-cohort after history and sex restrictions. An absolute threshold is unchanged.</p></li>
+<li><p>Phi remains exactly <code class="docutils literal notranslate"><span class="pre">-1</span></code> or <code class="docutils literal notranslate"><span class="pre">1</span></code> at the boundary. Its test uses <code class="docutils literal notranslate"><span class="pre">max(C_i,</span> <span class="pre">C_j)</span></code> in the test statistic and a two-sided Student’s t distribution; RR uses the pair-specific sub-cohort size.</p></li>
 <li><p>This function requires disease pairs to have already been generated.</p></li>
 <li><p>Downstream network and trajectory analyses only keep pairs significant for both phi and RR.</p></li>
 </ul>
@@ -382,6 +388,7 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">enforce_time_interval=True</span></code> is the default and applies the interval rules defined earlier in <code class="docutils literal notranslate"><span class="pre">data.disease_pair()</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">global_sampling=True</span></code> reuses incidence-density sampling across pairs with the same D2 and can be useful for larger analyses.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">max_n_cases</span></code> can cap the number of D2 cases analyzed for each model.</p></li>
+<li><p>Every significant binomial pair must also occur among significant comorbidity-strength pairs. This check ignores D1/D2 ordering and raises <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> for uncoupled inputs.</p></li>
 </ul>
 <p>If needed:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">trajectory_result</span> <span class="o">=</span> <span class="n">dnt</span><span class="o">.</span><span class="n">trajectory_multipletests</span><span class="p">(</span>

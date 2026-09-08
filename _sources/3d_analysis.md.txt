@@ -61,6 +61,7 @@ Important notes:
 - `keep_positive_associations=True` keeps PheWAS results with `phewas_coef >= 0` for non-exposed-only designs, and keeps comorbidity pairs with `phi > 0` and `RR > 1`.
 - The pipeline writes result tables and log files to `output_dir`, in addition to returning the result DataFrames.
 - If `save_intermediate_data=True`, the intermediate `DiseaseNetworkData` object created after disease-pair generation is saved with the prefix `project_prefix`.
+- Every returned DataFrame stores `pipeline_mode` and the human-readable `stage_order` in `DataFrame.attrs`; the pipeline log records the same values.
 
 ### Core pipeline arguments
 
@@ -74,7 +75,7 @@ Important notes:
 - `matching_var_dict`: Matching rules for trajectory analysis. Use `'sex'` for sex.
 - `matching_n`: Maximum number of matched controls per case in trajectory analysis.
 - `min_interval_days`, `max_interval_days`: Time-window settings used when building disease pairs.
-- `enforce_temporal_order`: Passed to `binomial_test()`.
+- `enforce_temporal_order`: Controls non-temporal-pair handling in `binomial_test()` and the same interval enforcement in `disease_trajectory()`. Do not also pass `enforce_time_interval` to the pipeline.
 - `correction`, `cutoff`: Multiple-testing correction method and significance threshold.
 
 ### Method-specific arguments
@@ -83,7 +84,7 @@ For `method="RPCN"`:
 
 - `auto_penalty=True` by default
 - `alpha_range=(1, 15)` by default when `auto_penalty=True`
-- `scaling_factor=1` by default
+- `scaling_factor=1` by default; it multiplies candidate disease-covariate penalties, while selection uses the unscaled search-grid key and output reports the effective scaled alpha
 - If `auto_penalty=False`, you must provide `alpha`
 
 For `method="PCN_PCA"`:
@@ -127,6 +128,8 @@ phewas_result = dnt.phewas(
 Notes:
 
 - `n_threshold` and `proportion_threshold` are mutually exclusive.
+- A proportional threshold is calculated separately for each Phecode from disease-eligible exposed participants after history, sex, matched-set, and valid-follow-up restrictions. An absolute threshold is unchanged.
+- Thresholds, incidence summaries, and Cox fitting use the same positive-follow-up risk set, including sex-specific eligibility.
 - If `covariates=None`, DiNetxify uses `'sex'` plus the covariates provided in `phenotype_data()`.
 - In matched cohorts, including matching variables as covariates may cause singular-model issues.
 
@@ -152,13 +155,14 @@ data.disease_pair(
     min_interval_days=0,
     max_interval_days=float("inf"),
     force=True,
-    n_process=4,
+    n_process=1,
 )
 ```
 
 Notes:
 
 - `force=True` is needed if `data.trajectory` already exists and you want to rebuild the pairs.
+- `n_process` must be `1`; parallel pair construction is disabled because it did not preserve serial interval classification.
 - By default, the method expects `phewas_result` to contain `phecode` and `phewas_p_significance`.
 - `min_interval_days` and `max_interval_days` are stored on the data object and reused later by trajectory analysis.
 
@@ -184,6 +188,8 @@ com_strength_result = dnt.comorbidity_strength(
 Notes:
 
 - `n_threshold` and `proportion_threshold` are mutually exclusive.
+- A proportional threshold is calculated separately for each pair from the disease-pair-eligible exposed sub-cohort after history and sex restrictions. An absolute threshold is unchanged.
+- Phi remains exactly `-1` or `1` at the boundary. Its test uses `max(C_i, C_j)` in the test statistic and a two-sided Student's t distribution; RR uses the pair-specific sub-cohort size.
 - This function requires disease pairs to have already been generated.
 - Downstream network and trajectory analyses only keep pairs significant for both phi and RR.
 
@@ -309,6 +315,7 @@ Notes:
 - `enforce_time_interval=True` is the default and applies the interval rules defined earlier in `data.disease_pair()`.
 - `global_sampling=True` reuses incidence-density sampling across pairs with the same D2 and can be useful for larger analyses.
 - `max_n_cases` can cap the number of D2 cases analyzed for each model.
+- Every significant binomial pair must also occur among significant comorbidity-strength pairs. This check ignores D1/D2 ordering and raises `ValueError` for uncoupled inputs.
 
 If needed:
 

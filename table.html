@@ -220,7 +220,7 @@
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">phi_theta</span></code></p></td>
 <td><p>Float</p></td>
-<td><p>Standard-error term used for inference on phi</p></td>
+<td><p>Standard-error term <code class="docutils literal notranslate"><span class="pre">sqrt((1</span> <span class="pre">-</span> <span class="pre">phi^2)</span> <span class="pre">/</span> <span class="pre">(max(C_i,</span> <span class="pre">C_j)</span> <span class="pre">-</span> <span class="pre">2))</span></code>; set to <code class="docutils literal notranslate"><span class="pre">0</span></code> for an exact boundary coefficient</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">phi_p</span></code></p></td>
 <td><p>Float</p></td>
@@ -232,7 +232,7 @@
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">RR_theta</span></code></p></td>
 <td><p>Float</p></td>
-<td><p>Standard-error term used for inference on RR</p></td>
+<td><p>Log-RR standard-error term calculated from the pair-specific eligible sub-cohort</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RR_p</span></code></p></td>
 <td><p>Float</p></td>

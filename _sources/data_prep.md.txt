@@ -73,7 +73,9 @@ You may also provide any number of additional covariates, such as age, BMI, smok
 - `Exposure` must be coded as `1` for exposed and `0` for unexposed when the study design includes an exposure group.
 - `Sex` must be coded as `1` for female and `0` for male.
 - Dates must use a consistent format.
+- Every participant's `End date` must be strictly later than their `Index date`; loading raises `ValueError` otherwise.
 - Covariate types are detected automatically and converted internally.
+- High-cardinality covariates are continuous only when their source dtype is numeric; high-cardinality text remains categorical.
 - Continuous covariates with missing values lead to participant removal during loading.
 - Covariate names must not conflict with reserved internal variable names.
 
@@ -136,6 +138,9 @@ If you have multiple coding systems, load them as separate files by calling `mer
 - Do not mix CM and WHO code systems in one file.
 - Do not pre-filter diagnoses to first occurrence only.
 - Do not pre-filter diagnoses to the follow-up period; `DiNetxify` handles follow-up filtering internally.
+- Rows missing participant ID, diagnosis code, or diagnosis date are removed before code processing.
+- Diagnosis codes and `diagnosis_code_exclusion` values are normalized before exclusion matching and Phecode mapping.
+- Records after each participant's `End date` are excluded before diagnosis counts are formed.
 - ICD-10 codes may be provided with or without decimal points.
 - ICD-9 codes may be provided in decimal or short format.
 
@@ -170,7 +175,7 @@ Notes:
 
 - If `date_fmt=None`, the medical-record file uses the same date format as the phenotype file.
 - `chunksize` controls how many rows are processed at a time and is useful for large files.
-- `diagnosis_code_exclusion` lets you exclude specific diagnosis codes before mapping.
+- `diagnosis_code_exclusion` lets you exclude specific diagnosis codes before mapping; values are normalized to the selected ICD format first.
 - After each merge, the package updates diagnosis, diagnosis-count, and history information inside the `DiseaseNetworkData` object.
 
 ## Dummy dataset

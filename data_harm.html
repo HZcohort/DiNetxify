@@ -184,8 +184,10 @@
 <li><p>For <code class="docutils literal notranslate"><span class="pre">cohort</span></code> and <code class="docutils literal notranslate"><span class="pre">matched</span> <span class="pre">cohort</span></code>, <code class="docutils literal notranslate"><span class="pre">Exposure</span></code> must be coded as <code class="docutils literal notranslate"><span class="pre">1</span></code> for exposed and <code class="docutils literal notranslate"><span class="pre">0</span></code> for unexposed.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Sex</span></code> must be coded as <code class="docutils literal notranslate"><span class="pre">1</span></code> for female and <code class="docutils literal notranslate"><span class="pre">0</span></code> for male.</p></li>
 <li><p>Required columns cannot contain missing values.</p></li>
+<li><p>Every participant’s <code class="docutils literal notranslate"><span class="pre">End</span> <span class="pre">date</span></code> must be strictly later than their <code class="docutils literal notranslate"><span class="pre">Index</span> <span class="pre">date</span></code>; loading raises <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> otherwise.</p></li>
 <li><p>Continuous covariates with missing values will remove those participants during loading.</p></li>
 <li><p>Categorical covariates with missing values are retained and treated as an <code class="docutils literal notranslate"><span class="pre">&quot;NA&quot;</span></code> category.</p></li>
+<li><p>High-cardinality covariates are continuous only when their source dtype is numeric; high-cardinality text remains categorical.</p></li>
 <li><p>Column names used for covariates must not conflict with DiNetxify reserved variables.</p></li>
 </ul>
 <p><strong>After loading phenotype data:</strong></p>
@@ -243,6 +245,9 @@
 <li><p>Do not mix CM and WHO coding systems in one file.</p></li>
 <li><p>Do not restrict records to first occurrences only.</p></li>
 <li><p>Do not pre-filter records to the follow-up period; DiNetxify handles follow-up filtering internally.</p></li>
+<li><p>Rows missing participant ID, diagnosis code, or diagnosis date are removed before code processing.</p></li>
+<li><p>Diagnosis codes and exclusion values are normalized before exclusion matching and Phecode mapping.</p></li>
+<li><p>Records after each participant’s <code class="docutils literal notranslate"><span class="pre">End</span> <span class="pre">date</span></code> are excluded before diagnosis counts are formed.</p></li>
 </ul>
 <p><strong>During loading, the package reports:</strong></p>
 <ul class="simple">

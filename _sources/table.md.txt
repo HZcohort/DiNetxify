@@ -38,10 +38,10 @@ For `exposed-only cohort`, the returned table is simpler: significance is based 
 | `n_d1d2_pair` | Integer | Total number of individuals contributing a D1/D2 pair, counting temporal and non-temporal pair occurrences together |
 | `description` | String | Note describing why statistics were not estimated, if applicable |
 | `phi` | Float | Phi correlation for the disease pair |
-| `phi_theta` | Float | Standard-error term used for inference on phi |
+| `phi_theta` | Float | Standard-error term `sqrt((1 - phi^2) / (max(C_i, C_j) - 2))`; set to `0` for an exact boundary coefficient |
 | `phi_p` | Float | P-value for phi correlation |
 | `RR` | Float | Relative risk for co-occurrence of the disease pair |
-| `RR_theta` | Float | Standard-error term used for inference on RR |
+| `RR_theta` | Float | Log-RR standard-error term calculated from the pair-specific eligible sub-cohort |
 | `RR_p` | Float | P-value for relative risk |
 | `phi_p_significance` | Boolean | Whether `phi_p` is significant after correction |
 | `phi_p_adjusted` | Float | Adjusted P-value for `phi_p` |

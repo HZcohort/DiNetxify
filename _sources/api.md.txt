@@ -46,8 +46,8 @@ Load phenotype data into the object.
 **Parameters:**
 
 - `phenotype_data_path` (`str`): Path to a CSV or TSV phenotype file.
-- `column_names` (`dict`): Mapping from DiNetxify-required field names to dataset columns. A cohort accepts exactly one of `Exposure` or `Outcome`; matched cohorts require `Exposure` and `Match ID`; nested case-control samples require `Outcome` and `Match ID`.
-- `covariates` (`list`): Additional phenotype variables to load.
+- `column_names` (`dict`): Mapping from DiNetxify-required field names to dataset columns. Every `End date` must be strictly later than its `Index date`.
+- `covariates` (`list`): Additional phenotype variables to load. High-cardinality values are classified as continuous only when the source dtype is numeric; text values remain categorical.
 - `is_single_sex` (`bool`): Set to `True` if the cohort contains only one sex.
 - `force` (`bool`): Overwrite existing phenotype and medical-record data if `True`.
 
@@ -101,7 +101,7 @@ Load and merge one medical-record file into the object.
 - `column_names` (`dict`): Mapping for `"Participant ID"`, `"Diagnosis code"`, and `"Date of diagnosis"`.
 - `date_fmt` (`str | None`): Date format for this file. If `None`, use the object's `date_fmt`.
 - `chunksize` (`int`): Number of rows processed per chunk.
-- `diagnosis_code_exclusion` (`list`): Diagnosis codes to exclude before phecode mapping.
+- `diagnosis_code_exclusion` (`list`): Diagnosis codes to exclude before Phecode mapping. Input and exclusion codes are normalized before matching. Rows missing participant ID, diagnosis code, or diagnosis date, and records after the participant's `End date`, are excluded before counts are formed.
 
 **Returns:**
 
@@ -195,7 +195,7 @@ Construct temporal and non-temporal disease pairs from significant PheWAS phecod
 - `min_interval_days` (`int | float`): Minimum gap required for a temporal D1 -> D2 relationship.
 - `max_interval_days` (`int | float`): Maximum gap allowed before a pair is treated as non-temporal.
 - `force` (`bool`): Overwrite existing trajectory data if `True`.
-- `n_process` (`int`): Number of processes used for pair construction.
+- `n_process` (`int`): Must be `1`. Parallel pair construction is disabled because it did not preserve the serial interval-classification behavior.
 - `**kwargs`: Optional column-name overrides:
   - `phecode_col` (default `'phecode'`)
   - `significance_col` (default `'phewas_p_significance'`)
@@ -324,6 +324,11 @@ The loaded analysis group determines the workflow. Exposure data retain the
 original after-exposure analysis. Outcome cohorts use time-varying Cox PheWAS,
 and Outcome-only nested case-control data use conditional logistic PheWAS
 within `Match ID` sets. Downstream stages use the analysis-positive group.
+The selected `pipeline_mode` and its stage order are written to the pipeline
+log and stored in `DataFrame.attrs` on every returned result table.
+`enforce_temporal_order` controls both the binomial temporal filter and the
+trajectory interval rule; passing the old duplicate `enforce_time_interval`
+keyword to the pipeline raises `ValueError`.
 
 **Returns:**
 
@@ -376,6 +381,8 @@ Run a phecode-wide association scan.
 **Notes:**
 
 - `n_threshold` and `proportion_threshold` are mutually exclusive.
+- A proportional threshold is converted separately for each tested Phecode from the disease-eligible exposed group after history, sex, matched-set, and valid-follow-up restrictions. An absolute `n_threshold` is unchanged.
+- The same positive-follow-up population is used for thresholding, displayed summaries, and model fitting; sex-specific Phecodes are restricted to the applicable sex.
 - For after-exposure `cohort` and `matched cohort` data, PheWAS fits Cox models.
 - For `exposed-only cohort`, significance is based on the case-count threshold rather than a model-based p-value.
 - For before-outcome cohort data loaded with `Outcome`, `phewas()` runs the time-varying Cox PheWAS with statsmodels by default and lifelines fallback when `lifelines_disable=False`.
@@ -459,6 +466,8 @@ Estimate disease-pair strength in the analysis-positive group using phi correlat
 
 - Requires disease pairs to have already been built with `DiseaseNetworkData.disease_pair()`.
 - `n_threshold` and `proportion_threshold` are mutually exclusive.
+- A proportional threshold is calculated separately for each disease pair from its eligible exposed sub-cohort after history and sex restrictions. An absolute `n_threshold` is unchanged.
+- Phi is reported without clipping at `-1` or `1`. Its test statistic uses `max(C_i, C_j)` and a two-sided Student's t test; RR uses the pair-specific sub-cohort size.
 
 ---
 
@@ -558,6 +567,7 @@ Fit pairwise non-temporal comorbidity models.
 - Method-specific options:
   - `alpha`, `auto_penalty`, `alpha_range`, `scaling_factor`
   - `n_PC`, `explained_variance`
+- With automatic RPCN, `scaling_factor` multiplies candidate disease-covariate penalties. Selection uses the unscaled search-grid key, while the result reports the effective scaled alpha. With fixed RPCN, the supplied `alpha` is used directly.
 - `enforce_time_interval` (`bool`, default `True`)
 - `multiprocessing_start_method` (`"fork"`, `"spawn"`, or `"forkserver"`): optional override for Step 4 multiprocessing. On POSIX systems the default prefers `forkserver` when it is safe to use.
 
@@ -606,6 +616,7 @@ Fit temporal disease-trajectory models using nested case-control sampling.
 - `matching_n` (`int`): Maximum number of matched controls per case.
 - `max_n_cases` (`int | np.inf`): Optional cap on the number of D2 cases.
 - `global_sampling` (`bool`): If `True`, sample once per unique D2 and fit separate D1 models within that sampled set.
+- Significant pairs in `binomial_test_result` must occur in the significant comorbidity-strength results. Pair matching is unordered, and an uncoupled pair raises `ValueError` before fitting.
 
 **Supported kwargs:**
 
@@ -618,6 +629,7 @@ Fit temporal disease-trajectory models using nested case-control sampling.
 - Method-specific options:
   - `alpha`, `auto_penalty`, `alpha_range`, `scaling_factor`
   - `n_PC`, `explained_variance`
+- With automatic RPCN, `scaling_factor` multiplies candidate disease-covariate penalties. Selection uses the unscaled search-grid key, while the result reports the effective scaled alpha.
 - `enforce_time_interval` (`bool`, default `True`)
 - `multiprocessing_start_method` (`"fork"`, `"spawn"`, or `"forkserver"`): optional override for trajectory multiprocessing. On POSIX systems the default prefers `forkserver` when it is safe to use.
 

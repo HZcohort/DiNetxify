@@ -166,8 +166,8 @@
 <p><strong>Parameters:</strong></p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">phenotype_data_path</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Path to a CSV or TSV phenotype file.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">column_names</span></code> (<code class="docutils literal notranslate"><span class="pre">dict</span></code>): Mapping from DiNetxify-required field names to dataset columns. A cohort accepts exactly one of <code class="docutils literal notranslate"><span class="pre">Exposure</span></code> or <code class="docutils literal notranslate"><span class="pre">Outcome</span></code>; matched cohorts require <code class="docutils literal notranslate"><span class="pre">Exposure</span></code> and <code class="docutils literal notranslate"><span class="pre">Match</span> <span class="pre">ID</span></code>; nested case-control samples require <code class="docutils literal notranslate"><span class="pre">Outcome</span></code> and <code class="docutils literal notranslate"><span class="pre">Match</span> <span class="pre">ID</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">covariates</span></code> (<code class="docutils literal notranslate"><span class="pre">list</span></code>): Additional phenotype variables to load.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">column_names</span></code> (<code class="docutils literal notranslate"><span class="pre">dict</span></code>): Mapping from DiNetxify-required field names to dataset columns. Every <code class="docutils literal notranslate"><span class="pre">End</span> <span class="pre">date</span></code> must be strictly later than its <code class="docutils literal notranslate"><span class="pre">Index</span> <span class="pre">date</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">covariates</span></code> (<code class="docutils literal notranslate"><span class="pre">list</span></code>): Additional phenotype variables to load. High-cardinality values are classified as continuous only when the source dtype is numeric; text values remain categorical.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">is_single_sex</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): Set to <code class="docutils literal notranslate"><span class="pre">True</span></code> if the cohort contains only one sex.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">force</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): Overwrite existing phenotype and medical-record data if <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
 </ul>
@@ -217,7 +217,7 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">column_names</span></code> (<code class="docutils literal notranslate"><span class="pre">dict</span></code>): Mapping for <code class="docutils literal notranslate"><span class="pre">&quot;Participant</span> <span class="pre">ID&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;Diagnosis</span> <span class="pre">code&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">&quot;Date</span> <span class="pre">of</span> <span class="pre">diagnosis&quot;</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">date_fmt</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span> <span class="pre">|</span> <span class="pre">None</span></code>): Date format for this file. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, use the object’s <code class="docutils literal notranslate"><span class="pre">date_fmt</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">chunksize</span></code> (<code class="docutils literal notranslate"><span class="pre">int</span></code>): Number of rows processed per chunk.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">diagnosis_code_exclusion</span></code> (<code class="docutils literal notranslate"><span class="pre">list</span></code>): Diagnosis codes to exclude before phecode mapping.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">diagnosis_code_exclusion</span></code> (<code class="docutils literal notranslate"><span class="pre">list</span></code>): Diagnosis codes to exclude before Phecode mapping. Input and exclusion codes are normalized before matching. Rows missing participant ID, diagnosis code, or diagnosis date, and records after the participant’s <code class="docutils literal notranslate"><span class="pre">End</span> <span class="pre">date</span></code>, are excluded before counts are formed.</p></li>
 </ul>
 <p><strong>Returns:</strong></p>
 <ul class="simple">
@@ -303,7 +303,7 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">min_interval_days</span></code> (<code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">|</span> <span class="pre">float</span></code>): Minimum gap required for a temporal D1 -&gt; D2 relationship.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">max_interval_days</span></code> (<code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">|</span> <span class="pre">float</span></code>): Maximum gap allowed before a pair is treated as non-temporal.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">force</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): Overwrite existing trajectory data if <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">n_process</span></code> (<code class="docutils literal notranslate"><span class="pre">int</span></code>): Number of processes used for pair construction.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_process</span></code> (<code class="docutils literal notranslate"><span class="pre">int</span></code>): Must be <code class="docutils literal notranslate"><span class="pre">1</span></code>. Parallel pair construction is disabled because it did not preserve the serial interval-classification behavior.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">**kwargs</span></code>: Optional column-name overrides:</p>
 <ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">phecode_col</span></code> (default <code class="docutils literal notranslate"><span class="pre">'phecode'</span></code>)</p></li>
@@ -423,7 +423,12 @@
 <p>The loaded analysis group determines the workflow. Exposure data retain the
 original after-exposure analysis. Outcome cohorts use time-varying Cox PheWAS,
 and Outcome-only nested case-control data use conditional logistic PheWAS
-within <code class="docutils literal notranslate"><span class="pre">Match</span> <span class="pre">ID</span></code> sets. Downstream stages use the analysis-positive group.</p>
+within <code class="docutils literal notranslate"><span class="pre">Match</span> <span class="pre">ID</span></code> sets. Downstream stages use the analysis-positive group.
+The selected <code class="docutils literal notranslate"><span class="pre">pipeline_mode</span></code> and its stage order are written to the pipeline
+log and stored in <code class="docutils literal notranslate"><span class="pre">DataFrame.attrs</span></code> on every returned result table.
+<code class="docutils literal notranslate"><span class="pre">enforce_temporal_order</span></code> controls both the binomial temporal filter and the
+trajectory interval rule; passing the old duplicate <code class="docutils literal notranslate"><span class="pre">enforce_time_interval</span></code>
+keyword to the pipeline raises <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>.</p>
 <p><strong>Returns:</strong></p>
 <ul class="simple">
 <li><p>A 5-tuple in this order:</p>
@@ -482,6 +487,8 @@ within <code class="docutils literal notranslate"><span class="pre">Match</span>
 <p><strong>Notes:</strong></p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">n_threshold</span></code> and <code class="docutils literal notranslate"><span class="pre">proportion_threshold</span></code> are mutually exclusive.</p></li>
+<li><p>A proportional threshold is converted separately for each tested Phecode from the disease-eligible exposed group after history, sex, matched-set, and valid-follow-up restrictions. An absolute <code class="docutils literal notranslate"><span class="pre">n_threshold</span></code> is unchanged.</p></li>
+<li><p>The same positive-follow-up population is used for thresholding, displayed summaries, and model fitting; sex-specific Phecodes are restricted to the applicable sex.</p></li>
 <li><p>For after-exposure <code class="docutils literal notranslate"><span class="pre">cohort</span></code> and <code class="docutils literal notranslate"><span class="pre">matched</span> <span class="pre">cohort</span></code> data, PheWAS fits Cox models.</p></li>
 <li><p>For <code class="docutils literal notranslate"><span class="pre">exposed-only</span> <span class="pre">cohort</span></code>, significance is based on the case-count threshold rather than a model-based p-value.</p></li>
 <li><p>For before-outcome cohort data loaded with <code class="docutils literal notranslate"><span class="pre">Outcome</span></code>, <code class="docutils literal notranslate"><span class="pre">phewas()</span></code> runs the time-varying Cox PheWAS with statsmodels by default and lifelines fallback when <code class="docutils literal notranslate"><span class="pre">lifelines_disable=False</span></code>.</p></li>
@@ -558,6 +565,8 @@ outcome-prefixed output files match the before-outcome branch of
 <ul class="simple">
 <li><p>Requires disease pairs to have already been built with <code class="docutils literal notranslate"><span class="pre">DiseaseNetworkData.disease_pair()</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">n_threshold</span></code> and <code class="docutils literal notranslate"><span class="pre">proportion_threshold</span></code> are mutually exclusive.</p></li>
+<li><p>A proportional threshold is calculated separately for each disease pair from its eligible exposed sub-cohort after history and sex restrictions. An absolute <code class="docutils literal notranslate"><span class="pre">n_threshold</span></code> is unchanged.</p></li>
+<li><p>Phi is reported without clipping at <code class="docutils literal notranslate"><span class="pre">-1</span></code> or <code class="docutils literal notranslate"><span class="pre">1</span></code>. Its test statistic uses <code class="docutils literal notranslate"><span class="pre">max(C_i,</span> <span class="pre">C_j)</span></code> and a two-sided Student’s t test; RR uses the pair-specific sub-cohort size.</p></li>
 </ul>
 </section>
 <hr class="docutils" />
@@ -655,6 +664,7 @@ outcome-prefixed output files match the before-outcome branch of
 <li><p><code class="docutils literal notranslate"><span class="pre">n_PC</span></code>, <code class="docutils literal notranslate"><span class="pre">explained_variance</span></code></p></li>
 </ul>
 </li>
+<li><p>With automatic RPCN, <code class="docutils literal notranslate"><span class="pre">scaling_factor</span></code> multiplies candidate disease-covariate penalties. Selection uses the unscaled search-grid key, while the result reports the effective scaled alpha. With fixed RPCN, the supplied <code class="docutils literal notranslate"><span class="pre">alpha</span></code> is used directly.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">enforce_time_interval</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">True</span></code>)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">multiprocessing_start_method</span></code> (<code class="docutils literal notranslate"><span class="pre">&quot;fork&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;spawn&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;forkserver&quot;</span></code>): optional override for Step 4 multiprocessing. On POSIX systems the default prefers <code class="docutils literal notranslate"><span class="pre">forkserver</span></code> when it is safe to use.</p></li>
 </ul>
@@ -699,6 +709,7 @@ outcome-prefixed output files match the before-outcome branch of
 <li><p><code class="docutils literal notranslate"><span class="pre">matching_n</span></code> (<code class="docutils literal notranslate"><span class="pre">int</span></code>): Maximum number of matched controls per case.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">max_n_cases</span></code> (<code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">|</span> <span class="pre">np.inf</span></code>): Optional cap on the number of D2 cases.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">global_sampling</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): If <code class="docutils literal notranslate"><span class="pre">True</span></code>, sample once per unique D2 and fit separate D1 models within that sampled set.</p></li>
+<li><p>Significant pairs in <code class="docutils literal notranslate"><span class="pre">binomial_test_result</span></code> must occur in the significant comorbidity-strength results. Pair matching is unordered, and an uncoupled pair raises <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> before fitting.</p></li>
 </ul>
 <p><strong>Supported kwargs:</strong></p>
 <ul class="simple">
@@ -717,6 +728,7 @@ outcome-prefixed output files match the before-outcome branch of
 <li><p><code class="docutils literal notranslate"><span class="pre">n_PC</span></code>, <code class="docutils literal notranslate"><span class="pre">explained_variance</span></code></p></li>
 </ul>
 </li>
+<li><p>With automatic RPCN, <code class="docutils literal notranslate"><span class="pre">scaling_factor</span></code> multiplies candidate disease-covariate penalties. Selection uses the unscaled search-grid key, while the result reports the effective scaled alpha.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">enforce_time_interval</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">True</span></code>)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">multiprocessing_start_method</span></code> (<code class="docutils literal notranslate"><span class="pre">&quot;fork&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;spawn&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;forkserver&quot;</span></code>): optional override for trajectory multiprocessing. On POSIX systems the default prefers <code class="docutils literal notranslate"><span class="pre">forkserver</span></code> when it is safe to use.</p></li>
 </ul>

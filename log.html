@@ -78,6 +78,28 @@
              
   <section id="changelog">
 <h1>Changelog<a class="headerlink" href="#changelog" title="Link to this heading"></a></h1>
+<p><strong>0.3.0 - 2026-09-08</strong></p>
+<ul class="simple">
+<li><p>Added follow-up end-date checks to medical-record processing and corrected invalid-record summaries.</p></li>
+<li><p>Made disease-covariate adjustment in trajectory analyses time-aware to prevent the use of future diagnoses.</p></li>
+<li><p>Updated the Phecode mapping and information <code class="docutils literal notranslate"><span class="pre">.npy</span></code> files to correct exclusion definitions.</p></li>
+<li><p>Required each participant’s end date to be later than their index date.</p></li>
+<li><p>Improved automatic classification of categorical and continuous covariates.</p></li>
+<li><p>Removed incomplete medical records before diagnosis-code processing.</p></li>
+<li><p>Standardized ICD codes before exclusion filtering and Phecode mapping.</p></li>
+<li><p>Corrected sex-specific disease filtering in PheWAS.</p></li>
+<li><p>Excluded participants with invalid follow-up periods before PheWAS summaries, thresholds, and model fitting.</p></li>
+<li><p>Calculated proportional PheWAS thresholds from each disease-eligible population.</p></li>
+<li><p>Corrected the relative-risk and phi-coefficient significance tests, including boundary handling for phi values of 1.</p></li>
+<li><p>Restricted disease-pair construction to serial execution to prevent inconsistent results.</p></li>
+<li><p>Corrected RPCN fitting when a user-specified penalty is provided.</p></li>
+<li><p>Corrected automatic scaling of the RPCN penalty.</p></li>
+<li><p>Corrected handling of custom relative-risk significance columns.</p></li>
+<li><p>Applied temporal-order settings consistently across analysis stages.</p></li>
+<li><p>Validated that trajectory and comorbidity results contain matching disease pairs.</p></li>
+<li><p>Harmonized pipeline execution modes and recorded the selected stage order.</p></li>
+<li><p>Calculated proportional comorbidity-strength thresholds from each disease-pair-eligible population.</p></li>
+</ul>
 <p><strong>0.2.0 - 2026-08-29</strong></p>
 <ul class="simple">
 <li><p>Added <code class="docutils literal notranslate"><span class="pre">Plot.interactive_website()</span></code> for generating self-contained offline websites from available PheWAS, comorbidity-network, disease-trajectory, and 3D network results.</p></li>
