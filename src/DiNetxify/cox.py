@@ -155,7 +155,7 @@ def cox_conditional(phecode: float):
     for id_ in dataset_analysis[id_col].values:
         date = time_first_diagnosis(d_lst, diagnosis[id_], n_diagnosis[id_], min_icd_num)
         outcome_time_lst.append(date)
-    dataset_analysis[outcome_time_col] = outcome_time_lst
+    dataset_analysis[outcome_time_col] = pd.to_datetime(outcome_time_lst)
     dataset_analysis[outcome_col] = dataset_analysis[outcome_time_col].apply(lambda x: 0 if pd.isna(x) else 1)
     dataset_analysis[end_date_col] = dataset_analysis[[end_date_col,outcome_time_col]].min(axis=1)
     
@@ -465,7 +465,7 @@ def cox_unconditional(phecode:float):
     for id_ in dataset_analysis[id_col].values:
         date = time_first_diagnosis(d_lst,diagnosis[id_],n_diagnosis[id_],min_icd_num)
         outcome_time_lst.append(date)
-    dataset_analysis[outcome_time_col] = outcome_time_lst
+    dataset_analysis[outcome_time_col] = pd.to_datetime(outcome_time_lst)
     dataset_analysis[outcome_col] = dataset_analysis[outcome_time_col].apply(lambda x: 0 if pd.isna(x) else 1)
     dataset_analysis[end_date_col] = dataset_analysis[[end_date_col,outcome_time_col]].min(axis=1)
     
