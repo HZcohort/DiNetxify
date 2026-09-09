@@ -8,6 +8,7 @@ Created on Sun Dec 15 02:13:51 2024
 import pandas as pd
 import numpy as np
 from statsmodels.discrete.discrete_model import Logit
+from statsmodels.tools.sm_exceptions import ConvergenceWarning
 import time
 import gc
 from .utility import write_log, find_best_alpha_and_vars, check_variance_vif_single
@@ -27,6 +28,19 @@ def _limit_threadpools() -> None:
     except Exception:
         return
     _threadpool_limiter = threadpool_limits(limits=1)
+
+def _fit_with_lbfgs_fallback(model):
+    """Retry a failed or non-converged BFGS fit with L-BFGS."""
+    with warnings.catch_warnings(record=True) as fit_warnings:
+        warnings.simplefilter('always')
+        try:
+            result = model.fit(disp=False, method='bfgs')
+        except Exception:
+            return model.fit(disp=False, method='lbfgs')
+    converged = getattr(result, 'mle_retvals', {}).get('converged', True)
+    if not converged or any(issubclass(w.category, ConvergenceWarning) for w in fit_warnings):
+        return model.fit(disp=False, method='lbfgs')
+    return result
 
 def logistic_model(args):
     """
@@ -125,7 +139,7 @@ def logistic_model(args):
             final_model_vars = forcedin_vars+final_covariates
             model = Logit(np.asarray(df_analysis[d2_col], dtype=int),
                           np.asarray(df_analysis[final_model_vars], dtype=float))
-            result_final = model.fit(disp=False, method='bfgs')
+            result_final = _fit_with_lbfgs_fallback(model)
             beta,se,p,aic = result_final.params[0], result_final.bse[0],result_final.pvalues[0],result_final.aic
             zvalue_dict = {var:z for var,z in zip(final_model_vars,result_final.tvalues)}
             result_lst += [method,f'fitted and delete the covariate(s): {del_covariates}',
@@ -162,7 +176,7 @@ def logistic_model(args):
                 df_analysis = df_analysis[final_model_vars+[d2_col]]
                 model_final = Logit(np.asarray(df_analysis[d2_col],dtype=int),
                                     np.asarray(df_analysis[final_model_vars],dtype=float))
-                result_final = model_final.fit(disp=False, method='bfgs')
+                result_final = _fit_with_lbfgs_fallback(model_final)
                 beta,se,p,aic = result_final.params[0],result_final.bse[0],result_final.pvalues[0],result_final.aic
                 #get the z-value dictionary
                 zvalue_dict = {var:z for var,z in zip(final_model_vars,result_final.tvalues)}
@@ -189,7 +203,7 @@ def logistic_model(args):
                 df_analysis = df_analysis[final_model_vars+[d2_col]]
                 model_final = Logit(np.asarray(df_analysis[d2_col],dtype=int),
                                     np.asarray(df_analysis[final_model_vars],dtype=float))
-                result_final = model_final.fit(disp=False,method='bfgs')
+                result_final = _fit_with_lbfgs_fallback(model_final)
                 beta,se,p,aic = result_final.params[0], result_final.bse[0],result_final.pvalues[0],result_final.aic
                 #get the z-value dictionary
                 zvalue_dict = {var:z for var,z in zip(final_model_vars,result_final.tvalues)}
@@ -225,7 +239,7 @@ def logistic_model(args):
             final_model_vars = forcedin_vars+final_pca_var+final_covariates
             model_final = Logit(np.asarray(df_analysis[d2_col],dtype=int),
                                 np.asarray(df_analysis[final_model_vars],dtype=float))
-            result_final = model_final.fit(disp=False,method='bfgs')
+            result_final = _fit_with_lbfgs_fallback(model_final)
             beta,se,p,aic = result_final.params[0], result_final.bse[0],result_final.pvalues[0],result_final.aic
             zvalue_dict = {var:z for var,z in zip(final_model_vars,result_final.tvalues)}
             result_lst += [f'{method}_n_components={pca_number}',f'fitted and delete the PC variable(s): {del_pca_var} and covariate(s): {del_covariates}',

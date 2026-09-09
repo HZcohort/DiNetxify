@@ -9,6 +9,7 @@ import pandas as pd
 import numpy as np
 from statsmodels.discrete.discrete_model import Logit
 from statsmodels.discrete.conditional_models import ConditionalLogit,ConditionalResultsWrapper
+from statsmodels.tools.sm_exceptions import ConvergenceWarning
 import time
 import gc
 from .utility import write_log,find_best_alpha_and_vars,check_variance_vif_single
@@ -28,6 +29,19 @@ def _limit_threadpools() -> None:
     except Exception:
         return
     _threadpool_limiter = threadpool_limits(limits=1)
+
+def _fit_with_lbfgs_fallback(model):
+    """Retry a failed or non-converged BFGS fit with L-BFGS."""
+    with warnings.catch_warnings(record=True) as fit_warnings:
+        warnings.simplefilter('always')
+        try:
+            result = model.fit(disp=False, method='bfgs')
+        except Exception:
+            return model.fit(disp=False, method='lbfgs')
+    converged = getattr(result, 'mle_retvals', {}).get('converged', True)
+    if not converged or any(issubclass(w.category, ConvergenceWarning) for w in fit_warnings):
+        return model.fit(disp=False, method='lbfgs')
+    return result
 
 def _add_timed_disease_covariates(df_matched:pd.DataFrame,
                                   phenotype_df_exposed:pd.DataFrame,
@@ -232,7 +246,7 @@ def logistic_model(args):
                 model = ConditionalLogit(np.asarray(df_analysis[d2_col],dtype=int),
                                         np.asarray(df_analysis[final_model_vars],dtype=float),
                                         groups=df_analysis[mathcing_id_col].values)
-                result = model.fit(disp=False, method='bfgs')
+                result = _fit_with_lbfgs_fallback(model)
                 result_final = MyConditionalResultsWrapper(result)
                 beta,se,p,aic = result_final.params[0], result_final.bse[0],result_final.pvalues[0],result_final.aic
                 zvalue_dict = {var:z for var,z in zip(final_model_vars,result_final.tvalues)}
@@ -263,7 +277,7 @@ def logistic_model(args):
                     model_final = ConditionalLogit(np.asarray(df_analysis[d2_col],dtype=int),
                                                 np.asarray(df_analysis[final_model_vars],dtype=float),
                                                 groups=df_analysis[mathcing_id_col].values)
-                    result_final = MyConditionalResultsWrapper(model_final.fit(disp=False, method='bfgs'))
+                    result_final = MyConditionalResultsWrapper(_fit_with_lbfgs_fallback(model_final))
                     beta,se,p,aic = result_final.params[0],result_final.bse[0],result_final.pvalues[0],result_final.aic
                     zvalue_dict = {var:z for var,z in zip(final_model_vars,result_final.tvalues)}
                     result_lst += [model_name,f'fitted and delete the diseases variable(s): {del_diseases_var} and covariate(s): {del_covariates}',
@@ -288,7 +302,7 @@ def logistic_model(args):
                     model_final = ConditionalLogit(np.asarray(df_analysis[d2_col],dtype=int),
                                                 np.asarray(df_analysis[final_model_vars],dtype=float),
                                                 groups=df_analysis[mathcing_id_col].values)
-                    result_final = model_final.fit(disp=False, method='bfgs')
+                    result_final = _fit_with_lbfgs_fallback(model_final)
                     result_final = MyConditionalResultsWrapper(result_final) #add aic property
                     beta,se,p,aic = result_final.params[0], result_final.bse[0],result_final.pvalues[0],result_final.aic
                     #get the z-value dictionary
@@ -317,7 +331,7 @@ def logistic_model(args):
                     model_final = ConditionalLogit(np.asarray(df_analysis[d2_col],dtype=int),
                                                 np.asarray(df_analysis[final_model_vars],dtype=float),
                                                 groups=df_analysis[mathcing_id_col].values)
-                    result_final = model_final.fit(disp=False, method='bfgs')
+                    result_final = _fit_with_lbfgs_fallback(model_final)
                     result_final = MyConditionalResultsWrapper(result_final) #add aic property
                     beta,se,p,aic = result_final.params[0],result_final.bse[0],result_final.pvalues[0],result_final.aic
                     #get the z-value dictionary
@@ -340,7 +354,7 @@ def logistic_model(args):
                     model_final = ConditionalLogit(np.asarray(df_analysis[d2_col],dtype=int),
                                                 np.asarray(df_analysis[final_model_vars],dtype=float),
                                                 groups=df_analysis[mathcing_id_col].values)
-                    result_final = MyConditionalResultsWrapper(model_final.fit(disp=False, method='bfgs'))
+                    result_final = MyConditionalResultsWrapper(_fit_with_lbfgs_fallback(model_final))
                     beta,se,p,aic = result_final.params[0],result_final.bse[0],result_final.pvalues[0],result_final.aic
                     z_value_dict = {var:z for var,z in zip(final_model_vars,result_final.tvalues)}
                     result_lst += [f'{method}_n_components={pca_number}',f'fitted and delete the disease variable(s): {del_diseases_var} and covariate(s): {del_covariates}',
@@ -368,7 +382,7 @@ def logistic_model(args):
                     model_final = ConditionalLogit(np.asarray(df_analysis[d2_col],dtype=int),
                                                 np.asarray(df_analysis[final_model_vars],dtype=float),
                                                 groups=df_analysis[mathcing_id_col].values)
-                    result_final = MyConditionalResultsWrapper(model_final.fit(disp=False, method='bfgs'))
+                    result_final = MyConditionalResultsWrapper(_fit_with_lbfgs_fallback(model_final))
                     beta,se,p,aic = result_final.params[0],result_final.bse[0],result_final.pvalues[0],result_final.aic
                     z_value_dict = {var:z for var,z in zip(final_model_vars,result_final.tvalues)}
                     result_lst += [f'{method}_n_components={pca_number}',f'fitted and delete the pca variable(s): {del_pca_var} and covariate(s): {del_covariates}',
