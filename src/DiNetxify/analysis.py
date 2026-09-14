@@ -378,90 +378,121 @@ def comorbidity_strength(
     proportion_threshold:float=None, 
     n_threshold:int=None, 
     n_process:int=1, 
-    log_file:str=None, 
+    log_file:str=None,
+    se_method:str='original',
     correction_phi:str='bonferroni', 
     cutoff_phi:float=0.05, 
     correction_RR:str='bonferroni', 
     cutoff_RR:float=0.05
 ) -> pd.DataFrame:
     """
-    Estimate comorbidity strength among exposed participants for all disease
-    pairs created by DiseaseNetworkData.disease_pair.
+    Estimate comorbidity strength for all disease pairs in the 
+    analysis-positive group of a DiseaseNetworkData object.
+
+    The analysis-positive group contains exposed participants.
+    Relative risk (RR; also referred to as the observed-to-expected ratio, OER) 
+    and phi-correlation are calculated from the disease-pair data created 
+    by ``DiseaseNetworkData.disease_pair``.
 
     Proportional thresholds are calculated separately from the eligible
     sub-cohort for each disease pair after history and sex restrictions;
-    absolute count thresholds are unchanged. Phi is reported without boundary
-    clipping, and its test statistic uses max(C_i, C_j) with a two-sided
-    Student's t test. RR uses the pair-specific sub-cohort size.
+    absolute count thresholds are unchanged. The pair-specific eligible
+    sub-cohort size is used in both RR/OER and phi calculations.
 
-    Parameters:
+    Standard errors and corresponding significance tests for both RR/OER and
+    phi can be calculated using either the multinomial delta method or the
+    original approach. The multinomial delta method is used by default.
+
+    Parameters
     ----------
     data : DiseaseNetworkData
         DiseaseNetworkData object.
 
-    proportion_threshold : float
-        The minimum proportion of disease-pair-eligible exposed individuals in
-        which a disease pair must co-occur (temporal or non-temporal) to be
-        included in the comorbidity strength estimation.
-        If the proportion of co-occurrence is below this threshold, the disease pair is excluded from the analysis.
+    proportion_threshold : float, default=None
+        The minimum proportion of disease-pair-eligible individuals in the
+        analysis-positive group in which a disease pair must co-occur
+        (temporal or non-temporal) to be included in the comorbidity strength
+        estimation.
+        If the proportion of co-occurrence is below this threshold, the disease
+        pair is excluded from the analysis.
         proportion_threshold and n_threshold are mutually exclusive.
     
-    n_threshold : int
-        The minimum number of individuals in the exposed group in which a disease pair must co-occur (temporal or non-temporal) to be included in the comorbidity strength estimation.
-        If the number of co-occurrences is below this threshold, the disease pair is excluded from the analysis.
+    n_threshold : int, default=None
+        The minimum number of individuals in the analysis-positive group in
+        which a disease pair must co-occur (temporal or non-temporal) to be
+        included in the comorbidity strength estimation.
+        If the number of co-occurrences is below this threshold, the disease
+        pair is excluded from the analysis.
         n_threshold and proportion_threshold are mutually exclusive.         
 
     n_process : int, default=1
         Specifies the number of parallel processes to use for the analysis.
-        Multiprocessing is enabled when `n_process` is set to a value greater than one.
+        Multiprocessing is enabled when ``n_process`` is greater than one.
 
-    correction_phi : str, default='bonferroni'
-        Method for phi-correlation p-value correction from the statsmodels.stats.multitest.multipletests.
-        Available methods are:
-        none : no correction
-        bonferroni : one-step correction
-        sidak : one-step correction
-        holm-sidak : step down method using Sidak adjustments
-        holm : step-down method using Bonferroni adjustments
-        simes-hochberg : step-up method (independent)
-        hommel : closed method based on Simes tests (non-negative)
-        fdr_bh : Benjamini/Hochberg (non-negative)
-        fdr_by : Benjamini/Yekutieli (negative)
-        fdr_tsbh : two stage fdr correction (non-negative)
-        fdr_tsbky : two stage fdr correction (non-negative)
-        See https://www.statsmodels.org/dev/generated/statsmodels.stats.multitest.multipletests.html for more details.
-    
-    cutoff_phi : float, default=0.05
-        The significance threshold for adjusted phi-correlatio p-values.
-
-    correction_RR : str, default='bonferroni'
-        Method for RR p-value correction from the statsmodels.stats.multitest.multipletests.
-        Available methods are:
-        none : no correction
-        bonferroni : one-step correction
-        sidak : one-step correction
-        holm-sidak : step down method using Sidak adjustments
-        holm : step-down method using Bonferroni adjustments
-        simes-hochberg : step-up method (independent)
-        hommel : closed method based on Simes tests (non-negative)
-        fdr_bh : Benjamini/Hochberg (non-negative)
-        fdr_by : Benjamini/Yekutieli (negative)
-        fdr_tsbh : two stage fdr correction (non-negative)
-        fdr_tsbky : two stage fdr correction (non-negative)
-        See https://www.statsmodels.org/dev/generated/statsmodels.stats.multitest.multipletests.html for more details.
-    
-    cutoff_RR : float, default=0.05
-        The significance threshold for adjusted RR p-values.
-    
     log_file : str, default=None
         Path and prefix for the text file where log will be recorded.
-        If None, the log will be written to the temporary files directory with file prefix of DiseaseNet_com_strength_.
+        If None, the log will be written to the temporary files directory with
+        file prefix ``DiseaseNet_com_strength_``.
 
-    Returns:
-    ----------
+    se_method : {'multinomial', 'original'}, default='original'
+        Method used to estimate the standard errors and P-values for both
+        RR/OER and phi-correlation.
+
+        'multinomial':
+            Uses the multinomial delta method for the standard errors and
+            two-sided Wald z-tests.
+
+        'original':
+            Uses the original standard-error and significance-test approaches
+            implemented in ``com_rr`` and ``com_phi``.
+
+    correction_phi : str, default='bonferroni'
+        Method for phi-correlation P-value correction from
+        ``statsmodels.stats.multitest.multipletests``.
+        Available methods are:
+        none : no correction
+        bonferroni : one-step correction
+        sidak : one-step correction
+        holm-sidak : step-down method using Sidak adjustments
+        holm : step-down method using Bonferroni adjustments
+        simes-hochberg : step-up method (independent)
+        hommel : closed method based on Simes tests (non-negative)
+        fdr_bh : Benjamini/Hochberg (non-negative)
+        fdr_by : Benjamini/Yekutieli (negative)
+        fdr_tsbh : two-stage FDR correction (non-negative)
+        fdr_tsbky : two-stage FDR correction (non-negative)
+        See https://www.statsmodels.org/dev/generated/statsmodels.stats.multitest.multipletests.html
+        for more details.
+    
+    cutoff_phi : float, default=0.05
+        The significance threshold for adjusted phi-correlation P-values.
+
+    correction_RR : str, default='bonferroni'
+        Method for RR/OER P-value correction from
+        ``statsmodels.stats.multitest.multipletests``.
+        Available methods are:
+        none : no correction
+        bonferroni : one-step correction
+        sidak : one-step correction
+        holm-sidak : step-down method using Sidak adjustments
+        holm : step-down method using Bonferroni adjustments
+        simes-hochberg : step-up method (independent)
+        hommel : closed method based on Simes tests (non-negative)
+        fdr_bh : Benjamini/Hochberg (non-negative)
+        fdr_by : Benjamini/Yekutieli (negative)
+        fdr_tsbh : two-stage FDR correction (non-negative)
+        fdr_tsbky : two-stage FDR correction (non-negative)
+        See https://www.statsmodels.org/dev/generated/statsmodels.stats.multitest.multipletests.html
+        for more details.
+    
+    cutoff_RR : float, default=0.05
+        The significance threshold for adjusted RR/OER P-values.
+
+    Returns
+    -------
     pd.DataFrame
-        A pandas DataFrame object that contains the results of PheWAS analysis.
-
+        Comorbidity-strength results. The positive-group count column is named
+        ``N_exposed`` after an exposure and ``N_outcome`` before an outcome.
     """
     from itertools import combinations
     
@@ -480,8 +511,8 @@ def comorbidity_strength(
     trajectory_dict = data.trajectory
 
     #validate threshold and retain its form for disease-pair-specific eligibility
-    n_exposed = data.get_attribute('phenotype_statistics')['n_exposed']
-    threshold_check(proportion_threshold,n_threshold,n_exposed)
+    n_analysis_positive = data.get_attribute('phenotype_statistics')['n_analysis_positive']
+    threshold_check(proportion_threshold,n_threshold,n_analysis_positive)
     threshold_config = (proportion_threshold,n_threshold)
     
     #check p-value correction method and cutoff
@@ -499,6 +530,10 @@ def comorbidity_strength(
         from .com_strength import com_phi_rr, init_worker #use original function as main function and init_worker to initialize global variables
     else:
         from .com_strength import com_phi_rr_wrapper #use wrapper function as main function
+
+    #check se_method
+    if se_method not in ['multinomial','original']:
+        raise ValueError("The input 'se_method' must be either 'multinomial' or 'original'.")
     
     #get all significant phecodes
     phecodes_sig = data.get_attribute('significant_phecodes')
@@ -518,13 +553,13 @@ def comorbidity_strength(
     result_all = []
     if n_process == 1:
         for d1,d2,describe in tqdm(d1d2_pair_lst, mininterval=15,smoothing=0):
-            result_all.append(com_phi_rr_wrapper(trajectory_dict,d1,d2,describe,threshold_config,log_file_final))
+            result_all.append(com_phi_rr_wrapper(trajectory_dict,d1,d2,describe,threshold_config,log_file_final,se_method))
     elif n_process > 1:
         parameters_all = []
         for d1,d2,describe in d1d2_pair_lst:
             # parameters_all.append([trajectory_dict,d1,d2,describe,threshold_config,log_file_final])
             parameters_all.append((d1,d2,describe))
-        with multiprocessing.get_context(start_mehtod).Pool(n_process, initializer=init_worker, initargs=(trajectory_dict,threshold_config,log_file_final)) as p:
+        with multiprocessing.get_context(start_mehtod).Pool(n_process, initializer=init_worker, initargs=(trajectory_dict,threshold_config,log_file_final,se_method)) as p:
             result_all = list(
                 tqdm(
                     p.imap(com_phi_rr, parameters_all),
@@ -540,7 +575,8 @@ def comorbidity_strength(
 
     #generate result dataframe
     max_columns = max([len(x) for x in result_all])
-    columns = ['phecode_d1','phecode_d2','name_disease_pair','N_exposed','n_total',
+    n_group_col = 'N_outcome' if analysis_mode(data.get_attribute('phenotype_info')) == 'before_outcome' else 'N_exposed'
+    columns = ['phecode_d1','phecode_d2','name_disease_pair',n_group_col,'n_total',
                'n_d1d2_diagnosis','n_d1_diagnosis','n_d2_diagnosis',
                'n_d1d2_nontemporal','n_d1d2_temporal','n_d2d1_temporal','n_d1d2_pair',
                'description','phi','phi_theta','phi_p','RR','RR_theta','RR_p']

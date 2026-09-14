@@ -20,7 +20,7 @@ from .analysis import (
 )
 from .analysis_pipeline import disease_network_pipeline
 
-__version__ = '0.3.1'
+__version__ = '0.3.2'
 
 
 
