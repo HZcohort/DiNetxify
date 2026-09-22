@@ -491,8 +491,8 @@ def comorbidity_strength(
     Returns
     -------
     pd.DataFrame
-        Comorbidity-strength results. The positive-group count column is named
-        ``N_exposed`` after an exposure and ``N_outcome`` before an outcome.
+        Comorbidity-strength results, with the positive-group count reported in the
+        ``N_exposed`` column.
     """
     from itertools import combinations
     
@@ -511,8 +511,8 @@ def comorbidity_strength(
     trajectory_dict = data.trajectory
 
     #validate threshold and retain its form for disease-pair-specific eligibility
-    n_analysis_positive = data.get_attribute('phenotype_statistics')['n_analysis_positive']
-    threshold_check(proportion_threshold,n_threshold,n_analysis_positive)
+    n_exposed = data.get_attribute('phenotype_statistics')['n_exposed']
+    threshold_check(proportion_threshold,n_threshold,n_exposed)
     threshold_config = (proportion_threshold,n_threshold)
     
     #check p-value correction method and cutoff
@@ -575,8 +575,7 @@ def comorbidity_strength(
 
     #generate result dataframe
     max_columns = max([len(x) for x in result_all])
-    n_group_col = 'N_outcome' if analysis_mode(data.get_attribute('phenotype_info')) == 'before_outcome' else 'N_exposed'
-    columns = ['phecode_d1','phecode_d2','name_disease_pair',n_group_col,'n_total',
+    columns = ['phecode_d1','phecode_d2','name_disease_pair','N_exposed','n_total',
                'n_d1d2_diagnosis','n_d1_diagnosis','n_d2_diagnosis',
                'n_d1d2_nontemporal','n_d1d2_temporal','n_d2d1_temporal','n_d1d2_pair',
                'description','phi','phi_theta','phi_p','RR','RR_theta','RR_p']
