@@ -1405,134 +1405,380 @@ def check_variance_vif(df:pd.DataFrame,
     else:
         raise ValueError("Invalid input.")
 
-def compute_vif_sm_exact(df, corr_thresh=0.99):
+
+def check_variance_vif_single(
+    df, forcedin_var_lst, covar_lst, group_col=None, vif_cutoff=None,
+    *, outcome_col=None, diagnostics=None, rank_tolerance=1e-10,
+    separation_tolerance=1e-7, lp_time_limit=20.0,
+):
+    """Remove problematic optional covariates; never remove forced predictors.
+
+    Both designs use zero-variance, protected-first QR rank, iterative QR
+    VIF, and (with a binary logistic outcome) single/multivariable separation
+    checks. Return (removed, error_text), where removed is a dictionary of
+    {optional_variable: removal_reason} and error_text is None on completion.
+
+    Matched designs use within-set centered predictors and case-minus-control
+    separation contrasts. Non-matched designs use the supplied full design:
+    a nonzero constant forced predictor is retained as an intercept; other
+    predictors are centered when that intercept is present. Without one,
+    rank, VIF and separation use a no-intercept design, not an invented
+    intercept. Optional constant columns are removed in either design.
+
+    Separation runs if outcome_col is supplied, or a complete binary 'd2'
+    is available (matched inference additionally requires one case in each
+    informative set). Other outcome names are not guessed. Only use this
+    argument for logistic models: a Cox event indicator is not appropriate.
+    Without a recognized outcome, both designs still receive rank/VIF checks.
+
+    Individual separating optional predictors are removed. Multivariable
+    separation removes the optional contributor with the least support:
+    varying matched sets, or non-matched observations differing from the
+    variable's modal value. Ties are broken by input order; checks repeat.
+    Deletions change the adjustment model and are recorded in the return.
+
+    No participants, input values, matching rules, or penalties are changed.
+    Protected-only problems and failed numerical checks return the removals
+    identified so far plus an error string; forced predictors are never
+    deleted. The caller MUST skip fitting that model when error_text is not
+    None. Partial removals do not resolve an unestimable exposure, and solver
+    failure is not evidence that separation is absent. Invalid inputs still
+    raise ValueError rather than being treated as a valid partial check.
+    These checks concern only predictors supplied to this particular call;
+    separately checked blocks may still be problematic when combined later.
+
+    diagnostics, if supplied, is a dictionary populated with decisions and
+    timing. Status distinguishes 'unestimable' from 'check_failed'; it also
+    records checks_complete and can_attempt_fit. The first five arguments
+    are unchanged, but callers MUST now unpack the two-part return value.
     """
-    Compute Variance Inflation Factor (VIF) for each feature in the DataFrame.
-    This function handles perfectly collinear variables by setting their VIF to infinity.
+    import time
+    import warnings
+    import numpy as np
+    import pandas as pd
+    from scipy.linalg import qr, solve_triangular
+    from scipy.optimize import linprog
 
-    Fix: collinear groups are transitive (connected components under corr >= corr_thresh).
-    """
-    result = {}
-    if df.shape[1] == 0:
-        return result
+    started = time.perf_counter()
+    details = diagnostics if diagnostics is not None else {}
+    matched = group_col is not None
+    details.update(status="running", removed={}, phase_seconds={}, lp_calls=0,
+                   design="matched" if matched else "nonmatched",
+                   separation_checked=False, separation_complete=False,
+                   final_separation_status="not_checked", error=None,
+                   checks_complete=False, can_attempt_fit=False)
+    removed = {}
+    threshold = {"phenotypic_covar": 500, "disease_covar": 20,
+                 "pca_covar": 500}.get(vif_cutoff, vif_cutoff)
 
-    corr_matrix = df.corr().abs()
-    cols = list(corr_matrix.columns)
-    p = len(cols)
+    def finish(status, error=None):
+        details.update(status=status, removed=dict(removed),
+                       error=error, checks_complete=status in ("ok", "rank_vif_only"),
+                       can_attempt_fit=status in ("ok", "rank_vif_only"),
+                       seconds=time.perf_counter() - started)
 
-    # --- Build transitive groups with Union-Find ---
-    parent = list(range(p))
+    def fail(message):
+        finish("invalid_input", message)
+        raise ValueError(message)
 
-    def find(a):
-        while parent[a] != a:
-            parent[a] = parent[parent[a]]
-            a = parent[a]
-        return a
+    def stop(status, message):
+        # Retained names are candidates, not a claim that fitting is safe.
+        details["retained_columns"] = [v for v in columns if v not in removed]
+        finish(status, message)
+        return dict(removed), message
 
-    def union(a, b):
-        ra, rb = find(a), find(b)
-        if ra != rb:
-            parent[rb] = ra
+    def record_phase(name, start):
+        elapsed = time.perf_counter() - start
+        phases = details["phase_seconds"]
+        phases[name] = phases.get(name, 0.0) + elapsed
 
-    # Union any pair with corr >= threshold
-    for i in range(p):
-        for j in range(i + 1, p):
-            if corr_matrix.iat[i, j] >= corr_thresh:
-                union(i, j)
+    # 1. Shared validation. Only optional predictors may be deleted.
+    forced = list(forcedin_var_lst)
+    covariates = list(covar_lst)
+    columns = forced + covariates
+    if len(set(columns)) != len(columns):
+        fail("Predictor names must be unique; forced predictors must not also be optional covariates")
+    if not forced:
+        fail("At least one protected/forced predictor is required")
+    if matched and (group_col not in df or df[group_col].isna().any()):
+        fail("Matched-set identifiers are missing")
+    if any(column not in df for column in columns):
+        fail("Missing predictor column")
+    threshold = float("inf") if threshold is None else float(threshold)
+    if threshold <= 0 or np.isnan(threshold):
+        fail("VIF threshold must be positive")
+    for name, value in (("rank_tolerance", rank_tolerance),
+                        ("separation_tolerance", separation_tolerance),
+                        ("lp_time_limit", lp_time_limit)):
+        if not np.isfinite(value) or value <= 0:
+            fail(f"{name} must be finite and positive")
 
-    # Collect connected components as groups of column names
-    groups_by_root = {}
-    for i in range(p):
-        r = find(i)
-        groups_by_root.setdefault(r, []).append(cols[i])
+    explicit_outcome = outcome_col is not None
+    if outcome_col is None and "d2" in df:
+        candidate = df["d2"]
+        if candidate.notna().all() and candidate.isin([0, 1]).all():
+            if not matched:
+                outcome_col = "d2"
+            else:
+                totals = candidate.groupby(df[group_col]).sum()
+                sizes = candidate.groupby(df[group_col]).size()
+                informative = (totals > 0) & (totals < sizes)
+                if informative.any() and (totals[informative] == 1).all():
+                    outcome_col = "d2"
 
-    collinear_groups = [g for g in groups_by_root.values() if len(g) > 1]
-    # ---------------------------------------------
+    checked = df
+    if outcome_col is not None:
+        if (outcome_col not in df or df[outcome_col].isna().any()
+                or not df[outcome_col].isin([0, 1]).all()):
+            fail("Separation checking requires a complete binary 0/1 outcome")
+        if outcome_col in columns:
+            fail("Outcome must not also be a predictor")
+        if matched:
+            totals = df[outcome_col].groupby(df[group_col]).sum()
+            sizes = df[outcome_col].groupby(df[group_col]).size()
+            informative_ids = totals[(totals > 0) & (totals < sizes)].index
+            # Diagnostic subset only; the caller's dataframe is not changed.
+            checked = df[df[group_col].isin(informative_ids)]
+        elif df[outcome_col].nunique() != 2:
+            return stop("unestimable", "Logistic separation checking requires both outcome classes")
+    if checked.empty:
+        return stop("unestimable", "No informative observations")
 
-    # Mark all but the representative in each group as infinite VIF
-    perfect_collinear = []
-    for group in collinear_groups:
-        perfect_collinear.extend(group[1:])  # keep group[0], drop the rest
+    details.update(outcome_col=outcome_col, outcome_explicit=explicit_outcome,
+                   n_rows=len(df), n_checked_rows=len(checked),
+                   n_sets=int(checked[group_col].nunique()) if matched else None,
+                   initial_columns=columns.copy(),
+                   selection_policy="lowest support among optional LP contributors",
+                   separation_model=("conditional_logistic" if matched else "logistic")
+                   if outcome_col is not None else None)
 
-    for col in perfect_collinear:
-        result[col] = np.inf
-
-    remaining_cols = [col for col in df.columns if col not in perfect_collinear]
-
-    if remaining_cols:
-        X_remaining = df[remaining_cols].values
-        G = X_remaining.T @ X_remaining
-        try:
-            G_inv = np.linalg.inv(G)
-            remaining_vifs = dict(zip(remaining_cols, np.diag(G) * np.diag(G_inv)))
-            result.update(remaining_vifs)
-        except np.linalg.LinAlgError:
-            # Fallback, use statsmodels VIF (loops, but only when singular)
-            from statsmodels.stats.outliers_influence import variance_inflation_factor
-
-            vifs = [variance_inflation_factor(X_remaining, i) for i in range(X_remaining.shape[1])]
-            vifs = [np.inf if (not np.isfinite(v) or v > 1e12) else float(v) for v in vifs]
-            remaining_vifs = dict(zip(remaining_cols, vifs))
-            result.update(remaining_vifs)
-
-    return result
-
-def check_variance_vif_single(df:pd.DataFrame, forcedin_var_lst:list,
-                              covar_lst:list, group_col:str=None,
-                              vif_cutoff:int=None) -> list:
-    """
-    Check within group variance and Variance inflation factor (VIF) for the all the covariates.
-    Covariate with 0 within group variance will be removed.
-    Covariate with VIF > 5 will be removed.
-
-    Args:
-        df (pd.DataFrame): dataframe for analysis
-        forcedin_var_lst (list): covariates should always be included, such as constant and exposure variable
-        covar_lst (list): phenotypic covariates
-        vif_cutoff (int): VIF cutoff value (int) or some prespecified settings
-
-    Returns:
-        list: a nested list of covariates to be removed.
-    """
-    from statsmodels.stats.outliers_influence import variance_inflation_factor
-    #prespecified vif value for some types
-    vif_dict = {'phenotypic_covar':500,'disease_covar':20,
-                'pca_covar':500}
-    vif_cutoff = vif_dict.get(vif_cutoff,vif_cutoff)
-
-    #keep the order, make sure covar_lst is the last for VIF check
-    var_removed = {}
-    #return empty list if no variables are provided
-    if len(covar_lst) == 0:
-        return []
-
-    #if group_col is provided, calculate the within group variance
-    if group_col is not None:
-        for var in covar_lst:
-            group_means = df.groupby(group_col)[var].transform('mean')
-            ss_within = ((df[var] - group_means) ** 2).sum()
-            variance_within = ss_within / (len(df) - df[group_col].nunique())
-            if variance_within == 0: var_removed[var] = 'within_group_variance==0'
-    #if not provided, check the whole dataset variance
+    # 2. Model-appropriate matrix; the remaining checking engine is shared.
+    phase_start = time.perf_counter()
+    raw = checked[columns].to_numpy(dtype=float)
+    if not np.isfinite(raw).all():
+        fail("Non-finite predictor values; missing-data policy must be explicit")
+    active = list(range(len(columns)))
+    protected = list(range(len(forced)))
+    intercepts = []
+    if matched:
+        groups, _ = pd.factorize(checked[group_col], sort=False)
+        n_groups = int(groups.max()) + 1
+        group_sizes = np.bincount(groups)
+        group_sums = np.zeros((n_groups, len(columns)), dtype=float)
+        np.add.at(group_sums, groups, raw)
+        centered = raw - (group_sums / group_sizes[:, None])[groups]
+        group_min = np.full((n_groups, len(columns)), np.inf)
+        group_max = np.full((n_groups, len(columns)), -np.inf)
+        np.minimum.at(group_min, groups, raw)
+        np.maximum.at(group_max, groups, raw)
+        support = (group_max - group_min > rank_tolerance).sum(axis=0)
+        basis = centered
+        geometry = "within_set"
     else:
-        for var in covar_lst:
-            if df[var].var() == 0: var_removed[var] = 'variance==0'
+        centered = raw - raw.mean(axis=0)
+        intercepts = [index for index in protected
+                      if np.ptp(raw[:, index]) == 0
+                      and abs(raw[0, index]) > rank_tolerance]
+        # Centering with a supplied intercept preserves the model's span.
+        # Without an intercept, retain the actual uncentered design.
+        basis = centered.copy() if intercepts else raw.copy()
+        for index in intercepts:
+            basis[:, index] = raw[:, index]
+        support = np.array([len(raw) - checked[column].value_counts().max()
+                            for column in columns], dtype=int)
+        geometry = "full_design"
+    variation = np.linalg.norm(centered, axis=0)
+    protected_no_variation = []
+    for index in active.copy():
+        if variation[index] <= rank_tolerance and index not in intercepts:
+            if index in protected:
+                protected_no_variation.append(index)
+            else:
+                removed[columns[index]] = ("within_group_variance==0" if matched
+                                           else "variance==0")
+                active.remove(index)
+    scaled = basis / np.maximum(np.linalg.norm(basis, axis=0), 1e-30)
+    details.update(intercept_columns=[columns[index] for index in intercepts],
+                   vif_geometry=geometry)
+    record_phase("design_preparation", phase_start)
+    if protected_no_variation:
+        scope = "within-set" if matched else "global"
+        names = ", ".join(columns[index] for index in protected_no_variation)
+        return stop("unestimable", f"Protected predictor {names} has no {scope} variation")
 
-    #always check VIF
-    covar_lst = [x for x in covar_lst if x not in var_removed] #remove the variables with 0 within group variance
-    vars_all = covar_lst + forcedin_var_lst #remaining covariates plus forced-in variables
-    #vars_all_set = vars_all.copy() #variables that remained unchanged during the VIF check loop
+    # 3. Shared protected-first rank check, then independent nuisance basis.
+    phase_start = time.perf_counter()
+    try:
+        forced_q, forced_r = qr(scaled[:, protected], mode="economic")
+    except np.linalg.LinAlgError as exc:
+        record_phase("rank", phase_start)
+        return stop("check_failed", f"Protected-predictor rank check failed: {exc}")
+    if (forced_r.shape[0] < len(protected)
+            or np.any(np.abs(np.diag(forced_r)) <= rank_tolerance)):
+        record_phase("rank", phase_start)
+        return stop("unestimable", f"Protected predictors have linearly dependent {geometry} contrasts")
+    optional = [index for index in active if index not in protected]
+    if optional:
+        residual = (scaled[:, optional]
+                    - forced_q @ (forced_q.T @ scaled[:, optional]))
+        try:
+            _, residual_r, pivots = qr(residual, mode="economic", pivoting=True)
+        except np.linalg.LinAlgError as exc:
+            record_phase("rank", phase_start)
+            return stop("check_failed", f"Optional-predictor rank check failed: {exc}")
+        rank = int(np.sum(np.abs(np.diag(residual_r)) > rank_tolerance))
+        retained = set(np.asarray(optional)[pivots[:rank]].tolist())
+        for index in optional:
+            if index not in retained:
+                removed[columns[index]] = ("redundant_within_set_contrast" if matched
+                                           else "redundant_predictor")
+                active.remove(index)
+    details["rank_after_redundancy_check"] = len(active)
+    record_phase("rank", phase_start)
 
-    while True:
-        all_vifs = compute_vif_sm_exact(df[vars_all])
-        offenders = {v:val for v, val in all_vifs.items()
-                     if v not in forcedin_var_lst and val > vif_cutoff}
+    # 4. Shared QR VIF; delete the worst optional offender and repeat.
+    phase_start = time.perf_counter()
+    while any(index not in protected for index in active):
+        try:
+            _, r = qr(scaled[:, active], mode="economic")
+            inverse_r = solve_triangular(r, np.eye(len(active)))
+        except np.linalg.LinAlgError as exc:
+            record_phase("vif", phase_start)
+            return stop("check_failed", f"VIF numerical check failed: {exc}")
+        vifs = np.sum(inverse_r ** 2, axis=1)
+        offenders = [j for j, index in enumerate(active)
+                     if index not in protected and vifs[j] > threshold]
         if not offenders:
             break
-        # Remove the variable with the highest VIF
-        worst = max(offenders, key=offenders.get)
-        var_removed[worst] = f"VIF={offenders[worst]:.2f}"
-        vars_all.remove(worst)
+        worst = max(offenders, key=lambda j: vifs[j])
+        index = active.pop(worst)
+        removed[columns[index]] = f"VIF={vifs[worst]:.6g} ({geometry})"
+    record_phase("vif", phase_start)
 
-    #return the dictionary of variables to be excluded
-    return var_removed
+    if outcome_col is None:
+        details.update(separation_checked=False,
+                       retained_columns=[columns[index] for index in active])
+        finish("rank_vif_only")
+        return dict(removed), None
+
+    # 5. Separation matrix for the likelihood being checked.
+    phase_start = time.perf_counter()
+    y = checked[outcome_col].to_numpy(dtype=int)
+    if not matched:
+        # O(n*p), not all case/control pairs. The intercept is supplied,
+        # never added silently; scaling does not change the model's span.
+        scales = np.maximum(raw.std(axis=0), 1e-12)
+        for index in intercepts:
+            scales[index] = abs(raw[0, index])
+        ordinary_design = raw / scales
+        contrasts = (2 * y - 1)[:, None] * ordinary_design
+    elif np.all(np.bincount(groups, weights=y) == 1):
+        case_values = np.zeros_like(group_sums)
+        case_values[groups[y == 1]] = raw[y == 1]
+        contrasts = (case_values[groups] - raw)[y == 0]
+    else:
+        blocks = []
+        order = np.argsort(groups, kind="stable")
+        starts = np.r_[0, np.flatnonzero(np.diff(groups[order])) + 1]
+        stops = np.r_[starts[1:], len(order)]
+        for first, stop in zip(starts, stops):
+            rows = order[first:stop]
+            cases = raw[rows[y[rows] == 1]]
+            controls = raw[rows[y[rows] == 0]]
+            blocks.append((cases[:, None, :] - controls[None, :, :])
+                          .reshape(-1, len(columns)))
+        contrasts = np.vstack(blocks)
+    if matched:
+        contrasts /= np.maximum(centered.std(axis=0), 1e-12)
+        details["n_case_control_contrasts"] = len(contrasts)
+    details.update(n_separation_constraints=len(contrasts), separation_checked=True)
+    record_phase("contrast_preparation", phase_start)
+
+    # 6. Shared delete-and-recheck engine: single and combined separators.
+    while True:
+        phase_start = time.perf_counter()
+        current = contrasts[:, active]
+        minima, maxima = current.min(axis=0), current.max(axis=0)
+        positive = ((minima >= -rank_tolerance)
+                    & (maxima > separation_tolerance))
+        negative = ((maxima <= rank_tolerance)
+                    & (minima < -separation_tolerance))
+        if not matched and intercepts:
+            # A single predictor plus the intercept can separate at any
+            # threshold, not only at zero. Test both possible directions.
+            values = ordinary_design[:, active]
+            case_min, case_max = values[y == 1].min(axis=0), values[y == 1].max(axis=0)
+            control_min = values[y == 0].min(axis=0)
+            control_max = values[y == 0].max(axis=0)
+            boundary = (case_min + control_max) / 2
+            positive = ((np.minimum(case_min - boundary, boundary - control_max)
+                         >= -rank_tolerance)
+                        & (np.maximum(case_max - boundary, boundary - control_min)
+                           > separation_tolerance))
+            boundary = (case_max + control_min) / 2
+            negative = ((np.minimum(boundary - case_max, control_min - boundary)
+                         >= -rank_tolerance)
+                        & (np.maximum(boundary - case_min, control_max - boundary)
+                           > separation_tolerance))
+        single = np.flatnonzero(positive | negative).tolist()
+        protected_separators = [active[j] for j in single if active[j] in protected]
+        if single:
+            # Record optional separators already identified in this pass,
+            # even if a forced separator prevents further safe checking.
+            for j in reversed(single):
+                if active[j] in protected:
+                    continue
+                index = active.pop(j)
+                direction = "positive" if positive[j] else "negative"
+                removed[columns[index]] = f"single_variable_separation ({direction} direction)"
+            record_phase("single_separation", phase_start)
+            if protected_separators:
+                details["final_separation_status"] = "detected"
+                names = ", ".join(columns[index] for index in protected_separators)
+                return stop("unestimable", f"Protected predictor {names} itself causes "
+                            f"{details['separation_model']} separation")
+            continue
+        record_phase("single_separation", phase_start)
+
+        phase_start = time.perf_counter()
+        details["lp_calls"] += 1
+        try:
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", message="Unrecognized options detected.*")
+                solved = linprog(
+                    -current.mean(axis=0), A_ub=-current,
+                    b_ub=np.zeros(len(current)), bounds=(-1, 1), method="highs",
+                    options={"threads": 1, "time_limit": lp_time_limit},
+                )
+        except (ValueError, RuntimeError, np.linalg.LinAlgError) as exc:
+            record_phase("multivariable_separation", phase_start)
+            details["final_separation_status"] = "unknown"
+            return stop("check_failed", f"Separation LP failed: {exc}")
+        record_phase("multivariable_separation", phase_start)
+        if not solved.success:
+            details["final_separation_status"] = "unknown"
+            return stop("check_failed", f"Separation LP did not complete: {solved.message}")
+        if (not np.isfinite(solved.x).all() or not np.isfinite(solved.fun)
+                or solved.x.shape != (len(active),)):
+            details["final_separation_status"] = "unknown"
+            return stop("check_failed", "Separation LP returned an invalid numerical solution")
+        margins = current @ solved.x
+        if margins.min() < -separation_tolerance:
+            details["final_separation_status"] = "unknown"
+            return stop("check_failed", "Separation LP solution violates its constraints")
+        separated = -solved.fun > separation_tolerance
+        if not separated:
+            details.update(retained_columns=[columns[index] for index in active],
+                           final_separation_status="not_detected", separation_complete=True)
+            finish("ok")
+            return dict(removed), None
+
+        contributors = [active[j] for j, coefficient in enumerate(solved.x)
+                        if abs(coefficient) > 1e-7 and active[j] not in protected]
+        if not contributors:
+            details["final_separation_status"] = "detected"
+            return stop("unestimable", "Separation involves protected predictors only")
+        index = min(contributors, key=lambda i: (support[i], i))
+        unit = "informative_sets" if matched else "nonmodal_observations"
+        removed[columns[index]] = f"multivariable_separation ({unit}={int(support[index])})"
+        active.remove(index)

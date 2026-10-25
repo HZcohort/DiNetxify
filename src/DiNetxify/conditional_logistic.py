@@ -228,13 +228,15 @@ def logistic_model(args):
         #result list
         result_lst = [d1,d2,f'{d1}-{d2}',N,n,f'{N_d1_withd2}/{N_d2}',f'{N_d1_nod2}/{N_nod2}']
         
-        del_covariates = check_variance_vif_single(
+        del_covariates,check_error_msg = check_variance_vif_single(
             df_analysis,
             forcedin_vars,
             covariates_,
             vif_cutoff=100,
             group_col=mathcing_id_col
         )
+        if check_error_msg is not None:
+            del_covariates[check_error_msg] = ''
         final_covariates = [x for x in covariates_ if x not in del_covariates]
 
         #simple method
@@ -255,16 +257,18 @@ def logistic_model(args):
                 message += f'method={method}; successfully fitted; '
             except Exception as e:
                 message += f'method={method}; error encountered: {e}; '
-                result_lst += [method,str(e)]
+                result_lst += [method,str(e)+f'; delete the covariate(s): {del_covariates}']
             del df_analysis
             gc.collect()
         
         #partial correlation method
         elif method == 'RPCN':
-            del_diseases_var = check_variance_vif_single(df_analysis,
+            del_diseases_var,check_error_msg = check_variance_vif_single(df_analysis,
                                                         forcedin_vars,all_diseases_var,
                                                         vif_cutoff='disease_covar',
                                                         group_col=mathcing_id_col)
+            if check_error_msg is not None:
+                del_diseases_var[check_error_msg] = ''
             all_diseases_var = [x for x in all_diseases_var if x not in del_diseases_var]
             #generate alpha lst after removing these variables
             alpha_lst = np.array([0]*len(forcedin_vars) + [1]*len(all_diseases_var))
@@ -284,7 +288,7 @@ def logistic_model(args):
                                 f'{final_model_vars}',f'{zvalue_dict}',np.nan,beta,se,p,aic]
                     message += f'method={model_name} (no informative other disease covariates); successfully fitted; '
                 except Exception as e:
-                    result_lst += [model_name,str(e)]
+                    result_lst += [model_name,str(e)+f'； delete the diseases variable(s): {del_diseases_var} and covariate(s): {del_covariates}']
                     message += f'method={model_name}; error encountered: {e}; '
             elif auto_penalty:
                 alpha_lst = alpha_lst * scaling_factor
@@ -311,7 +315,7 @@ def logistic_model(args):
                                 f'{final_model_vars}',f'{zvalue_dict}',final_best_alpha,beta,se,p,aic]
                     message += f'method={method}_auto (alpha={final_best_alpha}, number of other disease included as covariates: {len(final_disease_vars)}); successfully fitted; '
                 except Exception as e:
-                    result_lst += [f'{method}_auto', str(e)]
+                    result_lst += [f'{method}_auto', str(e)+f'; delete the diseases variable(s): {del_diseases_var} and covariate(s): {del_covariates}']
                     message += f'method={method}_auto; error encountered: {e}; '
 
             else:
@@ -340,7 +344,7 @@ def logistic_model(args):
                                 f'{final_model_vars}',f'{zvalue_dict}',alpha_single,beta,se,p,aic]
                     message += f'method={method}_fixed_alpha (alpha={alpha_single}, number of other disease included as covariates: {len(final_disease_vars)}); successfully fitted; '
                 except Exception as e:
-                    result_lst += [f'{method}_auto', str(e)]
+                    result_lst += [f'{method}_auto', str(e)+f'; delete the diseases variable(s): {del_diseases_var} and covariate(s): {del_covariates}']
                     message += f'method={method}_fixed_alpha (alpha={alpha_single}); error encountered: {e}; '
             del df_analysis
             gc.collect()
@@ -348,6 +352,7 @@ def logistic_model(args):
         elif method == 'PCN_PCA':
             del_diseases_var = [var for var in all_diseases_var if df_analysis[var].nunique() <= 1]
             all_diseases_var = [var for var in all_diseases_var if var not in del_diseases_var]
+            del_pca_var = {}
             try:
                 if not all_diseases_var:
                     final_model_vars = [x for x in forcedin_vars if x!=constant_col]+final_covariates
@@ -372,10 +377,12 @@ def logistic_model(args):
                     del disease_vars_transformed
                     gc.collect()
                     variance_explained = sum(pca.explained_variance_ratio_)
-                    del_pca_var = check_variance_vif_single(df_analysis,
+                    del_pca_var,check_error_msg = check_variance_vif_single(df_analysis,
                                                             forcedin_vars,all_pca_vars,
                                                             vif_cutoff='pca_covar',
                                                             group_col=mathcing_id_col)
+                    if check_error_msg is not None:
+                        del_pca_var[check_error_msg] = ''
                     final_pca_var = [x for x in all_pca_vars if x not in del_pca_var]
                     forcedin_vars = [x for x in forcedin_vars if x!=constant_col]
                     final_model_vars = forcedin_vars+final_pca_var+final_covariates
@@ -389,7 +396,7 @@ def logistic_model(args):
                                 f'{final_model_vars}',f'{z_value_dict}',variance_explained,beta,se,p,aic]
                     message += f'method={method}_n_components={pca_number} (number of PC included as covariates: {len(final_pca_var)}, total variance explained by PC: {variance_explained:.3f}); successfully fitted; '
             except Exception as e:
-                result_lst += [f'{method}_n_components={pca_number}',str(e)]
+                result_lst += [f'{method}_n_components={pca_number}',str(e)+f'; delete the pca variable(s): {del_pca_var} and covariate(s): {del_covariates}']
                 message += f'method={method}_n_components={pca_number}; error encountered: {e}; '
             del df_analysis
             gc.collect()

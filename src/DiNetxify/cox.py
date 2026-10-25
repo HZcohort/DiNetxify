@@ -202,13 +202,15 @@ def cox_conditional(phecode: float):
     dataset_analysis = dataset_analysis[dataset_analysis[matching_col].isin(match_id)]
     
     #check the covariates vif
-    del_covariates = check_variance_vif_single(
+    del_covariates, check_error_msg = check_variance_vif_single(
         dataset_analysis,
         [exp_col],
         covariates_,
         vif_cutoff='phenotypic_covar', 
         group_col=matching_col
     )
+    if check_error_msg is not None:
+        del_covariates[check_error_msg] = ''
     final_covariates = [x for x in covariates_ if x not in del_covariates]
     
     #error message
@@ -268,7 +270,7 @@ def cox_conditional(phecode: float):
                 error_message = e_stats
             else:
                 error_message = f'{e_stats} (statsmodels); {e_lifelines} (lifelines)'
-            result += [error_message,str_exp,str_noexp]
+            result += [str(error_message)+f'; delete the covariate(s): {del_covariates}',str_exp,str_noexp]
     #print
     time_end = time.time()
     time_spend = time_end - time_start
@@ -518,9 +520,11 @@ def cox_unconditional(phecode:float):
         return result
     
     #check the covariates vif
-    del_covariates = check_variance_vif_single(dataset_analysis,
+    del_covariates, check_error_msg = check_variance_vif_single(dataset_analysis,
                                                [exp_col],covariates_,
                                                vif_cutoff='phenotypic_covar')
+    if check_error_msg is not None:
+        del_covariates[check_error_msg] = ''
     final_covariates = [x for x in covariates_ if x not in del_covariates]
 
     #error message
@@ -577,7 +581,7 @@ def cox_unconditional(phecode:float):
                 error_message = e_stats
             else:
                 error_message = f'{e_stats} (statsmodels); {e_lifelines} (lifelines)'
-            result += [error_message,str_exp,str_noexp]
+            result += [str(error_message)+f'; delete the covariate(s): {del_covariates}',str_exp,str_noexp]
     #print
     time_end = time.time()
     time_spend = time_end - time_start
